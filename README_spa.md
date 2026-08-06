@@ -197,10 +197,10 @@ directamente.
 ## 3. Dónde van los archivos de firmware
 
 Esta herramienta espera una carpeta `firmware/` **dentro de
-`tools/flasher/V1.1/`**, justo al lado de `urtc_flasher.py`:
+`tools/flasher/`**, justo al lado de `urtc_flasher.py`:
 
 ```
-tools/flasher/V1.1/
+tools/flasher/
 ├── assets/
 │   ├── URTC_LOGO_FLASHER.svg      <- fuente del banner (vectorial)
 │   └── urtc_banner.png            <- se muestra en la parte superior de la ventana, renderizado desde el .svg de arriba
@@ -238,11 +238,11 @@ ejecutable independiente mediante el `--add-data` de PyInstaller, así
 que funciona igual tanto si ejecutas desde el código fuente como desde
 un binario compilado.
 
-Esto es deliberado: mantener `firmware/` dentro de `tools/flasher/V1.1/`
+Esto es deliberado: mantener `firmware/` dentro de `tools/flasher/`
 en vez de en la raíz del repositorio significa que toda la carpeta
-`tools/flasher/V1.1/` es autocontenida. Si solo quieres flashear una
+`tools/flasher/` es autocontenida. Si solo quieres flashear una
 placa — en un PC de taller, desde una memoria USB, donde sea — puedes
-copiar `tools/flasher/V1.1/` por sí sola sin nada más del repositorio, y
+copiar `tools/flasher/` por sí sola sin nada más del repositorio, y
 sigue funcionando.
 
 **Puedes tener más de un `.bin` ahí.** Cada archivo se revisa y se
@@ -525,7 +525,7 @@ el registro lo dice, lo cual es evidencia real de que los datos pasaron
 y solo se perdió el ACK, no solo una espera más larga y una esperanza.
 
 Cada sesión también escribe un archivo de registro con marca de tiempo
-en `tools/flasher/V1.1/logs/` (`urtc_flasher_YYYYMMDD_HHMMSS.log`),
+en `tools/flasher/logs/` (`urtc_flasher_YYYYMMDD_HHMMSS.log`),
 independiente del registro en pantalla - útil para entregarle una traza
 completa a quien escribió el firmware si algo sale mal en el campo. Esta
 carpeta se crea automáticamente y es segura de borrar; nada vuelve a
@@ -690,7 +690,7 @@ estado de parámetros de herramienta que tuviera guardado.
 **No es necesario para una actualización normal.** Un desajuste de
 versión en el propio formato del registro guardado ya se detecta y se
 ignora de forma segura en el siguiente arranque (ver la sección de
-persistencia de parámetros de `src/F303-master/V1.1/README.md`) - esta
+persistencia de parámetros de `src/F303-master/README.md`) - esta
 casilla existe para una limpieza genuinamente completa, no porque
 saltársela vaya a dejar algo roto.
 

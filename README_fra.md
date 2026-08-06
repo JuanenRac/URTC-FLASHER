@@ -204,10 +204,10 @@ directement.
 ## 3. Où vont les fichiers de firmware
 
 Cet outil s'attend à un dossier `firmware/` **à l'intérieur de
-`tools/flasher/V1.1/`**, juste à côté de `urtc_flasher.py` :
+`tools/flasher/`**, juste à côté de `urtc_flasher.py` :
 
 ```
-tools/flasher/V1.1/
+tools/flasher/
 ├── assets/
 │   ├── URTC_LOGO_FLASHER.svg      <- source de la banniere (vectorielle)
 │   └── urtc_banner.png            <- affichee en haut de la fenetre, rendue depuis le .svg ci-dessus
@@ -246,10 +246,10 @@ PyInstaller, donc cela fonctionne de la même manière que vous exécutiez
 depuis la source ou depuis un binaire construit.
 
 Ceci est délibéré : garder `firmware/` à l'intérieur de
-`tools/flasher/V1.1/` plutôt qu'à la racine du dépôt signifie que tout
-le dossier `tools/flasher/V1.1/` est autonome. Si vous voulez juste
+`tools/flasher/` plutôt qu'à la racine du dépôt signifie que tout
+le dossier `tools/flasher/` est autonome. Si vous voulez juste
 flasher une carte — sur un PC d'atelier, depuis une clé USB, n'importe
-où — vous pouvez copier `tools/flasher/V1.1/` seul sans rien d'autre du
+où — vous pouvez copier `tools/flasher/` seul sans rien d'autre du
 dépôt, et cela fonctionne quand même.
 
 **Vous pouvez en garder plus d'un `.bin` là-dedans.** Chaque fichier est
@@ -544,7 +544,7 @@ que seul l'ACK a été perdu, pas juste une attente plus longue et un
 espoir.
 
 Chaque session écrit aussi un fichier journal horodaté dans
-`tools/flasher/V1.1/logs/` (`urtc_flasher_YYYYMMDD_HHMMSS.log`),
+`tools/flasher/logs/` (`urtc_flasher_YYYYMMDD_HHMMSS.log`),
 indépendant du journal à l'écran - utile pour remettre une trace
 complète à celui qui a écrit le firmware si quelque chose ne va pas sur
 le terrain. Ce dossier est créé automatiquement et est sûr à
@@ -715,7 +715,7 @@ paramètres d'outil qu'elle avait sauvegardé.
 version dans la mise en page propre de l'enregistrement sauvegardé est
 déjà détectée et ignorée en sécurité au prochain démarrage (voir la
 section de persistance des paramètres de
-`src/F303-master/V1.1/README.md`) - cette case existe pour un
+`src/F303-master/README.md`) - cette case existe pour un
 nettoyage genuinement complet, pas parce que la sauter laisserait
 quelque chose de cassé.
 

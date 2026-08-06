@@ -175,17 +175,17 @@ installed module directly.
 
 ## 3. Where firmware files go
 
-This tool expects a `firmware/` folder **inside `tools/flasher/V1.1/`**, right next to
+This tool expects a `firmware/` folder **inside `tools/flasher/`**, right next to
 `urtc_flasher.py`:
 
 ```
-tools/flasher/V1.1/
+tools/flasher/
 ├── assets/
 │   ├── URTC_LOGO_FLASHER.svg      <- banner source (vector)
 │   └── urtc_banner.png            <- shown at the top of the window, rendered from the .svg above
 ├── firmware/
-│   ├── URTC_v1_0_F303CC.bin      <- put new .bin files here
-│   └── URTC_v1_0_F303CC_old.bin  <- can keep older versions around too
+│   ├── URTC_V1.1_F303CC.bin      <- put new .bin files here
+│   └── URTC_V1.1_F303CC_old.bin  <- can keep older versions around too
 ├── logs/                          <- created automatically, one file per session
 ├── urtc_config.json               <- optional, not included by default (see "Changing the HMAC key" below)
 ├── urtc_flasher.py                <- entry point: CLI args, splash screen, main window setup
@@ -203,9 +203,7 @@ tools/flasher/V1.1/
 
 This tool is organized into the modules above by responsibility, purely
 for readability - there's no functional difference between having them
-as separate files versus one large one, and no monolithic form to keep
-in sync the way the firmware has (this is a PC tool, not something
-flashed onto the board, so there's only ever the one form).
+as separate files versus one large one.
 
 `assets/urtc_banner.png` is optional - if it's missing, the tool just
 starts without a banner rather than failing. It's loaded through
@@ -215,10 +213,10 @@ ships with), not Pillow, so it doesn't add a new dependency. Both
 standalone executable via PyInstaller's `--add-data`, so this works the
 same way whether you run from source or from a built binary.
 
-This is deliberate: keeping `firmware/` inside `tools/flasher/V1.1/` instead of at
-the repo root means the whole `tools/flasher/V1.1/` folder is self-contained. If
+This is deliberate: keeping `firmware/` inside `tools/flasher/` instead of at
+the repo root means the whole `tools/flasher/` folder is self-contained. If
 you just want to flash a board — on a shop floor PC, from a USB stick,
-wherever — you can copy `tools/flasher/V1.1/` on its own with nothing else from
+wherever — you can copy `tools/flasher/` on its own with nothing else from
 the repo, and it still works.
 
 **You can keep more than one `.bin` in there.** Every file gets checked and
@@ -468,7 +466,7 @@ receiving the current page in full would imply - when they're
 consistent, the log says so, which is real evidence the data got
 through and only the ACK was lost, not just a longer wait and a hope.
 
-Every session also writes a timestamped log file to `tools/flasher/V1.1/logs/`
+Every session also writes a timestamped log file to `tools/flasher/logs/`
 (`urtc_flasher_YYYYMMDD_HHMMSS.log`), independent of the on-screen log -
 useful for handing a full trace to whoever wrote the firmware if
 something goes wrong in the field. This folder is created automatically
@@ -610,7 +608,7 @@ whatever tool-parameter state it had saved.
 
 **Not required for a normal update.** A version mismatch in the saved
 record's own layout is already detected and safely ignored on the next
-boot (see `src/F303-master/V1.1/README.md`'s parameter-persistence section) - this
+boot (see `src/F303-master/README.md`'s parameter-persistence section) - this
 checkbox exists for a genuinely clean slate, not because skipping it
 would leave anything broken.
 

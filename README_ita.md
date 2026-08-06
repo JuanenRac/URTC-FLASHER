@@ -200,10 +200,10 @@ riuscita, mentre `-m pip` trova il modulo installato direttamente.
 ## 3. Dove vanno i file di firmware
 
 Questo strumento si aspetta una cartella `firmware/` **dentro
-`tools/flasher/V1.1/`**, proprio accanto a `urtc_flasher.py`:
+`tools/flasher/`**, proprio accanto a `urtc_flasher.py`:
 
 ```
-tools/flasher/V1.1/
+tools/flasher/
 ├── assets/
 │   ├── URTC_LOGO_FLASHER.svg      <- sorgente del banner (vettoriale)
 │   └── urtc_banner.png            <- mostrato in cima alla finestra, renderizzato dal .svg sopra
@@ -241,11 +241,11 @@ dipendenza. Sia `build_exe.bat` che `build_exe.sh` già impacchettano
 PyInstaller, quindi funziona allo stesso modo sia che tu esegua dal
 sorgente sia da un binario compilato.
 
-Questo è deliberato: mantenere `firmware/` dentro `tools/flasher/V1.1/`
+Questo è deliberato: mantenere `firmware/` dentro `tools/flasher/`
 invece che nella radice del repository significa che l'intera cartella
-`tools/flasher/V1.1/` è autonoma. Se vuoi solo flashare una scheda - su
+`tools/flasher/` è autonoma. Se vuoi solo flashare una scheda - su
 un PC di officina, da una chiavetta USB, ovunque - puoi copiare
-`tools/flasher/V1.1/` da sola senza nient'altro dal repository, e
+`tools/flasher/` da sola senza nient'altro dal repository, e
 funziona comunque.
 
 **Puoi tenerne più di uno `.bin` lì.** Ogni file viene controllato ed
@@ -526,7 +526,7 @@ registro lo dice, il che è evidenza reale che i dati sono passati e si è
 perso solo l'ACK, non solo un'attesa più lunga e una speranza.
 
 Ogni sessione scrive anche un file di log con marca temporale in
-`tools/flasher/V1.1/logs/` (`urtc_flasher_YYYYMMDD_HHMMSS.log`),
+`tools/flasher/logs/` (`urtc_flasher_YYYYMMDD_HHMMSS.log`),
 indipendente dal registro a schermo - utile per consegnare una traccia
 completa a chi ha scritto il firmware se qualcosa va storto sul campo.
 Questa cartella viene creata automaticamente ed è sicura da eliminare;
@@ -690,7 +690,7 @@ stato di parametri strumento avesse salvato.
 **Non necessario per un aggiornamento normale.** Una discrepanza di
 versione nel layout stesso del record salvato viene già rilevata e
 ignorata in sicurezza al prossimo avvio (vedi la sezione persistenza
-parametri di `src/F303-master/V1.1/README.md`) - questa casella esiste
+parametri di `src/F303-master/README.md`) - questa casella esiste
 per una pulizia genuinamente completa, non perché saltarla lascerebbe
 qualcosa di rotto.
 

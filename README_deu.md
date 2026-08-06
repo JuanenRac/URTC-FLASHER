@@ -207,10 +207,10 @@ Modul direkt findet.
 ## 3. Wohin die Firmware-Dateien gehören
 
 Dieses Tool erwartet einen `firmware/`-Ordner **innerhalb von
-`tools/flasher/V1.1/`**, direkt neben `urtc_flasher.py`:
+`tools/flasher/`**, direkt neben `urtc_flasher.py`:
 
 ```
-tools/flasher/V1.1/
+tools/flasher/
 ├── assets/
 │   ├── URTC_LOGO_FLASHER.svg      <- Banner-Quelle (Vektor)
 │   └── urtc_banner.png            <- oben im Fenster angezeigt, aus dem .svg oben gerendert
@@ -250,11 +250,11 @@ egal ob Sie aus dem Quellcode oder aus einem erstellten Binary
 ausführen.
 
 Dies ist beabsichtigt: `firmware/` innerhalb von
-`tools/flasher/V1.1/` statt an der Wurzel des Repositorys zu halten
-bedeutet, dass der gesamte `tools/flasher/V1.1/`-Ordner in sich
+`tools/flasher/` statt an der Wurzel des Repositorys zu halten
+bedeutet, dass der gesamte `tools/flasher/`-Ordner in sich
 geschlossen ist. Wenn Sie nur eine Platine flashen wollen — auf einem
 Werkstatt-PC, von einem USB-Stick, wo auch immer — können Sie
-`tools/flasher/V1.1/` allein kopieren, ohne sonst etwas aus dem
+`tools/flasher/` allein kopieren, ohne sonst etwas aus dem
 Repository, und es funktioniert trotzdem.
 
 **Sie können mehr als eine `.bin` dort haben.** Jede Datei wird
@@ -333,7 +333,7 @@ etwas Getrenntes von der Version der installierten Anwendung, verfolgt
 über ihre eigene `BOOTLOADER_VERSION_MAJOR/MINOR/PATCH` in
 `BOOTLOADER.C` und als zweiter Frame (`0x7FA`) direkt neben `0x7F9`
 gesendet. Die laufende Anwendung sendet dies nie - sie hat keine
-M�glichkeit, die Version eines aktuell geflashten Bootloaders zu
+Möglichkeit, die Version eines aktuell geflashten Bootloaders zu
 kennen, außer den Bootloader selbst zu fragen, sodass dies nur
 auftaucht, wenn die Platine tatsächlich dort sitzt (direkt nach `0x7F0`,
 oder bei einem frischen Start, bevor sie zur Anwendung springt).
@@ -366,7 +366,7 @@ Abfragen/Speichern-Paar, direkt unter der Versionsprüfung. Liest und
 setzt, welche der 5 möglichen `CONN_EXPANSION`-Konfigurationen (keine,
 oder eine der 4 geplanten Varianten - siehe `EXPANSION.TXT`) physisch
 installiert ist, über CAN (`0x1A0`/`0x1A1`). Es gibt keine elektrische
-M�glichkeit für die Platine, dies selbst zu erkennen, also muss es ihr
+Möglichkeit für die Platine, dies selbst zu erkennen, also muss es ihr
 gesagt werden - dies lebt hier (nicht nur in `URTC Tester`), da es sich
 um einen einmaligen Hardware-Konfigurationsschritt handelt, der am
 natürlichsten zusammen mit einem Firmware-Update erfolgt. **Speichern**
@@ -551,7 +551,7 @@ echter Beweis dafür ist, dass die Daten durchgekommen sind und nur das
 ACK verloren ging, nicht nur ein längeres Warten und eine Hoffnung.
 
 Jede Sitzung schreibt auch eine zeitgestempelte Protokolldatei nach
-`tools/flasher/V1.1/logs/` (`urtc_flasher_YYYYMMDD_HHMMSS.log`),
+`tools/flasher/logs/` (`urtc_flasher_YYYYMMDD_HHMMSS.log`),
 unabhängig vom Bildschirmprotokoll - nützlich, um eine vollständige
 Spur an denjenigen weiterzugeben, der die Firmware geschrieben hat,
 falls im Feld etwas schiefgeht. Dieser Ordner wird automatisch erstellt
@@ -723,7 +723,7 @@ Werkzeugparameterzustand.
 im eigenen Layout des gespeicherten Datensatzes wird bereits beim
 nächsten Start sicher erkannt und ignoriert (siehe den
 Parameter-Persistenz-Abschnitt von
-`src/F303-master/V1.1/README.md`) - dieses Kontrollkästchen existiert
+`src/F303-master/README.md`) - dieses Kontrollkästchen existiert
 für einen wirklich sauberen Neuanfang, nicht weil das Überspringen
 etwas kaputt lassen würde.
 
