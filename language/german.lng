@@ -267,3 +267,15 @@ LOG_DEVICE_SERIAL_SAVED_CONFIRMED=Seriennummer gespeichert und bestaetigt: {seri
 LOG_DEVICE_SERIAL_MISMATCH=Seriennummer auf {value} gesetzt, aber Board meldet {confirmed} - das Schreiben hat moeglicherweise nicht funktioniert. Erneut abfragen zur Ueberpruefung.
 LOG_DEVICE_SERIAL_NO_CONFIRMATION=Seriennummer: gesendet, aber keine Bestaetigung erhalten (aeltere Firmware, oder Board nicht verbunden).
 LOG_DEVICE_SERIAL_SAVE_FAILED=Speichern der Seriennummer fehlgeschlagen: {e}
+
+# MLX9064x sensor variant control (0x1A6/0x1A7) - added alongside expansion_board_type
+LBL_MLX_SENSOR_VARIANT=MLX9064x-Sensor:
+TITLE_CONFIRM_MLX_VARIANT=MLX9064x-Sensorvariante bestätigen
+MSG_CONFIRM_MLX_VARIANT=Die MLX9064x-Sensorvariante dieser Platine festlegen und speichern auf:\n\n  {type}\n\nDies ist eine einmalige Hardware-Konfigurationseinstellung, die nur relevant ist, wenn der Erweiterungsplatinentyp Advanced oder Basic+MLX9064x ist - sie bleibt über Stromzyklen hinweg bestehen, bis sie explizit erneut geändert wird. Fortfahren?
+LOG_MLX_VARIANT_NO_RESPONSE=MLX9064x-Sensorvariante: keine Antwort (ältere Firmware oder Platine nicht verbunden).
+LOG_MLX_VARIANT_VALUE=MLX9064x-Sensorvariante: {type}
+LOG_MLX_VARIANT_QUERY_FAILED=Abfrage der MLX9064x-Sensorvariante fehlgeschlagen: {e}
+LOG_MLX_VARIANT_SAVED_CONFIRMED=MLX9064x-Sensorvariante gespeichert und bestätigt: {type}
+LOG_MLX_VARIANT_MISMATCH=MLX9064x-Sensorvariante auf {value} gesetzt, aber die Platine meldet {confirmed} - der Schreibvorgang wurde möglicherweise nicht übernommen. Erneut abfragen, um zu prüfen.
+LOG_MLX_VARIANT_NO_CONFIRMATION=MLX9064x-Sensorvariante: gesendet, aber keine Bestätigung erhalten (ältere Firmware oder Platine nicht verbunden).
+LOG_MLX_VARIANT_SAVE_FAILED=Speichern der MLX9064x-Sensorvariante fehlgeschlagen: {e}

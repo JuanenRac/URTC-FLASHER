@@ -266,3 +266,15 @@ LOG_DEVICE_SERIAL_SAVED_CONFIRMED=Device serial number saved and confirmed: {ser
 LOG_DEVICE_SERIAL_MISMATCH=Device serial number set to {value}, but board reports {confirmed} - the write may not have taken. Query again to check.
 LOG_DEVICE_SERIAL_NO_CONFIRMATION=Device serial number: sent, but no confirmation came back (older firmware, or board not connected).
 LOG_DEVICE_SERIAL_SAVE_FAILED=Device serial number save failed: {e}
+
+# MLX9064x sensor variant control (0x1A6/0x1A7) - added alongside expansion_board_type
+LBL_MLX_SENSOR_VARIANT=MLX9064x sensor:
+TITLE_CONFIRM_MLX_VARIANT=Confirm MLX9064x sensor variant
+MSG_CONFIRM_MLX_VARIANT=Set and save this board's own MLX9064x sensor variant to:\n\n  {type}\n\nThis is a one-time hardware-configuration setting, only meaningful when the expansion board type is Advanced or Basic+MLX9064x - it persists across power cycles until explicitly changed again. Proceed?
+LOG_MLX_VARIANT_NO_RESPONSE=MLX9064x sensor variant: no response (older firmware, or board not connected).
+LOG_MLX_VARIANT_VALUE=MLX9064x sensor variant: {type}
+LOG_MLX_VARIANT_QUERY_FAILED=MLX9064x sensor variant query failed: {e}
+LOG_MLX_VARIANT_SAVED_CONFIRMED=MLX9064x sensor variant saved and confirmed: {type}
+LOG_MLX_VARIANT_MISMATCH=MLX9064x sensor variant set to {value}, but board reports {confirmed} - the write may not have taken. Query again to check.
+LOG_MLX_VARIANT_NO_CONFIRMATION=MLX9064x sensor variant: sent, but no confirmation came back (older firmware, or board not connected).
+LOG_MLX_VARIANT_SAVE_FAILED=MLX9064x sensor variant save failed: {e}

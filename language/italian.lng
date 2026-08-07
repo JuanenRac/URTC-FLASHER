@@ -267,3 +267,15 @@ LOG_DEVICE_SERIAL_SAVED_CONFIRMED=Numero di serie salvato e confermato: {serial}
 LOG_DEVICE_SERIAL_MISMATCH=Numero di serie impostato a {value}, ma la scheda riporta {confirmed} - la scrittura potrebbe non essere andata a buon fine. Interroga di nuovo per verificare.
 LOG_DEVICE_SERIAL_NO_CONFIRMATION=Numero di serie: inviato, ma nessuna conferma ricevuta (firmware datato, o scheda non connessa).
 LOG_DEVICE_SERIAL_SAVE_FAILED=Salvataggio del numero di serie non riuscito: {e}
+
+# MLX9064x sensor variant control (0x1A6/0x1A7) - added alongside expansion_board_type
+LBL_MLX_SENSOR_VARIANT=Sensore MLX9064x:
+TITLE_CONFIRM_MLX_VARIANT=Conferma variante sensore MLX9064x
+MSG_CONFIRM_MLX_VARIANT=Imposta e salva la variante del sensore MLX9064x di questa scheda su:\n\n  {type}\n\nQuesta e un'impostazione di configurazione hardware una tantum, rilevante solo quando il tipo di scheda di espansione e Advanced o Basic+MLX9064x - persiste tra i cicli di accensione fino a quando non viene modificata di nuovo esplicitamente. Procedere?
+LOG_MLX_VARIANT_NO_RESPONSE=Variante sensore MLX9064x: nessuna risposta (firmware precedente, o scheda non connessa).
+LOG_MLX_VARIANT_VALUE=Variante sensore MLX9064x: {type}
+LOG_MLX_VARIANT_QUERY_FAILED=Interrogazione variante sensore MLX9064x non riuscita: {e}
+LOG_MLX_VARIANT_SAVED_CONFIRMED=Variante sensore MLX9064x salvata e confermata: {type}
+LOG_MLX_VARIANT_MISMATCH=Variante sensore MLX9064x impostata su {value}, ma la scheda riporta {confirmed} - la scrittura potrebbe non essere andata a buon fine. Interroga di nuovo per verificare.
+LOG_MLX_VARIANT_NO_CONFIRMATION=Variante sensore MLX9064x: inviato, ma nessuna conferma ricevuta (firmware precedente, o scheda non connessa).
+LOG_MLX_VARIANT_SAVE_FAILED=Salvataggio variante sensore MLX9064x non riuscito: {e}

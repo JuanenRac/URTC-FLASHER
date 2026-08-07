@@ -267,3 +267,15 @@ LOG_DEVICE_SERIAL_SAVED_CONFIRMED=Numero de serie guardado y confirmado: {serial
 LOG_DEVICE_SERIAL_MISMATCH=Numero de serie establecido a {value}, pero la placa reporta {confirmed} - es posible que la escritura no se haya aplicado. Consulta de nuevo para verificar.
 LOG_DEVICE_SERIAL_NO_CONFIRMATION=Numero de serie: enviado, pero no llego confirmacion (firmware antiguo, o placa no conectada).
 LOG_DEVICE_SERIAL_SAVE_FAILED=Fallo al guardar el numero de serie: {e}
+
+# MLX9064x sensor variant control (0x1A6/0x1A7) - added alongside expansion_board_type
+LBL_MLX_SENSOR_VARIANT=Sensor MLX9064x:
+TITLE_CONFIRM_MLX_VARIANT=Confirmar variante de sensor MLX9064x
+MSG_CONFIRM_MLX_VARIANT=Establecer y guardar la variante de sensor MLX9064x de esta placa como:\n\n  {type}\n\nEsto es un ajuste de configuracion de hardware unico, solo relevante cuando el tipo de placa de expansion es Advanced o Basic+MLX9064x - persiste entre ciclos de encendido hasta que se cambie explicitamente de nuevo. ¿Continuar?
+LOG_MLX_VARIANT_NO_RESPONSE=Variante de sensor MLX9064x: sin respuesta (firmware antiguo, o placa no conectada).
+LOG_MLX_VARIANT_VALUE=Variante de sensor MLX9064x: {type}
+LOG_MLX_VARIANT_QUERY_FAILED=Consulta de variante de sensor MLX9064x fallida: {e}
+LOG_MLX_VARIANT_SAVED_CONFIRMED=Variante de sensor MLX9064x guardada y confirmada: {type}
+LOG_MLX_VARIANT_MISMATCH=Variante de sensor MLX9064x establecida en {value}, pero la placa reporta {confirmed} - puede que la escritura no se haya aplicado. Consulta de nuevo para verificar.
+LOG_MLX_VARIANT_NO_CONFIRMATION=Variante de sensor MLX9064x: enviado, pero no llego confirmacion (firmware antiguo, o placa no conectada).
+LOG_MLX_VARIANT_SAVE_FAILED=Guardado de variante de sensor MLX9064x fallido: {e}

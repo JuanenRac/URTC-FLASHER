@@ -22,11 +22,13 @@ import flasher_config
 from flasher_config import (
     _, _CONFIG_LOADED, APP_FLASH_ADDR, APP_MAX_SIZE, AVAILABLE_LANGUAGES, BANNER_IMAGE_PATH,
     BOOTLOADER_FLASH_ADDR, BOOTLOADER_MAX_SIZE, CONFIG_FILE_PATH, DEFAULT_LANGUAGE,
-    EXPANSION_BOARD_TYPES, FIRMWARE_FOLDER, FIRMWARE_VERSION_MAJOR, FIRMWARE_VERSION_MINOR,
+    EXPANSION_BOARD_TYPES, MLX_SENSOR_VARIANTS, FIRMWARE_FOLDER, FIRMWARE_VERSION_MAJOR, FIRMWARE_VERSION_MINOR,
     FLASHER_AUTHOR, FLASHER_VERSION,
     ICON_IMAGE_PATH, LOGS_FOLDER, PYOCD_TARGET_NAME, SLCAN_BITRATES,
     STATUS_NAMES, THIS_HARDWARE_ID, TOOL_NAMES, CAN_ID_SET_FREE_TOOL, CAN_ID_FREE_TOOL_CONFIG_RESP,
     CAN_ID_SET_DEVICE_SERIAL, CAN_ID_PERIPHERAL_INFO_RESP,
+    CAN_ID_SET_EXPANSION_TYPE, CAN_ID_EXPANSION_TYPE_RESP,
+    CAN_ID_SET_MLX_VARIANT, CAN_ID_MLX_VARIANT_RESP,
     _center_geometry, _load_config_overrides, save_config,
 )
 from flasher_transports import SLCAN, SLCANError, SocketCAN, list_socketcan_interfaces
@@ -196,6 +198,30 @@ class FlasherGUI:
         ttk.Button(exp_btn_row, text=_("BTN_QUERY"), command=self.query_expansion_board_type).pack(side="left")
         ttk.Button(exp_btn_row, text=_("BTN_SAVE"), command=self.save_expansion_board_type).pack(side="left", padx=(4, 0))
         self.query_btn_holder.append(self.expansion_type_combo)
+        row += 1
+
+        # Only meaningful when expansion_board_type is 3, 4, or 6 - see
+        # this control's own query/save handlers for the same reasoning
+        # already established for expansion_board_type above. Shown
+        # unconditionally rather than hidden/shown dynamically based on
+        # the expansion board dropdown's own current value, since the
+        # person may not have queried that value yet when this window
+        # first opens - a control that appears and disappears based on
+        # another control's own not-yet-known state would be more
+        # confusing than one that's simply always visible.
+        ttk.Label(conn_frame, text=_("LBL_MLX_SENSOR_VARIANT")).grid(row=row, column=0, sticky="w", **pad)
+        self.mlx_variant_var = tk.StringVar(value=MLX_SENSOR_VARIANTS[0])
+        self.mlx_variant_combo = ttk.Combobox(
+            conn_frame, textvariable=self.mlx_variant_var, values=MLX_SENSOR_VARIANTS,
+            state="readonly", width=32,
+        )
+        self.mlx_variant_combo.grid(row=row, column=1, columnspan=3, sticky="w", **pad)
+        mlx_btn_row = ttk.Frame(conn_frame)
+        mlx_btn_row.grid(row=row, column=4, **pad)
+        ttk.Button(mlx_btn_row, text=_("BTN_QUERY"), command=self.query_mlx_sensor_variant).pack(side="left")
+        ttk.Button(mlx_btn_row, text=_("BTN_SAVE"), command=self.save_mlx_sensor_variant).pack(side="left", padx=(4, 0))
+        self.query_btn_holder.append(self.mlx_variant_combo)
+        row += 1
         # --- Tabbed body: CAN-OTA and SWD/JTAG are two genuinely different
         # operating modes (an auto-recovering OTA update vs. a destructive
         # full-chip programming session) rarely used side by side in the
@@ -926,7 +952,7 @@ class FlasherGUI:
                     if frame is not None and frame[0] == CAN_ID_EXPANSION_TYPE_RESP and len(frame[1]) >= 1:
                         value = frame[1][0]
                         break
-                if value is None or value > 4:
+                if value is None or value > 6:
                     self.log(_("LOG_EXPANSION_TYPE_NO_RESPONSE"))
                     self.root.after(0, lambda: self.expansion_type_var.set(EXPANSION_BOARD_TYPES[0]))
                 else:
@@ -969,6 +995,74 @@ class FlasherGUI:
                     self.log(_("LOG_EXPANSION_TYPE_NO_CONFIRMATION"))
             except Exception as e:
                 self.log(_("LOG_EXPANSION_TYPE_SAVE_FAILED", e=e))
+            finally:
+                self.root.after(0, lambda: self._set_ui_busy_state(False))
+
+        threading.Thread(target=_worker, daemon=True).start()
+
+    # Same shape as query_expansion_board_type/save_expansion_board_type
+    # above, for CAN_ID_SET_MLX_VARIANT/CAN_ID_MLX_VARIANT_RESP
+    # (0x1A6/0x1A7) instead - see MLX_SENSOR_VARIANTS's own comment
+    # (flasher_config.py) for when this control actually matters.
+    def query_mlx_sensor_variant(self):
+        if self.transport is None:
+            messagebox.showerror(_("TITLE_NOT_CONNECTED"), _("MSG_CONNECT_FIRST"))
+            return
+        self._set_ui_busy_state(True)
+
+        def _worker():
+            try:
+                self.transport.send_frame(CAN_ID_MLX_VARIANT_RESP, b"")
+                deadline = time.time() + 1.5
+                value = None
+                while time.time() < deadline:
+                    frame = self.transport.read_frame(timeout=0.1)
+                    if frame is not None and frame[0] == CAN_ID_MLX_VARIANT_RESP and len(frame[1]) >= 1:
+                        value = frame[1][0]
+                        break
+                if value is None or value > 2:
+                    self.log(_("LOG_MLX_VARIANT_NO_RESPONSE"))
+                    self.root.after(0, lambda: self.mlx_variant_var.set(MLX_SENSOR_VARIANTS[0]))
+                else:
+                    self.log(_("LOG_MLX_VARIANT_VALUE", type=MLX_SENSOR_VARIANTS[value]))
+                    self.root.after(0, lambda: self.mlx_variant_var.set(MLX_SENSOR_VARIANTS[value]))
+            except Exception as e:
+                self.log(_("LOG_MLX_VARIANT_QUERY_FAILED", e=e))
+            finally:
+                self.root.after(0, lambda: self._set_ui_busy_state(False))
+
+        threading.Thread(target=_worker, daemon=True).start()
+
+    def save_mlx_sensor_variant(self):
+        if self.transport is None:
+            messagebox.showerror(_("TITLE_NOT_CONNECTED"), _("MSG_CONNECT_FIRST"))
+            return
+        value = MLX_SENSOR_VARIANTS.index(self.mlx_variant_var.get())
+        if not messagebox.askyesno(
+            _("TITLE_CONFIRM_MLX_VARIANT"),
+            _("MSG_CONFIRM_MLX_VARIANT", type=MLX_SENSOR_VARIANTS[value]),
+        ):
+            return
+        self._set_ui_busy_state(True)
+
+        def _worker():
+            try:
+                self.transport.send_frame(CAN_ID_SET_MLX_VARIANT, bytes([value]))
+                deadline = time.time() + 1.5
+                confirmed = None
+                while time.time() < deadline:
+                    frame = self.transport.read_frame(timeout=0.1)
+                    if frame is not None and frame[0] == CAN_ID_MLX_VARIANT_RESP and len(frame[1]) >= 1:
+                        confirmed = frame[1][0]
+                        break
+                if confirmed == value:
+                    self.log(_("LOG_MLX_VARIANT_SAVED_CONFIRMED", type=MLX_SENSOR_VARIANTS[value]))
+                elif confirmed is not None:
+                    self.log(_("LOG_MLX_VARIANT_MISMATCH", value=value, confirmed=confirmed))
+                else:
+                    self.log(_("LOG_MLX_VARIANT_NO_CONFIRMATION"))
+            except Exception as e:
+                self.log(_("LOG_MLX_VARIANT_SAVE_FAILED", e=e))
             finally:
                 self.root.after(0, lambda: self._set_ui_busy_state(False))
 

@@ -26,6 +26,8 @@ CAN_ID_FRAM_STATE_RESP = 0x191   # Answers CAN_ID_QUERY_FRAM_STATE, also sent af
 CAN_ID_ERASE_FRAM = 0x192        # Magic-payload erase - see ERASE_FRAM_MAGIC below
 CAN_ID_SET_EXPANSION_TYPE = 0x1A0  # Sets/persists which CONN_EXPANSION variant is installed
 CAN_ID_EXPANSION_TYPE_RESP = 0x1A1  # Query, or the response to setting it - see EXPANSION.TXT
+CAN_ID_SET_MLX_VARIANT = 0x1A6  # Sets/persists which MLX9064x family member is installed
+CAN_ID_MLX_VARIANT_RESP = 0x1A7  # Query, or the response to setting it - see CANBUS.TXT
 CAN_ID_SET_FREE_TOOL = 0x1A2  # Sets/persists free_tool_selection - see EEPROM.TXT section 5
 CAN_ID_FREE_TOOL_CONFIG_RESP = 0x1A3  # Query, or the response to setting it - carries raw ID-jumper reading too
 CAN_ID_SET_DEVICE_SERIAL = 0x1A4  # Sets/persists device_serial_number - see EEPROM.TXT section 6
@@ -33,14 +35,27 @@ CAN_ID_PERIPHERAL_INFO_RESP = 0x1A5  # Query, or the response to setting it - ca
 CAN_ID_SET_FREE_TOOL = 0x1A2  # Sets/persists free_tool_selection - see EEPROM.TXT section 5
 CAN_ID_FREE_TOOL_RESP = 0x1A3  # Query, or the response to setting it
 
-# Index in this list matches the value URTC actually stores (0-4) - see
+# Index in this list matches the value URTC actually stores (0-6) - see
 # EXPANSION.TXT for what each configuration is.
 EXPANSION_BOARD_TYPES = [
     "0 - None installed",
     "1 - Basic, TMC2209",
     "2 - Basic, TMC5160A",
-    "3 - Advanced, TMC2209 + STM32F051T8",
-    "4 - Advanced, TMC5160A + STM32F051T8",
+    "3 - Advanced, TMC2209 + STM32F303CBT6",
+    "4 - Advanced, TMC5160A + STM32F303CBT6",
+    "5 - Basic, ADS1115 only (direct connection)",
+    "6 - Basic, MLX9064x only (direct connection)",
+]
+
+# Index in this list matches MLX_VARIANT_* on the board (0-2) - see
+# EEPROM.TXT section 6 and CANBUS.TXT's own 0x1A6/0x1A7. Only meaningful
+# when expansion_board_type is 3, 4, or 6 (an Advanced variant, or the
+# Basic+MLX9064x variant) - ignored by the firmware on every other
+# expansion_board_type, since there's no MLX9064x sensor to configure.
+MLX_SENSOR_VARIANTS = [
+    "0 - MLX90640 (32x24)",
+    "1 - MLX90641 (16x12)",
+    "2 - MLX90642 (32x24, onboard calc)",
 ]
 ERASE_FRAM_MAGIC = bytes([0xE3, 0xA5, 0xE0, 0xFF])
 CAN_ID_BOOTLOADER_VERSION_RESPONSE = 0x7FA  # sent only by the bootloader, alongside 0x7F9, when it's the one answering
