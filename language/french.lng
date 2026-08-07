@@ -279,3 +279,50 @@ LOG_MLX_VARIANT_SAVED_CONFIRMED=Variante du capteur MLX9064x enregistree et conf
 LOG_MLX_VARIANT_MISMATCH=Variante du capteur MLX9064x definie sur {value}, mais la carte indique {confirmed} - l'ecriture n'a peut-etre pas ete prise en compte. Interrogez a nouveau pour verifier.
 LOG_MLX_VARIANT_NO_CONFIRMATION=Variante du capteur MLX9064x : envoyee, mais aucune confirmation n'est revenue (firmware plus ancien, ou carte non connectee).
 LOG_MLX_VARIANT_SAVE_FAILED=Echec de l'enregistrement de la variante du capteur MLX9064x : {e}
+
+# Expansion slave CAN-OTA flashing (0x210-0x218 relay)
+LBL_FLASH_TARGET=Cible du flash :
+OPT_TARGET_MASTER=Cette carte (principale)
+OPT_TARGET_SLAVE=Esclave d'extension
+HELP_FLASH_TARGET_SLAVE=N'atteint quelque chose que sur une variante de carte d'extension Advanced (TMC2209+STM32F303CBT6 ou TMC5160A+STM32F303CBT6) - relaye via le pont I2C de cette carte (0x210-0x218 dans CANBUS.TXT), pas une connexion directe. « Effacer F-RAM » ne s'applique pas a lui - la puce esclave n'a pas de stockage persistant propre.
+MSG_CONFIRM_FLASH_TARGET=Sur le point de flasher : {target}.
+
+Ceci ecrasera le firmware actuellement en cours d'execution. Assurez-vous d'avoir selectionne le bon fichier pour cette cible specifique. Continuer ?
+LOG_SENDING_SLAVE_BOOTLOADER_TRIGGER=Envoi du declencheur de bootloader a l'esclave d'extension (0x210, relaye via I2C)...
+LOG_SENDING_SLAVE_START_UPDATE=Envoi du demarrage de mise a jour a l'esclave d'extension (0x211)...
+LOG_SLAVE_FIRMWARE_HARDWAREID=HardwareID de l'esclave d'extension : 0x{hw_id:08X}
+LOG_SLAVE_PROGRESS=Envoye {offset}/{size} octets a l'esclave d'extension (sa propre progression rapportee : {slave_pct}%)
+LOG_SLAVE_TRANSFER_COMPLETE=Transfert vers l'esclave d'extension termine : {size} octets en {elapsed:.1f}s ({kbps:.1f} Ko/s)
+LOG_SLAVE_UPDATE_CONFIRMED=Mise a jour de l'esclave d'extension verifiee et confirmee.
+LOG_SLAVE_VERIFY_FAILED=L'esclave d'extension a signale un echec de verification (taille, CRC32, HMAC ou HardwareID non concordants sur son propre emplacement de sauvegarde).
+LOG_SLAVE_GENERIC_ERROR=L'esclave d'extension a signale un statut d'erreur generique.
+
+# SWD/JTAG target chip selector (main board / expansion slave)
+LBL_SWD_TARGET=Puce cible :
+HELP_SWD_TARGET_SLAVE=La sonde doit etre physiquement cablee a la puce definie ici - contrairement a CAN-OTA, aucun pont ne permet a une seule connexion d'atteindre les deux. STM32F303CC (carte principale) et STM32F303CBT6 (esclave d'extension) ont des adresses/tailles de flash differentes et des noms de cible pyOCD differents, appliques automatiquement lors du changement de cette selection - voir PINOUT_SLAVE.txt pour l'emplacement des broches SWD de l'esclave d'extension.
+
+# GitHub firmware download
+BTN_CLOSE=Fermer
+BTN_DOWNLOAD_FROM_GITHUB=Telecharger depuis GitHub...
+BTN_DOWNLOAD_SELECTED=Telecharger la Selection
+TITLE_DOWNLOAD_FROM_GITHUB=Telecharger le Firmware depuis GitHub
+TITLE_FILE_EXISTS=Le Fichier Existe Deja
+MSG_GITHUB_FILE_EXISTS_OVERWRITE={name} existe deja dans votre dossier firmware. Ecraser avec la version de GitHub ?
+LBL_GITHUB_LOADING=Chargement de la liste des fichiers depuis github.com/JuanenRac/URTC...
+LBL_GITHUB_EMPTY=Aucun fichier trouve dans le dossier firmware/ du depot.
+LBL_GITHUB_LOADED_COUNT={count} fichier(s) disponible(s).
+LBL_GITHUB_DOWNLOADING_NAME=Telechargement de {name}...
+LBL_GITHUB_DOWNLOAD_DONE={name} telecharge - maintenant disponible dans la liste de firmware ci-dessus.
+LOG_GITHUB_FETCHING_LIST=Recuperation de la liste des fichiers firmware depuis GitHub...
+LOG_GITHUB_LIST_COUNT=GitHub a retourne {count} fichier(s) firmware.
+LOG_GITHUB_DOWNLOADING=Telechargement de {name} depuis GitHub...
+LOG_GITHUB_DOWNLOAD_COMPLETE={name} telecharge ({size} octets).
+ERR_GITHUB_RATE_LIMITED=Limite de frequence de l'API GitHub atteinte (60 requetes/heure sans authentification) - attendez et reessayez.
+ERR_GITHUB_NOT_FOUND=Le depot ou son propre dossier firmware/ n'a pas ete trouve (github.com/JuanenRac/URTC) - il a peut-etre ete deplace, ou n'existe pas encore.
+ERR_GITHUB_HTTP_ERROR=GitHub a retourne une erreur HTTP (code {code}).
+ERR_GITHUB_NETWORK=Impossible de joindre GitHub - {reason}. Verifiez votre propre connexion internet.
+ERR_GITHUB_TIMEOUT=Delai de connexion a GitHub depasse.
+ERR_GITHUB_BAD_RESPONSE=La reponse de GitHub n'etait pas un JSON valide - elle affiche peut-etre une page d'erreur au lieu de la liste de fichiers attendue.
+ERR_GITHUB_UNEXPECTED_SHAPE=La reponse de GitHub n'avait pas le format attendu pour une liste de dossier.
+ERR_GITHUB_WRITE_FAILED=Impossible d'ecrire le fichier telecharge - {reason}.
+ERR_GITHUB_UNEXPECTED=Erreur inattendue : {e}

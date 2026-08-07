@@ -19,6 +19,26 @@ CAN_ID_END_UPDATE       = 0x7F4
 CAN_ID_STATUS           = 0x7F5
 CAN_ID_HEARTBEAT        = 0x7F6
 CAN_ID_HMAC_CHUNK       = 0x7F7
+
+# Expansion slave chip's own OTA relay - same overall flow as the main
+# board's own 0x7F0-0x7F7 above, but reached via the I2C link bridge
+# this board already bit-bangs to the slave, not a direct CAN peripheral
+# on the slave chip itself (it has none) - see CANBUS.TXT's own
+# 0x210-0x218 section for the full protocol. No page-ACK equivalent
+# exists here (0x213's own I2C write either completes or fails
+# synchronously within that same transaction, no separate confirmation
+# needed the way a real CAN write-and-forget does) - see
+# flash_slave() in flasher_protocol.py for how progress is tracked
+# instead (polling 0x216).
+CAN_ID_SLAVE_ENTER_BOOTLOADER = 0x210
+CAN_ID_SLAVE_START_UPDATE     = 0x211
+CAN_ID_SLAVE_HMAC_CHUNK       = 0x212
+CAN_ID_SLAVE_DATA             = 0x213
+CAN_ID_SLAVE_END_UPDATE       = 0x214
+CAN_ID_SLAVE_STATUS           = 0x215
+CAN_ID_SLAVE_PROGRESS         = 0x216
+CAN_ID_SLAVE_VERSION_RESP_1   = 0x217
+CAN_ID_SLAVE_VERSION_RESP_2   = 0x218
 CAN_ID_QUERY_VERSION    = 0x7F8
 CAN_ID_VERSION_RESPONSE = 0x7F9
 CAN_ID_QUERY_FRAM_STATE = 0x190  # Query the FM24CL64B's recovered state (application-side, not the bootloader)
@@ -47,15 +67,20 @@ EXPANSION_BOARD_TYPES = [
     "6 - Basic, MLX9064x only (direct connection)",
 ]
 
-# Index in this list matches MLX_VARIANT_* on the board (0-2) - see
+# Index in this list matches MLX_VARIANT_* on the board (0-3) - see
 # EEPROM.TXT section 6 and CANBUS.TXT's own 0x1A6/0x1A7. Only meaningful
 # when expansion_board_type is 3, 4, or 6 (an Advanced variant, or the
 # Basic+MLX9064x variant) - ignored by the firmware on every other
 # expansion_board_type, since there's no MLX9064x sensor to configure.
+# 0 deliberately means "no sensor configured" rather than defaulting to
+# any real sensor - a physically-populated MLX90640 needs this set
+# explicitly, same one-time hardware-configuration step
+# expansion_board_type itself already requires.
 MLX_SENSOR_VARIANTS = [
-    "0 - MLX90640 (32x24)",
-    "1 - MLX90641 (16x12)",
-    "2 - MLX90642 (32x24, onboard calc)",
+    "0 - None installed",
+    "1 - MLX90640 (32x24)",
+    "2 - MLX90641 (16x12)",
+    "3 - MLX90642 (32x24, onboard calc)",
 ]
 ERASE_FRAM_MAGIC = bytes([0xE3, 0xA5, 0xE0, 0xFF])
 CAN_ID_BOOTLOADER_VERSION_RESPONSE = 0x7FA  # sent only by the bootloader, alongside 0x7F9, when it's the one answering
@@ -90,6 +115,7 @@ VERIFY_FAIL_REASONS = {
 # BOOTLOADER.C, change it here too - the two are not automatically kept in
 # sync.
 THIS_HARDWARE_ID = 0x0303CC01  # STM32F303CCT6, URTC board revision 1
+SLAVE_HARDWARE_ID = 0x0303CB01  # STM32F303CBT6, expansion slave chip - see slave_common.h's own THIS_HARDWARE_ID, verified against the real source rather than assumed to differ only in the last hex digit
 FIRMWARE_VERSION_MAJOR = 1
 FIRMWARE_VERSION_MINOR = 0
 
@@ -108,6 +134,7 @@ HMAC_KEY = bytes([
 ])
 
 APP_MAX_SIZE = 112 * 1024
+SLAVE_APP_MAX_SIZE = 54 * 1024  # matches STM32F303CBTx_SLAVEAPP.ld's own 54K main slot at 0x08005000 - verified against the real linker script, not assumed to match the main board's own 112K
 FLASH_PAGE_SIZE = 2048
 BITRATE_500K_SLCAN_CODE = "6"  # SLCAN's "Sx" bitrate codes: 6 = 500 kbit/s
 # Full standard SLCAN/Lawicel bitrate code table, for the bitrate selector
@@ -126,12 +153,30 @@ SLCAN_BITRATES = [
 BOOTLOADER_FLASH_ADDR = 0x08000000
 APP_FLASH_ADDR = 0x08008000
 BOOTLOADER_MAX_SIZE = 32 * 1024  # matches BOOTLOADER.C's own 32KB region, 0x08000000-0x08008000
+
+# Expansion slave chip's own SWD/JTAG addresses - genuinely different
+# memory map from the main board's own above (this chip is a
+# STM32F303CBT6, less flash than the main board's own STM32F303CCT6,
+# and its own bootloader/app regions sit at different offsets) -
+# verified against its own real linker scripts, not assumed to mirror
+# the main board's own.
+SLAVE_BOOTLOADER_FLASH_ADDR = 0x08000000  # matches STM32F303CBTx_SLAVEBOOT.ld's own 18K region
+SLAVE_APP_FLASH_ADDR = 0x08005000  # matches STM32F303CBTx_SLAVEAPP.ld's own 54K main slot
+SLAVE_BOOTLOADER_MAX_SIZE = 18 * 1024  # matches STM32F303CBTx_SLAVEBOOT.ld's own 18K region, 0x08000000-0x08005000
 # Verify this against `pyocd list --targets --name stm32f303` on the
 # machine actually running this - STM32 coverage in pyOCD is broad, but
 # this exact string wasn't confirmed against a live pyOCD install while
 # writing this. If it's not found, `pyocd pack install stm32f303cc`
 # (or the closest match `pyocd pack find` shows) pulls the CMSIS-Pack.
 PYOCD_TARGET_NAME = "stm32f303cc"
+# Same uncertainty and same fix as PYOCD_TARGET_NAME above, for the
+# expansion slave chip instead - `pyocd pack install stm32f303cb` (or
+# whatever `pyocd pack find stm32f303` actually shows) if this string
+# turns out wrong.
+SLAVE_PYOCD_TARGET_NAME = "stm32f303cb"
+# STM32F303CBT6's own total flash: 128KB, half the main board's own
+# STM32F303CCT6 (256KB) - same silicon family, smaller flash variant.
+SLAVE_TOTAL_FLASH_SIZE = 0x20000
 
 # firmware/ lives INSIDE tools/, not as a sibling - this keeps the whole
 # tools/ folder self-contained. Someone who just wants to flash a board

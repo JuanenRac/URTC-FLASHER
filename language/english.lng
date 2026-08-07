@@ -278,3 +278,50 @@ LOG_MLX_VARIANT_SAVED_CONFIRMED=MLX9064x sensor variant saved and confirmed: {ty
 LOG_MLX_VARIANT_MISMATCH=MLX9064x sensor variant set to {value}, but board reports {confirmed} - the write may not have taken. Query again to check.
 LOG_MLX_VARIANT_NO_CONFIRMATION=MLX9064x sensor variant: sent, but no confirmation came back (older firmware, or board not connected).
 LOG_MLX_VARIANT_SAVE_FAILED=MLX9064x sensor variant save failed: {e}
+
+# Expansion slave CAN-OTA flashing (0x210-0x218 relay)
+LBL_FLASH_TARGET=Flash target:
+OPT_TARGET_MASTER=This board (main)
+OPT_TARGET_SLAVE=Expansion slave
+HELP_FLASH_TARGET_SLAVE=Only reaches anything on an Advanced expansion board variant (TMC2209+STM32F303CBT6 or TMC5160A+STM32F303CBT6) - relayed through this board's own I2C bridge (CANBUS.TXT's own 0x210-0x218), not a direct connection. "Erase F-RAM" doesn't apply to it - the slave chip has no persistent storage of its own.
+MSG_CONFIRM_FLASH_TARGET=About to flash: {target}.
+
+This will overwrite the currently-running firmware. Make sure you selected the right file for this specific target. Continue?
+LOG_SENDING_SLAVE_BOOTLOADER_TRIGGER=Sending expansion slave bootloader trigger (0x210, relayed over I2C)...
+LOG_SENDING_SLAVE_START_UPDATE=Sending start update to expansion slave (0x211)...
+LOG_SLAVE_FIRMWARE_HARDWAREID=Expansion slave HardwareID: 0x{hw_id:08X}
+LOG_SLAVE_PROGRESS=Sent {offset}/{size} bytes to expansion slave (its own reported progress: {slave_pct}%)
+LOG_SLAVE_TRANSFER_COMPLETE=Expansion slave transfer complete: {size} bytes in {elapsed:.1f}s ({kbps:.1f} KB/s)
+LOG_SLAVE_UPDATE_CONFIRMED=Expansion slave update verified and confirmed.
+LOG_SLAVE_VERIFY_FAILED=Expansion slave reported verification failure (size, CRC32, HMAC, or HardwareID mismatch on its own backup slot).
+LOG_SLAVE_GENERIC_ERROR=Expansion slave reported a generic error status.
+
+# SWD/JTAG target chip selector (main board / expansion slave)
+LBL_SWD_TARGET=Target chip:
+HELP_SWD_TARGET_SLAVE=The probe must be physically wired to whichever chip this is set to - unlike CAN-OTA, there's no bridge that lets one connection reach both. STM32F303CC (main board) and STM32F303CBT6 (expansion slave) have different flash addresses/sizes and different pyOCD target names, applied automatically once you switch this - see PINOUT_SLAVE.txt for the expansion slave's own SWD pin locations.
+
+# GitHub firmware download
+BTN_CLOSE=Close
+BTN_DOWNLOAD_FROM_GITHUB=Download from GitHub...
+BTN_DOWNLOAD_SELECTED=Download Selected
+TITLE_DOWNLOAD_FROM_GITHUB=Download Firmware from GitHub
+TITLE_FILE_EXISTS=File Already Exists
+MSG_GITHUB_FILE_EXISTS_OVERWRITE={name} already exists in your firmware folder. Overwrite it with the version from GitHub?
+LBL_GITHUB_LOADING=Loading file list from github.com/JuanenRac/URTC...
+LBL_GITHUB_EMPTY=No files found in the firmware/ folder of the repository.
+LBL_GITHUB_LOADED_COUNT={count} file(s) available.
+LBL_GITHUB_DOWNLOADING_NAME=Downloading {name}...
+LBL_GITHUB_DOWNLOAD_DONE={name} downloaded - now available in the firmware list above.
+LOG_GITHUB_FETCHING_LIST=Fetching firmware file list from GitHub...
+LOG_GITHUB_LIST_COUNT=GitHub returned {count} firmware file(s).
+LOG_GITHUB_DOWNLOADING=Downloading {name} from GitHub...
+LOG_GITHUB_DOWNLOAD_COMPLETE={name} downloaded ({size} bytes).
+ERR_GITHUB_RATE_LIMITED=GitHub's own API rate limit was hit (60 requests/hour when not authenticated) - wait a while and try again.
+ERR_GITHUB_NOT_FOUND=The repository or its own firmware/ folder wasn't found (github.com/JuanenRac/URTC) - it may have moved, or not exist yet.
+ERR_GITHUB_HTTP_ERROR=GitHub returned an HTTP error (code {code}).
+ERR_GITHUB_NETWORK=Could not reach GitHub - {reason}. Check your own internet connection.
+ERR_GITHUB_TIMEOUT=Connection to GitHub timed out.
+ERR_GITHUB_BAD_RESPONSE=GitHub's own response wasn't valid JSON - it may be showing an error page instead of the expected file listing.
+ERR_GITHUB_UNEXPECTED_SHAPE=GitHub's own response wasn't in the expected format for a folder listing.
+ERR_GITHUB_WRITE_FAILED=Couldn't write the downloaded file - {reason}.
+ERR_GITHUB_UNEXPECTED=Unexpected error: {e}

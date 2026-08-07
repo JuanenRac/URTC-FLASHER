@@ -79,6 +79,7 @@ python -m PyInstaller --onefile --windowed --noconfirm --name "URTC_Flasher" ^
     --hidden-import flasher_swd_tools ^
     --hidden-import flasher_validation ^
     --hidden-import flasher_protocol ^
+    --hidden-import flasher_github ^
     --hidden-import flasher_gui ^
     urtc_flasher.py
 if not exist dist\URTC_Flasher.exe (
@@ -101,11 +102,6 @@ if exist language (
     xcopy /E /I /Y language dist\language >nul
     echo       Copied language\ into dist\language\
 )
-REM README.md and LICENSE: read directly by the Help menu's Readme/License
-REM entries (flasher_config.base_dir - next to the .exe, same reasoning as
-REM firmware/language above). Missing from dist/ meant those menu entries
-REM had nothing to open in a built .exe, even though they worked fine
-REM running from source.
 REM README.md and LICENSE: read directly by the Help menu's Readme/License
 REM entries (flasher_config.base_dir - next to the .exe, same reasoning as
 REM firmware/language above). Missing from dist/ meant those menu entries

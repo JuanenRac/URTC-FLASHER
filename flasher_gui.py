@@ -25,6 +25,8 @@ from flasher_config import (
     EXPANSION_BOARD_TYPES, MLX_SENSOR_VARIANTS, FIRMWARE_FOLDER, FIRMWARE_VERSION_MAJOR, FIRMWARE_VERSION_MINOR,
     FLASHER_AUTHOR, FLASHER_VERSION,
     ICON_IMAGE_PATH, LOGS_FOLDER, PYOCD_TARGET_NAME, SLCAN_BITRATES,
+    SLAVE_BOOTLOADER_FLASH_ADDR, SLAVE_APP_FLASH_ADDR, SLAVE_BOOTLOADER_MAX_SIZE,
+    SLAVE_APP_MAX_SIZE, SLAVE_PYOCD_TARGET_NAME, SLAVE_TOTAL_FLASH_SIZE,
     STATUS_NAMES, THIS_HARDWARE_ID, TOOL_NAMES, CAN_ID_SET_FREE_TOOL, CAN_ID_FREE_TOOL_CONFIG_RESP,
     CAN_ID_SET_DEVICE_SERIAL, CAN_ID_PERIPHERAL_INFO_RESP,
     CAN_ID_SET_EXPANSION_TYPE, CAN_ID_EXPANSION_TYPE_RESP,
@@ -33,6 +35,7 @@ from flasher_config import (
 )
 from flasher_transports import SLCAN, SLCANError, SocketCAN, list_socketcan_interfaces
 from flasher_protocol import URTCFlasher, FlashError
+from flasher_github import list_firmware_files, download_file, GitHubDownloadError
 from flasher_swd_tools import SWDFlashError, PyOCDCLI, CubeProgrammerCLI
 from flasher_validation import validate_firmware_file, validate_swd_image_file
 
@@ -257,9 +260,16 @@ class FlasherGUI:
         self.fw_tree.heading("file", text=_("COL_FILE"))
         self.fw_tree.heading("size", text=_("COL_SIZE"))
         self.fw_tree.heading("status", text=_("COL_STATUS"))
-        self.fw_tree.column("file", width=160)
-        self.fw_tree.column("size", width=60, anchor="e")
-        self.fw_tree.column("status", width=150)
+        # "file" gets the lion's share of the width and stretches with
+        # the window - filenames here can run long (this project's own
+        # "URTC_V1.1_F303CC.bin"-style naming, or whatever a future
+        # GitHub download brings in), and this column was cramped at
+        # its old 160px, forcing long names to truncate. size/status
+        # stay fixed-width and non-stretching, since neither one's own
+        # content grows with window width the way a filename might.
+        self.fw_tree.column("file", width=320, stretch=True)
+        self.fw_tree.column("size", width=70, anchor="e", stretch=False)
+        self.fw_tree.column("status", width=170, stretch=False)
         self.fw_tree.grid(row=1, column=0, columnspan=3, sticky="ew", padx=8, pady=2)
         self.fw_tree.bind("<<TreeviewSelect>>", self.select_detected_firmware)
         self.fw_tree.tag_configure("invalid", foreground="red")
@@ -267,6 +277,7 @@ class FlasherGUI:
 
         ttk.Label(fw_frame, text=_("LBL_OR_BROWSE_ELSEWHERE")).grid(row=2, column=0, sticky="w", **pad)
         ttk.Button(fw_frame, text=_("BTN_BROWSE_BIN"), command=self.browse_firmware).grid(row=2, column=1, sticky="w", **pad)
+        ttk.Button(fw_frame, text=_("BTN_DOWNLOAD_FROM_GITHUB"), command=self.open_github_download_dialog).grid(row=2, column=2, sticky="w", **pad)
 
         self.fw_label = ttk.Label(fw_frame, text=_("STATUS_NO_FILE_SELECTED"), foreground="gray", wraplength=350)
         self.fw_label.grid(row=3, column=0, columnspan=3, sticky="w", padx=8, pady=(0, 4))
@@ -274,34 +285,57 @@ class FlasherGUI:
         # --- Action frame (left column, bottom) ---
         act_frame = ttk.LabelFrame(canota_tab, text=_("TITLE_FLASH_BY_CAN_OTA"))
         act_frame.grid(row=1, column=0, sticky="new", **pad)
+
+        # Which chip this flash actually targets - the main board's own
+        # STM32F303CC (direct CAN), or the expansion slave's own
+        # STM32F303CBT6 (relayed through the main board's own I2C
+        # bridge, CANBUS.TXT's own 0x210-0x218) - only meaningful, and
+        # only actually reaches anything, when an Advanced expansion
+        # board is populated (see EXPANSION.TXT). Defaults to the main
+        # board, the far more common case.
+        self.flash_target_var = tk.StringVar(value="master")
+        target_row = ttk.Frame(act_frame)
+        target_row.grid(row=0, column=0, columnspan=3, sticky="w", **pad)
+        ttk.Label(target_row, text=_("LBL_FLASH_TARGET")).pack(side="left")
+        ttk.Radiobutton(target_row, text=_("OPT_TARGET_MASTER"), value="master",
+                         variable=self.flash_target_var, command=self._on_flash_target_change).pack(side="left", padx=(8, 0))
+        ttk.Radiobutton(target_row, text=_("OPT_TARGET_SLAVE"), value="slave",
+                         variable=self.flash_target_var, command=self._on_flash_target_change).pack(side="left", padx=(8, 0))
+        ttk.Label(
+            act_frame,
+            text=_("HELP_FLASH_TARGET_SLAVE"),
+            foreground="gray", wraplength=380, justify="left",
+        ).grid(row=1, column=0, columnspan=3, sticky="w", padx=8, pady=(0, 4))
+
         self.trigger_var = tk.BooleanVar(value=True)
         ttk.Checkbutton(
             act_frame,
             text=_("CHK_BOARD_RUNNING_APP"),
             variable=self.trigger_var,
-        ).grid(row=0, column=0, columnspan=3, sticky="w", **pad)
+        ).grid(row=2, column=0, columnspan=3, sticky="w", **pad)
         ttk.Label(
             act_frame,
             text=_("HELP_UNCHECK_IF_IN_BOOTLOADER"),
             foreground="gray", wraplength=380, justify="left",
-        ).grid(row=1, column=0, columnspan=3, sticky="w", padx=8)
+        ).grid(row=3, column=0, columnspan=3, sticky="w", padx=8)
 
         self.erase_fram_var = tk.BooleanVar(value=False)
-        ttk.Checkbutton(
+        self.erase_fram_check = ttk.Checkbutton(
             act_frame,
             text=_("CHK_ERASE_FRAM_BEFORE_FLASHING"),
             variable=self.erase_fram_var,
-        ).grid(row=2, column=0, columnspan=3, sticky="w", **pad)
+        )
+        self.erase_fram_check.grid(row=4, column=0, columnspan=3, sticky="w", **pad)
         ttk.Label(
             act_frame,
             text=_("HELP_ERASE_FRAM_OPTIONAL"),
             foreground="gray", wraplength=380, justify="left",
-        ).grid(row=3, column=0, columnspan=3, sticky="w", padx=8)
+        ).grid(row=5, column=0, columnspan=3, sticky="w", padx=8)
 
         self.flash_btn = ttk.Button(act_frame, text=_("BTN_FLASH_FIRMWARE"), command=self.start_flash)
-        self.flash_btn.grid(row=4, column=0, **pad)
+        self.flash_btn.grid(row=6, column=0, **pad)
         self.cancel_btn = ttk.Button(act_frame, text=_("BTN_CANCEL"), command=self.cancel_flash, state="disabled")
-        self.cancel_btn.grid(row=4, column=1, **pad)
+        self.cancel_btn.grid(row=6, column=1, **pad)
 
         # --- Free tool configuration (right column, top) - (0x1A2/0x1A3),
         # only consulted by a board whose ID jumpers read 11111 (0x1F,
@@ -364,11 +398,31 @@ class FlasherGUI:
         )
         swd_frame.pack(fill="both", expand=True, **pad)
 
+        # Which chip a probe is actually connected to - genuinely
+        # different silicon (STM32F303CC vs STM32F303CB), different
+        # flash addresses/sizes, and a different PyOCD target string.
+        # SWD/JTAG needs its own physical probe wired to whichever chip
+        # this is set to - unlike CAN-OTA, there's no bridge that lets
+        # one connection reach both chips here.
+        self.swd_target_var = tk.StringVar(value="master")
+        swd_target_row = ttk.Frame(swd_frame)
+        swd_target_row.grid(row=0, column=0, columnspan=3, sticky="w", **pad)
+        ttk.Label(swd_target_row, text=_("LBL_SWD_TARGET")).pack(side="left")
+        ttk.Radiobutton(swd_target_row, text=_("OPT_TARGET_MASTER"), value="master",
+                         variable=self.swd_target_var).pack(side="left", padx=(8, 0))
+        ttk.Radiobutton(swd_target_row, text=_("OPT_TARGET_SLAVE"), value="slave",
+                         variable=self.swd_target_var).pack(side="left", padx=(8, 0))
+        ttk.Label(
+            swd_frame,
+            text=_("HELP_SWD_TARGET_SLAVE"),
+            foreground="gray", wraplength=680, justify="left",
+        ).grid(row=1, column=0, columnspan=3, sticky="w", padx=8, pady=(0, 4))
+
         self._pyocd_ok = PyOCDCLI.available()
         self._cube_ok = CubeProgrammerCLI.available()
         self.swd_tool_var = tk.StringVar(value="pyocd" if self._pyocd_ok else "cube")
         tool_sub = ttk.Frame(swd_frame)
-        tool_sub.grid(row=0, column=0, columnspan=3, sticky="w", **pad)
+        tool_sub.grid(row=2, column=0, columnspan=3, sticky="w", **pad)
         ttk.Radiobutton(
             tool_sub, text=_("RADIO_PYOCD_BUILTIN") + ("" if self._pyocd_ok else " - not found"),
             value="pyocd", variable=self.swd_tool_var, state="normal" if self._pyocd_ok else "disabled",
@@ -397,49 +451,49 @@ class FlasherGUI:
                 swd_frame,
                 text=_("HELP_NEITHER_TOOL_FOUND"),
                 foreground="red", wraplength=680, justify="left",
-            ).grid(row=1, column=0, columnspan=3, sticky="w", padx=8)
+            ).grid(row=3, column=0, columnspan=3, sticky="w", padx=8)
 
-        ttk.Label(swd_frame, text=_("LBL_BOOTLOADER_FILE")).grid(row=2, column=0, sticky="w", **pad)
+        ttk.Label(swd_frame, text=_("LBL_BOOTLOADER_FILE")).grid(row=4, column=0, sticky="w", **pad)
         self.swd_bootloader_var = tk.StringVar()
-        ttk.Entry(swd_frame, textvariable=self.swd_bootloader_var, width=20).grid(row=2, column=1, sticky="ew", **pad)
-        ttk.Button(swd_frame, text=_("BTN_BROWSE"), command=self.browse_swd_bootloader).grid(row=2, column=2, **pad)
+        ttk.Entry(swd_frame, textvariable=self.swd_bootloader_var, width=20).grid(row=4, column=1, sticky="ew", **pad)
+        ttk.Button(swd_frame, text=_("BTN_BROWSE"), command=self.browse_swd_bootloader).grid(row=4, column=2, **pad)
 
-        ttk.Label(swd_frame, text=_("LBL_APPLICATION_FILE")).grid(row=3, column=0, sticky="w", **pad)
+        ttk.Label(swd_frame, text=_("LBL_APPLICATION_FILE")).grid(row=5, column=0, sticky="w", **pad)
         self.swd_app_var = tk.StringVar()
-        ttk.Entry(swd_frame, textvariable=self.swd_app_var, width=20).grid(row=3, column=1, sticky="ew", **pad)
-        ttk.Button(swd_frame, text=_("BTN_BROWSE"), command=self.browse_swd_app).grid(row=3, column=2, **pad)
+        ttk.Entry(swd_frame, textvariable=self.swd_app_var, width=20).grid(row=5, column=1, sticky="ew", **pad)
+        ttk.Button(swd_frame, text=_("BTN_BROWSE"), command=self.browse_swd_app).grid(row=5, column=2, **pad)
 
         self.swd_dry_run_var = tk.BooleanVar(value=True)
         ttk.Checkbutton(
             swd_frame,
             text=_("CHK_DRY_RUN"),
             variable=self.swd_dry_run_var,
-        ).grid(row=4, column=0, columnspan=3, sticky="w", padx=8)
+        ).grid(row=6, column=0, columnspan=3, sticky="w", padx=8)
 
         self.swd_backup_var = tk.BooleanVar(value=False)
         ttk.Checkbutton(
             swd_frame,
             text=_("CHK_BACKUP_BEFORE_ERASING"),
             variable=self.swd_backup_var,
-        ).grid(row=5, column=0, columnspan=3, sticky="w", padx=8)
+        ).grid(row=7, column=0, columnspan=3, sticky="w", padx=8)
 
         self.check_ob_btn = ttk.Button(
             swd_frame, text=_("BTN_CHECK_OPTION_BYTES"), command=self.start_check_option_bytes,
             state="normal" if self._cube_ok else "disabled",
         )
-        self.check_ob_btn.grid(row=6, column=0, columnspan=3, sticky="w", **pad)
+        self.check_ob_btn.grid(row=8, column=0, columnspan=3, sticky="w", **pad)
         ttk.Label(
             swd_frame,
             text=_("HELP_RDP_CHECK_READONLY")
                  + ("" if self._cube_ok else _("HELP_NEEDS_CUBEPROGRAMMER_SUFFIX")),
             foreground="gray", wraplength=680, justify="left",
-        ).grid(row=7, column=0, columnspan=3, sticky="w", padx=8)
+        ).grid(row=9, column=0, columnspan=3, sticky="w", padx=8)
 
         self.swd_flash_btn = ttk.Button(
             swd_frame, text=_("BTN_FLASH_COMPLETE_CHIP"), command=self.start_swd_flash,
             state="normal" if (self._pyocd_ok or self._cube_ok) else "disabled",
         )
-        self.swd_flash_btn.grid(row=8, column=0, columnspan=3, sticky="w", **pad)
+        self.swd_flash_btn.grid(row=10, column=0, columnspan=3, sticky="w", **pad)
         ttk.Label(
             swd_frame,
             text=_("HELP_ERASES_WHOLE_CHIP"),
@@ -574,7 +628,14 @@ class FlasherGUI:
 
     def _menu_show_github(self):
         import webbrowser
-        webbrowser.open("https://github.com/JuanenRac/URTC")
+        # This tool's own future dedicated repository, per the user's own
+        # explicit URL - not this project's monorepo (github.com/
+        # JuanenRac/URTC), which is where this tool's own source still
+        # physically lives as of this comment (the split described in
+        # this project's own audit trail hasn't happened yet). Pointing
+        # here now means this link is already correct the moment that
+        # split lands, rather than needing a separate follow-up change.
+        webbrowser.open("https://github.com/JuanenRac/URTC-FLASHER")
 
     def _show_text_window(self, title, text, width=90, height=30):
         """Shared plain-text viewer window - used by both the Readme and
@@ -783,7 +844,13 @@ class FlasherGUI:
 
         matches = []
         if os.path.isdir(FIRMWARE_FOLDER):
-            matches = sorted(glob.glob(os.path.join(FIRMWARE_FOLDER, "*.bin")))
+            all_bins = sorted(glob.glob(os.path.join(FIRMWARE_FOLDER, "*.bin")))
+            # Bootloaders never belong in this list - CAN-OTA only ever
+            # flashes application firmware (this board's own, or the
+            # expansion slave's own, once that path exists - see
+            # flash_slave_via_can_ota). A bootloader update needs
+            # SWD/JTAG (the other tab), not this one.
+            matches = [p for p in all_bins if "BOOTLOADER" not in os.path.basename(p).upper()]
 
         if not os.path.isdir(FIRMWARE_FOLDER):
             self.log(_("LOG_NO_FIRMWARE_FOLDER", folder=FIRMWARE_FOLDER))
@@ -858,6 +925,98 @@ class FlasherGUI:
         self.firmware_path = path
         self.fw_label.config(text=path, foreground="black" if is_valid else "red")
         self.fw_tree.selection_remove(self.fw_tree.selection())  # no detected-list item matches a manual browse
+
+    def open_github_download_dialog(self):
+        win = tk.Toplevel(self.root)
+        win.title(_("TITLE_DOWNLOAD_FROM_GITHUB"))
+        win.transient(self.root)
+        win.resizable(True, True)
+        win.geometry("560x360")
+        _center_geometry(win, 560, 360)
+
+        status_var = tk.StringVar(value=_("LBL_GITHUB_LOADING"))
+        ttk.Label(win, textvariable=status_var, foreground="gray").pack(anchor="w", padx=8, pady=(8, 4))
+
+        columns = ("name", "size")
+        tree = ttk.Treeview(win, columns=columns, show="headings", selectmode="browse")
+        tree.heading("name", text=_("COL_FILE"))
+        tree.heading("size", text=_("COL_SIZE"))
+        tree.column("name", width=380, stretch=True)
+        tree.column("size", width=100, anchor="e", stretch=False)
+        tree.pack(fill="both", expand=True, padx=8, pady=4)
+
+        btn_row = ttk.Frame(win)
+        btn_row.pack(fill="x", padx=8, pady=(4, 8))
+        progress = ttk.Progressbar(btn_row, mode="determinate", maximum=100)
+        progress.pack(side="left", fill="x", expand=True, padx=(0, 8))
+        download_btn = ttk.Button(btn_row, text=_("BTN_DOWNLOAD_SELECTED"), state="disabled")
+        download_btn.pack(side="left")
+        ttk.Button(btn_row, text=_("BTN_CLOSE"), command=win.destroy).pack(side="left", padx=(8, 0))
+
+        entries_by_iid = {}
+
+        def _load_list():
+            try:
+                entries = list_firmware_files(log=self.log)
+            except GitHubDownloadError as e:
+                self.root.after(0, lambda: status_var.set(str(e)))
+                return
+            except Exception as e:
+                self.root.after(0, lambda: status_var.set(_("ERR_GITHUB_UNEXPECTED", e=e)))
+                return
+
+            def _populate():
+                if not entries:
+                    status_var.set(_("LBL_GITHUB_EMPTY"))
+                    return
+                for entry in entries:
+                    size_kb = entry["size"] / 1024
+                    iid = tree.insert("", "end", values=(entry["name"], f"{size_kb:.1f} KB"))
+                    entries_by_iid[iid] = entry
+                status_var.set(_("LBL_GITHUB_LOADED_COUNT", count=len(entries)))
+            self.root.after(0, _populate)
+
+        def _on_select(_event=None):
+            download_btn.config(state="normal" if tree.selection() else "disabled")
+
+        tree.bind("<<TreeviewSelect>>", _on_select)
+
+        def _do_download():
+            selection = tree.selection()
+            if not selection:
+                return
+            entry = entries_by_iid.get(selection[0])
+            if entry is None:
+                return
+            if not os.path.isdir(FIRMWARE_FOLDER):
+                os.makedirs(FIRMWARE_FOLDER, exist_ok=True)
+            dest_path = os.path.join(FIRMWARE_FOLDER, entry["name"])
+            if os.path.isfile(dest_path) and not messagebox.askyesno(
+                _("TITLE_FILE_EXISTS"), _("MSG_GITHUB_FILE_EXISTS_OVERWRITE", name=entry["name"]),
+            ):
+                return
+            download_btn.config(state="disabled")
+            status_var.set(_("LBL_GITHUB_DOWNLOADING_NAME", name=entry["name"]))
+
+            def _download_worker():
+                try:
+                    download_file(
+                        entry["download_url"], dest_path, log=self.log,
+                        progress_cb=lambda pct: self.root.after(0, lambda: progress.configure(value=pct)),
+                    )
+                    self.root.after(0, lambda: status_var.set(_("LBL_GITHUB_DOWNLOAD_DONE", name=entry["name"])))
+                    self.root.after(0, self.scan_firmware_folder)
+                except GitHubDownloadError as e:
+                    self.root.after(0, lambda: status_var.set(str(e)))
+                except Exception as e:
+                    self.root.after(0, lambda: status_var.set(_("ERR_GITHUB_UNEXPECTED", e=e)))
+                finally:
+                    self.root.after(0, lambda: download_btn.config(state="normal"))
+
+            threading.Thread(target=_download_worker, daemon=True).start()
+
+        download_btn.config(command=_do_download)
+        threading.Thread(target=_load_list, daemon=True).start()
 
     def check_bus_activity(self):
         if self.transport is None:
@@ -1020,7 +1179,7 @@ class FlasherGUI:
                     if frame is not None and frame[0] == CAN_ID_MLX_VARIANT_RESP and len(frame[1]) >= 1:
                         value = frame[1][0]
                         break
-                if value is None or value > 2:
+                if value is None or value > 3:
                     self.log(_("LOG_MLX_VARIANT_NO_RESPONSE"))
                     self.root.after(0, lambda: self.mlx_variant_var.set(MLX_SENSOR_VARIANTS[0]))
                 else:
@@ -1299,6 +1458,18 @@ class FlasherGUI:
             state="disabled" if (busy or not (self._pyocd_ok or self._cube_ok)) else "normal"
         )
 
+    def _on_flash_target_change(self):
+        # The expansion slave chip has no F-RAM of its own (confirmed
+        # against its own real firmware source before this control was
+        # built - see this project's own audit trail) - "Erase F-RAM"
+        # is meaningless for it, disabled rather than left clickable and
+        # silently doing nothing.
+        if self.flash_target_var.get() == "slave":
+            self.erase_fram_var.set(False)
+            self.erase_fram_check.config(state="disabled")
+        else:
+            self.erase_fram_check.config(state="normal")
+
     def start_flash(self):
         if self.transport is None:
             messagebox.showerror(_("TITLE_NOT_CONNECTED"), _("MSG_CONNECT_FIRST"))
@@ -1309,9 +1480,10 @@ class FlasherGUI:
         if self._flash_thread and self._flash_thread.is_alive():
             messagebox.showerror(_("TITLE_BUSY"), _("MSG_FLASH_ALREADY_IN_PROGRESS"))
             return
+        target_label = _("OPT_TARGET_SLAVE") if self.flash_target_var.get() == "slave" else _("OPT_TARGET_MASTER")
         if not messagebox.askyesno(
             _("TITLE_CONFIRM_FLASH"),
-            _("MSG_CONFIRM_FLASH"),
+            _("MSG_CONFIRM_FLASH_TARGET", target=target_label),
         ):
             return
 
@@ -1335,14 +1507,19 @@ class FlasherGUI:
                 progress_cb=lambda pct: self.root.after(0, lambda: self.progress.configure(value=pct)),
                 stop_flag=lambda: self._stop_requested,
             )
-            if self.erase_fram_var.get():
-                if not self.trigger_var.get():
-                    self.log(_("LOG_SKIPPING_FRAM_ERASE"))
-                else:
-                    flasher.erase_fram()
-            if self.trigger_var.get():
-                flasher.trigger_bootloader_entry()
-            flasher.flash(self.firmware_path)
+            if self.flash_target_var.get() == "slave":
+                if self.trigger_var.get():
+                    flasher.trigger_slave_bootloader_entry()
+                flasher.flash_slave(self.firmware_path)
+            else:
+                if self.erase_fram_var.get():
+                    if not self.trigger_var.get():
+                        self.log(_("LOG_SKIPPING_FRAM_ERASE"))
+                    else:
+                        flasher.erase_fram()
+                if self.trigger_var.get():
+                    flasher.trigger_bootloader_entry()
+                flasher.flash(self.firmware_path)
             self.root.after(0, lambda: messagebox.showinfo(_("TITLE_SUCCESS"), _("MSG_FIRMWARE_UPDATE_COMPLETE")))
         except FlashError as e:
             self.log(_("LOG_FAILED", e=e))
@@ -1505,13 +1682,18 @@ class FlasherGUI:
         # Re-validated here too, not just in the Browse dialog above - the
         # path fields are plain text entries, so a manually typed or
         # pasted path would otherwise skip the check entirely.
-        ok, reason, _size = validate_swd_image_file(bootloader_path, BOOTLOADER_MAX_SIZE, "bootloader", BOOTLOADER_FLASH_ADDR)
+        is_slave = self.swd_target_var.get() == "slave"
+        boot_addr = SLAVE_BOOTLOADER_FLASH_ADDR if is_slave else BOOTLOADER_FLASH_ADDR
+        boot_max = SLAVE_BOOTLOADER_MAX_SIZE if is_slave else BOOTLOADER_MAX_SIZE
+        app_addr = SLAVE_APP_FLASH_ADDR if is_slave else APP_FLASH_ADDR
+        app_max = SLAVE_APP_MAX_SIZE if is_slave else APP_MAX_SIZE
+        ok, reason, _size = validate_swd_image_file(bootloader_path, boot_max, "bootloader", boot_addr)
         if not ok and not messagebox.askyesno(
             _("TITLE_BOOTLOADER_FILE_LOOKS_INVALID"),
             _("MSG_REASON_PROCEED_ANYWAY", reason=reason),
         ):
             return
-        ok, reason, _size = validate_swd_image_file(app_path, APP_MAX_SIZE, "application", APP_FLASH_ADDR)
+        ok, reason, _size = validate_swd_image_file(app_path, app_max, "application", app_addr)
         if not ok and not messagebox.askyesno(
             _("TITLE_APPLICATION_FILE_LOOKS_INVALID"),
             _("MSG_REASON_PROCEED_ANYWAY", reason=reason),
@@ -1559,21 +1741,30 @@ class FlasherGUI:
         self._set_ui_busy_state(True)
         self._swd_flash_thread = threading.Thread(
             target=self._swd_flash_worker,
-            args=(bootloader_path, app_path, self.swd_tool_var.get(), dry_run, probe_uid, backup_path),
+            args=(bootloader_path, app_path, self.swd_tool_var.get(), dry_run, probe_uid, backup_path, is_slave),
             daemon=True,
         )
         self._swd_flash_thread.start()
 
-    def _swd_flash_worker(self, bootloader_path, app_path, tool, dry_run, probe_uid=None, backup_path=None):
+    def _swd_flash_worker(self, bootloader_path, app_path, tool, dry_run, probe_uid=None, backup_path=None, is_slave=False):
         try:
+            if is_slave:
+                target_kwargs = {
+                    "bootloader_addr": SLAVE_BOOTLOADER_FLASH_ADDR,
+                    "app_addr": SLAVE_APP_FLASH_ADDR,
+                    "total_flash_size": SLAVE_TOTAL_FLASH_SIZE,
+                }
+            else:
+                target_kwargs = {}  # main board's own defaults already baked into full_chip_flash's own signature
             if tool == "pyocd":
                 programmer = PyOCDCLI(log=self.log)
+                pyocd_target = SLAVE_PYOCD_TARGET_NAME if is_slave else PYOCD_TARGET_NAME
                 programmer.full_chip_flash(bootloader_path, app_path, dry_run=dry_run, probe_uid=probe_uid,
-                                            backup_path=backup_path)
+                                            backup_path=backup_path, target=pyocd_target, **target_kwargs)
             else:
                 programmer = CubeProgrammerCLI(log=self.log)
                 programmer.full_chip_flash(bootloader_path, app_path, dry_run=dry_run, serial=probe_uid,
-                                            backup_path=backup_path)
+                                            backup_path=backup_path, **target_kwargs)
             if dry_run:
                 self.root.after(0, lambda: messagebox.showinfo(
                     _("TITLE_DRY_RUN_COMPLETE"), _("MSG_DRY_RUN_COMPLETE")))

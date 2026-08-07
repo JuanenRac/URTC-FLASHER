@@ -76,6 +76,7 @@ python3 -m PyInstaller --onefile --noconfirm --name "URTC_Flasher" \
     --hidden-import flasher_swd_tools \
     --hidden-import flasher_validation \
     --hidden-import flasher_protocol \
+    --hidden-import flasher_github \
     --hidden-import flasher_gui \
     urtc_flasher.py
 if [ ! -f dist/URTC_Flasher ]; then
@@ -100,11 +101,6 @@ if [ -d language ]; then
     cp -r language/. dist/language/
     echo "      Copied language/ into dist/language/"
 fi
-# README.md and LICENSE: read directly by the Help menu's Readme/License
-# entries (flasher_config.base_dir - next to the executable, same
-# reasoning as firmware/language above). Missing from dist/ meant those
-# menu entries had nothing to open in a built binary, even though they
-# worked fine running from source.
 # README.md and LICENSE: read directly by the Help menu's Readme/License
 # entries (flasher_config.base_dir - next to the executable, same
 # reasoning as firmware/language above). Missing from dist/ meant those

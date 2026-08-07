@@ -194,6 +194,7 @@ tools/flasher/
 ├── flasher_swd_tools.py           <- STM32CubeProgrammer / pyOCD wrappers
 ├── flasher_validation.py          <- firmware file validation (.bin/.hex/.elf)
 ├── flasher_protocol.py            <- the CAN OTA state machine itself
+├── flasher_github.py               <- downloads firmware from this project's own GitHub repo
 ├── flasher_gui.py                 <- the main window (FlasherGUI) and its menu bar
 ├── requirements.txt
 ├── build_exe.bat                  <- Windows standalone build
@@ -219,18 +220,23 @@ you just want to flash a board — on a shop floor PC, from a USB stick,
 wherever — you can copy `tools/flasher/` on its own with nothing else from
 the repo, and it still works.
 
-**You can keep more than one `.bin` in there.** Every file gets checked and
-listed - the tool doesn't just grab whatever it finds. On startup (and
-whenever you click **Refresh**), each `.bin` in `firmware/` is checked
-against the same plausibility test the bootloader itself applies to a
-fresh image (its first 4 bytes have to look like a real initial stack
-pointer for this chip's RAM, and its size has to fit the main slot). Every
-file shows up in the list with a clear ✓ or ✗ and the reason why:
+**You can keep more than one `.bin` in there.** Every application-firmware
+file gets checked and listed - the tool doesn't just grab whatever it
+finds, and bootloader binaries (anything with "BOOTLOADER" in the
+filename - `URTC_BOOTLOADER.bin`, `URTC_SLAVE_BOOTLOADER.bin`) are
+filtered out of this list entirely, since CAN-OTA only ever flashes
+application firmware; a bootloader update needs SWD/JTAG instead (section
+6 below). On startup (and whenever you click **Refresh**), each
+remaining `.bin` in `firmware/` is checked against the same
+plausibility test the bootloader itself applies to a fresh image (its
+first 4 bytes have to look like a real initial stack pointer for this
+chip's RAM, and its size has to fit the main slot). Every file shows up
+in the list with a clear ✓ or ✗ and the reason why:
 
 | File | Size | Status |
 |---|---|---|
-| URTC_v1_0_F303CC.bin | 30.9 KB | ✓ looks valid |
-| URTC_v1_0_F303CC_old.bin | 30.4 KB | ✓ looks valid |
+| URTC_V1.1_F303CC.bin | 30.9 KB | ✓ looks valid |
+| URTC_SLAVE_APP.bin | 12.4 KB | ✓ looks valid |
 | notes.txt.bin | 0.1 KB | ✗ first word doesn't look like a valid stack pointer |
 
 - **Exactly one file passes the check** → it's selected for you the moment
@@ -247,9 +253,18 @@ file shows up in the list with a clear ✓ or ✗ and the reason why:
 - **Nothing found, or you want a file from somewhere else entirely** → use
   the **Browse .bin...** button, which works regardless of where the file
   actually lives (and runs the same validation check either way).
+- **Want the latest build without hunting for it yourself** → **Download
+  from GitHub...** fetches the current file listing straight from this
+  project's own `firmware/` folder
+  (`github.com/JuanenRac/URTC/tree/main/firmware`) and lets you pick one
+  to download directly into your own local `firmware/` folder - it then
+  shows up in the list above like any other file, no restart needed. Uses
+  GitHub's own public API (unauthenticated, so subject to GitHub's own
+  60-requests/hour rate limit if you hit it a lot in a short window) -
+  nothing here needs a GitHub account or a token.
 
 **Optional `<filename>.manifest.json`, next to a firmware file** (e.g.
-`URTC_v1_0_F303CC.bin.manifest.json`), adds an extra, non-blocking sanity
+`URTC_V1.1_F303CC.bin.manifest.json`), adds an extra, non-blocking sanity
 check: if present, its `sha256` field is compared against the actual
 file right before flashing, with `version`/`build_date` logged alongside
 for reference.
@@ -309,14 +324,25 @@ What you'll see:
   path, that the interface is actually up (`ip link show`).
 
 **Expansion board:** a separate dropdown and Query/Save pair, right below
-version checking. Reads and sets which of the 5 possible `CONN_EXPANSION`
-configurations (none, or one of 4 planned variants - see `EXPANSION.TXT`)
+version checking. Reads and sets which of the 7 possible `CONN_EXPANSION`
+configurations (none, or one of 6 real variants - see `EXPANSION.TXT`)
 is physically installed, over CAN (`0x1A0`/`0x1A1`). There's no
 electrical way for the board to sense this itself, so it has to be told -
 this lives here (not only in `URTC Tester`) since it's a one-time
 hardware-configuration step most naturally done alongside a firmware
 update. **Save** asks for confirmation first, since this persists across
 power cycles until explicitly changed again.
+
+**MLX9064x sensor variant:** same shape as the expansion board control
+right above it - a dropdown and Query/Save pair reading/setting which of
+the 3 MLX9064x-family thermal sensors (or none at all) is actually
+populated, over CAN (`0x1A6`/`0x1A7` - see `CANBUS.TXT`). Only meaningful
+when the expansion board above is set to an Advanced variant or
+Basic+MLX9064x; the board's own firmware ignores this setting entirely
+on every other expansion board type. "None installed" (the safe default)
+deliberately doesn't fall back to assuming MLX90640 - a board with a real
+MLX90640 wired to it needs this set explicitly, once, the same way the
+expansion board type itself does.
 
 ## 5. Flashing
 
@@ -326,17 +352,29 @@ power cycles until explicitly changed again.
    interface is expected to already be at that bitrate (step 1 above) -
    this tool doesn't set it. Either way, the current version is queried
    automatically - see section 4 above.
-2. **Select firmware**: pick from the detected list, or Browse - see
+2. **Pick a flash target**: "This board (main)" or "Expansion slave" -
+   defaults to the main board, the far more common case. The slave option
+   only reaches anything on an Advanced expansion board variant
+   (TMC2209+STM32F303CBT6 or TMC5160A+STM32F303CBT6) - the update is
+   relayed through the main board's own I2C bridge to the slave chip
+   (`CANBUS.TXT`'s own `0x210`-`0x218`), not a separate physical
+   connection. "Erase F-RAM before flashing" (step 4 below) disables
+   itself automatically when Slave is picked - the slave chip has no
+   F-RAM of its own to erase.
+3. **Select firmware**: pick from the detected list, or Browse - see
    section 3 above for exactly how detection and validation work.
-3. **Flash**:
+4. **Flash**:
    - Leave "Board is currently running the application" checked if the
      board is powered up and running normally - the tool sends the
-     `0x7F0` magic-payload trigger first, which safely shuts down every
-     actuator before resetting into the bootloader.
+     `0x7F0` magic-payload trigger first (or `0x210`, relayed to the
+     slave, if Slave is the selected target), which safely shuts down
+     every actuator before resetting into the bootloader.
    - Uncheck it if the board is already sitting in the bootloader (right
      after a fresh JTAG flash, or if the version check above showed "no
      valid firmware currently installed").
-   - Click **Flash Firmware** and confirm. The log shows every protocol
+   - Click **Flash Firmware** and confirm - the confirmation dialog names
+     which target you're about to flash, so double-check that matches
+     what you actually meant to select. The log shows every protocol
      step; the progress bar tracks page-by-page write progress during
      transfer, then copy progress during the final backup-to-main copy.
 
@@ -348,8 +386,9 @@ whatever firmware it already had. It's always safe to just try again.
 
 Section "4. Program complete chip via SWD/JTAG" in the tool does a full
 bring-up flash - mass-erase the entire chip, then write both the
-bootloader (`0x08000000`) and application (`0x08008000`) images fresh.
-This is a **different kind of operation** from sections 1-5 above:
+bootloader and application images fresh, at whichever chip's own real
+addresses match the **Target chip** selection (see below). This is a
+**different kind of operation** from sections 1-5 above:
 
 |  | CAN OTA update (sections 1-5) | Full-chip SWD/JTAG (section 6) |
 |---|---|---|
@@ -358,6 +397,27 @@ This is a **different kind of operation** from sections 1-5 above:
 | Touches the bootloader | Never | Yes, by design |
 | Needs | A USB-CAN adapter | An SWD/JTAG probe (ST-Link or similar) |
 | Typical use | Routine firmware updates | First bring-up on a blank chip, or recovering a bricked board |
+
+**Target chip:** "This board (main)" or "Expansion slave" - same 2
+options as the CAN-OTA tab's own selector, but a genuinely separate
+choice here: SWD/JTAG needs a probe physically wired to whichever chip
+this is set to, since there's no bridge (unlike CAN-OTA) that lets one
+connection reach both. Switching this changes the flash addresses used
+automatically:
+
+| | Main board (STM32F303CC) | Expansion slave (STM32F303CBT6) |
+|---|---|---|
+| Bootloader address | `0x08000000` (32K region) | `0x08000000` (18K region) |
+| Application address | `0x08008000` (112K region) | `0x08005000` (54K region) |
+| pyOCD target string | `stm32f303cc` | `stm32f303cb` |
+
+Both target strings above are this project's own best guess at the real
+pyOCD target name for each chip, not confirmed against a live pyOCD
+install while this was written (STM32 coverage in pyOCD comes largely
+through CMSIS-Packs rather than built-in targets) - if flashing fails
+with a "target not found"-style error, run `pyocd list --targets --name
+stm32f303` yourself and `pyocd pack install <the real name>` pulls the
+right CMSIS-Pack.
 
 **Requires one of** (the tool auto-detects which is available and only
 enables the ones it finds):
@@ -653,6 +713,13 @@ new script version per deployment:
 }
 ```
 Every field is optional - only override what's actually changing. Missing
+fields fall back to this tool's own built-in defaults. **This override
+mechanism only applies to the main board's own constants** - the
+expansion slave chip's own equivalents (`SLAVE_BOOTLOADER_FLASH_ADDR`,
+`SLAVE_APP_FLASH_ADDR`, `SLAVE_HARDWARE_ID`, etc.) are fixed in
+`flasher_config.py` itself, since that hardware's own real values are
+already confirmed against its own linker scripts rather than needing a
+deployment-time override the way the main board's own defaults do.
 file falls back silently to the compiled-in defaults; a present-but-broken
 file logs a warning and also falls back, rather than crashing the tool
 over a typo. Whichever source is active gets logged at startup, so it's

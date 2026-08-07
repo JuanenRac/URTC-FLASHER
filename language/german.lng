@@ -279,3 +279,50 @@ LOG_MLX_VARIANT_SAVED_CONFIRMED=MLX9064x-Sensorvariante gespeichert und bestäti
 LOG_MLX_VARIANT_MISMATCH=MLX9064x-Sensorvariante auf {value} gesetzt, aber die Platine meldet {confirmed} - der Schreibvorgang wurde möglicherweise nicht übernommen. Erneut abfragen, um zu prüfen.
 LOG_MLX_VARIANT_NO_CONFIRMATION=MLX9064x-Sensorvariante: gesendet, aber keine Bestätigung erhalten (ältere Firmware oder Platine nicht verbunden).
 LOG_MLX_VARIANT_SAVE_FAILED=Speichern der MLX9064x-Sensorvariante fehlgeschlagen: {e}
+
+# Expansion slave CAN-OTA flashing (0x210-0x218 relay)
+LBL_FLASH_TARGET=Flash-Ziel:
+OPT_TARGET_MASTER=Diese Platine (Haupt)
+OPT_TARGET_SLAVE=Erweiterungs-Slave
+HELP_FLASH_TARGET_SLAVE=Erreicht nur etwas auf einer Advanced-Erweiterungsplatinenvariante (TMC2209+STM32F303CBT6 oder TMC5160A+STM32F303CBT6) - weitergeleitet über die eigene I2C-Bridge dieser Platine (0x210-0x218 in CANBUS.TXT), keine direkte Verbindung. „F-RAM löschen" gilt nicht dafür - der Slave-Chip hat keinen eigenen dauerhaften Speicher.
+MSG_CONFIRM_FLASH_TARGET=Im Begriff zu flashen: {target}.
+
+Dies überschreibt die derzeit laufende Firmware. Stellen Sie sicher, dass Sie die richtige Datei für dieses spezifische Ziel ausgewählt haben. Fortfahren?
+LOG_SENDING_SLAVE_BOOTLOADER_TRIGGER=Sende Bootloader-Auslöser an Erweiterungs-Slave (0x210, über I2C weitergeleitet)...
+LOG_SENDING_SLAVE_START_UPDATE=Sende Update-Start an Erweiterungs-Slave (0x211)...
+LOG_SLAVE_FIRMWARE_HARDWAREID=Erweiterungs-Slave HardwareID: 0x{hw_id:08X}
+LOG_SLAVE_PROGRESS={offset}/{size} Bytes an Erweiterungs-Slave gesendet (eigener gemeldeter Fortschritt: {slave_pct}%)
+LOG_SLAVE_TRANSFER_COMPLETE=Übertragung an Erweiterungs-Slave abgeschlossen: {size} Bytes in {elapsed:.1f}s ({kbps:.1f} KB/s)
+LOG_SLAVE_UPDATE_CONFIRMED=Erweiterungs-Slave-Update überprüft und bestätigt.
+LOG_SLAVE_VERIFY_FAILED=Erweiterungs-Slave meldete Überprüfungsfehler (Größe, CRC32, HMAC oder HardwareID stimmen im eigenen Backup-Slot nicht überein).
+LOG_SLAVE_GENERIC_ERROR=Erweiterungs-Slave meldete einen allgemeinen Fehlerstatus.
+
+# SWD/JTAG target chip selector (main board / expansion slave)
+LBL_SWD_TARGET=Ziel-Chip:
+HELP_SWD_TARGET_SLAVE=Die Sonde muss physisch mit dem hier eingestellten Chip verbunden sein - anders als bei CAN-OTA gibt es keine Bridge, die es einer einzigen Verbindung erlaubt, beide zu erreichen. STM32F303CC (Hauptplatine) und STM32F303CBT6 (Erweiterungs-Slave) haben unterschiedliche Flash-Adressen/-Größen und unterschiedliche pyOCD-Zielnamen, die beim Wechsel dieser Auswahl automatisch angewendet werden - siehe PINOUT_SLAVE.txt für die Position der SWD-Pins des Erweiterungs-Slaves.
+
+# GitHub firmware download
+BTN_CLOSE=Schließen
+BTN_DOWNLOAD_FROM_GITHUB=Von GitHub herunterladen...
+BTN_DOWNLOAD_SELECTED=Auswahl herunterladen
+TITLE_DOWNLOAD_FROM_GITHUB=Firmware von GitHub herunterladen
+TITLE_FILE_EXISTS=Datei existiert bereits
+MSG_GITHUB_FILE_EXISTS_OVERWRITE={name} existiert bereits in Ihrem Firmware-Ordner. Mit der Version von GitHub überschreiben?
+LBL_GITHUB_LOADING=Dateiliste wird von github.com/JuanenRac/URTC geladen...
+LBL_GITHUB_EMPTY=Keine Dateien im firmware/-Ordner des Repositorys gefunden.
+LBL_GITHUB_LOADED_COUNT={count} Datei(en) verfügbar.
+LBL_GITHUB_DOWNLOADING_NAME={name} wird heruntergeladen...
+LBL_GITHUB_DOWNLOAD_DONE={name} heruntergeladen - jetzt in der obigen Firmware-Liste verfügbar.
+LOG_GITHUB_FETCHING_LIST=Firmware-Dateiliste wird von GitHub abgerufen...
+LOG_GITHUB_LIST_COUNT=GitHub hat {count} Firmware-Datei(en) zurückgegeben.
+LOG_GITHUB_DOWNLOADING={name} wird von GitHub heruntergeladen...
+LOG_GITHUB_DOWNLOAD_COMPLETE={name} heruntergeladen ({size} Bytes).
+ERR_GITHUB_RATE_LIMITED=Das eigene Ratenlimit der GitHub-API wurde erreicht (60 Anfragen/Stunde ohne Authentifizierung) - warten Sie und versuchen Sie es erneut.
+ERR_GITHUB_NOT_FOUND=Das Repository oder sein eigener firmware/-Ordner wurde nicht gefunden (github.com/JuanenRac/URTC) - es wurde möglicherweise verschoben oder existiert noch nicht.
+ERR_GITHUB_HTTP_ERROR=GitHub hat einen HTTP-Fehler zurückgegeben (Code {code}).
+ERR_GITHUB_NETWORK=GitHub konnte nicht erreicht werden - {reason}. Überprüfen Sie Ihre eigene Internetverbindung.
+ERR_GITHUB_TIMEOUT=Zeitüberschreitung bei der Verbindung zu GitHub.
+ERR_GITHUB_BAD_RESPONSE=Die Antwort von GitHub war kein gültiges JSON - möglicherweise wird statt der erwarteten Dateiliste eine Fehlerseite angezeigt.
+ERR_GITHUB_UNEXPECTED_SHAPE=Die Antwort von GitHub hatte nicht das erwartete Format für eine Ordnerliste.
+ERR_GITHUB_WRITE_FAILED=Die heruntergeladene Datei konnte nicht geschrieben werden - {reason}.
+ERR_GITHUB_UNEXPECTED=Unerwarteter Fehler: {e}

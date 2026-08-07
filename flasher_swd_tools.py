@@ -13,7 +13,8 @@ import subprocess
 import threading
 import time
 
-from flasher_config import _, APP_FLASH_ADDR, BOOTLOADER_FLASH_ADDR, PYOCD_TARGET_NAME
+from flasher_config import _, APP_FLASH_ADDR, BOOTLOADER_FLASH_ADDR, PYOCD_TARGET_NAME, \
+    SLAVE_BOOTLOADER_FLASH_ADDR, SLAVE_APP_FLASH_ADDR, SLAVE_PYOCD_TARGET_NAME, SLAVE_TOTAL_FLASH_SIZE
 
 # =============================================================================
 # SWD/JTAG full-chip programming - a DIFFERENT kind of operation from the CAN
@@ -261,17 +262,22 @@ class PyOCDCLI(_SubprocessProgrammerBase):
             )
         self.log(_("LOG_PROBE_DETECTED_USB"))
 
-    def backup_flash(self, output_path, dry_run=False, target=PYOCD_TARGET_NAME, probe_uid=None):
-        """Reads the entire 256KB flash region to output_path before any
+    def backup_flash(self, output_path, dry_run=False, target=PYOCD_TARGET_NAME, probe_uid=None,
+                      total_flash_size=0x40000):
+        """Reads the entire flash region to output_path before any
         erase touches it, via commander's savemem command - see
         CubeProgrammerCLI.backup_flash's own docstring for why this
-        matters more than it might for an ordinary read. Returns True if
-        the backup file was actually written and is non-empty."""
+        matters more than it might for an ordinary read. total_flash_size
+        defaults to the main board's own STM32F303CC (256KB) - pass
+        SLAVE_TOTAL_FLASH_SIZE for the expansion slave's own smaller
+        STM32F303CBT6 (128KB), so this doesn't try reading past that
+        chip's own real flash end. Returns True if the backup file was
+        actually written and is non-empty."""
         probe_args = ["--probe", probe_uid] if probe_uid else []
         self.log(_("LOG_BACKING_UP_FLASH", path=output_path))
         if dry_run:
             self.log(f"$ {self.exe} commander -t {target} " + " ".join(probe_args)
-                      + f' -c "savemem 0x08000000 0x40000 \\"{output_path}\\""')
+                      + f' -c "savemem 0x08000000 0x{total_flash_size:x} \\"{output_path}\\""')
             self.log(_("LOG_DRY_RUN_NOTHING_TO_VERIFY"))
             return False
         self._run(["commander", "-t", target] + probe_args
@@ -286,7 +292,7 @@ class PyOCDCLI(_SubprocessProgrammerBase):
                   # escape sequence on Windows paths - forward slashes are
                   # accepted for file paths on Windows by essentially every
                   # modern tool, sidestepping the question entirely.
-                  + ["-c", f'savemem 0x08000000 0x40000 "{output_path.replace(os.sep, "/")}"'], dry_run=False)
+                  + ["-c", f'savemem 0x08000000 0x{total_flash_size:x} "{output_path.replace(os.sep, "/")}"'], dry_run=False)
         ok = os.path.isfile(output_path) and os.path.getsize(output_path) > 0
         if ok:
             self.log(_("LOG_BACKUP_WRITTEN", path=output_path, size=os.path.getsize(output_path)))
@@ -295,12 +301,14 @@ class PyOCDCLI(_SubprocessProgrammerBase):
         return ok
 
     def full_chip_flash(self, bootloader_path, app_path, dry_run=False,
-                         target=PYOCD_TARGET_NAME, probe_uid=None, backup_path=None):
+                         target=PYOCD_TARGET_NAME, probe_uid=None, backup_path=None,
+                         bootloader_addr=BOOTLOADER_FLASH_ADDR, app_addr=APP_FLASH_ADDR,
+                         total_flash_size=0x40000):
         self.check_connection(probe_uid, dry_run)
         probe_args = ["--probe", probe_uid] if probe_uid else []
         if backup_path is not None:
             if not self.backup_flash(backup_path, dry_run=dry_run, target=target,
-                                      probe_uid=probe_uid) and not dry_run:
+                                      probe_uid=probe_uid, total_flash_size=total_flash_size) and not dry_run:
                 raise SWDFlashError(
                     f"Backup to {backup_path} didn't produce a usable file - stopping before "
                     f"the erase rather than proceeding without it. Retry without a backup path "
@@ -312,13 +320,13 @@ class PyOCDCLI(_SubprocessProgrammerBase):
 
         self.log(_("LOG_PROGRAMMING_BOOTLOADER_REGION"))
         args = ["flash", "-t", target, "-e", "auto"] + probe_args
-        args += _address_args_bin_needs_it(bootloader_path, BOOTLOADER_FLASH_ADDR, "--base-address")
+        args += _address_args_bin_needs_it(bootloader_path, bootloader_addr, "--base-address")
         args += [bootloader_path]
         self._run(args, dry_run)
 
         self.log(_("LOG_PROGRAMMING_APP_REGION"))
         args = ["flash", "-t", target, "-e", "auto"] + probe_args
-        args += _address_args_bin_needs_it(app_path, APP_FLASH_ADDR, "--base-address")
+        args += _address_args_bin_needs_it(app_path, app_addr, "--base-address")
         args += [app_path]
         self._run(args, dry_run)
 
@@ -336,13 +344,13 @@ class PyOCDCLI(_SubprocessProgrammerBase):
         if bootloader_path.lower().endswith(".bin"):
             self.log(_("LOG_VERIFYING_BOOTLOADER_REGION"))
             self._run(["commander", "-t", target] + probe_args
-                      + ["-c", f'compare 0x{BOOTLOADER_FLASH_ADDR:08X} "{bootloader_path.replace(os.sep, "/")}"'], dry_run)
+                      + ["-c", f'compare 0x{bootloader_addr:08X} "{bootloader_path.replace(os.sep, "/")}"'], dry_run)
         else:
             self.log(_("LOG_BOOTLOADER_NOT_BIN_SKIP"))
         if app_path.lower().endswith(".bin"):
             self.log(_("LOG_VERIFYING_APP_REGION"))
             self._run(["commander", "-t", target] + probe_args
-                      + ["-c", f'compare 0x{APP_FLASH_ADDR:08X} "{app_path.replace(os.sep, "/")}"'], dry_run)
+                      + ["-c", f'compare 0x{app_addr:08X} "{app_path.replace(os.sep, "/")}"'], dry_run)
         else:
             self.log(_("LOG_APPLICATION_NOT_BIN_SKIP"))
 
@@ -498,13 +506,16 @@ class CubeProgrammerCLI(_SubprocessProgrammerBase):
             )
         self.log(_("LOG_CONNECTION_CONFIRMED"))
 
-    def backup_flash(self, output_path, dry_run=False, serial=None):
-        """Reads the entire 256KB flash region (bootloader + application +
+    def backup_flash(self, output_path, dry_run=False, serial=None, total_flash_size=0x40000):
+        """Reads the entire flash region (bootloader + application +
         whatever's between/after) to output_path before any erase touches
         it - a full-chip flash is the one operation in this tool that
         can't be undone by re-running it (unlike a CAN OTA update, which
         the golden-image backup slot protects against), so a local backup
         beforehand is real, meaningful insurance, not just a formality.
+        total_flash_size defaults to the main board's own STM32F303CC
+        (256KB) - pass SLAVE_TOTAL_FLASH_SIZE for the expansion slave's
+        own smaller STM32F303CBT6 (128KB).
         Uses CubeProgrammer's -r <address> <size> <file> memory-read-to-file
         syntax (confirmed against ST's own community documentation - -r32
         with the same 3 arguments only dumps to the screen, never to a
@@ -516,10 +527,10 @@ class CubeProgrammerCLI(_SubprocessProgrammerBase):
         connect = ["-c", "port=SWD" + (f" sn={serial}" if serial else "")]
         self.log(_("LOG_BACKING_UP_FLASH", path=output_path))
         if dry_run:
-            self.log(f"$ {self.exe} " + " ".join(connect) + f" -r 0x08000000 0x40000 \"{output_path}\"")
+            self.log(f"$ {self.exe} " + " ".join(connect) + f" -r 0x08000000 0x{total_flash_size:x} \"{output_path}\"")
             self.log(_("LOG_DRY_RUN_NOTHING_TO_VERIFY"))
             return False
-        self._run(connect + ["-r", "0x08000000", "0x40000", output_path], dry_run=False)
+        self._run(connect + ["-r", "0x08000000", f"0x{total_flash_size:x}", output_path], dry_run=False)
         ok = os.path.isfile(output_path) and os.path.getsize(output_path) > 0
         if ok:
             self.log(_("LOG_BACKUP_WRITTEN", path=output_path, size=os.path.getsize(output_path)))
@@ -528,11 +539,13 @@ class CubeProgrammerCLI(_SubprocessProgrammerBase):
         return ok
 
     def full_chip_flash(self, bootloader_path, app_path, dry_run=False, serial=None,
-                         backup_path=None):
+                         backup_path=None, bootloader_addr=BOOTLOADER_FLASH_ADDR, app_addr=APP_FLASH_ADDR,
+                         total_flash_size=0x40000):
         self.check_connection(serial, dry_run)
         connect = ["-c", "port=SWD" + (f" sn={serial}" if serial else "")]
         if backup_path is not None:
-            if not self.backup_flash(backup_path, dry_run=dry_run, serial=serial) and not dry_run:
+            if not self.backup_flash(backup_path, dry_run=dry_run, serial=serial,
+                                      total_flash_size=total_flash_size) and not dry_run:
                 raise SWDFlashError(
                     f"Backup to {backup_path} didn't produce a usable file - stopping before "
                     f"the erase rather than proceeding without it. Retry without a backup path "
@@ -544,12 +557,12 @@ class CubeProgrammerCLI(_SubprocessProgrammerBase):
 
         self.log(_("LOG_PROGRAMMING_BOOTLOADER_REGION"))
         args = connect + ["-w", bootloader_path]
-        args += _address_args_bin_needs_it(bootloader_path, BOOTLOADER_FLASH_ADDR)
+        args += _address_args_bin_needs_it(bootloader_path, bootloader_addr)
         self._run(args, dry_run)
 
         self.log(_("LOG_PROGRAMMING_APP_VERIFY_RESET"))
         args = connect + ["-w", app_path]
-        args += _address_args_bin_needs_it(app_path, APP_FLASH_ADDR)
+        args += _address_args_bin_needs_it(app_path, app_addr)
         args += ["-v", "-rst"]
         self._run(args, dry_run)
         self.log(_("LOG_CUBE_FULLCHIP_COMPLETE"))
