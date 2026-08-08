@@ -10,7 +10,7 @@ import struct
 from flasher_config import APP_FLASH_ADDR, APP_MAX_SIZE, BOOTLOADER_FLASH_ADDR
 
 # =============================================================================
-# Bootloader protocol - implements the exact CAN sequence BOOTLOADER.C
+# Bootloader protocol - implements the exact CAN sequence bootloader_protocol.c
 # expects, matching CANBUS.TXT's documented 0x7F0-0x7F7 protocol.
 # =============================================================================
 # =============================================================================

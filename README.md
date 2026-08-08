@@ -10,9 +10,9 @@ writes)
 
 **Author:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
-License: **GPL-3.0**, same as the URTC firmware itself — see `LICENSE` in
-the repository root. This covers `urtc_flasher.py` and any binary
-built from it.
+License: **GPL-3.0** for the source code, **CC BY-SA 4.0** for this
+documentation - see `LICENSE` in this repository, or the "License and
+Copyright Notices" section at the end of this document.
 
 A small cross-platform GUI tool for updating URTC board firmware over CAN
 bus. It implements the exact bootloader protocol from `docs/CANBUS.TXT`: the
@@ -297,7 +297,7 @@ completes, to confirm the new version actually took).
 **When the bootloader itself answers** (board sitting in the bootloader,
 not running its application), it also reports its own version - a
 separate thing from the installed application's version, tracked via its
-own `BOOTLOADER_VERSION_MAJOR/MINOR/PATCH` in `BOOTLOADER.C` and sent as
+own `BOOTLOADER_VERSION_MAJOR/MINOR/PATCH` in `bootloader_common.h` and sent as
 a second frame (`0x7FA`) right alongside `0x7F9`. The running application
 never sends this - it has no way to know a currently-flashed bootloader's
 version other than asking the bootloader itself, so this only shows up
@@ -650,7 +650,7 @@ doesn't change flashing behavior, just makes it easier to tell "this is
 just slow" from "something's actually wrong" at a glance.
 
 **Specific verify-failure reasons**: if verification fails during a CAN
-update, `BOOTLOADER.C` sends a reason byte alongside status `0x05`
+update, `bootloader_protocol.c` sends a reason byte alongside status `0x05`
 (verify failed) - incomplete transfer, CRC32 mismatch, HMAC mismatch, or
 HardwareID mismatch, rather than every failure looking identical. See
 `docs/CANBUS.TXT` for the exact frame format (`0x7F5`, DLC 2 for this specific
@@ -673,7 +673,7 @@ checkbox exists for a genuinely clean slate, not because skipping it
 would leave anything broken.
 
 **Only works while the application is running** - the bootloader itself
-doesn't handle `0x192` at all, only `STM32F303CC.C` does. This checkbox
+doesn't handle `0x192` at all, only `firmware_can_global_post.c` does. This checkbox
 is silently skipped (with a log line explaining why) if the "board is
 currently running the application" checkbox above it is unchecked, since
 in that case the board's assumed to already be sitting in the bootloader.
@@ -689,8 +689,8 @@ confirmation frame going missing. Check the F-RAM state separately
 ## Changing the HMAC key / HardwareID
 
 The shared signing key lives in two places that must always match:
-`BOOTLOADER.C`'s `HMAC_KEY` array, and this tool's `HMAC_KEY` constant near
-the top of `urtc_flasher.py`. If you change one, change the other and
+`bootloader_common.h`'s `HMAC_KEY` array, and this tool's `HMAC_KEY` constant near
+the top of `flasher_config.py`. If you change one, change the other and
 rebuild/reflash the bootloader before trying to sign anything with the new
 key - an image signed with a key the bootloader doesn't have will always
 fail verification, safely, with the main slot left untouched.
@@ -719,14 +719,61 @@ expansion slave chip's own equivalents (`SLAVE_BOOTLOADER_FLASH_ADDR`,
 `SLAVE_APP_FLASH_ADDR`, `SLAVE_HARDWARE_ID`, etc.) are fixed in
 `flasher_config.py` itself, since that hardware's own real values are
 already confirmed against its own linker scripts rather than needing a
-deployment-time override the way the main board's own defaults do.
-file falls back silently to the compiled-in defaults; a present-but-broken
-file logs a warning and also falls back, rather than crashing the tool
-over a typo. Whichever source is active gets logged at startup, so it's
-always visible which values a given session actually used. `hardware_id`
-accepts either a JSON string (`"0x0303CC01"`) or a plain JSON number
-(`50580689`) - whichever is more natural for however the file gets
-generated. `app_max_size`, `bootloader_max_size`, `flash_page_size`,
-`bootloader_flash_addr`, and `app_flash_addr` are also overridable here,
-alongside the signing key and HardwareID above - useful if this tool is
-ever adapted to a different chip variant or partition scheme.
+deployment-time override the way the main board's own defaults do. A
+present-but-broken file logs a warning and also falls back, rather than
+crashing the tool over a typo. Whichever source is active gets logged at
+startup, so it's always visible which values a given session actually
+used. `hardware_id` accepts either a JSON string (`"0x0303CC01"`) or a
+plain JSON number (`50580689`) - whichever is more natural for however
+the file gets generated. `app_max_size`, `bootloader_max_size`,
+`flash_page_size`, `bootloader_flash_addr`, and `app_flash_addr` are
+also overridable here, alongside the signing key and HardwareID above -
+useful if this tool is ever adapted to a different chip variant or
+partition scheme.
+
+## 📸 Photos
+
+<p align="center">
+  <img src="images/URTC_FLASHER_V1_1.png" alt="URTC Flasher window" width="700">
+</p>
+
+## 📜 License and Copyright Notices
+
+URTC Flasher is (c) 2026 JuanenRac (Electro Hobby 3D). This notice must
+be included in any distributions of this project or derivative works.
+
+This project consists of source code and its own documentation, made
+available under different licenses - each suited to what it actually
+covers:
+
+1. The source code (`urtc_flasher.py` and every `flasher_*.py` module)
+   and any binary built from it via `build_exe.bat`/`build_exe.sh` are
+   available under the **GNU General Public License v3.0 (GPL-3.0)**.
+   Full text at https://www.gnu.org/licenses/gpl-3.0.html.
+
+2. The documentation (this README and its own translations -
+   `README_spa.md`, `README_ita.md`, `README_fra.md`, `README_deu.md`)
+   is available under **Creative Commons Attribution-ShareAlike 4.0
+   International (CC BY-SA 4.0)**. Full text at
+   https://creativecommons.org/licenses/by-sa/4.0/.
+
+This tool is the CAN-OTA/SWD-JTAG flashing companion to the
+[URTC (Universal Robot Tool Controller)](https://github.com/JuanenRac/URTC)
+project - see that project's own repository for the board firmware,
+hardware designs, and full protocol documentation this tool implements
+against. URTC's own firmware is GPL-3.0 and its hardware designs are
+CERN-OHL-S v2; this tool's own license here doesn't extend to that
+separate project, and vice versa. A web-based alternative covering
+similar ground also exists at
+[URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO).
+
+If you build on this project, keep the licensing split in mind: code
+changes should stay GPL-3.0, documentation derivatives should stay CC
+BY-SA - each with attribution back to this project and its author.
+
+## 👤 Author
+
+**JuanenRac** (Electro Hobby 3D)
+📧 electrohobby3d@gmail.com
+📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
+

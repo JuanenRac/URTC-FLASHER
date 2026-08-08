@@ -20,7 +20,7 @@ from flasher_config import _, APP_FLASH_ADDR, BOOTLOADER_FLASH_ADDR, PYOCD_TARGE
 # SWD/JTAG full-chip programming - a DIFFERENT kind of operation from the CAN
 # OTA path above, deliberately kept as its own separate classes rather than
 # folded into URTCFlasher. The CAN update path is self-healing on any
-# interruption - the bootloader's own golden-image logic (see BOOTLOADER.C)
+# interruption - the bootloader's own golden-image logic (see bootloader_flash.c)
 # guarantees the board always has SOME working firmware afterward, with no
 # physical access needed to recover. A full-chip SWD write isn't
 # self-healing the same way: an interrupted erase/write can leave the

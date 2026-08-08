@@ -10,9 +10,9 @@ firmware de la carte URTC qu'il écrit)
 
 **Auteur :** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
-Licence : **GPL-3.0**, la même que le firmware URTC lui-même — voir
-`LICENSE` à la racine du dépôt. Ceci couvre `urtc_flasher.py` et tout
-binaire construit à partir de celui-ci.
+Licence : **GPL-3.0** pour le code source, **CC BY-SA 4.0** pour cette
+documentation - voir `LICENSE` dans ce dépôt, ou la section « Licence
+et Avis de Copyright » à la fin de ce document.
 
 Un petit outil graphique multiplateforme pour mettre à jour le firmware
 de la carte URTC via le bus CAN. Il implémente exactement le protocole
@@ -343,7 +343,7 @@ version a bien pris).
 bootloader, n'exécutant pas son application), il rapporte aussi sa
 propre version - une chose séparée de la version de l'application
 installée, suivie via son propre
-`BOOTLOADER_VERSION_MAJOR/MINOR/PATCH` dans `BOOTLOADER.C` et envoyée
+`BOOTLOADER_VERSION_MAJOR/MINOR/PATCH` dans `bootloader_common.h` et envoyée
 comme deuxième trame (`0x7FA`) juste à côté de `0x7F9`. L'application en
 cours d'exécution n'envoie jamais ceci - elle n'a aucun moyen de
 connaître la version d'un bootloader actuellement flashé autrement qu'en
@@ -761,7 +761,7 @@ distinguer d'un coup d'œil "ça va juste lentement" de "quelque chose ne
 va vraiment pas".
 
 **Raisons spécifiques d'échec de vérification** : si la vérification
-échoue pendant une mise à jour CAN, `BOOTLOADER.C` envoie un octet de
+échoue pendant une mise à jour CAN, `bootloader_protocol.c` envoie un octet de
 raison à côté du statut `0x05` (vérification échouée) - transfert
 incomplet, discordance CRC32, discordance HMAC, ou discordance
 HardwareID, plutôt que chaque échec paraisse identique. Voir
@@ -789,7 +789,7 @@ quelque chose de cassé.
 
 **Fonctionne seulement pendant que l'application est en cours
 d'exécution** - le bootloader lui-même ne gère pas du tout `0x192`,
-seul `STM32F303CC.C` le fait. Cette case est sautée silencieusement
+seul `firmware_can_global_post.c` le fait. Cette case est sautée silencieusement
 (avec une ligne de journal expliquant pourquoi) si la case "la carte
 exécute actuellement l'application" au-dessus n'est pas cochée,
 puisque dans ce cas on suppose que la carte est déjà dans le
@@ -808,8 +808,8 @@ l'État de `URTC Tester`) si cela vous importe.
 ## Changer la clé HMAC / le HardwareID
 
 La clé de signature partagée vit à 2 endroits qui doivent toujours
-correspondre : le tableau `HMAC_KEY` de `BOOTLOADER.C`, et la constante
-`HMAC_KEY` de cet outil près du début de `urtc_flasher.py`. Si vous en
+correspondre : le tableau `HMAC_KEY` de `bootloader_common.h`, et la constante
+`HMAC_KEY` de cet outil près du début de `flasher_config.py`. Si vous en
 changez une, changez l'autre et reconstruisez/reflashez le bootloader
 avant d'essayer de signer quoi que ce soit avec la nouvelle clé - une
 image signée avec une clé que le bootloader n'a pas échouera toujours
@@ -856,3 +856,54 @@ qui est plus naturel pour la façon dont le fichier est généré.
 ici, aux côtés de la clé de signature et du HardwareID ci-dessus - utile
 si cet outil est un jour adapté à une variante de puce ou un schéma de
 partition différent.
+
+## 📸 Photos
+
+<p align="center">
+  <img src="images/URTC_FLASHER_V1_1.png" alt="Fenêtre URTC Flasher" width="700">
+</p>
+
+## 📜 Licence et Avis de Copyright
+
+URTC Flasher est (c) 2026 JuanenRac (Electro Hobby 3D). Cet avis doit
+être inclus dans toute distribution de ce projet ou de ses travaux
+dérivés.
+
+Ce projet consiste en du code source et sa propre documentation,
+disponibles sous des licences différentes - chacune adaptée à ce
+qu'elle couvre réellement :
+
+1. Le code source (`urtc_flasher.py` et chaque module `flasher_*.py`)
+   et tout binaire construit à partir de celui-ci via
+   `build_exe.bat`/`build_exe.sh` sont disponibles sous la
+   **GNU General Public License v3.0 (GPL-3.0)**. Texte complet sur
+   https://www.gnu.org/licenses/gpl-3.0.html.
+
+2. La documentation (ce README et ses propres traductions -
+   `README_spa.md`, `README_ita.md`, `README_fra.md`, `README_deu.md`)
+   est disponible sous **Creative Commons Attribution-ShareAlike 4.0
+   International (CC BY-SA 4.0)**. Texte complet sur
+   https://creativecommons.org/licenses/by-sa/4.0/.
+
+Cet outil est le compagnon de flashage CAN-OTA/SWD-JTAG du projet
+[URTC (Universal Robot Tool Controller)](https://github.com/JuanenRac/URTC)
+- voir le propre dépôt de ce projet pour le firmware de la carte, les
+conceptions matérielles, et la documentation complète du protocole
+contre lequel cet outil fonctionne. Le propre firmware d'URTC est
+GPL-3.0 et ses conceptions matérielles sont CERN-OHL-S v2 ; la propre
+licence de cet outil ici ne s'étend pas à ce projet séparé, et
+vice-versa. Une alternative basée sur le web couvrant un terrain
+similaire existe aussi sur
+[URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO).
+
+Si vous construisez sur ce projet, gardez la séparation des licences à
+l'esprit : les modifications de code devraient rester GPL-3.0, les
+dérivés de documentation devraient rester CC BY-SA - chacun avec une
+attribution à ce projet et son auteur.
+
+## 👤 Auteur
+
+**JuanenRac** (Electro Hobby 3D)
+📧 electrohobby3d@gmail.com
+📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
+

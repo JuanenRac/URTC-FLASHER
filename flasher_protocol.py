@@ -1,6 +1,6 @@
 # =============================================================================
 # URTC Flasher - CAN bootloader OTA protocol implementation (URTCFlasher),
-# matching BOOTLOADER.C's own state machine exactly. Transport-agnostic -
+# matching bootloader_protocol.c's own state machine exactly. Transport-agnostic -
 # works with any object exposing send_frame/read_frame (SLCAN, SocketCAN,
 # or MockCAN from flasher_transports.py).
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>

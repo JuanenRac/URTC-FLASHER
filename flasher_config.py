@@ -9,7 +9,7 @@ import os
 import json
 
 # =============================================================================
-# Protocol constants - must match BOOTLOADER.C exactly
+# Protocol constants - must match bootloader_common.h exactly
 # =============================================================================
 CAN_ID_ENTER_BOOTLOADER = 0x7F0
 CAN_ID_START_UPDATE     = 0x7F1
@@ -96,7 +96,7 @@ STATUS_NAMES = {
     0xFF: "Error",
 }
 
-# Matches BOOTLOADER.C's VERIFY_FAIL_REASON_* defines exactly - present as
+# Matches bootloader_common.h's VERIFY_FAIL_REASON_* defines exactly - present as
 # a second byte on STATUS_VERIFY_FAIL (0x05) frames specifically, DLC=2
 # instead of the usual DLC=1, so a failed update can say WHY rather than
 # just THAT. Byte[0] is still 0x05 regardless, so any code that
@@ -109,11 +109,11 @@ VERIFY_FAIL_REASONS = {
     0x05: "rollback rejected (older version than what's already installed)",
 }
 
-# THIS_HARDWARE_ID and HMAC_KEY must match BOOTLOADER.C exactly, or every
-# update this tool sends will be rejected (HardwareID mismatch) or fail
-# signature verification (HMAC mismatch). If you change the key in
-# BOOTLOADER.C, change it here too - the two are not automatically kept in
-# sync.
+# THIS_HARDWARE_ID and HMAC_KEY must match bootloader_common.h exactly, or
+# every update this tool sends will be rejected (HardwareID mismatch) or
+# fail signature verification (HMAC mismatch). If you change the key in
+# bootloader_common.h, change it here too - the two are not automatically
+# kept in sync.
 THIS_HARDWARE_ID = 0x0303CC01  # STM32F303CCT6, URTC board revision 1
 SLAVE_HARDWARE_ID = 0x0303CB01  # STM32F303CBT6, expansion slave chip - see slave_common.h's own THIS_HARDWARE_ID, verified against the real source rather than assumed to differ only in the last hex digit
 FIRMWARE_VERSION_MAJOR = 1
@@ -148,11 +148,11 @@ SLCAN_BITRATES = [
 ]
 
 # Full-chip SWD/JTAG programming (see SWDFlasher below) - same two fixed
-# addresses used throughout BOOTLOADER.C (MAIN_APP_ADDR) and the README's
+# addresses used throughout bootloader_common.h (MAIN_APP_ADDR) and the README's
 # documented JTAG bring-up procedure.
 BOOTLOADER_FLASH_ADDR = 0x08000000
 APP_FLASH_ADDR = 0x08008000
-BOOTLOADER_MAX_SIZE = 32 * 1024  # matches BOOTLOADER.C's own 32KB region, 0x08000000-0x08008000
+BOOTLOADER_MAX_SIZE = 32 * 1024  # matches bootloader_common.h's own 32KB region, 0x08000000-0x08008000
 
 # Expansion slave chip's own SWD/JTAG addresses - genuinely different
 # memory map from the main board's own above (this chip is a
