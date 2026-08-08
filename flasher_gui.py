@@ -931,8 +931,7 @@ class FlasherGUI:
         win.title(_("TITLE_DOWNLOAD_FROM_GITHUB"))
         win.transient(self.root)
         win.resizable(True, True)
-        win.geometry("560x360")
-        _center_geometry(win, 560, 360)
+        win.geometry(_center_geometry(win, 560, 360))
 
         status_var = tk.StringVar(value=_("LBL_GITHUB_LOADING"))
         ttk.Label(win, textvariable=status_var, foreground="gray").pack(anchor="w", padx=8, pady=(8, 4))

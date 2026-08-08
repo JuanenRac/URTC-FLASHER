@@ -212,8 +212,8 @@ tools/flasher/
 │   ├── URTC_LOGO_FLASHER.svg      <- source de la banniere (vectorielle)
 │   └── urtc_banner.png            <- affichee en haut de la fenetre, rendue depuis le .svg ci-dessus
 ├── firmware/
-│   ├── URTC_v1_0_F303CC.bin      <- placez les nouveaux fichiers .bin ici
-│   └── URTC_v1_0_F303CC_old.bin  <- vous pouvez aussi garder d'anciennes versions
+│   ├── URTC_V1.1_F303CC.bin      <- placez les nouveaux fichiers .bin ici
+│   └── URTC_SLAVE_APP.bin        <- application du chip esclave d'extension, le cas echeant
 ├── logs/                          <- cree automatiquement, un fichier par session
 ├── urtc_config.json               <- optionnel, non inclus par defaut (voir "Changer la cle HMAC" ci-dessous)
 ├── urtc_flasher.py                <- point d'entree : arguments CLI, ecran de demarrage, configuration de la fenetre principale
@@ -221,7 +221,8 @@ tools/flasher/
 ├── flasher_transports.py          <- SLCAN, SocketCAN, MockCAN
 ├── flasher_swd_tools.py           <- wrappers STM32CubeProgrammer / pyOCD
 ├── flasher_validation.py          <- validation des fichiers firmware (.bin/.hex/.elf)
-├── flasher_protocol.py            <- la machine a etats CAN OTA elle-meme
+├── flasher_protocol.py            <- la machine a etats CAN OTA elle-meme, tant pour la carte principale que (relayee via son propre pont I2C) l'esclave d'extension
+├── flasher_github.py               <- telecharge le firmware depuis le propre depot GitHub de ce projet
 ├── flasher_gui.py                 <- la fenetre principale (FlasherGUI) et sa barre de menu
 ├── requirements.txt
 ├── build_exe.bat                  <- build autonome pour Windows
@@ -252,20 +253,25 @@ flasher une carte — sur un PC d'atelier, depuis une clé USB, n'importe
 où — vous pouvez copier `tools/flasher/` seul sans rien d'autre du
 dépôt, et cela fonctionne quand même.
 
-**Vous pouvez en garder plus d'un `.bin` là-dedans.** Chaque fichier est
-vérifié et listé - l'outil ne prend pas simplement ce qu'il trouve. Au
-démarrage (et chaque fois que vous cliquez sur **Actualiser**), chaque
-`.bin` dans `firmware/` est vérifié contre le même test de plausibilité
-que le bootloader lui-même applique à une image fraîche (ses 4 premiers
-octets doivent ressembler à un vrai pointeur de pile initial pour la RAM
-de cette puce, et sa taille doit tenir dans l'emplacement principal).
-Chaque fichier apparaît dans la liste avec un ✓ ou ✗ clair et la
-raison :
+**Vous pouvez en garder plus d'un `.bin` là-dedans.** Chaque fichier de
+firmware applicatif est vérifié et listé - l'outil ne prend pas
+simplement le premier qu'il trouve, et les binaires de bootloader
+(tout fichier avec "BOOTLOADER" dans le nom - `URTC_BOOTLOADER.bin`,
+`URTC_SLAVE_BOOTLOADER.bin`) sont entièrement filtrés de cette liste,
+puisque CAN-OTA ne flashe jamais que du firmware applicatif ; une mise
+à jour du bootloader nécessite SWD/JTAG à la place (section 6
+ci-dessous). Au démarrage (et chaque fois que vous cliquez sur
+**Actualiser**), chaque `.bin` restant dans `firmware/` est vérifié
+contre le même test de plausibilité que le bootloader lui-même applique
+à une image fraîche (ses 4 premiers octets doivent ressembler à un vrai
+pointeur de pile initial pour la RAM de cette puce, et sa taille doit
+tenir dans l'emplacement principal). Chaque fichier apparaît dans la
+liste avec un ✓ ou ✗ clair et la raison :
 
 | Fichier | Taille | Statut |
 |---|---|---|
-| URTC_v1_0_F303CC.bin | 30.9 KB | ✓ semble valide |
-| URTC_v1_0_F303CC_old.bin | 30.4 KB | ✓ semble valide |
+| URTC_V1.1_F303CC.bin | 30.9 KB | ✓ semble valide |
+| URTC_SLAVE_APP.bin | 12.4 KB | ✓ semble valide |
 | notes.txt.bin | 0.1 KB | ✗ le premier mot ne ressemble pas a un pointeur de pile valide |
 
 - **Exactement un fichier passe la vérification** → il est sélectionné
@@ -285,9 +291,20 @@ raison :
   entièrement** → utilisez le bouton **Parcourir .bin...**, qui
   fonctionne peu importe où le fichier vit réellement (et exécute la
   même vérification de validation dans les deux cas).
+- **Vous voulez la dernière build sans avoir à la chercher vous-même**
+  → **Télécharger depuis GitHub...** récupère la liste de fichiers
+  actuelle directement depuis le propre dossier `firmware/` de ce
+  projet (`github.com/JuanenRac/URTC/tree/main/firmware`) et vous
+  permet d'en choisir un à télécharger directement dans votre propre
+  dossier `firmware/` local - il apparaît ensuite dans la liste
+  ci-dessus comme n'importe quel autre fichier, sans redémarrage
+  nécessaire. Utilise la propre API publique de GitHub (non
+  authentifiée, donc soumise à la propre limite de fréquence de GitHub
+  de 60 requêtes/heure si vous l'utilisez beaucoup en peu de temps) -
+  rien ici ne nécessite un compte GitHub ou un jeton.
 
 **`<nomdefichier>.manifest.json` optionnel, à côté d'un fichier
-firmware** (p. ex. `URTC_v1_0_F303CC.bin.manifest.json`), ajoute une
+firmware** (p. ex. `URTC_V1.1_F303CC.bin.manifest.json`), ajoute une
 vérification de bon sens supplémentaire et non bloquante : si présent,
 son champ `sha256` est comparé au fichier réel juste avant de flasher,
 avec `version`/`build_date` enregistrés à côté pour référence.
@@ -358,8 +375,8 @@ Ce que vous verrez :
 
 **Carte d'extension :** une liste déroulante séparée et une paire
 Interroger/Enregistrer, juste sous la vérification de version. Lit et
-définit laquelle des 5 configurations possibles de `CONN_EXPANSION`
-(aucune, ou l'une des 4 variantes planifiées - voir `EXPANSION.TXT`)
+définit laquelle des 7 configurations possibles de `CONN_EXPANSION`
+(aucune, ou l'une des 6 variantes réelles - voir `EXPANSION.TXT`)
 est physiquement installée, via CAN (`0x1A0`/`0x1A1`). Il n'y a aucun
 moyen électrique pour la carte de le détecter elle-même, donc il faut le
 lui dire - cela vit ici (pas seulement dans `URTC Tester`) puisque
@@ -368,6 +385,19 @@ naturellement aux côtés d'une mise à jour de firmware. **Enregistrer**
 demande d'abord confirmation, puisque cela persiste à travers les
 cycles d'alimentation jusqu'à ce que ce soit explicitement changé à
 nouveau.
+
+**Variante de capteur MLX9064x :** même forme que le contrôle de carte
+d'extension ci-dessus - une liste déroulante et une paire
+Interroger/Enregistrer qui lit/définit lequel des 3 capteurs thermiques
+de la famille MLX9064x (ou aucun) est réellement installé, via CAN
+(`0x1A6`/`0x1A7` - voir `CANBUS.TXT`). Pertinent uniquement lorsque la
+carte d'extension ci-dessus est configurée comme une variante Advanced
+ou Basic+MLX9064x ; le propre firmware de la carte ignore complètement
+ce réglage sur tout autre type de carte d'extension. « Aucun installé »
+(la valeur par défaut sûre) ne retombe délibérément pas sur l'hypothèse
+MLX90640 - une carte avec un vrai MLX90640 câblé nécessite que cela
+soit défini explicitement, une fois, de la même manière que le type de
+carte d'extension lui-même le requiert déjà.
 
 ## 5. Flasher
 
@@ -378,19 +408,33 @@ nouveau.
    soit déjà à ce débit (étape 1 ci-dessus) - cet outil ne le définit
    pas. Dans les deux cas, la version actuelle est interrogée
    automatiquement - voir section 4 ci-dessus.
-2. **Sélectionner le firmware** : choisissez dans la liste détectée, ou
+2. **Choisissez une cible de flashage** : « Cette carte (principale) »
+   ou « Esclave d'extension » - par défaut la carte principale, le cas
+   de loin le plus courant. L'option esclave n'atteint quelque chose
+   que sur une variante de carte d'extension Advanced
+   (TMC2209+STM32F303CBT6 ou TMC5160A+STM32F303CBT6) - la mise à jour
+   est relayée via le propre pont I2C de la carte principale vers la
+   puce esclave (les propres `0x210`-`0x218` de `CANBUS.TXT`), pas une
+   connexion physique séparée. « Effacer F-RAM avant de flasher »
+   (étape 4 ci-dessous) se désactive automatiquement en choisissant
+   Esclave - la puce esclave n'a pas de F-RAM propre à effacer.
+3. **Sélectionner le firmware** : choisissez dans la liste détectée, ou
    Parcourir - voir la section 3 ci-dessus pour savoir exactement
    comment fonctionnent la détection et la validation.
-3. **Flasher** :
+4. **Flasher** :
    - Laissez coché "La carte exécute actuellement l'application" si la
      carte est allumée et fonctionne normalement - l'outil envoie
-     d'abord le déclencheur à charge utile magique `0x7F0`, qui éteint
-     en sécurité chaque actionneur avant de réinitialiser vers le
+     d'abord le déclencheur à charge utile magique `0x7F0` (ou `0x210`,
+     relayé vers l'esclave, si Esclave est la cible sélectionnée), qui
+     éteint en sécurité chaque actionneur avant de réinitialiser vers le
      bootloader.
    - Décochez si la carte est déjà dans le bootloader (juste après un
      flash JTAG frais, ou si la vérification de version ci-dessus a
      montré "no valid firmware currently installed").
-   - Cliquez sur **Flasher le Firmware** et confirmez. Le journal montre
+   - Cliquez sur **Flasher le Firmware** et confirmez - la boîte de
+     dialogue de confirmation nomme quelle cible vous êtes sur le point
+     de flasher, alors vérifiez que cela correspond à ce que vous
+     vouliez réellement sélectionner. Le journal montre
      chaque étape du protocole ; la barre de progression suit la
      progression d'écriture page par page pendant le transfert, puis la
      progression de copie pendant la copie finale de sauvegarde vers
@@ -405,8 +449,9 @@ déjà. Il est toujours sûr de simplement réessayer.
 
 La section "4. Program complete chip via SWD/JTAG" dans l'outil fait un
 flash complet de mise en route - efface en masse toute la puce, puis
-écrit à neuf à la fois l'image du bootloader (`0x08000000`) et celle de
-l'application (`0x08008000`). Ceci est un **type d'opération
+écrit à neuf à la fois l'image du bootloader et celle de l'application,
+aux adresses réelles de la puce correspondant à la sélection **Puce
+cible** (voir ci-dessous). Ceci est un **type d'opération
 différent** des sections 1-5 ci-dessus :
 
 |  | Mise à jour CAN OTA (sections 1-5) | Puce complète SWD/JTAG (section 6) |
@@ -416,6 +461,29 @@ différent** des sections 1-5 ci-dessus :
 | Touche le bootloader | Jamais | Oui, par conception |
 | Nécessite | Un adaptateur USB-CAN | Une sonde SWD/JTAG (ST-Link ou similaire) |
 | Usage typique | Mises à jour de firmware routinières | Première mise en route sur une puce vierge, ou récupération d'une carte briquée |
+
+**Puce cible :** « Cette carte (principale) » ou « Esclave d'extension »
+- mêmes 2 options que le propre sélecteur de l'onglet CAN-OTA, mais un
+choix véritablement séparé ici : SWD/JTAG nécessite une sonde
+physiquement câblée à la puce correspondant à cette sélection, puisqu'il
+n'existe aucun pont (contrairement à CAN-OTA) qui permette à une seule
+connexion d'atteindre les deux. Changer ceci modifie automatiquement les
+adresses flash utilisées :
+
+| | Carte principale (STM32F303CC) | Esclave d'extension (STM32F303CBT6) |
+|---|---|---|
+| Adresse bootloader | `0x08000000` (région 32K) | `0x08000000` (région 18K) |
+| Adresse application | `0x08008000` (région 112K) | `0x08005000` (région 54K) |
+| Chaîne cible pyOCD | `stm32f303cc` | `stm32f303cb` |
+
+Les deux chaînes cibles ci-dessus sont la meilleure estimation de ce
+projet pour le vrai nom de cible pyOCD de chaque puce, non confirmée
+face à une installation pyOCD réelle lors de la rédaction (la
+couverture STM32 dans pyOCD passe en grande partie par les CMSIS-Packs
+plutôt que par des cibles intégrées) - si le flashage échoue avec une
+erreur du type « target not found », exécutez vous-même `pyocd list
+--targets --name stm32f303` et `pyocd pack install <le vrai nom>`
+télécharge le bon CMSIS-Pack.
 
 **Nécessite l'un de** (l'outil détecte automatiquement lequel est
 disponible et n'active que ceux qu'il trouve) :
@@ -770,7 +838,15 @@ Chaque champ est optionnel - ne remplacez que ce qui change réellement.
 Un fichier manquant retombe silencieusement sur les valeurs par défaut
 compilées ; un fichier présent mais cassé enregistre un avertissement
 et retombe aussi sur ces valeurs, plutôt que de faire planter l'outil
-pour une faute de frappe. Quelle source est active est enregistré au
+pour une faute de frappe. **Ce mécanisme de remplacement ne s'applique
+qu'aux constantes propres de la carte principale** - les équivalents
+propres de la puce esclave d'extension (`SLAVE_BOOTLOADER_FLASH_ADDR`,
+`SLAVE_APP_FLASH_ADDR`, `SLAVE_HARDWARE_ID`, etc.) sont fixes dans le
+propre `flasher_config.py`, puisque les valeurs réelles de ce matériel
+sont déjà confirmées face à ses propres scripts d'édition de liens
+réels plutôt que de nécessiter un remplacement au moment du déploiement
+comme le nécessitent les valeurs par défaut propres de la carte
+principale. Quelle source est active est enregistré au
 démarrage, donc il est toujours visible quelles valeurs une session
 donnée a réellement utilisées. `hardware_id` accepte soit une chaîne
 JSON (`"0x0303CC01"`) soit un nombre JSON simple (`50580689`) - selon ce

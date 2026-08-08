@@ -464,7 +464,7 @@ def _center_geometry(win, width, height):
     y = max(0, (hs - height) // 2)
     return f"{width}x{height}+{x}+{y}"
 
-# Same 12 tool profiles as tester_config.py's own TOOL_NAMES - kept as a
+# Same 25 tool profiles as tester_config.py's own TOOL_NAMES - kept as a
 # separate copy rather than a shared import between the two tools' own
 # config modules (they're intentionally independent projects, not a
 # shared package), used here only for the free tool configuration
@@ -474,4 +474,9 @@ TOOL_NAMES = {
     3: "Screwdriver", 4: "Vacuum Pickup", 5: "Drill",
     6: "Gripper (Gimbal)", 7: "Gripper (NEMA)", 8: "AOI Inspection",
     9: "Laser Engraver", 10: "3D Printer", 11: "Scan Probe",
+    12: "SMT Pick & Place", 13: "Electromagnet", 14: "Spot Welder",
+    15: "Conformal Coating", 16: "Vacuum Gripper (LG)", 17: "Flying Probe",
+    18: "UV Curing", 19: "Hot Air Rework", 20: "Press-Fit Inserter",
+    21: "Crimping Actuator", 22: "Thermal Inspection", 23: "Paste Jetting",
+    24: "Ultrasonic Welder",
 }
