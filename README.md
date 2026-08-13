@@ -655,6 +655,16 @@ status). This tool and the bootloader agree on this frame format, so
 flash both together if you're building a custom bootloader with a
 different version of the protocol.
 
+**Same detail for the expansion slave**: a failed slave update (Target:
+"Expansion slave") queries `0x219` right after `0x215` reports
+`STATUS_VERIFY_FAIL`, relaying the slave bootloader's own
+`REG_VERIFY_FAIL_REASON` - the same 5 reasons as above, just reached over
+the I2C bridge instead of read directly off a CAN frame. Requires a slave
+bootloader that implements `0x219` (added alongside this tool's own
+support for it); an older slave bootloader simply doesn't answer that
+query, and this tool falls back to the generic "verification failed"
+message instead.
+
 ## 12. Optional F-RAM erase before flashing
 
 Section 3 has a checkbox, **"Also erase the persistence F-RAM before

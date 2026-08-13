@@ -742,6 +742,17 @@ questo formato di trama, quindi flasha entrambi insieme se stai
 costruendo un bootloader personalizzato con una versione diversa del
 protocollo.
 
+**Lo stesso dettaglio per lo slave di espansione**: un aggiornamento
+fallito dello slave (Destinazione: "Slave di espansione") interroga
+`0x219` subito dopo che `0x215` segnala `STATUS_VERIFY_FAIL`,
+inoltrando il proprio `REG_VERIFY_FAIL_REASON` del bootloader slave -
+gli stessi 5 motivi di sopra, solo raggiunti tramite il bridge I2C
+invece che letti direttamente da una trama CAN. Richiede un bootloader
+slave che implementi `0x219` (aggiunto insieme al supporto di questo
+strumento per esso); un bootloader slave più vecchio semplicemente non
+risponde a quella richiesta, e questo strumento ricade sul messaggio
+generico "verifica fallita".
+
 ## 12. Cancellazione opzionale della F-RAM prima di flashare
 
 La sezione 3 ha una casella di controllo, **"Cancella anche la F-RAM di

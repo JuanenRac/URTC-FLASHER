@@ -39,6 +39,7 @@ CAN_ID_SLAVE_STATUS           = 0x215
 CAN_ID_SLAVE_PROGRESS         = 0x216
 CAN_ID_SLAVE_VERSION_RESP_1   = 0x217
 CAN_ID_SLAVE_VERSION_RESP_2   = 0x218
+CAN_ID_SLAVE_VERIFY_FAIL_REASON = 0x219  # only meaningful right after CAN_ID_SLAVE_STATUS reports STATUS_VERIFY_FAIL (0x05) - same VERIFY_FAIL_REASONS values below as the main board's own 0x7F5
 CAN_ID_QUERY_VERSION    = 0x7F8
 CAN_ID_VERSION_RESPONSE = 0x7F9
 CAN_ID_QUERY_FRAM_STATE = 0x190  # Query the FM24CL64B's recovered state (application-side, not the bootloader)

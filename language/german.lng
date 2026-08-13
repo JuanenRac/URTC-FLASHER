@@ -295,6 +295,7 @@ LOG_SLAVE_PROGRESS={offset}/{size} Bytes an Erweiterungs-Slave gesendet (eigener
 LOG_SLAVE_TRANSFER_COMPLETE=Übertragung an Erweiterungs-Slave abgeschlossen: {size} Bytes in {elapsed:.1f}s ({kbps:.1f} KB/s)
 LOG_SLAVE_UPDATE_CONFIRMED=Erweiterungs-Slave-Update überprüft und bestätigt.
 LOG_SLAVE_VERIFY_FAILED=Erweiterungs-Slave meldete Überprüfungsfehler (Größe, CRC32, HMAC oder HardwareID stimmen im eigenen Backup-Slot nicht überein).
+LOG_SLAVE_VERIFY_FAILED_REASON=Erweiterungs-Slave meldete Überprüfungsfehler: {reason}
 LOG_SLAVE_GENERIC_ERROR=Erweiterungs-Slave meldete einen allgemeinen Fehlerstatus.
 
 # SWD/JTAG target chip selector (main board / expansion slave)

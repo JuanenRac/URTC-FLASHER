@@ -777,6 +777,17 @@ diesem Frame-Format überein, also flashen Sie beide zusammen, wenn Sie
 einen benutzerdefinierten Bootloader mit einer anderen Protokollversion
 bauen.
 
+**Dasselbe Detail für den Erweiterungs-Slave**: ein fehlgeschlagenes
+Slave-Update (Ziel: „Erweiterungs-Slave") fragt `0x219` direkt ab,
+nachdem `0x215` `STATUS_VERIFY_FAIL` meldet, und leitet den eigenen
+`REG_VERIFY_FAIL_REASON` des Slave-Bootloaders weiter - dieselben 5
+Gründe wie oben, nur über die I2C-Bridge erreicht statt direkt aus
+einem CAN-Frame gelesen. Erfordert einen Slave-Bootloader, der `0x219`
+implementiert (zusammen mit der Unterstützung dieses Tools dafür
+hinzugefügt); ein älterer Slave-Bootloader antwortet auf diese Anfrage
+einfach nicht, und dieses Tool fällt dann auf die generische Meldung
+„Verifizierung fehlgeschlagen" zurück.
+
 ## 12. Optionales F-RAM-Löschen vor dem Flashen
 
 Abschnitt 3 hat ein Kontrollkästchen, **"Auch das persistente F-RAM vor

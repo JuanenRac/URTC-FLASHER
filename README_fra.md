@@ -766,6 +766,17 @@ statut spécifique). Cet outil et le bootloader s'accordent sur ce
 format de trame, donc flashez les deux ensemble si vous construisez un
 bootloader personnalisé avec une version différente du protocole.
 
+**Le même détail pour l'esclave d'extension** : une mise à jour
+échouée de l'esclave (Cible : « Esclave d'extension ») interroge
+`0x219` juste après que `0x215` signale `STATUS_VERIFY_FAIL`, relayant
+le propre `REG_VERIFY_FAIL_REASON` du bootloader esclave - les mêmes 5
+raisons que ci-dessus, atteintes cette fois via le pont I2C plutôt que
+lues directement sur une trame CAN. Nécessite un bootloader esclave qui
+implémente `0x219` (ajouté en même temps que le support de cet outil
+pour celui-ci) ; un bootloader esclave plus ancien ne répond simplement
+pas à cette requête, et cet outil retombe alors sur le message
+générique « échec de vérification ».
+
 ## 12. Effacement optionnel de la F-RAM avant de flasher
 
 La section 3 a une case à cocher, **"Effacer aussi la F-RAM de

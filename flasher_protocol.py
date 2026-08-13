@@ -24,6 +24,7 @@ from flasher_config import (
     CAN_ID_SLAVE_ENTER_BOOTLOADER, CAN_ID_SLAVE_START_UPDATE, CAN_ID_SLAVE_HMAC_CHUNK,
     CAN_ID_SLAVE_DATA, CAN_ID_SLAVE_END_UPDATE, CAN_ID_SLAVE_STATUS,
     CAN_ID_SLAVE_PROGRESS, CAN_ID_SLAVE_VERSION_RESP_1, CAN_ID_SLAVE_VERSION_RESP_2,
+    CAN_ID_SLAVE_VERIFY_FAIL_REASON,
     SLAVE_HARDWARE_ID, SLAVE_APP_MAX_SIZE,
 )
 
@@ -572,6 +573,10 @@ class URTCFlasher:
                 self.log(_("LOG_SLAVE_UPDATE_CONFIRMED"))
                 return True
             if status == 0x05:  # STATUS_VERIFY_FAIL
+                reason_byte = self._query_slave_verify_fail_reason(timeout=1.0)
+                if reason_byte is not None:
+                    reason = VERIFY_FAIL_REASONS.get(reason_byte, f"unknown reason 0x{reason_byte:02X}")
+                    raise FlashError(_("LOG_SLAVE_VERIFY_FAILED_REASON", reason=reason))
                 raise FlashError(_("LOG_SLAVE_VERIFY_FAILED"))
             if status == 0xFF:
                 raise FlashError(_("LOG_SLAVE_GENERIC_ERROR"))
@@ -590,6 +595,22 @@ class URTCFlasher:
                 continue
             can_id, data = frame
             if can_id == CAN_ID_SLAVE_STATUS and len(data) >= 1:
+                return data[0]
+        return None
+
+    def _query_slave_verify_fail_reason(self, timeout=1.0):
+        # Same relay pattern as _query_slave_status/_query_slave_progress
+        # above - only meaningful right after status reports
+        # STATUS_VERIFY_FAIL (0x05), see CAN_ID_SLAVE_VERIFY_FAIL_REASON's
+        # own comment in flasher_config.py.
+        self.can.send_frame(CAN_ID_SLAVE_VERIFY_FAIL_REASON, b"")
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            frame = self.can.read_frame(timeout=0.1)
+            if frame is None:
+                continue
+            can_id, data = frame
+            if can_id == CAN_ID_SLAVE_VERIFY_FAIL_REASON and len(data) >= 1:
                 return data[0]
         return None
 

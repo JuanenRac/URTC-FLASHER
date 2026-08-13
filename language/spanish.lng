@@ -295,6 +295,7 @@ LOG_SLAVE_PROGRESS=Enviados {offset}/{size} bytes al esclavo de expansion (progr
 LOG_SLAVE_TRANSFER_COMPLETE=Transferencia al esclavo de expansion completa: {size} bytes en {elapsed:.1f}s ({kbps:.1f} KB/s)
 LOG_SLAVE_UPDATE_CONFIRMED=Actualizacion del esclavo de expansion verificada y confirmada.
 LOG_SLAVE_VERIFY_FAILED=El esclavo de expansion reporto fallo de verificacion (tamaño, CRC32, HMAC, o HardwareID no coinciden en su propio slot de respaldo).
+LOG_SLAVE_VERIFY_FAILED_REASON=El esclavo de expansion reporto fallo de verificacion: {reason}
 LOG_SLAVE_GENERIC_ERROR=El esclavo de expansion reporto un estado de error generico.
 
 # SWD/JTAG target chip selector (main board / expansion slave)

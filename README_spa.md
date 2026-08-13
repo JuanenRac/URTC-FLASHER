@@ -743,6 +743,17 @@ este formato de trama, así que flashea ambos juntos si estás
 construyendo un bootloader personalizado con una versión distinta del
 protocolo.
 
+**El mismo detalle para el esclavo de expansión**: una actualización
+fallida del esclavo (Objetivo: "Esclavo de expansión") consulta `0x219`
+justo después de que `0x215` reporte `STATUS_VERIFY_FAIL`, relevando el
+propio `REG_VERIFY_FAIL_REASON` del bootloader esclavo - los mismos 5
+motivos de arriba, solo que alcanzados a través del puente I2C en vez de
+leídos directamente de una trama CAN. Requiere un bootloader esclavo que
+implemente `0x219` (añadido junto con el soporte de esta herramienta para
+ello); un bootloader esclavo más antiguo simplemente no responde a esa
+consulta, y esta herramienta cae de vuelta al mensaje genérico de
+"verificación fallida".
+
 ## 12. Borrado opcional de la F-RAM antes de flashear
 
 La sección 3 tiene una casilla, **"También borrar la F-RAM de

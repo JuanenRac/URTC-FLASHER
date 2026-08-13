@@ -295,6 +295,7 @@ LOG_SLAVE_PROGRESS=Envoye {offset}/{size} octets a l'esclave d'extension (sa pro
 LOG_SLAVE_TRANSFER_COMPLETE=Transfert vers l'esclave d'extension termine : {size} octets en {elapsed:.1f}s ({kbps:.1f} Ko/s)
 LOG_SLAVE_UPDATE_CONFIRMED=Mise a jour de l'esclave d'extension verifiee et confirmee.
 LOG_SLAVE_VERIFY_FAILED=L'esclave d'extension a signale un echec de verification (taille, CRC32, HMAC ou HardwareID non concordants sur son propre emplacement de sauvegarde).
+LOG_SLAVE_VERIFY_FAILED_REASON=L'esclave d'extension a signale un echec de verification : {reason}
 LOG_SLAVE_GENERIC_ERROR=L'esclave d'extension a signale un statut d'erreur generique.
 
 # SWD/JTAG target chip selector (main board / expansion slave)
