@@ -6,6 +6,7 @@
 STATUS_CHECK_REQUIRES_CONNECTION=(la verifica richiede una connessione attiva)
 STATUS_CONNECT_TO_CHECK=(connetti per verificare)
 CHK_ERASE_FRAM_BEFORE_FLASHING=Cancella anche la F-RAM di persistenza prima di programmare
+CHK_ALLOW_DOWNGRADE=Consenti il downgrade (bypassa l'anti-rollback) per questo aggiornamento
 LBL_APPLICATION_FILE=Applicazione (.bin/.hex/.elf):
 BTN_AUTO_DETECT=Rilevamento automatico
 CHK_BACKUP_BEFORE_ERASING=Backup di tutta la flash prima della cancellazione (256KB, ~10-30s)
@@ -60,6 +61,7 @@ STATUS_TRYING_EACH_BITRATE=Prova di ogni velocita bus...
 RADIO_PYOCD_BUILTIN=pyOCD (integrato)
 HELP_UNCHECK_IF_IN_BOOTLOADER=Deseleziona questo se la scheda si trova gia nel bootloader (flash JTAG recente, o nessuna applicazione valida attualmente presente).
 HELP_ERASE_FRAM_OPTIONAL=Opzionale, disattivato di default. Cancella lo stato dei parametri dello strumento salvato sulla scheda (vedi CANBUS.TXT 0x190-0x192) - non necessario per un aggiornamento normale, poiche una discrepanza di versione viene gia rilevata e ignorata automaticamente, ma utile per una tabula rasa autentica. Funziona solo mentre l'applicazione e in esecuzione (richiede anche la casella di trigger sopra selezionata) - il bootloader stesso non gestisce questo comando.
+HELP_ALLOW_DOWNGRADE=Disattivato di default. Invia 0x7FD prima di terminare l'aggiornamento, autorizzando SOLO questo tentativo a installare una versione precedente rispetto a quella in esecuzione - normalmente rifiutato per impedire che una versione con una vulnerabilita nota venga reinstallata. Usa questo solo per tornare deliberatamente a una versione precedente di cui ti fidi. Disattivato per l'obiettivo slave di espansione - il suo bootloader non implementa ancora 0x7FD.
 HELP_NEITHER_TOOL_FOUND=Nessuno dei due trovato. Installa pyOCD (pip install pyocd) o STM32CubeProgrammer per usare questa sezione.
 HELP_RDP_CHECK_READONLY=Verifica RDP di sola lettura tramite STM32CubeProgrammer (pyOCD non la espone allo stesso modo). RDP0/1 sono entrambi reversibili; RDP2 e l'unico blocco permanente di cui questo strumento si e preoccupato.
 HELP_NEEDS_CUBEPROGRAMMER_SUFFIX= Richiede STM32CubeProgrammer.
@@ -157,6 +159,8 @@ LOG_RESETTING_TARGET=Reset del target...
 LOG_SENDING_HMAC=Invio della firma HMAC (4x 0x7F7)...
 LOG_SENDING_BOOTLOADER_TRIGGER=Invio del trigger di ingresso al bootloader (0x7F0)...
 LOG_SENDING_END_UPDATE=Invio di fine aggiornamento / verifica (0x7F4)...
+LOG_SENDING_AUTHORIZE_DOWNGRADE=Invio autorizzazione downgrade (0x7FD)...
+LOG_NO_MANIFEST_VERSION_FOR_DOWNGRADE=Nessun campo versione trovato nel .manifest.json di questo file - verra comunicata al bootloader la versione configurata di questo strumento ({major}.{minor}). Se non corrisponde alla versione reale del file, aggiungi prima un manifest.json con il campo "version" corretto.
 LOG_SENDING_FIRMWARE_DATA=Invio dei dati firmware...
 LOG_SENDING_START_UPDATE=Invio di inizio aggiornamento (0x7F1)...
 LOG_UPDATE_VERIFIED_OK=Aggiornamento verificato correttamente - la scheda si sta riavviando nel nuovo firmware.
@@ -224,6 +228,7 @@ LOG_SKIPPING_FRAM_ERASE=Cancellazione F-RAM saltata: richiede che l'applicazione
 TITLE_CONFIRM_EXPANSION_BOARD_TYPE=Conferma tipo di scheda di espansione
 MSG_CONFIRM_EXPANSION_BOARD_TYPE=Imposta e salva il tipo di scheda di espansione di questa scheda a:\n\n  {type}\n\nQuesta e un'impostazione di configurazione hardware una tantum, non qualcosa da cambiare con leggerezza - persiste tra i cicli di alimentazione finche non viene esplicitamente cambiata di nuovo. Procedere?
 TITLE_CONFIRM_FLASH=Conferma programmazione
+TITLE_CONFIRM_DOWNGRADE=Conferma downgrade
 MSG_CONFIRM_FLASH=Questo cancellera lo slot di backup e, una volta verificato, sostituira lo slot dell'applicazione principale con questo firmware.\n\nIl firmware attualmente in esecuzione rimane intatto finche la nuova immagine non e completamente verificata, quindi e sicuro riprovare in caso di fallimento - ma controlla bene di aver selezionato il file giusto.\n\nProcedere?
 
 # --- Barra dei menu ---
@@ -291,6 +296,7 @@ OPT_TARGET_MASTER=Questa scheda (principale)
 OPT_TARGET_SLAVE=Slave di espansione
 HELP_FLASH_TARGET_SLAVE=Raggiunge qualcosa solo su una variante di scheda di espansione Advanced (TMC2209+STM32F303CBT6 o TMC5160A+STM32F303CBT6) - inoltrato tramite il bridge I2C di questa scheda (0x210-0x218 in CANBUS.TXT), non una connessione diretta. "Cancella F-RAM" non si applica ad esso - il chip slave non ha memoria persistente propria.
 MSG_CONFIRM_FLASH_TARGET=Stai per flashare: {target}.
+MSG_CONFIRM_DOWNGRADE=Questo bypassa la protezione anti-rollback del bootloader per questo aggiornamento. Procedi solo se stai installando deliberatamente una versione precedente di cui ti fidi. Continuare?
 
 Questo sovrascrivera il firmware attualmente in esecuzione. Assicurati di aver selezionato il file corretto per questa specifica destinazione. Continuare?
 LOG_SENDING_SLAVE_BOOTLOADER_TRIGGER=Invio trigger bootloader allo slave di espansione (0x210, inoltrato via I2C)...

@@ -441,6 +441,25 @@ HMAC, ou HardwareID), l'emplacement principal du bootloader n'est
 jamais touché - la carte continue d'exécuter le firmware qu'elle avait
 déjà. Il est toujours sûr de simplement réessayer.
 
+**Installer délibérément une version antérieure** : le bootloader
+refuse normalement une image valablement signée si elle déclare une
+version antérieure à celle déjà installée (raison d'échec de
+vérification « rollback refusé ») - cela empêche qu'une version avec
+une vulnérabilité déjà découverte soit réinstallée. Si vous avez
+vraiment besoin de revenir à une version antérieure en laquelle vous
+avez confiance, cochez **« Autoriser le downgrade (contourner
+l'anti-rollback) pour cette mise à jour »** (carte principale
+uniquement) avant de flasher - une seconde boîte de dialogue de
+confirmation apparaît puisque cela contourne délibérément une
+vérification de sécurité. Ceci charge quand même l'image antérieure
+complète via le transfert normal, cela ne fait que lever la vérification
+de l'ordre des versions pour cette tentative (`0x7FD` - voir
+`docs/CANBUS.TXT`) ; le numéro de version signalé à la carte provient du
+propre `.manifest.json` du fichier lorsqu'il en existe un à côté (voir
+section 3 ci-dessus), retombant sur la version actuellement configurée
+de cet outil sinon, journalisé clairement dans tous les cas afin que ce
+ne soit jamais une supposition silencieuse.
+
 ## 6. Programmer la puce complète via SWD/JTAG (avancé)
 
 La section "4. Program complete chip via SWD/JTAG" dans l'outil fait un

@@ -24,7 +24,7 @@ from flasher_config import (
     CAN_ID_SLAVE_ENTER_BOOTLOADER, CAN_ID_SLAVE_START_UPDATE, CAN_ID_SLAVE_HMAC_CHUNK,
     CAN_ID_SLAVE_DATA, CAN_ID_SLAVE_END_UPDATE, CAN_ID_SLAVE_STATUS,
     CAN_ID_SLAVE_PROGRESS, CAN_ID_SLAVE_VERSION_RESP_1, CAN_ID_SLAVE_VERSION_RESP_2,
-    CAN_ID_SLAVE_VERIFY_FAIL_REASON,
+    CAN_ID_SLAVE_VERIFY_FAIL_REASON, CAN_ID_AUTHORIZE_DOWNGRADE,
     SLAVE_HARDWARE_ID, SLAVE_APP_MAX_SIZE,
 )
 
@@ -169,15 +169,24 @@ class URTCFlasher:
         time.sleep(0.8)  # give the app time to shut down actuators and reset
 
     def _check_manifest(self, firmware_path, actual_sha256):
+        # Returns the manifest's own declared (major, minor) as a parsed
+        # tuple if present and well-formed, else None - flash() uses this
+        # in preference to its own hardcoded FIRMWARE_VERSION_MAJOR/MINOR
+        # when available, same reasoning flash_slave() already documents
+        # for why trusting a fixed constant regardless of which .bin was
+        # actually selected would be wrong (that constant reflects this
+        # tool's own currently-configured version, not necessarily the
+        # specific file on disk - most likely to actually diverge exactly
+        # when deliberately flashing an older file for a downgrade).
         manifest_path = firmware_path + ".manifest.json"
         if not os.path.isfile(manifest_path):
-            return
+            return None
         try:
             with open(manifest_path, "r") as f:
                 manifest = json.load(f)
         except (OSError, json.JSONDecodeError) as e:
             self.log(_("LOG_MANIFEST_UNREADABLE", e=e))
-            return
+            return None
 
         # str() before .lower(): manifest.get() only supplies the ""
         # default when the key is absent - if it's present but the wrong
@@ -189,9 +198,15 @@ class URTCFlasher:
         version = manifest.get("version", "?")
         build_date = manifest.get("build_date", "?")
         self.log(_("LOG_MANIFEST_INFO", version=version, build_date=build_date))
+
+        parsed_version = None
+        parts = str(version).split(".")
+        if len(parts) >= 2 and parts[0].isdigit() and parts[1].isdigit():
+            parsed_version = (int(parts[0]), int(parts[1]))
+
         if not expected_sha256:
             self.log(_("LOG_MANIFEST_NO_SHA256_FIELD"))
-            return
+            return parsed_version
         if expected_sha256 == actual_sha256.lower():
             self.log(_("LOG_MANIFEST_SHA256_MATCHES"))
         else:
@@ -203,8 +218,9 @@ class URTCFlasher:
                 f"warning, not an authoritative gate the way the bootloader's own HMAC "
                 f"verification is."
             )
+        return parsed_version
 
-    def flash(self, firmware_path):
+    def flash(self, firmware_path, allow_downgrade=False):
         self._last_heartbeat_pct = None  # a stale value from a prior flash()
         # call in this same session would otherwise always satisfy the
         # page-ACK retry's ">=" check below, regardless of this update's
@@ -232,7 +248,18 @@ class URTCFlasher:
         self.log(_("LOG_FIRMWARE_HMAC", hmac=signature.hex()))
         self.log(_("LOG_FIRMWARE_HARDWAREID", hw_id=THIS_HARDWARE_ID))
 
-        self._check_manifest(firmware_path, actual_sha256)
+        manifest_version = self._check_manifest(firmware_path, actual_sha256)
+        report_major, report_minor = manifest_version if manifest_version else (FIRMWARE_VERSION_MAJOR, FIRMWARE_VERSION_MINOR)
+        if manifest_version is None:
+            # No manifest, or no parseable version field in it - falling
+            # back to this tool's own configured version is only actually
+            # correct when the selected file happens to match it. Usually
+            # true (the common case is flashing the current build), but
+            # worth a visible note specifically when downgrading, since
+            # that's exactly the case where "assume it's the current
+            # version" is most likely to be wrong.
+            if allow_downgrade:
+                self.log(_("LOG_NO_MANIFEST_VERSION_FOR_DOWNGRADE", major=report_major, minor=report_minor))
 
         # --- 0x7F1: start update (size + HardwareID) ---
         self.log(_("LOG_SENDING_START_UPDATE"))
@@ -338,9 +365,24 @@ class URTCFlasher:
         self.log(_("LOG_TRANSFER_COMPLETE", size=size, elapsed=transfer_elapsed,
                   kbps=overall_kbps, retries=total_retries, retry_word=retry_word))
 
-        # --- 0x7F4: end update (CRC32 + version) ---
+        # --- 0x7FD: authorize downgrade for THIS attempt, if requested -
+        # must arrive before 0x7F4 below, since HandleEndUpdate consumes
+        # the flag the moment its own anti-rollback check runs. Deliberate
+        # magic payload (see CANBUS.TXT) - never sent unless the caller
+        # explicitly opted in. ---
+        if allow_downgrade:
+            self.log(_("LOG_SENDING_AUTHORIZE_DOWNGRADE"))
+            self.can.send_frame(CAN_ID_AUTHORIZE_DOWNGRADE, bytes([0xD0, 0x9E, 0x12, 0xAD]))
+            time.sleep(0.01)
+
+        # --- 0x7F4: end update (CRC32 + version) - report_major/minor
+        # come from the firmware file's own manifest when available (see
+        # _check_manifest above), not blindly from this tool's own
+        # currently-configured FIRMWARE_VERSION_MAJOR/MINOR, since those 2
+        # can genuinely differ - most likely exactly when allow_downgrade
+        # is set. ---
         self.log(_("LOG_SENDING_END_UPDATE"))
-        payload = struct.pack(">IHH", crc32, FIRMWARE_VERSION_MAJOR, FIRMWARE_VERSION_MINOR)
+        payload = struct.pack(">IHH", crc32, report_major, report_minor)
         self.can.send_frame(CAN_ID_END_UPDATE, payload)
 
         # The bootloader now verifies, then copies backup->main - this can

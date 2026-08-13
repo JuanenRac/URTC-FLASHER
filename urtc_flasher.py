@@ -123,6 +123,11 @@ def run_cli(argv):
                               "valid application currently present)")
     parser.add_argument("--force", action="store_true",
                          help="Flash even if the file fails the plausibility check")
+    parser.add_argument("--allow-downgrade", action="store_true",
+                         help="Send CAN_ID_AUTHORIZE_DOWNGRADE (0x7FD) before ending the update, "
+                              "bypassing the bootloader's own anti-rollback check for this attempt "
+                              "only - use to deliberately revert to an older, still-signed release. "
+                              "Off by default.")
     parser.add_argument("--mock-fail", type=lambda s: int(s, 0), default=None, metavar="REASON",
                          help="With --transport mock: simulate a verify failure with this "
                               "VERIFY_FAIL_REASON_* value (e.g. 0x03 for HMAC mismatch) instead "
@@ -165,7 +170,7 @@ def run_cli(argv):
         flasher = URTCFlasher(transport, log=_cli_log, progress_cb=lambda pct: None)
         if not args.no_trigger:
             flasher.trigger_bootloader_entry()
-        flasher.flash(args.file)
+        flasher.flash(args.file, allow_downgrade=args.allow_downgrade)
         _cli_log("SUCCESS: firmware update complete.")
         return 0
     except KeyboardInterrupt:

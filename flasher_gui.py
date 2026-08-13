@@ -341,10 +341,29 @@ class FlasherGUI:
             foreground="gray", wraplength=380, justify="left",
         ).grid(row=5, column=0, columnspan=3, sticky="w", padx=8)
 
+        # 0x7FD - bypasses the bootloader's own anti-rollback check for
+        # this one attempt (Target: main board only; the expansion slave's
+        # own bootloader doesn't implement this yet). Off by default and
+        # asked to confirm again in start_flash() below, same "opt in
+        # twice for something deliberately dangerous" pattern the SWD
+        # section's own dry-run/option-bytes checks already use.
+        self.allow_downgrade_var = tk.BooleanVar(value=False)
+        self.allow_downgrade_check = ttk.Checkbutton(
+            act_frame,
+            text=_("CHK_ALLOW_DOWNGRADE"),
+            variable=self.allow_downgrade_var,
+        )
+        self.allow_downgrade_check.grid(row=6, column=0, columnspan=3, sticky="w", **pad)
+        ttk.Label(
+            act_frame,
+            text=_("HELP_ALLOW_DOWNGRADE"),
+            foreground="#b35900", wraplength=380, justify="left",
+        ).grid(row=7, column=0, columnspan=3, sticky="w", padx=8)
+
         self.flash_btn = ttk.Button(act_frame, text=_("BTN_FLASH_FIRMWARE"), command=self.start_flash)
-        self.flash_btn.grid(row=6, column=0, **pad)
+        self.flash_btn.grid(row=8, column=0, **pad)
         self.cancel_btn = ttk.Button(act_frame, text=_("BTN_CANCEL"), command=self.cancel_flash, state="disabled")
-        self.cancel_btn.grid(row=6, column=1, **pad)
+        self.cancel_btn.grid(row=8, column=1, **pad)
 
         # --- Free tool configuration (right column, top) - (0x1A2/0x1A3),
         # only consulted by a board whose ID jumpers read 11111 (0x1F,
@@ -1518,8 +1537,14 @@ class FlasherGUI:
         if self.flash_target_var.get() == "slave":
             self.erase_fram_var.set(False)
             self.erase_fram_check.config(state="disabled")
+            # The expansion slave's own bootloader doesn't implement 0x7FD
+            # (CANBUS.TXT) yet - same reasoning as F-RAM above, disabled
+            # rather than left clickable and silently doing nothing.
+            self.allow_downgrade_var.set(False)
+            self.allow_downgrade_check.config(state="disabled")
         else:
             self.erase_fram_check.config(state="normal")
+            self.allow_downgrade_check.config(state="normal")
 
     def start_flash(self):
         if self.transport is None:
@@ -1535,6 +1560,16 @@ class FlasherGUI:
         if not messagebox.askyesno(
             _("TITLE_CONFIRM_FLASH"),
             _("MSG_CONFIRM_FLASH_TARGET", target=target_label),
+        ):
+            return
+        # Second, separate confirmation specifically for the anti-rollback
+        # bypass - deliberately not folded into the confirmation above, so
+        # checking this box always means an extra, unambiguous prompt of
+        # its own rather than blending into the routine "confirm target"
+        # dialog every flash already shows.
+        if self.allow_downgrade_var.get() and not messagebox.askyesno(
+            _("TITLE_CONFIRM_DOWNGRADE"),
+            _("MSG_CONFIRM_DOWNGRADE"),
         ):
             return
 
@@ -1570,7 +1605,7 @@ class FlasherGUI:
                         flasher.erase_fram()
                 if self.trigger_var.get():
                     flasher.trigger_bootloader_entry()
-                flasher.flash(self.firmware_path)
+                flasher.flash(self.firmware_path, allow_downgrade=self.allow_downgrade_var.get())
             self.root.after(0, lambda: messagebox.showinfo(_("TITLE_SUCCESS"), _("MSG_FIRMWARE_UPDATE_COMPLETE")))
         except FlashError as e:
             self.log(_("LOG_FAILED", e=e))

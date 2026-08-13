@@ -379,6 +379,22 @@ If verification fails at any point (CRC32, HMAC, or HardwareID mismatch),
 the bootloader's main slot is never touched - the board keeps running
 whatever firmware it already had. It's always safe to just try again.
 
+**Deliberately installing an older version**: the bootloader normally
+rejects a validly-signed image if it declares a version older than what's
+already installed (verify-failure reason "rollback rejected") - this
+stops a version with a since-discovered vulnerability from being
+replayed. If you genuinely need to revert to an older, still-trusted
+release, check **"Allow downgrade (bypass anti-rollback) for this
+update"** (Target: main board only) before flashing - a second
+confirmation dialog appears since this is deliberately bypassing a
+safety check. This still uploads the complete older image through the
+normal transfer, it only lifts the version-ordering check for that one
+attempt (`0x7FD` - see `docs/CANBUS.TXT`); the version number reported to
+the board comes from the file's own `.manifest.json` when one exists
+next to it (see section 3 above), falling back to this tool's own
+currently-configured version otherwise, logged clearly either way so
+it's never a silent guess.
+
 ## 6. Programming the complete chip via SWD/JTAG (advanced)
 
 Section "4. Program complete chip via SWD/JTAG" in the tool does a full

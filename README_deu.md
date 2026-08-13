@@ -449,6 +449,24 @@ oder HardwareID-Abweichung), wird der Hauptslot des Bootloaders nie
 berührt - die Platine führt weiterhin die Firmware aus, die sie bereits
 hatte. Es ist immer sicher, es einfach erneut zu versuchen.
 
+**Absichtliches Installieren einer älteren Version**: der Bootloader
+lehnt normalerweise ein gültig signiertes Image ab, wenn es eine ältere
+Version deklariert als die bereits installierte (Verifizierungsfehler-
+Grund „Rollback abgelehnt") - dies verhindert, dass eine Version mit
+einer bereits entdeckten Schwachstelle erneut installiert wird. Wenn Sie
+wirklich zu einer älteren, vertrauenswürdigen Version zurückkehren
+müssen, aktivieren Sie **„Downgrade erlauben (Anti-Rollback umgehen) für
+dieses Update"** (nur Hauptplatine) vor dem Flashen - es erscheint ein
+zweiter Bestätigungsdialog, da dies absichtlich eine Sicherheitsprüfung
+umgeht. Dies lädt weiterhin das komplette ältere Image über die normale
+Übertragung hoch, es hebt nur die Versionsreihenfolge-Prüfung für diesen
+einen Versuch auf (`0x7FD` - siehe `docs/CANBUS.TXT`); die der Platine
+gemeldete Versionsnummer stammt aus der eigenen `.manifest.json` der
+Datei, falls neben ihr eine vorhanden ist (siehe Abschnitt 3 oben),
+andernfalls aus der aktuell konfigurierten Version dieses Tools, in
+beiden Fällen klar protokolliert, sodass es nie eine stille Vermutung
+ist.
+
 ## 6. Den kompletten Chip via SWD/JTAG programmieren (fortgeschritten)
 
 Der Abschnitt "4. Program complete chip via SWD/JTAG" im Tool führt

@@ -429,6 +429,24 @@ HardwareID), el slot principal del bootloader nunca se toca - la placa
 sigue ejecutando el firmware que ya tenía. Siempre es seguro simplemente
 volver a intentarlo.
 
+**Instalar deliberadamente una versión anterior**: el bootloader
+normalmente rechaza una imagen válidamente firmada si declara una
+versión anterior a la ya instalada (razón de fallo de verificación
+"rollback rechazado") - esto evita que se reenvíe una versión con una
+vulnerabilidad ya descubierta. Si genuinamente necesitas revertir a una
+versión anterior en la que confíes, marca **"Permitir downgrade
+(saltarse el anti-rollback) para esta actualización"** (solo para el
+board principal) antes de flashear - aparece un segundo diálogo de
+confirmación, ya que esto salta deliberadamente una comprobación de
+seguridad. Esto sigue subiendo la imagen antigua completa a través de
+la transferencia normal, solo levanta la comprobación de orden de
+versión para ese intento (`0x7FD` - ver `docs/CANBUS.TXT`); el número de
+versión reportado a la placa viene del propio `.manifest.json` del
+archivo cuando existe uno junto a él (ver sección 3 arriba), recayendo
+en la versión actualmente configurada de esta herramienta en caso
+contrario, registrado claramente en cualquier caso para que nunca sea
+una suposición silenciosa.
+
 ## 6. Programar el chip completo por SWD/JTAG (avanzado)
 
 La sección "4. Program complete chip via SWD/JTAG" en la herramienta
