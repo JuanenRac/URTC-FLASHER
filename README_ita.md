@@ -199,11 +199,10 @@ riuscita, mentre `-m pip` trova il modulo installato direttamente.
 
 ## 3. Dove vanno i file di firmware
 
-Questo strumento si aspetta una cartella `firmware/` **dentro
-`tools/flasher/`**, proprio accanto a `urtc_flasher.py`:
+Questo strumento si aspetta una cartella `firmware/` proprio accanto a
+`urtc_flasher.py`, nella radice di questo stesso repository:
 
 ```
-tools/flasher/
 ├── assets/
 │   ├── URTC_LOGO_FLASHER.svg      <- sorgente del banner (vettoriale)
 │   └── urtc_banner.png            <- mostrato in cima alla finestra, renderizzato dal .svg sopra
@@ -242,12 +241,9 @@ dipendenza. Sia `build_exe.bat` che `build_exe.sh` già impacchettano
 PyInstaller, quindi funziona allo stesso modo sia che tu esegua dal
 sorgente sia da un binario compilato.
 
-Questo è deliberato: mantenere `firmware/` dentro `tools/flasher/`
-invece che nella radice del repository significa che l'intera cartella
-`tools/flasher/` è autonoma. Se vuoi solo flashare una scheda - su
-un PC di officina, da una chiavetta USB, ovunque - puoi copiare
-`tools/flasher/` da sola senza nient'altro dal repository, e
-funziona comunque.
+Questo è deliberato: l'intero repository è autonomo. Se vuoi solo
+flashare una scheda - su un PC di officina, da una chiavetta USB,
+ovunque - puoi copiare questo repository da solo, e funziona comunque.
 
 **Puoi tenerne più di uno `.bin` lì.** Ogni file firmware applicativo
 viene controllato ed elencato - lo strumento non prende semplicemente
@@ -348,7 +344,7 @@ Cosa vedrai:
 - **`v1.1 (application, HardwareID 0x0303CC01)`** - caso normale,
   applicazione in esecuzione, tutto corrisponde.
 - **`Bootloader running, no valid firmware currently installed,
-  bootloader v1.1.1`** - la scheda è bloccata nel bootloader senza
+  bootloader v1.1.2`** - la scheda è bloccata nel bootloader senza
   niente a cui saltare (chip vuoto, o ogni controllo sullo slot
   principale è fallito). Questa è esattamente la situazione per cui
   esiste questo strumento - flashala. La versione di bootloader
@@ -594,7 +590,7 @@ registro lo dice, il che è evidenza reale che i dati sono passati e si è
 perso solo l'ACK, non solo un'attesa più lunga e una speranza.
 
 Ogni sessione scrive anche un file di log con marca temporale in
-`tools/flasher/logs/` (`urtc_flasher_YYYYMMDD_HHMMSS.log`),
+`logs/` (`urtc_flasher_YYYYMMDD_HHMMSS.log`),
 indipendente dal registro a schermo - utile per consegnare una traccia
 completa a chi ha scritto il firmware se qualcosa va storto sul campo.
 Questa cartella viene creata automaticamente ed è sicura da eliminare;

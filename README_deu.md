@@ -206,11 +206,10 @@ Modul direkt findet.
 
 ## 3. Wohin die Firmware-Dateien gehören
 
-Dieses Tool erwartet einen `firmware/`-Ordner **innerhalb von
-`tools/flasher/`**, direkt neben `urtc_flasher.py`:
+Dieses Tool erwartet einen `firmware/`-Ordner direkt neben
+`urtc_flasher.py`, im Wurzelverzeichnis dieses Repositorys:
 
 ```
-tools/flasher/
 ├── assets/
 │   ├── URTC_LOGO_FLASHER.svg      <- Banner-Quelle (Vektor)
 │   └── urtc_banner.png            <- oben im Fenster angezeigt, aus dem .svg oben gerendert
@@ -250,13 +249,10 @@ eigenständige Executable, sodass dies auf dieselbe Weise funktioniert,
 egal ob Sie aus dem Quellcode oder aus einem erstellten Binary
 ausführen.
 
-Dies ist beabsichtigt: `firmware/` innerhalb von
-`tools/flasher/` statt an der Wurzel des Repositorys zu halten
-bedeutet, dass der gesamte `tools/flasher/`-Ordner in sich
-geschlossen ist. Wenn Sie nur eine Platine flashen wollen — auf einem
-Werkstatt-PC, von einem USB-Stick, wo auch immer — können Sie
-`tools/flasher/` allein kopieren, ohne sonst etwas aus dem
-Repository, und es funktioniert trotzdem.
+Dies ist beabsichtigt: das gesamte Repository ist in sich geschlossen.
+Wenn Sie nur eine Platine flashen wollen — auf einem Werkstatt-PC, von
+einem USB-Stick, wo auch immer — können Sie dieses Repository allein
+kopieren, und es funktioniert trotzdem.
 
 **Sie können mehr als eine `.bin` dort haben.** Jede
 Anwendungs-Firmware-Datei wird geprüft und aufgelistet - das Tool
@@ -361,7 +357,7 @@ Was Sie sehen werden:
 - **`v1.1 (application, HardwareID 0x0303CC01)`** - normaler Fall,
   Anwendung läuft, alles stimmt überein.
 - **`Bootloader running, no valid firmware currently installed,
-  bootloader v1.1.1`** - die Platine steckt im Bootloader fest, ohne
+  bootloader v1.1.2`** - die Platine steckt im Bootloader fest, ohne
   etwas, zu dem sie springen könnte (leerer Chip, oder jede Prüfung
   auf dem Hauptslot schlug fehl). Dies ist genau die Situation, für die
   dieses Tool existiert - flashen Sie sie. Die hier gezeigte
@@ -622,7 +618,7 @@ echter Beweis dafür ist, dass die Daten durchgekommen sind und nur das
 ACK verloren ging, nicht nur ein längeres Warten und eine Hoffnung.
 
 Jede Sitzung schreibt auch eine zeitgestempelte Protokolldatei nach
-`tools/flasher/logs/` (`urtc_flasher_YYYYMMDD_HHMMSS.log`),
+`logs/` (`urtc_flasher_YYYYMMDD_HHMMSS.log`),
 unabhängig vom Bildschirmprotokoll - nützlich, um eine vollständige
 Spur an denjenigen weiterzugeben, der die Firmware geschrieben hat,
 falls im Feld etwas schiefgeht. Dieser Ordner wird automatisch erstellt

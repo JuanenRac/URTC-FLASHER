@@ -175,11 +175,10 @@ installed module directly.
 
 ## 3. Where firmware files go
 
-This tool expects a `firmware/` folder **inside `tools/flasher/`**, right next to
-`urtc_flasher.py`:
+This tool expects a `firmware/` folder right next to `urtc_flasher.py`,
+at this repository's own root:
 
 ```
-tools/flasher/
 ├── assets/
 │   ├── URTC_LOGO_FLASHER.svg      <- banner source (vector)
 │   └── urtc_banner.png            <- shown at the top of the window, rendered from the .svg above
@@ -214,11 +213,9 @@ ships with), not Pillow, so it doesn't add a new dependency. Both
 standalone executable via PyInstaller's `--add-data`, so this works the
 same way whether you run from source or from a built binary.
 
-This is deliberate: keeping `firmware/` inside `tools/flasher/` instead of at
-the repo root means the whole `tools/flasher/` folder is self-contained. If
-you just want to flash a board — on a shop floor PC, from a USB stick,
-wherever — you can copy `tools/flasher/` on its own with nothing else from
-the repo, and it still works.
+This is deliberate: this whole repository is self-contained. If you just
+want to flash a board — on a shop floor PC, from a USB stick, wherever —
+you can copy this repository on its own, and it still works.
 
 **You can keep more than one `.bin` in there.** Every application-firmware
 file gets checked and listed - the tool doesn't just grab whatever it
@@ -309,7 +306,7 @@ What you'll see:
 - **`v1.1 (application, HardwareID 0x0303CC01)`** - normal case, application
   running, everything matches.
 - **`Bootloader running, no valid firmware currently installed, bootloader
-  v1.1.1`** - the board is stuck in the bootloader with nothing to jump
+  v1.1.2`** - the board is stuck in the bootloader with nothing to jump
   to (blank chip, or every check on the main slot failed). This is
   exactly the situation this tool exists to fix - flash it. The
   bootloader version shown here is the bootloader itself, unrelated to
@@ -526,7 +523,7 @@ receiving the current page in full would imply - when they're
 consistent, the log says so, which is real evidence the data got
 through and only the ACK was lost, not just a longer wait and a hope.
 
-Every session also writes a timestamped log file to `tools/flasher/logs/`
+Every session also writes a timestamped log file to `logs/`
 (`urtc_flasher_YYYYMMDD_HHMMSS.log`), independent of the on-screen log -
 useful for handing a full trace to whoever wrote the firmware if
 something goes wrong in the field. This folder is created automatically

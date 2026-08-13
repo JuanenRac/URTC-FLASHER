@@ -203,11 +203,10 @@ directement.
 
 ## 3. Où vont les fichiers de firmware
 
-Cet outil s'attend à un dossier `firmware/` **à l'intérieur de
-`tools/flasher/`**, juste à côté de `urtc_flasher.py` :
+Cet outil s'attend à un dossier `firmware/` juste à côté de
+`urtc_flasher.py`, à la racine de ce même dépôt :
 
 ```
-tools/flasher/
 ├── assets/
 │   ├── URTC_LOGO_FLASHER.svg      <- source de la banniere (vectorielle)
 │   └── urtc_banner.png            <- affichee en haut de la fenetre, rendue depuis le .svg ci-dessus
@@ -246,12 +245,9 @@ dépendance. `build_exe.bat` et `build_exe.sh` empaquettent déjà
 PyInstaller, donc cela fonctionne de la même manière que vous exécutiez
 depuis la source ou depuis un binaire construit.
 
-Ceci est délibéré : garder `firmware/` à l'intérieur de
-`tools/flasher/` plutôt qu'à la racine du dépôt signifie que tout
-le dossier `tools/flasher/` est autonome. Si vous voulez juste
+Ceci est délibéré : ce dépôt entier est autonome. Si vous voulez juste
 flasher une carte — sur un PC d'atelier, depuis une clé USB, n'importe
-où — vous pouvez copier `tools/flasher/` seul sans rien d'autre du
-dépôt, et cela fonctionne quand même.
+où — vous pouvez copier ce dépôt seul, et cela fonctionne quand même.
 
 **Vous pouvez en garder plus d'un `.bin` là-dedans.** Chaque fichier de
 firmware applicatif est vérifié et listé - l'outil ne prend pas
@@ -356,7 +352,7 @@ Ce que vous verrez :
 - **`v1.1 (application, HardwareID 0x0303CC01)`** - cas normal,
   application en cours d'exécution, tout correspond.
 - **`Bootloader running, no valid firmware currently installed,
-  bootloader v1.1.1`** - la carte est coincée dans le bootloader sans
+  bootloader v1.1.2`** - la carte est coincée dans le bootloader sans
   rien vers quoi sauter (puce vierge, ou chaque vérification sur
   l'emplacement principal a échoué). C'est exactement la situation pour
   laquelle cet outil existe - flashez-la. La version de bootloader
@@ -612,7 +608,7 @@ que seul l'ACK a été perdu, pas juste une attente plus longue et un
 espoir.
 
 Chaque session écrit aussi un fichier journal horodaté dans
-`tools/flasher/logs/` (`urtc_flasher_YYYYMMDD_HHMMSS.log`),
+`logs/` (`urtc_flasher_YYYYMMDD_HHMMSS.log`),
 indépendant du journal à l'écran - utile pour remettre une trace
 complète à celui qui a écrit le firmware si quelque chose ne va pas sur
 le terrain. Ce dossier est créé automatiquement et est sûr à
