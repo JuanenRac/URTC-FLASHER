@@ -611,11 +611,11 @@ transporte - no hay nada aquí para que lo intente.
 **Actividad de bus** ("Comprobar (2s)", junto a Consultar): cuenta
 tramas de protocolo reales realmente vistas durante una ventana fija de
 2 segundos en el transporte que esté conectado. Esto deliberadamente
-**no** es lo mismo que un porcentaje real de carga de bus CAN o los
-propios contadores de error del controlador (REC/TEC) - esos necesitan
-una consulta netlink (SocketCAN) o extensiones específicas del adaptador
-(SLCAN) que esta herramienta no tiene una forma estándar y sin
-dependencias de obtener. Lo que sí da: una señal genuina, directamente
+**no** es lo mismo que un porcentaje real de carga de bus CAN - eso
+necesitaría una consulta netlink (SocketCAN) o extensiones específicas
+del adaptador (SLCAN) que esta herramienta no tiene una forma estándar y
+sin dependencias de obtener para el controlador del *propio adaptador*.
+Lo que sí da: una señal genuina, directamente
 medida, de "hay algo hablando en este bus, y aproximadamente con qué
 frecuencia", en cualquiera de los 2 transportes. Para SocketCAN en
 concreto, también muestra el delta de 2 segundos de las propias
@@ -634,6 +634,22 @@ limpiar un bus-off real necesita bajar y volver a subir la interfaz a
 nivel del kernel, lo cual necesita root y cuenta como cambiar la
 configuración de red del sistema, no algo para hacer silenciosamente en
 tu nombre.
+
+**Contadores de error (TEC/REC)** (junto a Actividad de bus): a
+diferencia de los contadores del adaptador de arriba, esto le pregunta a
+**la propia placa** por el Transmit/Receive Error Counter de su propio
+controlador CAN (`0x7FB`/`0x7FC` - ver `docs/CANBUS.TXT`), respondido
+por lo que esté ejecutándose en ese momento, aplicación o bootloader.
+Verde significa que ambos contadores están en 0 (error-active,
+saludable); naranja significa que uno o ambos son distintos de cero pero
+por debajo de 128 (todavía error-active, pero algo está causando
+retransmisiones); rojo significa 128 o más (error-passive o peor) o
+ninguna respuesta en absoluto (firmware/bootloader antiguo que aún no
+implementa `0x7FB`, o la placa no conectada). Un TEC que sube de forma
+constante con un REC plano suele apuntar a que las propias transmisiones
+de esta placa no reciben confirmación - ningún otro nodo en el bus, o un
+problema de cableado/terminación/bitrate específico de la conexión de
+esta placa.
 
 **Exportar paquete de depuración** (arriba del registro): guarda un
 `.zip` con el registro actual en pantalla, diagnósticos básicos del

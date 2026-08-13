@@ -85,6 +85,8 @@ MLX_SENSOR_VARIANTS = [
 ]
 ERASE_FRAM_MAGIC = bytes([0xE3, 0xA5, 0xE0, 0xFF])
 CAN_ID_BOOTLOADER_VERSION_RESPONSE = 0x7FA  # sent only by the bootloader, alongside 0x7F9, when it's the one answering
+CAN_ID_QUERY_ERROR_COUNTERS = 0x7FB  # answered by whichever of the application or bootloader is currently running, same dual-answerable convention as CAN_ID_QUERY_VERSION
+CAN_ID_ERROR_COUNTERS_RESPONSE = 0x7FC  # DLC=2: TEC (Transmit Error Counter), REC (Receive Error Counter) - read directly from the CAN peripheral's own ESR register on the board's side
 
 STATUS_NAMES = {
     0x01: "Listening",

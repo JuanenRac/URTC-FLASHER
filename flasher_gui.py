@@ -31,6 +31,7 @@ from flasher_config import (
     CAN_ID_SET_DEVICE_SERIAL, CAN_ID_PERIPHERAL_INFO_RESP,
     CAN_ID_SET_EXPANSION_TYPE, CAN_ID_EXPANSION_TYPE_RESP,
     CAN_ID_SET_MLX_VARIANT, CAN_ID_MLX_VARIANT_RESP,
+    CAN_ID_QUERY_ERROR_COUNTERS, CAN_ID_ERROR_COUNTERS_RESPONSE,
     _center_geometry, _load_config_overrides, save_config,
 )
 from flasher_transports import SLCAN, SLCANError, SocketCAN, list_socketcan_interfaces
@@ -187,6 +188,14 @@ class FlasherGUI:
         self.bus_activity_btn = ttk.Button(conn_frame, text=_("BTN_CHECK_2S"), command=self.check_bus_activity)
         self.bus_activity_btn.grid(row=row, column=4, **pad)
         self.query_btn_holder.append(self.bus_activity_btn)  # locked by _set_ui_busy_state the same way Query is
+        row += 1
+
+        ttk.Label(conn_frame, text=_("LBL_ERROR_COUNTERS")).grid(row=row, column=0, sticky="w", **pad)
+        self.error_counters_label = ttk.Label(conn_frame, text=_("STATUS_CHECK_REQUIRES_CONNECTION"), foreground="gray")
+        self.error_counters_label.grid(row=row, column=1, columnspan=3, sticky="w", **pad)
+        self.error_counters_btn = ttk.Button(conn_frame, text=_("BTN_QUERY"), command=self.query_error_counters)
+        self.error_counters_btn.grid(row=row, column=4, **pad)
+        self.query_btn_holder.append(self.error_counters_btn)  # locked by _set_ui_busy_state the same way Query is
         row += 1
 
         ttk.Label(conn_frame, text=_("LBL_EXPANSION_BOARD")).grid(row=row, column=0, sticky="w", **pad)
@@ -1076,6 +1085,49 @@ class FlasherGUI:
                     f"bitrate mismatch between nodes, a damaged/too-long cable run, or a "
                     f"marginal transceiver on one of the nodes."
                 )
+
+    def query_error_counters(self):
+        # TEC/REC (Transmit/Receive Error Counter), read directly from the
+        # board's own CAN peripheral ESR register - answered by whichever
+        # of the application or bootloader is currently running, same
+        # dual-answerable convention as CAN_ID_QUERY_VERSION. Complements
+        # check_bus_activity above: that one counts frames actually seen
+        # on the bus, this one asks the board itself what its own
+        # controller's fault-confinement counters say.
+        if self.transport is None:
+            messagebox.showerror(_("TITLE_NOT_CONNECTED"), _("MSG_CONNECT_FIRST"))
+            return
+        self.error_counters_label.config(text=_("STATUS_QUERYING"), foreground="gray")
+        self._set_ui_busy_state(True)
+
+        def _worker():
+            try:
+                self.transport.send_frame(CAN_ID_QUERY_ERROR_COUNTERS, b"")
+                deadline = time.time() + 1.5
+                tec = rec = None
+                while time.time() < deadline:
+                    frame = self.transport.read_frame(timeout=0.1)
+                    if frame is not None and frame[0] == CAN_ID_ERROR_COUNTERS_RESPONSE and len(frame[1]) >= 2:
+                        tec, rec = frame[1][0], frame[1][1]
+                        break
+                if tec is None:
+                    self.log(_("LOG_ERROR_COUNTERS_NO_RESPONSE"))
+                    self.root.after(0, lambda: self.error_counters_label.config(
+                        text=_("STATUS_NO_RESPONSE_LONG"), foreground="red"))
+                else:
+                    text = _("LBL_TEC_REC_VALUES", tec=tec, rec=rec)
+                    self.log(_("LOG_ERROR_COUNTERS_VALUE", tec=tec, rec=rec))
+                    # Error-passive at 128+, bus-off territory above that -
+                    # same thresholds the CAN protocol's own fault-
+                    # confinement state machine uses (RM0316).
+                    color = "red" if (tec >= 128 or rec >= 128) else ("orange" if (tec > 0 or rec > 0) else "green")
+                    self.root.after(0, lambda: self.error_counters_label.config(text=text, foreground=color))
+            except Exception as e:
+                self.log(_("LOG_ERROR_COUNTERS_QUERY_FAILED", e=e))
+            finally:
+                self.root.after(0, lambda: self._set_ui_busy_state(False))
+
+        threading.Thread(target=_worker, daemon=True).start()
 
     def query_current_version(self):
         if self.transport is None:

@@ -542,10 +542,10 @@ control is disabled for that transport - there's nothing here for it to try.
 **Bus activity** ("Check (2s)", next to Query): counts real protocol
 frames actually seen over a fixed 2-second window on whichever transport
 is connected. This is deliberately **not** the same thing as a true CAN
-bus-load percentage or the controller's own error counters (REC/TEC) -
-those need a netlink query (SocketCAN) or adapter-specific extensions
-(SLCAN) this tool doesn't have a standard, dependency-free way to get.
-What it does give: a genuine, directly-measured "is anything talking on
+bus-load percentage - that would need a netlink query (SocketCAN) or
+adapter-specific extensions (SLCAN) this tool doesn't have a standard,
+dependency-free way to get for the *adapter's own* controller. What it
+does give: a genuine, directly-measured "is anything talking on
 this bus, and roughly how often" signal, on either transport. For
 SocketCAN specifically, it also shows the 2-second delta of Linux's own
 interface statistics (`/sys/class/net/<iface>/statistics/`) - basic
@@ -560,6 +560,20 @@ type can bitrate 500000 restart-ms 100`). This tool doesn't run that
 command itself - clearing a real bus-off needs the interface taken down
 and back up at the kernel level, which needs root and counts as changing
 system network configuration, not something to do silently on your behalf.
+
+**Error counters (TEC/REC)** (next to Bus activity): unlike the adapter-
+side counters above, this asks the **board itself** for its own CAN
+controller's Transmit/Receive Error Counter (`0x7FB`/`0x7FC` - see
+`docs/CANBUS.TXT`), answered by whichever of the application or
+bootloader is currently running. Green means both counters are at 0
+(error-active, healthy); orange means one or both are nonzero but below
+128 (still error-active, but something's causing retransmits); red means
+128 or above (error-passive or worse) or no response at all (older
+firmware/bootloader that doesn't implement `0x7FB` yet, or the board not
+connected). A steadily climbing TEC with a flat REC typically points at
+this board's own transmissions going unacknowledged - no other node on
+the bus, or a wiring/termination/bitrate problem specific to this
+board's own connection.
 
 **Export Debug Bundle** (above the log): saves a `.zip` with the current
 on-screen log, basic system diagnostics (OS, Python version, which tools

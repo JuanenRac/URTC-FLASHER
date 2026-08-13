@@ -629,11 +629,11 @@ désactivé pour ce transport - il n'y a rien ici à essayer.
 **Activité du bus** ("Vérifier (2s)", à côté d'Interroger) : compte les
 vraies trames de protocole réellement vues pendant une fenêtre fixe de
 2 secondes sur le transport connecté. Ceci n'est délibérément **pas** la
-même chose qu'un vrai pourcentage de charge de bus CAN ou les propres
-compteurs d'erreur du contrôleur (REC/TEC) - ceux-ci nécessitent une
-requête netlink (SocketCAN) ou des extensions spécifiques à
-l'adaptateur (SLCAN) que cet outil n'a pas de moyen standard et sans
-dépendance d'obtenir. Ce que ça donne : un signal genuine, directement
+même chose qu'un vrai pourcentage de charge de bus CAN - cela
+nécessiterait une requête netlink (SocketCAN) ou des extensions
+spécifiques à l'adaptateur (SLCAN) que cet outil n'a pas de moyen
+standard et sans dépendance d'obtenir pour le contrôleur du *propre
+adaptateur*. Ce que ça donne : un signal genuine, directement
 mesuré, de "quelque chose parle sur ce bus, et environ à quelle
 fréquence", sur l'un ou l'autre des 2 transports. Pour SocketCAN
 spécifiquement, cela montre aussi le delta de 2 secondes des propres
@@ -652,6 +652,21 @@ lui-même - nettoyer un vrai bus-off nécessite de baisser et remonter
 l'interface au niveau du noyau, ce qui nécessite root et compte comme
 changer la configuration réseau système, pas quelque chose à faire
 silencieusement en votre nom.
+
+**Compteurs d'erreur (TEC/REC)** (à côté d'Activité du bus) : contrairement
+aux compteurs de l'adaptateur ci-dessus, ceci interroge **la carte
+elle-même** pour son propre Transmit/Receive Error Counter du contrôleur
+CAN (`0x7FB`/`0x7FC` - voir `docs/CANBUS.TXT`), répondu par ce qui
+tourne actuellement, application ou bootloader. Vert signifie que les 2
+compteurs sont à 0 (error-active, sain) ; orange signifie que l'un ou
+l'autre est non nul mais en dessous de 128 (toujours error-active, mais
+quelque chose cause des retransmissions) ; rouge signifie 128 ou plus
+(error-passive ou pire) ou aucune réponse du tout (firmware/bootloader
+ancien qui n'implémente pas encore `0x7FB`, ou carte non connectée). Un
+TEC qui grimpe régulièrement avec un REC stable indique généralement que
+les propres transmissions de cette carte ne sont pas acquittées - aucun
+autre nœud sur le bus, ou un problème de câblage/terminaison/débit
+binaire spécifique à la connexion de cette carte.
 
 **Exporter le paquet de débogage** (au-dessus du journal) : enregistre
 un `.zip` avec le journal actuel à l'écran, des diagnostics système de

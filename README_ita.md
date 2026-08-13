@@ -611,11 +611,11 @@ provare.
 **Attività bus** ("Controlla (2s)", accanto a Interroga): conta trame di
 protocollo reali effettivamente viste durante una finestra fissa di 2
 secondi sul trasporto connesso. Questo deliberatamente **non** è la
-stessa cosa di una vera percentuale di carico bus CAN o dei contatori di
-errore propri del controller (REC/TEC) - quelli richiedono
+stessa cosa di una vera percentuale di carico bus CAN - richiederebbe
 un'interrogazione netlink (SocketCAN) o estensioni specifiche
 dell'adattatore (SLCAN) che questo strumento non ha un modo standard e
-senza dipendenze per ottenere. Ciò che dà: un segnale genuino,
+senza dipendenze per ottenere per il controller del *proprio adattatore*.
+Ciò che dà: un segnale genuino,
 direttamente misurato, di "c'è qualcosa che parla su questo bus, e
 approssimativamente con quale frequenza", su entrambi i trasporti. Per
 SocketCAN nello specifico, mostra anche il delta di 2 secondi delle
@@ -634,6 +634,22 @@ ripulire un vero bus-off richiede abbassare e rialzare l'interfaccia a
 livello kernel, il che richiede root e conta come modifica alla
 configurazione di rete di sistema, non qualcosa da fare silenziosamente
 per tuo conto.
+
+**Contatori di errore (TEC/REC)** (accanto ad Attività bus): a
+differenza dei contatori dell'adattatore sopra, questo chiede alla
+**scheda stessa** il proprio Transmit/Receive Error Counter del
+controller CAN (`0x7FB`/`0x7FC` - vedi `docs/CANBUS.TXT`), risposto da
+qualunque cosa sia in esecuzione in quel momento, applicazione o
+bootloader. Verde significa che entrambi i contatori sono a 0
+(error-active, sano); arancione significa che uno o entrambi sono
+diversi da zero ma sotto 128 (ancora error-active, ma qualcosa sta
+causando ritrasmissioni); rosso significa 128 o più (error-passive o
+peggio) o nessuna risposta (firmware/bootloader datato che non
+implementa ancora `0x7FB`, o scheda non connessa). Un TEC in costante
+salita con un REC piatto in genere indica che le trasmissioni di questa
+scheda non ricevono conferma - nessun altro nodo sul bus, o un problema
+di cablaggio/terminazione/bitrate specifico della connessione di questa
+scheda.
 
 **Esporta Pacchetto Debug** (sopra il registro): salva uno `.zip` con il
 registro attuale a schermo, diagnostica di base del sistema (SO,

@@ -639,11 +639,11 @@ für diesen Transport deaktiviert - es gibt hier nichts zu versuchen.
 **Busaktivität** ("Prüfen (2s)", neben Abfragen): zählt echte
 Protokoll-Frames, die tatsächlich während eines festen 2-Sekunden-Fensters
 auf dem verbundenen Transport gesehen wurden. Dies ist absichtlich
-**nicht** dasselbe wie ein echter CAN-Bus-Auslastungsprozentsatz oder
-die eigenen Fehlerzähler des Controllers (REC/TEC) - diese benötigen
-eine Netlink-Abfrage (SocketCAN) oder adapterspezifische Erweiterungen
-(SLCAN), die dieses Tool nicht auf standardmäßige, abhängigkeitsfreie
-Weise erhalten kann. Was es gibt: ein echtes, direkt gemessenes Signal
+**nicht** dasselbe wie ein echter CAN-Bus-Auslastungsprozentsatz - das
+würde eine Netlink-Abfrage (SocketCAN) oder adapterspezifische
+Erweiterungen (SLCAN) benötigen, die dieses Tool nicht auf
+standardmäßige, abhängigkeitsfreie Weise für den Controller des
+*eigenen Adapters* erhalten kann. Was es gibt: ein echtes, direkt gemessenes Signal
 für "spricht etwas auf diesem Bus, und ungefähr wie oft", auf beiden
 Transporten. Speziell für SocketCAN zeigt es auch das 2-Sekunden-Delta
 der eigenen Schnittstellenstatistiken von Linux
@@ -662,6 +662,22 @@ aus - ein echtes Bus-Off zu bereinigen erfordert, die Schnittstelle auf
 Kernel-Ebene herunter- und wieder hochzufahren, was Root erfordert und
 als Änderung der Systemnetzwerkkonfiguration zählt, nichts, das
 stillschweigend in Ihrem Namen getan werden sollte.
+
+**Fehlerzähler (TEC/REC)** (neben Busaktivität): im Gegensatz zu den
+Adapter-Zählern oben fragt dies **die Platine selbst** nach ihrem
+eigenen Transmit/Receive Error Counter des CAN-Controllers
+(`0x7FB`/`0x7FC` - siehe `docs/CANBUS.TXT`), beantwortet von dem, was
+gerade läuft, Anwendung oder Bootloader. Grün bedeutet, beide Zähler
+stehen auf 0 (error-active, gesund); orange bedeutet, einer oder beide
+sind ungleich null, aber unter 128 (immer noch error-active, aber etwas
+verursacht Neuübertragungen); rot bedeutet 128 oder mehr (error-passive
+oder schlimmer) oder gar keine Antwort (ältere Firmware/älterer
+Bootloader, der `0x7FB` noch nicht implementiert, oder Platine nicht
+verbunden). Ein stetig steigender TEC bei flachem REC deutet
+typischerweise darauf hin, dass die eigenen Übertragungen dieser
+Platine unbestätigt bleiben - kein anderer Knoten am Bus, oder ein
+Verkabelungs-/Terminierungs-/Bitrate-Problem speziell bei der
+Verbindung dieser Platine.
 
 **Debug-Paket exportieren** (über dem Protokoll): speichert eine
 `.zip`-Datei mit dem aktuellen Bildschirmprotokoll, grundlegender
