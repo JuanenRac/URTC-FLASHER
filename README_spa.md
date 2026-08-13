@@ -429,6 +429,18 @@ HardwareID), el slot principal del bootloader nunca se toca - la placa
 sigue ejecutando el firmware que ya tenía. Siempre es seguro simplemente
 volver a intentarlo.
 
+**Respaldar Firmware (CAN)**: lee el firmware actualmente instalado por
+el bus, sin modificar, y lo guarda como un archivo `.bin` - el
+equivalente CAN de la propia función SWD "back up entire flash before
+erasing" (sección 6 más abajo), por la misma razón. Vale la pena hacerlo
+antes de cualquier actualización, especialmente antes de un downgrade
+deliberado (abajo), ya que es la única forma de recuperar los bytes
+exactos de hoy más adelante si ya no tienes el archivo que los generó.
+Solo board principal, y solo mientras la placa está realmente en el
+bootloader - requiere un bootloader que implemente `0x7FE`/`0x7FF` (ver
+`docs/CANBUS.TXT`); uno antiguo simplemente nunca responde, mostrado como
+un timeout claro en vez de un archivo silenciosamente vacío.
+
 **Instalar deliberadamente una versión anterior**: el bootloader
 normalmente rechaza una imagen válidamente firmada si declara una
 versión anterior a la ya instalada (razón de fallo de verificación

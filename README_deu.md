@@ -449,6 +449,19 @@ oder HardwareID-Abweichung), wird der Hauptslot des Bootloaders nie
 berührt - die Platine führt weiterhin die Firmware aus, die sie bereits
 hatte. Es ist immer sicher, es einfach erneut zu versuchen.
 
+**Firmware sichern (CAN)**: liest die aktuell installierte Firmware über
+den Bus zurück, unverändert, und speichert sie als `.bin`-Datei - das
+CAN-Äquivalent der eigenen SWD-Funktion „back up entire flash before
+erasing" (Abschnitt 6 unten), aus demselben Grund. Lohnt sich vor jedem
+Update, besonders vor einem absichtlichen Downgrade (unten), da dies die
+einzige Möglichkeit ist, die heutigen exakten Bytes später
+zurückzuerhalten, falls Sie die Datei, aus der sie stammen, nicht mehr
+besitzen. Nur Hauptplatine, und nur während die Platine sich tatsächlich
+im Bootloader befindet - erfordert einen Bootloader, der `0x7FE`/`0x7FF`
+implementiert (siehe `docs/CANBUS.TXT`); ein älterer antwortet einfach
+nie, was als klare Zeitüberschreitung angezeigt wird statt als
+stillschweigend leere Datei.
+
 **Absichtliches Installieren einer älteren Version**: der Bootloader
 lehnt normalerweise ein gültig signiertes Image ab, wenn es eine ältere
 Version deklariert als die bereits installierte (Verifizierungsfehler-

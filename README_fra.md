@@ -441,6 +441,19 @@ HMAC, ou HardwareID), l'emplacement principal du bootloader n'est
 jamais touché - la carte continue d'exécuter le firmware qu'elle avait
 déjà. Il est toujours sûr de simplement réessayer.
 
+**Sauvegarder le Firmware (CAN)** : lit le firmware actuellement installé
+via le bus, inchangé, et l'enregistre sous forme de fichier `.bin` -
+l'équivalent CAN de la propre fonctionnalité SWD « back up entire flash
+before erasing » (section 6 ci-dessous), pour la même raison. Utile
+avant toute mise à jour, surtout avant un downgrade délibéré
+(ci-dessous), car c'est le seul moyen de récupérer les octets exacts
+d'aujourd'hui plus tard si vous n'avez plus le fichier qui les a
+produits. Carte principale uniquement, et seulement pendant que la carte
+est réellement dans le bootloader - nécessite un bootloader qui
+implémente `0x7FE`/`0x7FF` (voir `docs/CANBUS.TXT`) ; un ancien ne
+répond simplement jamais, signalé comme un délai dépassé clair plutôt
+qu'un fichier silencieusement vide.
+
 **Installer délibérément une version antérieure** : le bootloader
 refuse normalement une image valablement signée si elle déclare une
 version antérieure à celle déjà installée (raison d'échec de

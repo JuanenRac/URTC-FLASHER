@@ -25,6 +25,7 @@ from flasher_config import (
     CAN_ID_SLAVE_DATA, CAN_ID_SLAVE_END_UPDATE, CAN_ID_SLAVE_STATUS,
     CAN_ID_SLAVE_PROGRESS, CAN_ID_SLAVE_VERSION_RESP_1, CAN_ID_SLAVE_VERSION_RESP_2,
     CAN_ID_SLAVE_VERIFY_FAIL_REASON, CAN_ID_AUTHORIZE_DOWNGRADE,
+    CAN_ID_READBACK, CAN_ID_READBACK_PAGE_ACK,
     SLAVE_HARDWARE_ID, SLAVE_APP_MAX_SIZE,
 )
 
@@ -438,6 +439,80 @@ class URTCFlasher:
             self.log(_("LOG_BOARD_RESPONDING_AS_APP"))
             return True
         raise FlashError("Timed out waiting for final verification result")
+
+    def read_back_flash(self, output_path, timeout=180.0):
+        """Reads the main board's own currently-installed firmware back
+        over CAN (0x7FE/0x7FF - see CANBUS.TXT), unmodified, and writes it
+        to output_path. The CAN equivalent of the SWD "back up entire
+        flash before erasing" feature - worth doing before a normal
+        update, and especially before an allow_downgrade one, since it's
+        the only way to get the CURRENT bytes back later if the file
+        that produced them isn't kept around. Bootloader-only (the board
+        must already be sitting in the bootloader, same as flash() itself
+        expects once triggered) - requires a bootloader that implements
+        0x7FE; an older one simply never answers, surfaced here as a
+        timeout rather than a silent empty file.
+        """
+        self.log(_("LOG_SENDING_READBACK_START"))
+        self.can.send_frame(CAN_ID_READBACK, b"")
+
+        # First reply is always DLC=4 (total size, 0 if nothing valid is
+        # installed) - distinguished from the DLC=8 data replies that
+        # follow purely by DLC, see CANBUS.TXT's own 0x7FE note.
+        deadline = time.time() + 5.0
+        total_size = None
+        while time.time() < deadline:
+            if self.stop_flag():
+                raise FlashError("Cancelled by user")
+            frame = self.can.read_frame(timeout=0.2)
+            if frame is None:
+                continue
+            can_id, data = frame
+            if can_id == CAN_ID_READBACK and len(data) == 4:
+                total_size = struct.unpack(">I", data)[0]
+                break
+        if total_size is None:
+            raise FlashError(_("LOG_READBACK_NO_RESPONSE"))
+        if total_size == 0:
+            raise FlashError(_("LOG_READBACK_NOTHING_INSTALLED"))
+        self.log(_("LOG_READBACK_SIZE", size=total_size, kb=total_size / 1024))
+
+        buf = bytearray()
+        page_index = 0
+        transfer_start = time.time()
+        while len(buf) < total_size:
+            if time.time() - transfer_start > timeout:
+                raise FlashError(_("LOG_READBACK_TIMEOUT"))
+            page_target = min(len(buf) + FLASH_PAGE_SIZE, total_size)
+            page_deadline = time.time() + 5.0
+            while len(buf) < page_target:
+                if self.stop_flag():
+                    raise FlashError("Cancelled by user")
+                if time.time() > page_deadline:
+                    raise FlashError(_("LOG_READBACK_PAGE_TIMEOUT", page=page_index))
+                frame = self.can.read_frame(timeout=0.2)
+                if frame is None:
+                    continue
+                can_id, data = frame
+                if can_id == CAN_ID_READBACK and len(data) == 8:
+                    buf.extend(data)
+            # Acking unconditionally requests the next page even though buf
+            # may have grown slightly past page_target (the board's own
+            # final 8-byte frame in a page is only ever exactly sized to
+            # what's left in that page, so this only happens if a stray
+            # frame from elsewhere slipped through the same ID/DLC filter -
+            # vanishingly unlikely, and self-corrects next page regardless).
+            self.can.send_frame(CAN_ID_READBACK_PAGE_ACK, struct.pack(">I", page_index))
+            page_index += 1
+            pct = int((min(len(buf), total_size) / total_size) * 100)
+            self.progress_cb(pct)
+
+        with open(output_path, "wb") as f:
+            f.write(bytes(buf[:total_size]))
+        elapsed = time.time() - transfer_start
+        kbps = (total_size / 1024) / elapsed if elapsed > 0 else 0.0
+        self.log(_("LOG_READBACK_COMPLETE", size=total_size, path=output_path, elapsed=elapsed, kbps=kbps))
+        return total_size
 
     # -------------------------------------------------------------------
     # Expansion slave chip OTA - relayed through the main board's own

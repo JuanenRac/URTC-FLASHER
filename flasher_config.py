@@ -88,6 +88,8 @@ CAN_ID_BOOTLOADER_VERSION_RESPONSE = 0x7FA  # sent only by the bootloader, along
 CAN_ID_QUERY_ERROR_COUNTERS = 0x7FB  # answered by whichever of the application or bootloader is currently running, same dual-answerable convention as CAN_ID_QUERY_VERSION
 CAN_ID_ERROR_COUNTERS_RESPONSE = 0x7FC  # DLC=2: TEC (Transmit Error Counter), REC (Receive Error Counter) - read directly from the CAN peripheral's own ESR register on the board's side
 CAN_ID_AUTHORIZE_DOWNGRADE = 0x7FD  # DLC=4, magic payload 0xD0,0x9E,0x12,0xAD - authorizes the CURRENT update attempt only to bypass the bootloader's own anti-rollback check; must be sent after 0x7F1 and before 0x7F4 for the same attempt, see CANBUS.TXT
+CAN_ID_READBACK = 0x7FE  # bidirectional, distinguished by DLC: master sends any DLC to start, bootloader replies DLC=4 (total size) once then DLC=8 (raw data) repeatedly - see CANBUS.TXT
+CAN_ID_READBACK_PAGE_ACK = 0x7FF  # sent to the bootloader after each 2048-byte page of readback data is safely received: DLC=4, big-endian page index
 
 STATUS_NAMES = {
     0x01: "Listening",

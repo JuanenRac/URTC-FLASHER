@@ -360,10 +360,25 @@ class FlasherGUI:
             foreground="#b35900", wraplength=380, justify="left",
         ).grid(row=7, column=0, columnspan=3, sticky="w", padx=8)
 
+        # 0x7FE/0x7FF - reads the currently-installed firmware back over
+        # CAN before you deliberately overwrite it. Main board only (same
+        # reasoning as Allow downgrade above - the expansion slave's own
+        # bootloader doesn't implement this yet), disabled the same way
+        # for the slave target.
+        self.readback_btn = ttk.Button(
+            act_frame, text=_("BTN_BACKUP_FIRMWARE_CAN"), command=self.start_readback,
+        )
+        self.readback_btn.grid(row=8, column=0, columnspan=2, sticky="w", **pad)
+        ttk.Label(
+            act_frame,
+            text=_("HELP_BACKUP_FIRMWARE_CAN"),
+            foreground="gray", wraplength=380, justify="left",
+        ).grid(row=9, column=0, columnspan=3, sticky="w", padx=8)
+
         self.flash_btn = ttk.Button(act_frame, text=_("BTN_FLASH_FIRMWARE"), command=self.start_flash)
-        self.flash_btn.grid(row=8, column=0, **pad)
+        self.flash_btn.grid(row=10, column=0, **pad)
         self.cancel_btn = ttk.Button(act_frame, text=_("BTN_CANCEL"), command=self.cancel_flash, state="disabled")
-        self.cancel_btn.grid(row=8, column=1, **pad)
+        self.cancel_btn.grid(row=10, column=1, **pad)
 
         # --- Free tool configuration (right column, top) - (0x1A2/0x1A3),
         # only consulted by a board whose ID jumpers read 11111 (0x1F,
@@ -1524,6 +1539,9 @@ class FlasherGUI:
         if hasattr(self, "transport_radio_socketcan"):
             self.transport_radio_socketcan.config(state="disabled" if busy else "normal")
         self.flash_btn.config(state="disabled" if busy else "normal")
+        self.readback_btn.config(
+            state="disabled" if (busy or self.flash_target_var.get() == "slave") else "normal"
+        )
         self.swd_flash_btn.config(
             state="disabled" if (busy or not (self._pyocd_ok or self._cube_ok)) else "normal"
         )
@@ -1542,9 +1560,58 @@ class FlasherGUI:
             # rather than left clickable and silently doing nothing.
             self.allow_downgrade_var.set(False)
             self.allow_downgrade_check.config(state="disabled")
+            self.readback_btn.config(state="disabled")
         else:
             self.erase_fram_check.config(state="normal")
             self.allow_downgrade_check.config(state="normal")
+            self.readback_btn.config(state="normal")
+
+    def start_readback(self):
+        if self.transport is None:
+            messagebox.showerror(_("TITLE_NOT_CONNECTED"), _("MSG_CONNECT_FIRST"))
+            return
+        if self._flash_thread and self._flash_thread.is_alive():
+            messagebox.showerror(_("TITLE_BUSY"), _("MSG_FLASH_ALREADY_IN_PROGRESS"))
+            return
+        save_path = filedialog.asksaveasfilename(
+            title=_("TITLE_SAVE_READBACK"),
+            defaultextension=".bin",
+            initialfile=f"urtc_readback_{time.strftime('%Y%m%d_%H%M%S')}.bin",
+            filetypes=[("Firmware binary", "*.bin")],
+        )
+        if not save_path:
+            return
+
+        self._stop_requested = False
+        self._set_ui_busy_state(True)
+        self.cancel_btn.config(state="normal")
+        self.progress["value"] = 0
+
+        def _worker():
+            try:
+                flasher = URTCFlasher(
+                    self.transport,
+                    log=self.log,
+                    progress_cb=lambda pct: self.root.after(0, lambda: self.progress.configure(value=pct)),
+                    stop_flag=lambda: self._stop_requested,
+                )
+                size = flasher.read_back_flash(save_path)
+                self.root.after(0, lambda: messagebox.showinfo(
+                    _("TITLE_SUCCESS"), _("MSG_READBACK_COMPLETE", size=size, path=save_path)))
+            except FlashError as e:
+                self.log(_("LOG_FAILED", e=e))
+                msg = str(e)
+                self.root.after(0, lambda: messagebox.showerror(_("TITLE_FLASH_FAILED"), msg))
+            except Exception as e:
+                self.log(_("LOG_UNEXPECTED_ERROR", e=e))
+                msg = str(e)
+                self.root.after(0, lambda: messagebox.showerror(_("TITLE_UNEXPECTED_ERROR"), msg))
+            finally:
+                self.root.after(0, lambda: self._set_ui_busy_state(False))
+                self.root.after(0, lambda: self.cancel_btn.config(state="disabled"))
+
+        self._flash_thread = threading.Thread(target=_worker, daemon=True)
+        self._flash_thread.start()
 
     def start_flash(self):
         if self.transport is None:

@@ -379,6 +379,17 @@ If verification fails at any point (CRC32, HMAC, or HardwareID mismatch),
 the bootloader's main slot is never touched - the board keeps running
 whatever firmware it already had. It's always safe to just try again.
 
+**Back up Firmware (CAN)**: reads the currently-installed firmware back
+over the bus, unmodified, and saves it as a `.bin` file - the CAN
+equivalent of the SWD section's own "back up entire flash before erasing"
+(section 6 below), for the same reason. Worth doing before any update,
+especially before a deliberate downgrade (below), since it's the only way
+to get today's exact bytes back later if you don't still have the file
+that produced them. Main board only, and only while the board is actually
+sitting in the bootloader - requires a bootloader that implements
+`0x7FE`/`0x7FF` (see `docs/CANBUS.TXT`); an older one just never answers,
+surfaced as a clear timeout rather than a silently empty file.
+
 **Deliberately installing an older version**: the bootloader normally
 rejects a validly-signed image if it declares a version older than what's
 already installed (verify-failure reason "rollback rejected") - this
