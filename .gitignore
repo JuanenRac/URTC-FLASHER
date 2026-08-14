@@ -30,3 +30,8 @@ dist/README_spa.md
 dist/urtc_config.json.example
 dist/URTC_Flasher.exe
 URTC_Flasher.spec
+__pycache__/flasher_config.cpython-314.pyc
+__pycache__/flasher_protocol.cpython-314.pyc
+__pycache__/flasher_transports.cpython-314.pyc
+__pycache__/flasher_validation.cpython-314.pyc
+__pycache__/urtc_flasher.cpython-314.pyc

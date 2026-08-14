@@ -84,7 +84,7 @@ elif not HAVE_SERIAL:
     print("SocketCAN mode will still work. To also enable Serial/SLCAN:")
     print("    pip install pyserial")
 
-from flasher_config import _, _CONFIG_LOADED, FLASHER_VERSION, BANNER_IMAGE_PATH, _center_geometry
+from flasher_config import _, _CONFIG_LOADED, FLASHER_VERSION, BANNER_IMAGE_PATH, _center_geometry, _load_config_overrides
 from flasher_transports import SLCAN, SLCANError, SocketCAN, SocketCANError, MockCAN
 from flasher_protocol import URTCFlasher, FlashError
 from flasher_validation import validate_firmware_file
