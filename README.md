@@ -15,7 +15,10 @@ documentation - see `LICENSE` in this repository, or the "License and
 Copyright Notices" section at the end of this document.
 
 A small cross-platform GUI tool for updating URTC board firmware over CAN
-bus. It implements the exact bootloader protocol from `docs/CANBUS.TXT`: the
+bus. It implements the exact bootloader protocol from `docs/CANBUS.TXT` (in
+the sibling [URTC](https://github.com/JuanenRac/URTC) repository this tool
+implements against - see "Related Projects" near the end of this document;
+every other `docs/*.TXT` reference in this README points there too): the
 HardwareID check, HMAC-SHA256 signing, the golden-image backup-slot update
 flow, live progress via the bootloader's heartbeat messages, and a
 version-query (does this board's application *or* bootloader identify
@@ -40,7 +43,7 @@ either platform is a real board over real hardware — treat a first
 real-world flash attempt with the same caution you'd give any new tool
 talking to a bootloader: have JTAG on hand as a fallback.
 
-## 1. Get your adapter talking CAN
+## 1. 🔌 Get your adapter talking CAN
 
 Which of these you need depends on your platform and which transport
 you'll use:
@@ -84,7 +87,7 @@ declared DLC implies is treated as malformed and skipped, rather than
 parsed from its first N hex characters regardless of what follows -
 worth knowing if you're debugging against a noisy or non-standard adapter.
 
-## 2. Install and run
+## 2. 💻 Install and run
 
 **Windows:**
 ```
@@ -173,7 +176,7 @@ common issue on both platforms: `pip`'s own wrapper script isn't always on
 PATH even right after a successful install, while `-m pip` finds the
 installed module directly.
 
-## 3. Where firmware files go
+## 3. 📁 Where firmware files go
 
 This tool expects a `firmware/` folder right next to `urtc_flasher.py`,
 at this repository's own root:
@@ -278,7 +281,7 @@ during the real transfer, which remains the authoritative check either way.
 Adding a new build later: just drop it into `firmware/` and click
 **Refresh** - no restart needed.
 
-## 4. Checking what's currently installed
+## 4. 🔍 Checking what's currently installed
 
 If you're on Linux and SocketCAN is available, you'll see a **Transport**
 choice at the top - pick Serial/SLCAN or SocketCAN before connecting. On
@@ -341,7 +344,7 @@ deliberately doesn't fall back to assuming MLX90640 - a board with a real
 MLX90640 wired to it needs this set explicitly, once, the same way the
 expansion board type itself does.
 
-## 5. Flashing
+## 5. ⚡ Flashing
 
 1. **Connect**: pick Serial/SLCAN or SocketCAN (Linux only), then the
    port/interface, then click Connect. For Serial/SLCAN this opens the CAN
@@ -406,13 +409,13 @@ next to it (see section 3 above), falling back to this tool's own
 currently-configured version otherwise, logged clearly either way so
 it's never a silent guess.
 
-## 6. Programming the complete chip via SWD/JTAG (advanced)
+## 6. 🛠️ Programming the complete chip via SWD/JTAG (advanced)
 
-Section "4. Program complete chip via SWD/JTAG" in the tool does a full
-bring-up flash - mass-erase the entire chip, then write both the
-bootloader and application images fresh, at whichever chip's own real
-addresses match the **Target chip** selection (see below). This is a
-**different kind of operation** from sections 1-5 above:
+The **SWD/JTAG Programming** tab's "Program complete chip via SWD/JTAG
+(advanced)" panel does a full bring-up flash - mass-erase the entire chip,
+then write both the bootloader and application images fresh, at whichever
+chip's own real addresses match the **Target chip** selection (see below).
+This is a **different kind of operation** from sections 1-5 above:
 
 |  | CAN OTA update (sections 1-5) | Full-chip SWD/JTAG (section 6) |
 |---|---|---|
@@ -499,7 +502,7 @@ fallback plan (STM32CubeIDE's own flash tool, or `st-flash`) in mind in
 case something about your specific pyOCD version or probe doesn't match
 what this assumes.
 
-## 7. CLI mode (headless, no GUI)
+## 7. ⌨️ CLI mode (headless, no GUI)
 
 For CI pipelines, test benches, or production-line scripting where
 there's no display:
@@ -535,7 +538,7 @@ other `VERIFY_FAIL_REASON_*` value from `docs/CANBUS.TXT`) makes the
 simulated update fail verification instead of succeeding, for testing
 the failure path the same way.
 
-## 8. Reliability during a CAN update, and session logs
+## 8. 🔄 Reliability during a CAN update, and session logs
 
 If a page's ACK doesn't arrive within the normal 3s window during a CAN
 update, the tool retries the *wait* (not a resend of the page's data) up
@@ -556,7 +559,7 @@ useful for handing a full trace to whoever wrote the firmware if
 something goes wrong in the field. This folder is created automatically
 and is safe to delete; nothing reads old logs back in.
 
-## 9. Diagnostics — bus activity, bitrate, and debug bundles
+## 9. 📊 Diagnostics — bus activity, bitrate, and debug bundles
 
 **Bitrate selector + auto-detect** (Serial/SLCAN only): URTC's bus is fixed
 at 500 kbit/s, which stays the default - this is for a misconfigured
@@ -609,7 +612,7 @@ CAN firmware file - useful for handing a complete picture to whoever wrote
 the firmware if something goes wrong in the field, instead of copying log
 text by hand.
 
-## 10. SWD/JTAG — file formats, slot verification, and probe selection
+## 10. 🔬 SWD/JTAG — file formats, slot verification, and probe selection
 
 **File formats**: the SWD section's bootloader/application pickers accept
 `.bin`, `.hex`, and `.elf`/`.axf`. ELF/AXF is parsed with a small amount
@@ -646,8 +649,8 @@ in the wrong slot is caught and blocked, not silently accepted. Same
 logic applies to `.hex`/`.elf`, checked against their own embedded load
 address instead.
 
-**Check Option Bytes** (section 4, STM32CubeProgrammer only - pyOCD doesn't
-expose this the same way via CLI): a read-only `-ob displ` dump, no
+**Check Option Bytes** (same SWD/JTAG Programming tab, STM32CubeProgrammer
+only - pyOCD doesn't expose this the same way via CLI): a read-only `-ob displ` dump, no
 erase/write. Flags RDP level with the same care this whole tool takes
 around SWD risk:
 - **RDP0** - no protection, normal for a dev board.
@@ -659,7 +662,7 @@ around SWD risk:
   SWD), RDP2 disables the debug port forever by ST's own design. This
   check exists to catch it before a full-chip operation, not after.
 
-**Probe selection** (section 4): if more than one ST-Link/probe is
+**Probe selection** (same tab): if more than one ST-Link/probe is
 connected at once, every command requires picking one explicitly from
 the Probe dropdown - there's no "whichever one the OS happens to
 enumerate first". With exactly one probe connected, it's auto-selected;
@@ -679,7 +682,7 @@ correctly match a `.hex`/`.elf` file's own encoding even after a
 successful flash, so those two formats skip this specific step and rely
 on pyOCD's own internal write-time verification instead.
 
-## 11. Transfer telemetry and verify-failure detail
+## 11. 📡 Transfer telemetry and verify-failure detail
 
 **Transfer telemetry**: the log shows effective KB/s and elapsed time
 per page during a CAN update, plus a summary line at the end (total time,
@@ -706,7 +709,7 @@ support for it); an older slave bootloader simply doesn't answer that
 query, and this tool falls back to the generic "verification failed"
 message instead.
 
-## 12. Optional F-RAM erase before flashing
+## 12. 🧹 Optional F-RAM erase before flashing
 
 Section 3 has a checkbox, **"Also erase the persistence F-RAM before
 flashing"** - off by default. If checked, it sends the magic-payload
@@ -734,7 +737,7 @@ something that should abort an otherwise-successful update over its own
 confirmation frame going missing. Check the F-RAM state separately
 (`URTC Tester`'s own Query State button) if that matters to you.
 
-## Changing the HMAC key / HardwareID
+## 🔑 Changing the HMAC key / HardwareID
 
 The shared signing key lives in two places that must always match:
 `bootloader_common.h`'s `HMAC_KEY` array, and this tool's `HMAC_KEY` constant near
@@ -784,6 +787,77 @@ partition scheme.
 <p align="center">
   <img src="images/URTC_FLASHER_V1_1.png" alt="URTC Flasher window" width="700">
 </p>
+
+## 📂 Repository Structure
+
+```
+├── assets/
+│   ├── URTC_APP_ICON.svg          <- shared app/taskbar icon source (vector)
+│   ├── URTC_LOGO_FLASHER.svg      <- banner source (vector), shown centered for 5s on startup
+│   ├── urtc_banner.png            <- rendered from the .svg above, shown at the top of the window
+│   ├── urtc_icon.ico              <- Windows taskbar/window icon
+│   └── urtc_icon.png              <- Linux taskbar/window icon
+├── firmware/
+│   ├── URTC_V1.1_F303CC.bin       <- current main-board application firmware
+│   ├── URTC_v1.0_F303CC.bin       <- older main-board build, kept as a real example of "more than
+│   │                                  one valid file" (see section 3 above)
+│   ├── URTC_BOOTLOADER.bin        <- main-board bootloader (SWD/JTAG only, filtered out of the
+│   │                                  CAN-OTA firmware list - see section 3 above)
+│   ├── URTC_SLAVE_APP.bin         <- expansion slave application (advanced expansion boards only)
+│   └── URTC_SLAVE_BOOTLOADER.bin  <- expansion slave bootloader
+├── images/
+│   ├── URTC_FLASHER_V1_1.png      <- real window screenshot, shown in the Photos section above
+│   └── URTC_LOGO_FLASHER.svg      <- gallery copy of assets/URTC_LOGO_FLASHER.svg above
+├── language/
+│   ├── english.lng                <- default language, plain KEY=Value pairs
+│   ├── spanish.lng
+│   ├── italian.lng
+│   ├── french.lng
+│   └── german.lng
+├── logs/                           <- created automatically, one file per session
+├── urtc_config.json.example        <- template for the optional urtc_config.json override file
+│                                       (see "Changing the HMAC key / HardwareID" above) - copy it
+│                                       to urtc_config.json and edit, rather than starting from
+│                                       scratch
+├── urtc_flasher.py                <- entry point: CLI args, splash screen, main window setup
+├── flasher_config.py              <- config file I/O, language loading, protocol constants
+├── flasher_transports.py          <- SLCAN, SocketCAN, MockCAN
+├── flasher_swd_tools.py           <- STM32CubeProgrammer / pyOCD wrappers
+├── flasher_validation.py          <- firmware file validation (.bin/.hex/.elf)
+├── flasher_protocol.py            <- the CAN OTA state machine itself
+├── flasher_github.py              <- downloads firmware from URTC's own GitHub repo
+├── flasher_gui.py                 <- the main window (FlasherGUI) and its menu bar
+├── requirements.txt
+├── build_exe.bat                  <- Windows standalone build
+├── build_exe.sh                   <- Linux standalone build
+├── URTC_Flasher.spec              <- PyInstaller spec used by both build scripts above
+├── README.md                      <- this file
+├── README_spa.md / README_ita.md / README_fra.md / README_deu.md  <- translations
+├── LICENSE
+├── .gitattributes
+└── .gitignore
+```
+
+This tool is organized into the `flasher_*.py` modules above by
+responsibility, purely for readability - there's no functional difference
+between having them as separate files versus one large one.
+
+## 🔗 Related Projects
+
+This project is part of a larger robotics ecosystem by the same author (JuanenRac / Electro Hobby 3D). Worth knowing about, since a request might actually be about one of these rather than this repository:
+
+**HYDRA-UMC platform** — the multi-robot micro-factory cell
+- **[HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC)** — the motherboard itself: Raspberry Pi CM5 host + dual-core STM32H745 real-time co-processor, orchestrating up to 8 distributed robot arms over CAN-OTA/SPI-OTA. Own hardware + firmware, GPL-3.0/CERN-OHL-S v2/CC BY-SA 4.0.
+- **[HYDRA-UMC STUDIO](https://github.com/JuanenRac/HYDRA-UMC-STUDIO)** — web-based control dashboard for HYDRA-UMC: multi-robot 3D visualization, kinematics/trajectory recording, CAN-OTA flashing and testing for the whole platform. React + Vite + Three.js.
+- **[HYDRA-UMC-ANDROID-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-ANDROID-CONTROL)** — planned Android control app for HYDRA-UMC. Not yet started; scope to be defined.
+- **[HYDRA-UMC-IOS-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-IOS-CONTROL)** — planned iOS control app for HYDRA-UMC. Not yet started; scope to be defined.
+- **[HYDRA-UMC-SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE)** — planned; scope to be defined.
+
+**URTC platform** — the tool head controller every HYDRA-UMC robot arm carries
+- **[URTC](https://github.com/JuanenRac/URTC)** — Universal Robot Tool Controller: STM32F303-based CAN bus tool head controller, 25 fully-implemented tool profiles, CAN-OTA firmware update.
+- **URTC Flasher** *(this repository)* — desktop CAN-OTA + full-chip SWD/JTAG flashing tool for URTC boards (Windows/Linux).
+- **[URTC Tester](https://github.com/JuanenRac/URTC-TESTER)** — desktop live CAN-bus diagnostic tool for URTC boards, one panel per tool profile (Windows/Linux).
+- **[URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO)** — browser-based alternative to the 2 desktop tools above (Web Serial API + SLCAN), no local install needed.
 
 ## 📜 License and Copyright Notices
 
