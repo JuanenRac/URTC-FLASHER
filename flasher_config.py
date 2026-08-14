@@ -53,8 +53,6 @@ CAN_ID_SET_FREE_TOOL = 0x1A2  # Sets/persists free_tool_selection - see EEPROM.T
 CAN_ID_FREE_TOOL_CONFIG_RESP = 0x1A3  # Query, or the response to setting it - carries raw ID-jumper reading too
 CAN_ID_SET_DEVICE_SERIAL = 0x1A4  # Sets/persists device_serial_number - see EEPROM.TXT section 6
 CAN_ID_PERIPHERAL_INFO_RESP = 0x1A5  # Query, or the response to setting it - carries peripheral type too
-CAN_ID_SET_FREE_TOOL = 0x1A2  # Sets/persists free_tool_selection - see EEPROM.TXT section 5
-CAN_ID_FREE_TOOL_RESP = 0x1A3  # Query, or the response to setting it
 
 # Index in this list matches the value URTC actually stores (0-6) - see
 # EXPANSION.TXT for what each configuration is.

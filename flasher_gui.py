@@ -1693,7 +1693,14 @@ class FlasherGUI:
         )
         if not path:
             return
-        is_valid, reason, size = validate_swd_image_file(path, BOOTLOADER_MAX_SIZE, "bootloader", BOOTLOADER_FLASH_ADDR)
+        # Target-aware validation, same rule start_swd_flash() applies before
+        # actually flashing - otherwise a legitimate slave image picked while
+        # target=="slave" gets checked against the master's addr/size and
+        # trips a confusing "invalid" warning.
+        is_slave = self.swd_target_var.get() == "slave"
+        boot_addr = SLAVE_BOOTLOADER_FLASH_ADDR if is_slave else BOOTLOADER_FLASH_ADDR
+        boot_max = SLAVE_BOOTLOADER_MAX_SIZE if is_slave else BOOTLOADER_MAX_SIZE
+        is_valid, reason, size = validate_swd_image_file(path, boot_max, "bootloader", boot_addr)
         if not is_valid:
             if not messagebox.askyesno(
                 _("TITLE_FILE_LOOKS_INVALID"),
@@ -1709,7 +1716,12 @@ class FlasherGUI:
         )
         if not path:
             return
-        is_valid, reason, size = validate_swd_image_file(path, APP_MAX_SIZE, "application", APP_FLASH_ADDR)
+        # Target-aware validation, same rule start_swd_flash() applies before
+        # actually flashing - see browse_swd_bootloader() above for why.
+        is_slave = self.swd_target_var.get() == "slave"
+        app_addr = SLAVE_APP_FLASH_ADDR if is_slave else APP_FLASH_ADDR
+        app_max = SLAVE_APP_MAX_SIZE if is_slave else APP_MAX_SIZE
+        is_valid, reason, size = validate_swd_image_file(path, app_max, "application", app_addr)
         if not is_valid:
             if not messagebox.askyesno(
                 _("TITLE_FILE_LOOKS_INVALID"),
