@@ -54,6 +54,44 @@ HAVE_SOCKETCAN = hasattr(socket, "AF_CAN")
 # GUI
 # =============================================================================
 class FlasherGUI:
+    @staticmethod
+    def _make_scrollable_tab(notebook, tab_text):
+        """Adds a new notebook tab whose content sits inside a vertically
+        scrollable canvas, and returns the inner Frame to build that tab's
+        real content into - a drop-in replacement for
+        ttk.Frame(notebook, padding=8) at the call site, so nothing below
+        this needs to know its parent is a canvas rather than the notebook
+        directly."""
+        outer = ttk.Frame(notebook)
+        canvas = tk.Canvas(outer, highlightthickness=0)
+        vscroll = ttk.Scrollbar(outer, orient="vertical", command=canvas.yview)
+        canvas.configure(yscrollcommand=vscroll.set)
+        canvas.pack(side="left", fill="both", expand=True)
+        vscroll.pack(side="right", fill="y")
+
+        inner = ttk.Frame(canvas, padding=8)
+        inner_window = canvas.create_window((0, 0), window=inner, anchor="nw")
+        inner.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        # Match the embedded frame's width to the canvas's own visible
+        # width (never its content's natural width) - only the height
+        # should ever come from content and trigger scrolling; the width
+        # tracking here is what keeps every control left-aligned and
+        # wrapped text using the full available width instead of the
+        # canvas's own tiny default request.
+        canvas.bind("<Configure>", lambda e: canvas.itemconfig(inner_window, width=e.width))
+
+        # Mousewheel only scrolls this canvas while the pointer is actually
+        # over it - bind_all() is unbound again on <Leave>, so it doesn't
+        # keep intercepting the wheel once the pointer moves to the other
+        # tab, a dialog, or anywhere else.
+        def _on_wheel(event):
+            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        canvas.bind("<Enter>", lambda e: canvas.bind_all("<MouseWheel>", _on_wheel))
+        canvas.bind("<Leave>", lambda e: canvas.unbind_all("<MouseWheel>"))
+
+        notebook.add(outer, text=tab_text)
+        return inner
+
     def __init__(self, root):
         self.root = root
         root.title(f"URTC Flasher v{FLASHER_VERSION}")
