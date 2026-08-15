@@ -20,7 +20,7 @@ from flasher_config import (
     CAN_ID_FRAM_STATE_RESP, CAN_ID_HEARTBEAT, CAN_ID_HMAC_CHUNK, CAN_ID_PAGE_ACK,
     CAN_ID_QUERY_VERSION, CAN_ID_START_UPDATE, CAN_ID_STATUS, CAN_ID_VERSION_RESPONSE,
     ERASE_FRAM_MAGIC, FIRMWARE_VERSION_MAJOR, FIRMWARE_VERSION_MINOR, FLASH_PAGE_SIZE,
-    HMAC_KEY, STATUS_NAMES, THIS_HARDWARE_ID, VERIFY_FAIL_REASONS,
+    HMAC_KEY, SLAVE_HMAC_KEY, STATUS_NAMES, THIS_HARDWARE_ID, VERIFY_FAIL_REASONS,
     CAN_ID_SLAVE_ENTER_BOOTLOADER, CAN_ID_SLAVE_START_UPDATE, CAN_ID_SLAVE_HMAC_CHUNK,
     CAN_ID_SLAVE_DATA, CAN_ID_SLAVE_END_UPDATE, CAN_ID_SLAVE_STATUS,
     CAN_ID_SLAVE_PROGRESS, CAN_ID_SLAVE_VERSION_RESP_1, CAN_ID_SLAVE_VERSION_RESP_2,
@@ -585,7 +585,12 @@ class URTCFlasher:
             )
 
         crc32 = zlib.crc32(firmware) & 0xFFFFFFFF
-        signature = hmac.new(HMAC_KEY, firmware, hashlib.sha256).digest()
+        # Slave board's own key, deliberately different from the master
+        # board's HMAC_KEY used in flash_master above (see
+        # slaveboot_common.h's own comment on why) - signing a slave
+        # image with the master's key would make its bootloader reject
+        # every real update sent to it.
+        signature = hmac.new(SLAVE_HMAC_KEY, firmware, hashlib.sha256).digest()
         actual_sha256 = hashlib.sha256(firmware).hexdigest()
 
         self.log(_("LOG_FIRMWARE_PATH", path=firmware_path))

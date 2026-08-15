@@ -113,11 +113,16 @@ VERIFY_FAIL_REASONS = {
     0x05: "rollback rejected (older version than what's already installed)",
 }
 
-# THIS_HARDWARE_ID and HMAC_KEY must match bootloader_common.h exactly, or
-# every update this tool sends will be rejected (HardwareID mismatch) or
-# fail signature verification (HMAC mismatch). If you change the key in
-# bootloader_common.h, change it here too - the two are not automatically
-# kept in sync.
+# THIS_HARDWARE_ID/HMAC_KEY must match bootloader_common.h (master board)
+# exactly, and SLAVE_HARDWARE_ID/SLAVE_HMAC_KEY must match
+# slaveboot_common.h (expansion slave) exactly, or every update this tool
+# sends will be rejected (HardwareID mismatch) or fail signature
+# verification (HMAC mismatch). If you change either key in firmware,
+# change the matching one here too - they are not automatically kept in
+# sync. The two keys are deliberately different from each other (see
+# slaveboot_common.h's own comment on why) - flasher_protocol.py signs
+# master updates with HMAC_KEY and slave updates with SLAVE_HMAC_KEY,
+# never the other one for either board.
 THIS_HARDWARE_ID = 0x0303CC01  # STM32F303CCT6, URTC board revision 1
 SLAVE_HARDWARE_ID = 0x0303CB01  # STM32F303CBT6, expansion slave chip - see slave_common.h's own THIS_HARDWARE_ID, verified against the real source rather than assumed to differ only in the last hex digit
 FIRMWARE_VERSION_MAJOR = 1
@@ -130,11 +135,23 @@ FIRMWARE_VERSION_MINOR = 0
 # definition - this one's about the flasher script itself.
 FLASHER_VERSION = "1.1"
 FLASHER_AUTHOR = "JuanenRac"
+# Real CSPRNG-generated keys (2026-08-15), matching bootloader_crypto.c
+# (master) and slaveboot_crypto.c (slave) respectively - see either
+# file's own comment for the full rationale, including why a key
+# committed to a public repo is a functional default, not a real
+# confidentiality boundary; rotate both via urtc_config.json's
+# "hmac_key_hex"/"slave_hmac_key_hex" overrides below for real production use.
 HMAC_KEY = bytes([
-    0x55, 0x52, 0x54, 0x43, 0x2D, 0x48, 0x59, 0x44,
-    0x52, 0x41, 0x2D, 0x55, 0x4D, 0x43, 0x2D, 0x32,
-    0x30, 0x32, 0x36, 0x2D, 0x43, 0x48, 0x41, 0x4E,
-    0x47, 0x45, 0x2D, 0x4D, 0x45, 0x2D, 0x21, 0x21
+    0x25, 0x26, 0xCC, 0x3E, 0x90, 0x11, 0xEC, 0x7C,
+    0x49, 0xEC, 0xD2, 0xD2, 0xB7, 0xF3, 0x89, 0xE3,
+    0x59, 0xAA, 0x24, 0x60, 0x14, 0xFF, 0x51, 0x54,
+    0xA0, 0xAF, 0x8A, 0x3C, 0x3B, 0xF9, 0x55, 0x81
+])
+SLAVE_HMAC_KEY = bytes([
+    0xF6, 0xFC, 0x5E, 0xC3, 0xC7, 0xC0, 0xB8, 0x32,
+    0x5F, 0x08, 0x83, 0x85, 0xCD, 0x10, 0x9E, 0x63,
+    0x7D, 0x45, 0x58, 0xD4, 0x53, 0x5F, 0x61, 0x9C,
+    0xD0, 0x6F, 0x3D, 0xF2, 0xAF, 0xDC, 0x38, 0x1D
 ])
 
 APP_MAX_SIZE = 112 * 1024
@@ -303,20 +320,22 @@ def _(key, **kwargs):
 
 def _load_config_overrides(log=None):
     """Optional urtc_config.json next to firmware/ can override HMAC_KEY,
-    THIS_HARDWARE_ID, and the memory-map constants (slot sizes, flash page
-    size, base addresses) without needing to edit or rebuild this script -
-    useful for a different board revision, a rotated signing key, or (for
-    the memory-map values) adapting this tool to a different chip variant
-    or partition scheme down the line. Missing file is normal and silent
-    (falls back to the compiled-in defaults above); a present-but-invalid
-    file is logged and then also falls back to defaults, rather than
-    crashing the whole tool over a typo in a config file.
+    SLAVE_HMAC_KEY, THIS_HARDWARE_ID, and the memory-map constants (slot
+    sizes, flash page size, base addresses) without needing to edit or
+    rebuild this script - useful for a different board revision, a
+    rotated signing key, or (for the memory-map values) adapting this
+    tool to a different chip variant or partition scheme down the line.
+    Missing file is normal and silent (falls back to the compiled-in
+    defaults above); a present-but-invalid file is logged and then also
+    falls back to defaults, rather than crashing the whole tool over a
+    typo in a config file.
 
     Expected format (every key optional - only override what's actually
     changing):
         {
           "hardware_id": "0x0303CC01",
-          "hmac_key_hex": "555254432D...",
+          "hmac_key_hex": "2526CC3E...",
+          "slave_hmac_key_hex": "F6FC5EC3...",
           "app_max_size": 114688,
           "bootloader_max_size": 32768,
           "flash_page_size": 2048,
@@ -325,11 +344,11 @@ def _load_config_overrides(log=None):
         }
     """
     log = log or (lambda msg: None)
-    hw_id, key = THIS_HARDWARE_ID, HMAC_KEY
+    hw_id, key, slave_key = THIS_HARDWARE_ID, HMAC_KEY, SLAVE_HMAC_KEY
     app_max_size, bootloader_max_size = APP_MAX_SIZE, BOOTLOADER_MAX_SIZE
     flash_page_size = FLASH_PAGE_SIZE
     bootloader_addr, app_addr = BOOTLOADER_FLASH_ADDR, APP_FLASH_ADDR
-    defaults = (hw_id, key, app_max_size, bootloader_max_size, flash_page_size, bootloader_addr, app_addr, False)
+    defaults = (hw_id, key, slave_key, app_max_size, bootloader_max_size, flash_page_size, bootloader_addr, app_addr, False)
     if not os.path.isfile(CONFIG_FILE_PATH):
         return defaults
 
@@ -407,6 +426,15 @@ def _load_config_overrides(log=None):
             overridden.append("hmac_key_hex")
         except (ValueError, TypeError) as e:
             skipped.append(f"hmac_key_hex ({e})")
+    if "slave_hmac_key_hex" in cfg:
+        try:
+            candidate_slave_key = bytes.fromhex(cfg["slave_hmac_key_hex"])
+            if len(candidate_slave_key) != 32:
+                raise ValueError(f"must decode to 32 bytes, got {len(candidate_slave_key)}")
+            slave_key = candidate_slave_key
+            overridden.append("slave_hmac_key_hex")
+        except (ValueError, TypeError) as e:
+            skipped.append(f"slave_hmac_key_hex ({e})")
     app_max_size = _int_field("app_max_size", app_max_size)
     bootloader_max_size = _int_field("bootloader_max_size", bootloader_max_size)
     flash_page_size = _int_field("flash_page_size", flash_page_size)
@@ -419,7 +447,7 @@ def _load_config_overrides(log=None):
         log(f"WARNING: {CONFIG_FILE_PATH} had problems with: {'; '.join(skipped)} "
             f"- those specific fields fell back to their compiled-in defaults, "
             f"everything else above still applied.")
-    return (hw_id, key, app_max_size, bootloader_max_size, flash_page_size,
+    return (hw_id, key, slave_key, app_max_size, bootloader_max_size, flash_page_size,
             bootloader_addr, app_addr, bool(overridden))
 
 
@@ -428,7 +456,7 @@ def _load_config_overrides(log=None):
 # run_cli() both re-run this WITH logging once a log sink actually exists,
 # purely so the override (or its absence) is visible in the session log/CLI
 # output - the values themselves don't change on the second call.
-THIS_HARDWARE_ID, HMAC_KEY, APP_MAX_SIZE, BOOTLOADER_MAX_SIZE, FLASH_PAGE_SIZE, \
+THIS_HARDWARE_ID, HMAC_KEY, SLAVE_HMAC_KEY, APP_MAX_SIZE, BOOTLOADER_MAX_SIZE, FLASH_PAGE_SIZE, \
     BOOTLOADER_FLASH_ADDR, APP_FLASH_ADDR, _CONFIG_LOADED = _load_config_overrides()
 
 # The banner image is a bundled asset, not a user-supplied file - a
