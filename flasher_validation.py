@@ -32,8 +32,18 @@ from flasher_config import APP_FLASH_ADDR, APP_MAX_SIZE, BOOTLOADER_FLASH_ADDR
 # common mistakes (wrong file, empty file, a truncated download) locally
 # and instantly, before spending time sending anything over CAN.
 # =============================================================================
-def validate_firmware_file(path):
-    """Returns (is_valid, reason_string, size_bytes)."""
+def validate_firmware_file(path, expected_base_addr=None, max_size=None):
+    """Returns (is_valid, reason_string, size_bytes). expected_base_addr/
+    max_size default to the main board's own APP_FLASH_ADDR/APP_MAX_SIZE -
+    pass the expansion slave's own SLAVE_APP_FLASH_ADDR/SLAVE_APP_MAX_SIZE
+    when the CAN-OTA target is the slave (see flash_target_var in
+    flasher_gui.py), otherwise a real URTC_SLAVE_APP.bin - which
+    genuinely links at a different address (0x08005000, not this board's
+    own 0x08008000, see flasher_config.py's own SLAVE_APP_FLASH_ADDR) -
+    fails the reset-handler check below even though it's a perfectly
+    valid image for its own slot."""
+    expected_base_addr = APP_FLASH_ADDR if expected_base_addr is None else expected_base_addr
+    max_size = APP_MAX_SIZE if max_size is None else max_size
     try:
         size = os.path.getsize(path)
     except OSError as e:
@@ -41,8 +51,8 @@ def validate_firmware_file(path):
 
     if size == 0:
         return False, "empty file", 0
-    if size > APP_MAX_SIZE:
-        return False, f"too large ({size} bytes > {APP_MAX_SIZE}-byte main slot)", size
+    if size > max_size:
+        return False, f"too large ({size} bytes > {max_size}-byte slot)", size
     if size < 8:
         return False, "too small to contain a vector table", size
 
@@ -78,15 +88,17 @@ def validate_firmware_file(path):
     # BOOTLOADER.bin/APP.bin, whose reset handlers land at 0x080030F1 and
     # 0x0800C725 respectively, each correctly inside its own range and
     # outside the other's.
-    if not (APP_FLASH_ADDR <= reset_handler < APP_FLASH_ADDR + APP_MAX_SIZE):
+    if not (expected_base_addr <= reset_handler < expected_base_addr + max_size):
         return False, (
             f"reset handler (0x{reset_handler:08X}) doesn't point inside "
-            f"the application slot (0x{APP_FLASH_ADDR:08X}-"
-            f"0x{APP_FLASH_ADDR + APP_MAX_SIZE:08X}) - this looks like a "
-            f"bootloader image, not an application image. A CAN-OTA update "
-            f"only ever writes to the application slot, so this file can't "
-            f"go through this path regardless of size - use the SWD/JTAG "
-            f"section instead if you actually need to update the bootloader."
+            f"the application slot (0x{expected_base_addr:08X}-"
+            f"0x{expected_base_addr + max_size:08X}) - this looks like a "
+            f"bootloader image, not an application image, or an image "
+            f"built for the other target (main board vs. expansion slave). "
+            f"A CAN-OTA update only ever writes to the application slot, "
+            f"so this file can't go through this path regardless of size - "
+            f"use the SWD/JTAG section instead if you actually need to "
+            f"update the bootloader."
         ), size
 
     return True, "looks valid", size

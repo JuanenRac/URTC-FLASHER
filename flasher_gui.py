@@ -243,10 +243,22 @@ class FlasherGUI:
         notebook = ttk.Notebook(root)
         notebook.grid(row=1, column=0, sticky="nsew", padx=4, pady=(0, 4))
         self._notebook = notebook
-        canota_tab = ttk.Frame(notebook, padding=8)
-        swdjtag_tab = ttk.Frame(notebook, padding=8)
-        notebook.add(canota_tab, text=_("TAB_CAN_OTA"))
-        notebook.add(swdjtag_tab, text=_("TAB_SWD_JTAG"))
+        # Each tab's content lives inside its own scrollable canvas rather
+        # than a plain Frame. root's own fixed 1235x1040 initial geometry
+        # (see urtc_flasher.py) is only a starting hint - Tk still expands
+        # the actual window past it to fit whatever a tab's content
+        # naturally needs, and CAN-OTA Programming's own control count grew
+        # past that budget, pushing the window taller than a 1080p screen
+        # and hiding the log frame below the taskbar entirely with no way
+        # to reach it. A plain Canvas (unlike a Frame) doesn't propagate
+        # its embedded content's size to its parent - it only ever claims
+        # whatever space the notebook's own row actually has - so wrapping
+        # each tab this way caps the window at a sane height for good,
+        # trading "everything always visible without scrolling" (impossible
+        # once a tab's own content genuinely doesn't fit) for "the log
+        # frame is always reachable regardless of which tab is open".
+        canota_tab = self._make_scrollable_tab(notebook, _("TAB_CAN_OTA"))
+        swdjtag_tab = self._make_scrollable_tab(notebook, _("TAB_SWD_JTAG"))
 
         # 2 columns rather than everything stacked in one - halves the
         # tab's vertical height for the same content, since the left
@@ -291,9 +303,20 @@ class FlasherGUI:
         self.fw_label = ttk.Label(fw_frame, text=_("STATUS_NO_FILE_SELECTED"), foreground="gray", wraplength=350)
         self.fw_label.grid(row=3, column=0, columnspan=3, sticky="w", padx=8, pady=(0, 4))
 
-        # --- Action frame (left column, bottom) ---
+        # --- Action frame (left column, bottom) - only the compact controls
+        # (checkboxes/radios/button, none of which wrap) are paired 2-per-row;
+        # every help label still spans the frame's FULL width. An earlier cut
+        # of this also halved the help labels' own wraplength to fit a
+        # sub-column, which backfired badly - a narrower label wraps onto
+        # MORE lines, not fewer, so that version was taller than the
+        # original single-column stack it was meant to shrink. Pairing just
+        # the controls (which do save real rows) while leaving prose at full
+        # width is the actual net height win.
         act_frame = ttk.LabelFrame(canota_tab, text=_("TITLE_FLASH_BY_CAN_OTA"))
         act_frame.grid(row=1, column=0, sticky="new", **pad)
+        act_frame.grid_columnconfigure(0, weight=1)
+        act_frame.grid_columnconfigure(1, weight=1)
+        full_wrap = 380  # same wraplength the single-column layout used - help text always gets the frame's full width, never a half-column
 
         # Which chip this flash actually targets - the main board's own
         # STM32F303CC (direct CAN), or the expansion slave's own
@@ -304,7 +327,7 @@ class FlasherGUI:
         # board, the far more common case.
         self.flash_target_var = tk.StringVar(value="master")
         target_row = ttk.Frame(act_frame)
-        target_row.grid(row=0, column=0, columnspan=3, sticky="w", **pad)
+        target_row.grid(row=0, column=0, columnspan=2, sticky="w", **pad)
         ttk.Label(target_row, text=_("LBL_FLASH_TARGET")).pack(side="left")
         ttk.Radiobutton(target_row, text=_("OPT_TARGET_MASTER"), value="master",
                          variable=self.flash_target_var, command=self._on_flash_target_change).pack(side="left", padx=(8, 0))
@@ -313,20 +336,15 @@ class FlasherGUI:
         ttk.Label(
             act_frame,
             text=_("HELP_FLASH_TARGET_SLAVE"),
-            foreground="gray", wraplength=380, justify="left",
-        ).grid(row=1, column=0, columnspan=3, sticky="w", padx=8, pady=(0, 4))
+            foreground="gray", wraplength=full_wrap, justify="left",
+        ).grid(row=1, column=0, columnspan=2, sticky="w", padx=8, pady=(0, 4))
 
         self.trigger_var = tk.BooleanVar(value=True)
         ttk.Checkbutton(
             act_frame,
             text=_("CHK_BOARD_RUNNING_APP"),
             variable=self.trigger_var,
-        ).grid(row=2, column=0, columnspan=3, sticky="w", **pad)
-        ttk.Label(
-            act_frame,
-            text=_("HELP_UNCHECK_IF_IN_BOOTLOADER"),
-            foreground="gray", wraplength=380, justify="left",
-        ).grid(row=3, column=0, columnspan=3, sticky="w", padx=8)
+        ).grid(row=2, column=0, sticky="w", **pad)
 
         self.erase_fram_var = tk.BooleanVar(value=False)
         self.erase_fram_check = ttk.Checkbutton(
@@ -334,12 +352,18 @@ class FlasherGUI:
             text=_("CHK_ERASE_FRAM_BEFORE_FLASHING"),
             variable=self.erase_fram_var,
         )
-        self.erase_fram_check.grid(row=4, column=0, columnspan=3, sticky="w", **pad)
+        self.erase_fram_check.grid(row=2, column=1, sticky="w", **pad)
+
+        ttk.Label(
+            act_frame,
+            text=_("HELP_UNCHECK_IF_IN_BOOTLOADER"),
+            foreground="gray", wraplength=full_wrap, justify="left",
+        ).grid(row=3, column=0, columnspan=2, sticky="w", padx=8)
         ttk.Label(
             act_frame,
             text=_("HELP_ERASE_FRAM_OPTIONAL"),
-            foreground="gray", wraplength=380, justify="left",
-        ).grid(row=5, column=0, columnspan=3, sticky="w", padx=8)
+            foreground="gray", wraplength=full_wrap, justify="left",
+        ).grid(row=4, column=0, columnspan=2, sticky="w", padx=8)
 
         # 0x7FD - bypasses the bootloader's own anti-rollback check for
         # this one attempt (Target: main board only; the expansion slave's
@@ -353,12 +377,7 @@ class FlasherGUI:
             text=_("CHK_ALLOW_DOWNGRADE"),
             variable=self.allow_downgrade_var,
         )
-        self.allow_downgrade_check.grid(row=6, column=0, columnspan=3, sticky="w", **pad)
-        ttk.Label(
-            act_frame,
-            text=_("HELP_ALLOW_DOWNGRADE"),
-            foreground="#b35900", wraplength=380, justify="left",
-        ).grid(row=7, column=0, columnspan=3, sticky="w", padx=8)
+        self.allow_downgrade_check.grid(row=5, column=0, sticky="w", **pad)
 
         # 0x7FE/0x7FF - reads the currently-installed firmware back over
         # CAN before you deliberately overwrite it. Main board only (same
@@ -368,17 +387,25 @@ class FlasherGUI:
         self.readback_btn = ttk.Button(
             act_frame, text=_("BTN_BACKUP_FIRMWARE_CAN"), command=self.start_readback,
         )
-        self.readback_btn.grid(row=8, column=0, columnspan=2, sticky="w", **pad)
+        self.readback_btn.grid(row=5, column=1, sticky="w", **pad)
+
+        ttk.Label(
+            act_frame,
+            text=_("HELP_ALLOW_DOWNGRADE"),
+            foreground="#b35900", wraplength=full_wrap, justify="left",
+        ).grid(row=6, column=0, columnspan=2, sticky="w", padx=8)
         ttk.Label(
             act_frame,
             text=_("HELP_BACKUP_FIRMWARE_CAN"),
-            foreground="gray", wraplength=380, justify="left",
-        ).grid(row=9, column=0, columnspan=3, sticky="w", padx=8)
+            foreground="gray", wraplength=full_wrap, justify="left",
+        ).grid(row=7, column=0, columnspan=2, sticky="w", padx=8)
 
-        self.flash_btn = ttk.Button(act_frame, text=_("BTN_FLASH_FIRMWARE"), command=self.start_flash)
-        self.flash_btn.grid(row=10, column=0, **pad)
-        self.cancel_btn = ttk.Button(act_frame, text=_("BTN_CANCEL"), command=self.cancel_flash, state="disabled")
-        self.cancel_btn.grid(row=10, column=1, **pad)
+        flash_btn_row = ttk.Frame(act_frame)
+        flash_btn_row.grid(row=8, column=0, columnspan=2, sticky="w", **pad)
+        self.flash_btn = ttk.Button(flash_btn_row, text=_("BTN_FLASH_FIRMWARE"), command=self.start_flash)
+        self.flash_btn.pack(side="left")
+        self.cancel_btn = ttk.Button(flash_btn_row, text=_("BTN_CANCEL"), command=self.cancel_flash, state="disabled")
+        self.cancel_btn.pack(side="left", padx=(8, 0))
 
         # --- Free tool configuration (right column, top) - (0x1A2/0x1A3),
         # only consulted by a board whose ID jumpers read 11111 (0x1F,
@@ -902,10 +929,20 @@ class FlasherGUI:
             self.log(_("LOG_FIRMWARE_FOLDER_NO_BINS", folder=FIRMWARE_FOLDER))
             return
 
+        # Validate against whichever slot the current CAN-OTA target
+        # actually flashes into - a real URTC_SLAVE_APP.bin genuinely
+        # links at SLAVE_APP_FLASH_ADDR (0x08005000), not this board's
+        # own APP_FLASH_ADDR (0x08008000, see flasher_config.py), so
+        # checking every file against the main board's address always
+        # flagged a real slave image as invalid regardless of target.
+        is_slave = self.flash_target_var.get() == "slave"
+        fw_addr = SLAVE_APP_FLASH_ADDR if is_slave else APP_FLASH_ADDR
+        fw_max = SLAVE_APP_MAX_SIZE if is_slave else APP_MAX_SIZE
+
         valid_entries = []
         for path in matches:
             name = os.path.basename(path)
-            is_valid, reason, size = validate_firmware_file(path)
+            is_valid, reason, size = validate_firmware_file(path, fw_addr, fw_max)
             size_str = f"{size/1024:.1f} KB" if size else "-"
             status_str = "\u2713 " + reason if is_valid else "\u2717 " + reason
             tag = "valid" if is_valid else "invalid"
@@ -917,7 +954,7 @@ class FlasherGUI:
         self.log(_("LOG_SCANNED_FIRMWARE", found=len(matches), valid=len(valid_entries)))
         for path in matches:
             name = os.path.basename(path)
-            is_valid, reason, size = validate_firmware_file(path)
+            is_valid, reason, size = validate_firmware_file(path, fw_addr, fw_max)
             if not is_valid:
                 self.log(_("LOG_FIRMWARE_ENTRY_INVALID", name=name, reason=reason))
 
@@ -958,7 +995,10 @@ class FlasherGUI:
         )
         if not path:
             return
-        is_valid, reason, size = validate_firmware_file(path)
+        is_slave = self.flash_target_var.get() == "slave"
+        fw_addr = SLAVE_APP_FLASH_ADDR if is_slave else APP_FLASH_ADDR
+        fw_max = SLAVE_APP_MAX_SIZE if is_slave else APP_MAX_SIZE
+        is_valid, reason, size = validate_firmware_file(path, fw_addr, fw_max)
         if not is_valid:
             if not messagebox.askyesno(
                 _("TITLE_FILE_LOOKS_INVALID"),
@@ -1565,6 +1605,15 @@ class FlasherGUI:
             self.erase_fram_check.config(state="normal")
             self.allow_downgrade_check.config(state="normal")
             self.readback_btn.config(state="normal")
+
+        # Master and slave application images validate against different
+        # flash addresses (see scan_firmware_folder) - a file already
+        # selected under the old target may be the wrong slot for the new
+        # one, so re-scan and drop the stale selection rather than leaving
+        # a now-mismatched path silently in place.
+        self.firmware_path = None
+        self.fw_label.config(text=_("STATUS_NO_FILE_SELECTED"), foreground="gray")
+        self.scan_firmware_folder()
 
     def start_readback(self):
         if self.transport is None:
