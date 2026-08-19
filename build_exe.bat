@@ -119,8 +119,8 @@ for %%f in (README_*.md) do (
     copy /Y "%%f" "dist\%%f" >nul
     echo       Copied %%f into dist\
 )
-if exist ..\..\..\LICENSE (
-    copy /Y ..\..\..\LICENSE dist\LICENSE >nul
+if exist LICENSE (
+    copy /Y LICENSE dist\LICENSE >nul
     echo       Copied LICENSE into dist\
 )
 REM urtc_config.json.example: a starting point for the technical HMAC

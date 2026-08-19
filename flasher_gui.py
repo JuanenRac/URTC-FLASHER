@@ -742,13 +742,11 @@ class FlasherGUI:
 
     def _menu_show_github(self):
         import webbrowser
-        # This tool's own future dedicated repository, per the user's own
-        # explicit URL - not this project's monorepo (github.com/
-        # JuanenRac/URTC), which is where this tool's own source still
-        # physically lives as of this comment (the split described in
-        # this project's own audit trail hasn't happened yet). Pointing
-        # here now means this link is already correct the moment that
-        # split lands, rather than needing a separate follow-up change.
+        # This tool's own dedicated repository - deliberately not URTC's
+        # own monorepo (github.com/JuanenRac/URTC), since this tool is
+        # versioned, released, and issue-tracked independently from the
+        # board firmware it flashes, even though the two work closely
+        # together.
         webbrowser.open("https://github.com/JuanenRac/URTC-FLASHER")
 
     def _show_text_window(self, title, text, width=90, height=30):
@@ -1631,9 +1629,9 @@ class FlasherGUI:
         )
 
     def _on_flash_target_change(self):
-        # The expansion slave chip has no F-RAM of its own (confirmed
-        # against its own real firmware source before this control was
-        # built - see this project's own audit trail) - "Erase F-RAM"
+        # The expansion slave chip has no F-RAM of its own - confirmed
+        # against its own real firmware source rather than assumed to
+        # mirror the main board's own memory map - so "Erase F-RAM"
         # is meaningless for it, disabled rather than left clickable and
         # silently doing nothing.
         if self.flash_target_var.get() == "slave":

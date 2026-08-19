@@ -136,22 +136,20 @@ FIRMWARE_VERSION_MINOR = 0
 FLASHER_VERSION = "1.1"
 FLASHER_AUTHOR = "JuanenRac"
 
-# --- HMAC signing keys - NOT compiled in as real key material anymore
-# (2026-08-19 audit fix) ---
-# This used to be the real CSPRNG-generated key pair (2026-08-15) matching
-# bootloader_crypto.c (master) and slaveboot_crypto.c (slave), spelled out
-# as a literal byte array right here. That worked - it made the tool sign
-# correctly out of the box - but it also meant the actual signing key for
-# every URTC board in the field sat in plaintext in this file, permanently,
-# in version control: anyone who ever clones, forks, or even just reads the
-# diff on GitHub gets the same key every bootloader trusts, and rotating it
-# later doesn't undo that - the old key stays readable in the git history of
-# every fork forever. A config-file override for this already existed below
-# (_load_config_overrides' own "hmac_key_hex"/"slave_hmac_key_hex" fields,
-# meant for a *rotated* production key) - the fix here is just to also route
-# the *default* key through that same mechanism instead of hardcoding it,
-# and to make sure the file it's read from (urtc_config.json) is actually
-# gitignored, which it was not before this fix either.
+# --- HMAC signing keys - deliberately NOT real key material in source ---
+# The actual signing key pair matching bootloader_crypto.c (master) and
+# slaveboot_crypto.c (slave) is real, CSPRNG-generated cryptographic
+# material - it does not belong spelled out as a literal byte array in a
+# file every clone/fork/GitHub-diff of this project can read. Anyone who
+# can read the key can forge a signed update for every URTC board in the
+# field, and unlike a config file, a value once committed here stays
+# readable in the git history of every fork forever, even after being
+# "removed" in a later commit - so this file only ever holds an obviously
+# fake placeholder, and the real key pair lives exclusively in each
+# machine's own local urtc_config.json (gitignored - see .gitignore),
+# read through _load_config_overrides' own "hmac_key_hex"/
+# "slave_hmac_key_hex" fields below, following urtc_config.json.example's
+# documented format.
 #
 # The two constants below are therefore NOT real keys - they're readable,
 # obviously-fake ASCII placeholders, used only when urtc_config.json doesn't
