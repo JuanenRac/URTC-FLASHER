@@ -135,24 +135,40 @@ FIRMWARE_VERSION_MINOR = 0
 # definition - this one's about the flasher script itself.
 FLASHER_VERSION = "1.1"
 FLASHER_AUTHOR = "JuanenRac"
-# Real CSPRNG-generated keys (2026-08-15), matching bootloader_crypto.c
-# (master) and slaveboot_crypto.c (slave) respectively - see either
-# file's own comment for the full rationale, including why a key
-# committed to a public repo is a functional default, not a real
-# confidentiality boundary; rotate both via urtc_config.json's
-# "hmac_key_hex"/"slave_hmac_key_hex" overrides below for real production use.
-HMAC_KEY = bytes([
-    0x25, 0x26, 0xCC, 0x3E, 0x90, 0x11, 0xEC, 0x7C,
-    0x49, 0xEC, 0xD2, 0xD2, 0xB7, 0xF3, 0x89, 0xE3,
-    0x59, 0xAA, 0x24, 0x60, 0x14, 0xFF, 0x51, 0x54,
-    0xA0, 0xAF, 0x8A, 0x3C, 0x3B, 0xF9, 0x55, 0x81
-])
-SLAVE_HMAC_KEY = bytes([
-    0xF6, 0xFC, 0x5E, 0xC3, 0xC7, 0xC0, 0xB8, 0x32,
-    0x5F, 0x08, 0x83, 0x85, 0xCD, 0x10, 0x9E, 0x63,
-    0x7D, 0x45, 0x58, 0xD4, 0x53, 0x5F, 0x61, 0x9C,
-    0xD0, 0x6F, 0x3D, 0xF2, 0xAF, 0xDC, 0x38, 0x1D
-])
+
+# --- HMAC signing keys - NOT compiled in as real key material anymore
+# (2026-08-19 audit fix) ---
+# This used to be the real CSPRNG-generated key pair (2026-08-15) matching
+# bootloader_crypto.c (master) and slaveboot_crypto.c (slave), spelled out
+# as a literal byte array right here. That worked - it made the tool sign
+# correctly out of the box - but it also meant the actual signing key for
+# every URTC board in the field sat in plaintext in this file, permanently,
+# in version control: anyone who ever clones, forks, or even just reads the
+# diff on GitHub gets the same key every bootloader trusts, and rotating it
+# later doesn't undo that - the old key stays readable in the git history of
+# every fork forever. A config-file override for this already existed below
+# (_load_config_overrides' own "hmac_key_hex"/"slave_hmac_key_hex" fields,
+# meant for a *rotated* production key) - the fix here is just to also route
+# the *default* key through that same mechanism instead of hardcoding it,
+# and to make sure the file it's read from (urtc_config.json) is actually
+# gitignored, which it was not before this fix either.
+#
+# The two constants below are therefore NOT real keys - they're readable,
+# obviously-fake ASCII placeholders, used only when urtc_config.json doesn't
+# supply "hmac_key_hex"/"slave_hmac_key_hex". Signing with these against
+# real hardware fails HMAC verification loudly (STATUS_VERIFY_FAIL, reason
+# 0x03 - see VERIFY_FAIL_REASONS above) rather than silently doing
+# something insecure - that's deliberate, so a missing/misconfigured key
+# file is impossible to miss. The real key pair now lives only in this
+# machine's own local urtc_config.json (never committed - see .gitignore),
+# copied in following urtc_config.json.example's documented
+# "hmac_key_hex"/"slave_hmac_key_hex" format; _load_config_overrides below
+# logs a loud warning on every startup where it falls back to either
+# placeholder, so the fallback is never silent either.
+_INSECURE_DEV_HMAC_KEY = b"INSECURE-DEV-DEFAULT-KEY-NOTREAL"  # 32 bytes, deliberately readable so it's obviously not a real key if it ever shows up in a log or hex dump
+_INSECURE_DEV_SLAVE_HMAC_KEY = b"INSECURE-DEV-SLAVE-KEY-NOT-REAL!"  # 32 bytes, deliberately different text from the master placeholder above - same "the two keys must differ" reasoning as the real ones
+HMAC_KEY = _INSECURE_DEV_HMAC_KEY
+SLAVE_HMAC_KEY = _INSECURE_DEV_SLAVE_HMAC_KEY
 
 APP_MAX_SIZE = 112 * 1024
 SLAVE_APP_MAX_SIZE = 54 * 1024  # matches STM32F303CBTx_SLAVEAPP.ld's own 54K main slot at 0x08005000 - verified against the real linker script, not assumed to match the main board's own 112K
@@ -325,10 +341,14 @@ def _load_config_overrides(log=None):
     rebuild this script - useful for a different board revision, a
     rotated signing key, or (for the memory-map values) adapting this
     tool to a different chip variant or partition scheme down the line.
-    Missing file is normal and silent (falls back to the compiled-in
-    defaults above); a present-but-invalid file is logged and then also
-    falls back to defaults, rather than crashing the whole tool over a
-    typo in a config file.
+    Missing file is normal and silent for the memory-map/hardware-id
+    fields (falls back to the compiled-in defaults above); a
+    present-but-invalid file is logged and then also falls back to
+    defaults for whichever fields it broke, rather than crashing the
+    whole tool over a typo in a config file. hmac_key_hex/slave_hmac_key_hex
+    are the one exception to "silent" - see _warn_if_insecure_keys below -
+    since falling back there means every update this tool sends will be
+    rejected by real hardware, not just a cosmetic default.
 
     Expected format (every key optional - only override what's actually
     changing):
@@ -344,12 +364,39 @@ def _load_config_overrides(log=None):
         }
     """
     log = log or (lambda msg: None)
+
+    def _warn_if_insecure_keys(overridden_fields):
+        # Called from every return path below - "hmac_key_hex"/
+        # "slave_hmac_key_hex" missing from urtc_config.json (whether
+        # because the file itself doesn't exist yet, or just doesn't
+        # happen to set those two fields) means HMAC_KEY/SLAVE_HMAC_KEY
+        # are still the obviously-fake _INSECURE_DEV_* placeholders
+        # defined above, not real signing keys - worth a loud warning on
+        # every single startup this stays true, not just a one-time note,
+        # since it's easy to fix once and then forget urtc_config.json
+        # needs to travel with this tool onto a new machine too.
+        if "hmac_key_hex" not in overridden_fields:
+            log(f"WARNING: no \"hmac_key_hex\" in {CONFIG_FILE_PATH} - using the "
+                f"INSECURE built-in placeholder HMAC key (see flasher_config.py's "
+                f"own comment on _INSECURE_DEV_HMAC_KEY). This will NOT match any "
+                f"real board's bootloader_crypto.c - every master-board update will "
+                f"fail HMAC verification (STATUS_VERIFY_FAIL, reason 0x03) until the "
+                f"real key is set in urtc_config.json - see urtc_config.json.example.")
+        if "slave_hmac_key_hex" not in overridden_fields:
+            log(f"WARNING: no \"slave_hmac_key_hex\" in {CONFIG_FILE_PATH} - using the "
+                f"INSECURE built-in placeholder HMAC key for the expansion slave (see "
+                f"flasher_config.py's own comment on _INSECURE_DEV_SLAVE_HMAC_KEY). "
+                f"Same consequence as the master key above, for slave-target updates "
+                f"instead, until slaveboot_crypto.c's real key is set in "
+                f"urtc_config.json - see urtc_config.json.example.")
+
     hw_id, key, slave_key = THIS_HARDWARE_ID, HMAC_KEY, SLAVE_HMAC_KEY
     app_max_size, bootloader_max_size = APP_MAX_SIZE, BOOTLOADER_MAX_SIZE
     flash_page_size = FLASH_PAGE_SIZE
     bootloader_addr, app_addr = BOOTLOADER_FLASH_ADDR, APP_FLASH_ADDR
     defaults = (hw_id, key, slave_key, app_max_size, bootloader_max_size, flash_page_size, bootloader_addr, app_addr, False)
     if not os.path.isfile(CONFIG_FILE_PATH):
+        _warn_if_insecure_keys([])
         return defaults
 
     try:
@@ -359,6 +406,7 @@ def _load_config_overrides(log=None):
         # Nothing to salvage here - the file couldn't even be read as JSON
         # at all, so there's no per-field data to fall back on individually.
         log(f"WARNING: couldn't load {CONFIG_FILE_PATH} ({e}) - using compiled-in defaults instead.")
+        _warn_if_insecure_keys([])
         return defaults
 
     # Each field is parsed independently below - a mistake in one (a typo
@@ -447,6 +495,7 @@ def _load_config_overrides(log=None):
         log(f"WARNING: {CONFIG_FILE_PATH} had problems with: {'; '.join(skipped)} "
             f"- those specific fields fell back to their compiled-in defaults, "
             f"everything else above still applied.")
+    _warn_if_insecure_keys(overridden)
     return (hw_id, key, slave_key, app_max_size, bootloader_max_size, flash_page_size,
             bootloader_addr, app_addr, bool(overridden))
 

@@ -466,8 +466,10 @@ class FlasherGUI:
             free_tool_frame, textvariable=self.free_tool_var, state="readonly", width=22,
             values=list(self._free_tool_display_to_selection.keys()),
         ).grid(row=1, column=0, sticky="w", **pad)
-        ttk.Button(free_tool_frame, text=_("BTN_PROGRAM"), command=self.program_free_tool_config).grid(
-            row=1, column=1, **pad)
+        self.free_tool_program_btn = ttk.Button(
+            free_tool_frame, text=_("BTN_PROGRAM"), command=self.program_free_tool_config)
+        self.free_tool_program_btn.grid(row=1, column=1, **pad)
+        self.query_btn_holder.append(self.free_tool_program_btn)  # locked by _set_ui_busy_state the same way Query is - writes 0x1A2 over the same serial/CAN link an active flash is using, same concurrent-port-access hazard as the buttons already in this list
         self.free_tool_result_var = tk.StringVar(value="")
         ttk.Label(free_tool_frame, textvariable=self.free_tool_result_var, wraplength=380, justify="left").grid(
             row=2, column=0, columnspan=3, sticky="w", padx=8, pady=(0, 4))
@@ -487,15 +489,19 @@ class FlasherGUI:
             text=_("HELP_PERIPHERAL_INFO"),
             foreground="gray", wraplength=380, justify="left",
         ).grid(row=0, column=0, columnspan=4, sticky="w", padx=8, pady=(4, 4))
-        ttk.Button(peripheral_frame, text=_("BTN_QUERY"), command=self.query_peripheral_info).grid(
-            row=1, column=0, **pad)
+        self.peripheral_query_btn = ttk.Button(
+            peripheral_frame, text=_("BTN_QUERY"), command=self.query_peripheral_info)
+        self.peripheral_query_btn.grid(row=1, column=0, **pad)
+        self.query_btn_holder.append(self.peripheral_query_btn)  # locked by _set_ui_busy_state the same way Query is - queries 0x1A5 over the same serial/CAN link an active flash is using, same concurrent-port-access hazard as the buttons already in this list
         ttk.Label(peripheral_frame, text=_("LBL_NEW_SERIAL")).grid(row=1, column=1, sticky="e", **pad)
         self.device_serial_var = tk.StringVar(value="0")
         ttk.Spinbox(
             peripheral_frame, textvariable=self.device_serial_var, from_=0, to=255, width=6,
         ).grid(row=1, column=2, sticky="w", **pad)
-        ttk.Button(peripheral_frame, text=_("BTN_PROGRAM"), command=self.program_device_serial).grid(
-            row=1, column=3, **pad)
+        self.device_serial_program_btn = ttk.Button(
+            peripheral_frame, text=_("BTN_PROGRAM"), command=self.program_device_serial)
+        self.device_serial_program_btn.grid(row=1, column=3, **pad)
+        self.query_btn_holder.append(self.device_serial_program_btn)  # locked by _set_ui_busy_state the same way Query is - writes 0x1A4 over the same serial/CAN link an active flash is using, same concurrent-port-access hazard as the buttons already in this list
         self.peripheral_info_result_var = tk.StringVar(value="")
         ttk.Label(peripheral_frame, textvariable=self.peripheral_info_result_var, wraplength=380, justify="left").grid(
             row=2, column=0, columnspan=4, sticky="w", padx=8, pady=(0, 4))
