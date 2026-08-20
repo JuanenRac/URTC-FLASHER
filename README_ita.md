@@ -875,6 +875,80 @@ partizioni diverso.
   <img src="images/URTC_FLASHER_V1_1.png" alt="Finestra di URTC Flasher" width="700">
 </p>
 
+## 📂 Struttura del Repository
+
+```
+├── assets/
+│   ├── URTC_APP_ICON.svg          <- icona condivisa app/barra delle applicazioni (vettoriale)
+│   ├── URTC_LOGO_FLASHER.svg      <- sorgente del banner (vettoriale), mostrato al centro per 5s all'avvio
+│   ├── urtc_banner.png            <- renderizzato dal .svg sopra, mostrato in cima alla finestra
+│   ├── urtc_icon.ico              <- icona barra applicazioni/finestra su Windows
+│   └── urtc_icon.png              <- icona barra applicazioni/finestra su Linux
+├── firmware/
+│   ├── URTC_V1.1_F303CC.bin       <- firmware applicativo attuale della scheda principale
+│   ├── URTC_v1.0_F303CC.bin       <- build precedente della scheda principale, tenuta come esempio reale
+│   │                                  di "più di un file valido" (vedi sezione 3 sopra)
+│   ├── URTC_BOOTLOADER.bin        <- bootloader della scheda principale (solo SWD/JTAG, escluso dall'elenco
+│   │                                  firmware CAN-OTA - vedi sezione 3 sopra)
+│   ├── URTC_SLAVE_APP.bin         <- applicazione del chip slave di espansione (solo schede di espansione avanzate)
+│   └── URTC_SLAVE_BOOTLOADER.bin  <- bootloader del chip slave di espansione
+├── images/
+│   ├── URTC_FLASHER_V1_1.png      <- screenshot reale della finestra, mostrato nella sezione Foto sopra
+│   └── URTC_LOGO_FLASHER.svg      <- copia della galleria di assets/URTC_LOGO_FLASHER.svg sopra
+├── language/
+│   ├── english.lng                <- lingua predefinita, coppie KEY=Value in testo semplice
+│   ├── spanish.lng
+│   ├── italian.lng
+│   ├── french.lng
+│   └── german.lng
+├── logs/                           <- creata automaticamente, un file per sessione
+├── urtc_config.json.example        <- modello per il file opzionale di override urtc_config.json
+│                                       (vedi "Cambiare la chiave HMAC / l'HardwareID" sopra) - copialo
+│                                       come urtc_config.json e modificalo, invece di partire da zero
+├── urtc_flasher.py                <- punto d'ingresso: argomenti CLI, splash screen, configurazione finestra principale
+├── flasher_config.py              <- I/O del file di configurazione, caricamento lingua, costanti di protocollo
+├── flasher_transports.py          <- SLCAN, SocketCAN, MockCAN
+├── flasher_swd_tools.py           <- wrapper per STM32CubeProgrammer / pyOCD
+├── flasher_validation.py          <- validazione dei file firmware (.bin/.hex/.elf)
+├── flasher_protocol.py            <- la macchina a stati CAN OTA vera e propria
+├── flasher_github.py              <- scarica firmware dal repository GitHub di URTC
+├── flasher_gui.py                 <- la finestra principale (FlasherGUI) e la sua barra dei menu
+├── requirements.txt
+├── build_exe.bat                  <- build standalone per Windows
+├── build_exe.sh                   <- build standalone per Linux
+├── URTC_Flasher.spec              <- spec PyInstaller usata da entrambi gli script di build sopra
+├── README.md                      <- (versione in inglese)
+├── README_ita.md                  <- questo file
+├── README_spa.md / README_fra.md / README_deu.md  <- altre traduzioni
+├── LICENSE
+├── .gitattributes
+└── .gitignore
+```
+
+Questo strumento è organizzato nei moduli `flasher_*.py` sopra per
+responsabilità, puramente per leggibilità - non c'è alcuna differenza
+funzionale tra averli come file separati o come uno grande.
+
+## 🔗 Progetti Correlati
+
+Questo progetto fa parte di un ecosistema di robotica più ampio dello stesso autore (JuanenRac / Electro Hobby 3D). Vale la pena conoscerlo, dato che una richiesta potrebbe in realtà riguardare uno di questi invece di questo repository:
+
+**Piattaforma HYDRA-UMC** — la cella di micro-fabbrica multi-robot
+- **[HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC)** — la scheda madre stessa: host Raspberry Pi CM5 + coprocessore real-time STM32H745 dual-core, che orchestra fino a 8 bracci robotici distribuiti via CAN-OTA/SPI-OTA. Hardware + firmware propri, GPL-3.0/CERN-OHL-S v2/CC BY-SA 4.0.
+- **[HYDRA-UMC STUDIO](https://github.com/JuanenRac/HYDRA-UMC-STUDIO)** — dashboard di controllo web per HYDRA-UMC: visualizzazione 3D multi-robot, registrazione cinematica/traiettorie, flashing e testing via CAN-OTA per l'intera piattaforma. React + Vite + Three.js.
+- **[HYDRA-UMC-ANDROID-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-ANDROID-CONTROL)** — app di controllo Android per HYDRA-UMC via Wi-Fi/Bluetooth. App reale e funzionante - set completo di funzioni di controllo remoto, autenticazione JWT, archiviazione cifrata delle credenziali.
+- **[HYDRA-UMC-IOS-CONTROL](https://github.com/JuanenRac/HYDRA-UMC-IOS-CONTROL)** — app di controllo iOS/iPadOS per HYDRA-UMC via Wi-Fi, sviluppata in Flutter (multipiattaforma, verificabile su Windows senza bisogno di un Mac; il packaging finale dell'`.ipa` richiede comunque Xcode). App reale e funzionante - stesso set di funzioni dell'app Android.
+- **[HYDRA-UMC-SUITE](https://github.com/JuanenRac/HYDRA-UMC-SUITE)** — centro di comando desktop (Python/PySide6) per lo sciame: scoperta di rete multi-controller, sincronizzazione bidirezionale live, viewport 3D reale dei robot, workspace agganciabile in stile Photoshop. Reale e funzionante, non un placeholder.
+- **[HYDRA-UMC-EDITOR-URDF](https://github.com/JuanenRac/HYDRA-UMC-EDITOR-URDF)** — creatore/editor grafico URDF desktop (Python/PySide6) per il catalogo modelli di questo stesso progetto: importa file sorgente da GitHub o da una cartella locale, valida la fattibilità dei DOF, modifica colore/scala/cinematica con anteprima 3D live, e pubblica il risultato finito su un server STUDIO in esecuzione. Reale e funzionante, non un placeholder.
+- **[HYDRA-UMC-DSI](https://github.com/JuanenRac/HYDRA-UMC-DSI)** — pianificato: un'interfaccia touch nativa per il touchscreen DSI da 7" (1280×800) di HYDRA-UMC sulla Compute Module 5, controllando questo stesso server direttamente dalla scheda. Non ancora iniziato.
+
+**Piattaforma URTC** — il controller della testa utensile che ogni braccio robotico HYDRA-UMC porta con sé
+- **[URTC](https://github.com/JuanenRac/URTC)** — Universal Robot Tool Controller: controller per testa utensile su bus CAN basato su STM32F303, 25 profili utensile completamente implementati, aggiornamento firmware via CAN-OTA.
+- **URTC Flasher** *(questo repository)* — strumento desktop di flashing CAN-OTA + SWD/JTAG a chip completo per schede URTC (Windows/Linux).
+- **[URTC Tester](https://github.com/JuanenRac/URTC-TESTER)** — strumento desktop di diagnostica live su bus CAN per schede URTC, un pannello per profilo utensile (Windows/Linux).
+- **[URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO)** — alternativa basata su browser ai 2 strumenti desktop sopra (Web Serial API + SLCAN), senza bisogno di installazione locale.
+
+
 ## 📜 Licenza e Note sul Copyright
 
 URTC Flasher è (c) 2026 JuanenRac (Electro Hobby 3D). Questo avviso
