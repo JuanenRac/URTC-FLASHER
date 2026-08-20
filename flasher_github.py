@@ -126,6 +126,7 @@ def download_file(download_url, dest_path, log=None, progress_cb=None):
     req = urllib.request.Request(download_url, headers={"User-Agent": USER_AGENT})
     if log:
         log(_("LOG_GITHUB_DOWNLOADING", name=os.path.basename(dest_path)))
+    written = 0  # set before the try so the finally block below can safely reference it even if urlopen() itself fails before any bytes are written
     try:
         with urllib.request.urlopen(req, timeout=30) as response:
             total_size = int(response.headers.get("Content-Length", 0))
@@ -155,6 +156,21 @@ def download_file(download_url, dest_path, log=None, progress_cb=None):
         raise GitHubDownloadError(_("ERR_GITHUB_TIMEOUT"))
     except OSError as e:
         raise GitHubDownloadError(_("ERR_GITHUB_WRITE_FAILED", reason=e))
+    finally:
+        # A connection dropped mid-transfer (network error, timeout, or the
+        # request failing before any bytes ever arrived) raises out of the
+        # "with open(tmp_path, ...)" block before os.replace() ever runs,
+        # leaving the half-written ".part" file behind. On success
+        # os.replace() has already renamed it away, so this is a no-op then;
+        # on failure it's removed here so a retry starts from a fresh file
+        # instead of silently reusing (via truncating "wb") a stale partial
+        # download, and so a failed download never leaves debris next to
+        # FIRMWARE_FOLDER.
+        try:
+            if os.path.isfile(dest_path + ".part"):
+                os.remove(dest_path + ".part")
+        except OSError:
+            pass
 
     if log:
         log(_("LOG_GITHUB_DOWNLOAD_COMPLETE", name=os.path.basename(dest_path), size=written))

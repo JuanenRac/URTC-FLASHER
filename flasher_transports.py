@@ -447,7 +447,12 @@ class MockCAN:
             pass  # no response, matching the real bootloader protocol
         elif can_id == CAN_ID_DATA:
             self._update_bytes_received += len(data)
-            page_size = 2048  # matches FLASH_PAGE_SIZE
+            # Reads the actual (possibly urtc_config.json-overridden) constant
+            # rather than a hardcoded 2048 - a stale literal here would silently
+            # desync this simulator's PAGE_ACK indices from what flasher_protocol.py
+            # itself computes whenever flash_page_size is overridden, making
+            # --transport mock testing pass or fail for the wrong reasons.
+            page_size = FLASH_PAGE_SIZE
             while self._update_bytes_received >= (self._next_page_index + 1) * page_size or (
                 self._update_bytes_received >= self._update_total_size
                 and self._update_bytes_received > self._next_page_index * page_size

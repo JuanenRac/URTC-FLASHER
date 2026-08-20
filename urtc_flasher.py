@@ -239,13 +239,6 @@ def main():
     root.withdraw()  # hidden until the splash finishes, rather than flashing empty then populated
     # Sized from actual measured content across all 5 supported languages
     # (root.winfo_reqwidth/reqheight after building the real GUI, not a
-    # guess) - Italian needs the most width (914px measured), French/German
-    # the most height (~967px measured), both with help text at the same
-    # wraplength as English. A small margin above those worst-case
-    # measurements, rather than sizing for English alone and letting other
-    # languages clip.
-    # Sized from actual measured content across all 5 supported languages
-    # (root.winfo_reqwidth/reqheight after building the real GUI, not a
     # guess) - re-measured after redesigning the CAN-OTA tab into 2
     # columns (firmware selection + flashing on the left, free tool
     # config + peripheral info on the right) instead of everything
