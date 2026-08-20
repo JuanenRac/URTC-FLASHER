@@ -558,6 +558,15 @@ class CubeProgrammerCLI(_SubprocessProgrammerBase):
         self.log(_("LOG_PROGRAMMING_BOOTLOADER_REGION"))
         args = connect + ["-w", bootloader_path]
         args += _address_args_bin_needs_it(bootloader_path, bootloader_addr)
+        # "-v" (verify, read-back compare) applies here too, not just to the
+        # app write below - without it, STM32CubeProgrammer never confirms
+        # the bootloader region actually landed correctly (it performs no
+        # verification of a "-w" write on its own unless "-v" is passed).
+        # The pyOCD path (PyOCDCLI.full_chip_flash above) already verifies
+        # BOTH regions via "commander -c compare" - this brings the
+        # CubeProgrammer path to the same coverage instead of silently
+        # trusting an unverified bootloader write.
+        args += ["-v"]
         self._run(args, dry_run)
 
         self.log(_("LOG_PROGRAMMING_APP_VERIFY_RESET"))

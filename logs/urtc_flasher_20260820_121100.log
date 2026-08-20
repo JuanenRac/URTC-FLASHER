@@ -1,0 +1,7 @@
+2026-08-20 12:11:00,981 === URTC Flasher v1.1 session started ===
+2026-08-20 12:11:01,273 Scanned firmware/: 3 file(s) found, 2 look valid.
+2026-08-20 12:11:01,276   ✗ URTC_SLAVE_APP.bin: reset handler (0x08007859) doesn't point inside the application slot (0x08008000-0x08024000) - this looks like a bootloader image, not an application image, or an image built for the other target (main board vs. expansion slave). A CAN-OTA update only ever writes to the application slot, so this file can't go through this path regardless of size - use the SWD/JTAG section instead if you actually need to update the bootloader.
+2026-08-20 12:11:01,282 Multiple valid firmware files found - select one from the list above.
+2026-08-20 12:11:01,283 URTC Flasher ready. HardwareID: 0x0303CC01, firmware version 1.0
+2026-08-20 12:11:01,283 Loaded config overrides from C:\Users\juane\Documents\GitHub\URTC-FLASHER\urtc_config.json: hmac_key_hex, slave_hmac_key_hex
+2026-08-20 12:11:01,284 Expecting the adapter in SLCAN mode - see the README if your CANable shows up as anything other than a serial port.

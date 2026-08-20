@@ -47,8 +47,7 @@ tratta il primo vero tentativo di flash con la stessa cautela che
 daresti a qualsiasi nuovo strumento che parla con un bootloader: tieni a
 portata di mano il JTAG come ripiego.
 
-## 1. Fai parlare CAN al tuo adattatore
-
+## 1. 🔌 Fai parlare CAN al tuo adattatore
 Quale di questi ti serve dipende dalla tua piattaforma e da quale
 trasporto userai:
 
@@ -98,8 +97,7 @@ saltata, invece che analizzata dai suoi primi N caratteri esadecimali
 indipendentemente da ciò che segue - utile da sapere se stai facendo
 debug contro un adattatore rumoroso o non standard.
 
-## 2. Installazione ed esecuzione
-
+## 2. 💻 Installazione ed esecuzione
 **Windows:**
 ```
 python -m pip install -r requirements.txt
@@ -197,8 +195,7 @@ un problema comune su entrambe le piattaforme: lo script wrapper di
 `pip` stesso non è sempre nel PATH anche subito dopo un'installazione
 riuscita, mentre `-m pip` trova il modulo installato direttamente.
 
-## 3. Dove vanno i file di firmware
-
+## 3. 📁 Dove vanno i file di firmware
 Questo strumento si aspetta una cartella `firmware/` proprio accanto a
 `urtc_flasher.py`, nella radice di questo stesso repository:
 
@@ -312,8 +309,7 @@ comunque il controllo autoritativo.
 Aggiungere una build nuova più tardi: basta metterla in `firmware/` e
 cliccare **Aggiorna** - nessun riavvio necessario.
 
-## 4. Controllare cosa è attualmente installato
-
+## 4. 🔍 Controllare cosa è attualmente installato
 Se sei su Linux e SocketCAN è disponibile, vedrai una scelta di
 **Trasporto** in alto - scegli Seriale/SLCAN o SocketCAN prima di
 connettere. Su Windows questa riga non appare affatto; Seriale/SLCAN è
@@ -384,8 +380,7 @@ MLX90640 - una scheda con un MLX90640 reale collegato necessita che
 questo venga impostato esplicitamente, una volta, allo stesso modo in
 cui il tipo di scheda di espansione stesso già richiede.
 
-## 5. Flashare
-
+## 5. ⚡ Flashare
 1. **Connetti**: scegli Seriale/SLCAN o SocketCAN (solo Linux), poi la
    porta/interfaccia, poi clicca Connetti. Per Seriale/SLCAN questo apre
    il canale CAN a 500 kbit/s (la velocità di bus fissa di URTC); per
@@ -458,8 +453,7 @@ sezione 3 sopra), ricadendo sulla versione attualmente configurata di
 questo strumento altrimenti, registrato chiaramente in ogni caso in modo
 che non sia mai una supposizione silenziosa.
 
-## 6. Programmare il chip completo via SWD/JTAG (avanzato)
-
+## 6. 🛠️ Programmare il chip completo via SWD/JTAG (avanzato)
 La sezione "4. Program complete chip via SWD/JTAG" nello strumento fa un
 flash completo di avvio - cancella l'intero chip in massa, poi scrive
 da zero sia l'immagine del bootloader che quella dell'applicazione,
@@ -564,8 +558,7 @@ piano di riserva (lo strumento di flash stesso di STM32CubeIDE, o
 `st-flash`) nel caso qualcosa della tua specifica versione di pyOCD o
 sonda non corrisponda a ciò che si assume qui.
 
-## 7. Modalità CLI (senza schermo, no GUI)
-
+## 7. ⌨️ Modalità CLI (senza schermo, no GUI)
 Per pipeline CI, banchi di prova, o scripting da linea di produzione
 dove non c'è display:
 
@@ -602,8 +595,7 @@ di toccare hardware reale - non qualcosa che parla con una scheda reale.
 invece di avere successo, per testare il percorso di fallimento allo
 stesso modo.
 
-## 8. Affidabilità durante un aggiornamento CAN, e log di sessione
-
+## 8. 🔄 Affidabilità durante un aggiornamento CAN, e log di sessione
 Se l'ACK di una pagina non arriva entro la normale finestra di 3s
 durante un aggiornamento CAN, lo strumento riprova l'*attesa* (non un
 reinvio dei dati della pagina) fino a due volte in più con un breve
@@ -626,8 +618,7 @@ completa a chi ha scritto il firmware se qualcosa va storto sul campo.
 Questa cartella viene creata automaticamente ed è sicura da eliminare;
 nulla rilegge vecchi log.
 
-## 9. Diagnostica — attività bus, bitrate, e pacchetti di debug
-
+## 9. 📊 Diagnostica — attività bus, bitrate, e pacchetti di debug
 **Selettore bitrate + auto-rilevamento** (solo Seriale/SLCAN): il bus di
 URTC è fisso a 500 kbit/s, che rimane il default - questo serve per un
 adattatore mal configurato o per il debug di una scheda non standard.
@@ -689,8 +680,7 @@ per consegnare un quadro completo a chi ha scritto il firmware se
 qualcosa va storto sul campo, invece di copiare il registro
 a mano.
 
-## 10. SWD/JTAG — formati file, verifica slot, e selezione sonda
-
+## 10. 🔬 SWD/JTAG — formati file, verifica slot, e selezione sonda
 **Formati file**: i selettori bootloader/applicazione della sezione SWD
 accettano `.bin`, `.hex`, e `.elf`/`.axf`. ELF/AXF viene analizzato con
 una piccola quantità di unpacking di struct scritto a mano (solo header
@@ -768,8 +758,7 @@ che non corrisponderebbe correttamente alla codifica propria di un file
 saltano questo specifico passo e si affidano invece alla verifica
 interna in tempo di scrittura propria di pyOCD.
 
-## 11. Telemetria di trasferimento e dettaglio fallimento verifica
-
+## 11. 📡 Telemetria di trasferimento e dettaglio fallimento verifica
 **Telemetria di trasferimento**: il registro mostra i KB/s effettivi e
 il tempo trascorso per pagina durante un aggiornamento CAN, più una riga
 di riepilogo alla fine (tempo totale, KB/s medio, quanti retry di ACK
@@ -799,8 +788,7 @@ strumento per esso); un bootloader slave più vecchio semplicemente non
 risponde a quella richiesta, e questo strumento ricade sul messaggio
 generico "verifica fallita".
 
-## 12. Cancellazione opzionale della F-RAM prima di flashare
-
+## 12. 🧹 Cancellazione opzionale della F-RAM prima di flashare
 La sezione 3 ha una casella di controllo, **"Cancella anche la F-RAM di
 persistenza prima di flashare"** - disattivata di default. Se spuntata,
 invia il comando di cancellazione a payload magico (`0x192` - vedi
@@ -831,7 +819,7 @@ un aggiornamento altrimenti riuscito per l'assenza della sua propria
 trama di conferma. Controlla lo stato della F-RAM separatamente (il
 pulsante Interroga Stato stesso di `URTC Tester`) se questo ti importa.
 
-## Cambiare la chiave HMAC / l'HardwareID
+## 🔑 Cambiare la chiave HMAC / l'HardwareID
 
 La chiave di firma condivisa vive in 2 posti che devono sempre
 corrispondere: l'array `HMAC_KEY` di `bootloader_common.h`, e la costante

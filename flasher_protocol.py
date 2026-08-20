@@ -758,6 +758,19 @@ class URTCFlasher:
                 return
             if status == 0xFF:
                 raise FlashError(_("LOG_SLAVE_GENERIC_ERROR"))
+            # Same fail-fast reasoning as the main board's own _wait_for():
+            # a genuine STATUS_VERIFY_FAIL here is a real, already-known
+            # answer from the slave bootloader, not just "not yet the
+            # status this call is waiting for" - sitting through the rest
+            # of this timeout only to eventually raise a generic "Timed
+            # out" message would hide that known cause and cost up to
+            # `timeout` seconds for no reason.
+            if status == 0x05:
+                reason_byte = self._query_slave_verify_fail_reason(timeout=1.0)
+                if reason_byte is not None:
+                    reason = VERIFY_FAIL_REASONS.get(reason_byte, f"unknown reason 0x{reason_byte:02X}")
+                    raise FlashError(_("LOG_SLAVE_VERIFY_FAILED_REASON", reason=reason))
+                raise FlashError(_("LOG_SLAVE_VERIFY_FAILED"))
             time.sleep(0.2)
         raise FlashError(f"Timed out waiting for the expansion slave to report status 0x{expected_value:02X}")
 

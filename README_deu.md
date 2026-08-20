@@ -48,8 +48,7 @@ echten Flash-Versuch mit derselben Vorsicht, die Sie jedem neuen Tool
 entgegenbringen würden, das mit einem Bootloader spricht: halten Sie
 JTAG als Rückfalloption bereit.
 
-## 1. Bringen Sie Ihren Adapter zum CAN-Sprechen
-
+## 1. 🔌 Bringen Sie Ihren Adapter zum CAN-Sprechen
 Was Sie davon brauchen, hängt von Ihrer Plattform und dem verwendeten
 Transport ab:
 
@@ -103,8 +102,7 @@ Hex-Zeichen unabhängig davon analysiert zu werden, was folgt - gut zu
 wissen, wenn Sie gegen einen verrauschten oder nicht-standardmäßigen
 Adapter debuggen.
 
-## 2. Installation und Ausführung
-
+## 2. 💻 Installation und Ausführung
 **Windows:**
 ```
 python -m pip install -r requirements.txt
@@ -204,8 +202,7 @@ Wrapper-Skript von `pip` ist nicht immer im PATH, selbst direkt nach
 einer erfolgreichen Installation, während `-m pip` das installierte
 Modul direkt findet.
 
-## 3. Wohin die Firmware-Dateien gehören
-
+## 3. 📁 Wohin die Firmware-Dateien gehören
 Dieses Tool erwartet einen `firmware/`-Ordner direkt neben
 `urtc_flasher.py`, im Wurzelverzeichnis dieses Repositorys:
 
@@ -325,8 +322,7 @@ HMAC-Verifizierung des Bootloaders während der eigentlichen
 Später einen neuen Build hinzufügen: einfach in `firmware/` ablegen und
 auf **Aktualisieren** klicken - kein Neustart nötig.
 
-## 4. Prüfen, was aktuell installiert ist
-
+## 4. 🔍 Prüfen, was aktuell installiert ist
 Wenn Sie unter Linux sind und SocketCAN verfügbar ist, sehen Sie oben
 eine **Transport**-Auswahl - wählen Sie Seriell/SLCAN oder SocketCAN
 vor dem Verbinden. Unter Windows erscheint diese Zeile überhaupt
@@ -401,8 +397,7 @@ angeschlossenen MLX90640 benötigt, dass dies explizit einmal gesetzt
 wird, genauso wie es der Erweiterungsplatinentyp selbst bereits
 erfordert.
 
-## 5. Flashen
-
+## 5. ⚡ Flashen
 1. **Verbinden**: wählen Sie Seriell/SLCAN oder SocketCAN (nur Linux),
    dann den Port/die Schnittstelle, dann klicken Sie auf Verbinden. Für
    Seriell/SLCAN öffnet dies den CAN-Kanal mit 500 kbit/s (URTCs feste
@@ -480,8 +475,7 @@ andernfalls aus der aktuell konfigurierten Version dieses Tools, in
 beiden Fällen klar protokolliert, sodass es nie eine stille Vermutung
 ist.
 
-## 6. Den kompletten Chip via SWD/JTAG programmieren (fortgeschritten)
-
+## 6. 🛠️ Den kompletten Chip via SWD/JTAG programmieren (fortgeschritten)
 Der Abschnitt "4. Program complete chip via SWD/JTAG" im Tool führt
 einen vollständigen Inbetriebnahme-Flash durch - löscht den gesamten
 Chip komplett, schreibt dann sowohl das Bootloader-Image als auch das
@@ -590,8 +584,7 @@ STM32CubeIDE, oder `st-flash`) im Hinterkopf, falls etwas an Ihrer
 spezifischen pyOCD-Version oder Sonde nicht dem entspricht, was hier
 angenommen wird.
 
-## 7. CLI-Modus (headless, keine GUI)
-
+## 7. ⌨️ CLI-Modus (headless, keine GUI)
 Für CI-Pipelines, Testbänke, oder Produktionslinien-Skripting, wo es
 keinen Bildschirm gibt:
 
@@ -629,8 +622,7 @@ Hardware berührt wird - nichts, das mit einer echten Platine spricht.
 fehlschlagen statt erfolgreich zu sein, um den Fehlerpfad auf dieselbe
 Weise zu testen.
 
-## 8. Zuverlässigkeit während eines CAN-Updates, und Sitzungsprotokolle
-
+## 8. 🔄 Zuverlässigkeit während eines CAN-Updates, und Sitzungsprotokolle
 Wenn das ACK einer Seite nicht innerhalb des normalen 3s-Fensters
 während eines CAN-Updates ankommt, wiederholt das Tool das *Warten*
 (nicht ein erneutes Senden der Seitendaten) bis zu zweimal mehr mit
@@ -655,8 +647,7 @@ Spur an denjenigen weiterzugeben, der die Firmware geschrieben hat,
 falls im Feld etwas schiefgeht. Dieser Ordner wird automatisch erstellt
 und ist sicher zu löschen; nichts liest alte Protokolle zurück.
 
-## 9. Diagnose — Busaktivität, Bitrate, und Debug-Pakete
-
+## 9. 📊 Diagnose — Busaktivität, Bitrate, und Debug-Pakete
 **Bitrate-Auswahl + Auto-Erkennung** (nur Seriell/SLCAN): der Bus von
 URTC ist fest auf 500 kbit/s, was der Standard bleibt - dies ist für
 einen falsch konfigurierten Adapter oder zur Fehlersuche bei einer
@@ -719,8 +710,7 @@ weiterzugeben, der die Firmware geschrieben hat, falls im Feld etwas
 schiefgeht, statt das Protokoll
 von Hand zu kopieren.
 
-## 10. SWD/JTAG — Dateiformate, Slot-Verifizierung, und Sondenauswahl
-
+## 10. 🔬 SWD/JTAG — Dateiformate, Slot-Verifizierung, und Sondenauswahl
 **Dateiformate**: die Bootloader-/Anwendungsauswähler des
 SWD-Abschnitts akzeptieren `.bin`, `.hex`, und `.elf`/`.axf`. ELF/AXF
 wird mit einer kleinen Menge handgeschriebenen
@@ -803,8 +793,7 @@ erfolgreichen Flash nicht korrekt übereinstimmen würde, daher
 verlassen sich stattdessen auf die eigene interne
 Schreibzeit-Verifizierung von pyOCD.
 
-## 11. Übertragungstelemetrie und Verifizierungsfehler-Details
-
+## 11. 📡 Übertragungstelemetrie und Verifizierungsfehler-Details
 **Übertragungstelemetrie**: das Protokoll zeigt die effektiven KB/s und
 die verstrichene Zeit pro Seite während eines CAN-Updates, plus eine
 Zusammenfassungszeile am Ende (Gesamtzeit, durchschnittliche KB/s, wie
@@ -835,8 +824,7 @@ hinzugefügt); ein älterer Slave-Bootloader antwortet auf diese Anfrage
 einfach nicht, und dieses Tool fällt dann auf die generische Meldung
 „Verifizierung fehlgeschlagen" zurück.
 
-## 12. Optionales F-RAM-Löschen vor dem Flashen
-
+## 12. 🧹 Optionales F-RAM-Löschen vor dem Flashen
 Abschnitt 3 hat ein Kontrollkästchen, **"Auch das persistente F-RAM vor
 dem Flashen löschen"** - standardmäßig deaktiviert. Wenn markiert,
 sendet es den Lösch-Befehl mit magischem Payload (`0x192` - siehe
@@ -871,7 +859,7 @@ Sie den F-RAM-Status separat (die eigene
 Zustand-Abfragen-Schaltfläche von `URTC Tester`), falls Ihnen das
 wichtig ist.
 
-## Den HMAC-Schlüssel / die HardwareID ändern
+## 🔑 Den HMAC-Schlüssel / die HardwareID ändern
 
 Der gemeinsame Signierschlüssel lebt an 2 Stellen, die immer
 übereinstimmen müssen: das `HMAC_KEY`-Array von `bootloader_common.h`, und

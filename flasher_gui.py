@@ -245,9 +245,20 @@ class FlasherGUI:
         self.expansion_type_combo.grid(row=row, column=1, columnspan=3, sticky="w", **pad)
         exp_btn_row = ttk.Frame(conn_frame)
         exp_btn_row.grid(row=row, column=4, **pad)
-        ttk.Button(exp_btn_row, text=_("BTN_QUERY"), command=self.query_expansion_board_type).pack(side="left")
-        ttk.Button(exp_btn_row, text=_("BTN_SAVE"), command=self.save_expansion_board_type).pack(side="left", padx=(4, 0))
+        self.expansion_type_query_btn = ttk.Button(exp_btn_row, text=_("BTN_QUERY"), command=self.query_expansion_board_type)
+        self.expansion_type_query_btn.pack(side="left")
+        self.expansion_type_save_btn = ttk.Button(exp_btn_row, text=_("BTN_SAVE"), command=self.save_expansion_board_type)
+        self.expansion_type_save_btn.pack(side="left", padx=(4, 0))
         self.query_btn_holder.append(self.expansion_type_combo)
+        # Both buttons send their own CAN frames (0x1A0 query, 0x1A0 write)
+        # over the same shared transport an active flash thread may still
+        # be using - only the combo was being locked here before, leaving
+        # these two clickable mid-flash despite the exact same
+        # concurrent-port-access hazard already called out for the other
+        # buttons in this list (free tool config, peripheral info, device
+        # serial).
+        self.query_btn_holder.append(self.expansion_type_query_btn)
+        self.query_btn_holder.append(self.expansion_type_save_btn)
         row += 1
 
         # Only meaningful when expansion_board_type is 3, 4, or 6 - see
@@ -268,9 +279,17 @@ class FlasherGUI:
         self.mlx_variant_combo.grid(row=row, column=1, columnspan=3, sticky="w", **pad)
         mlx_btn_row = ttk.Frame(conn_frame)
         mlx_btn_row.grid(row=row, column=4, **pad)
-        ttk.Button(mlx_btn_row, text=_("BTN_QUERY"), command=self.query_mlx_sensor_variant).pack(side="left")
-        ttk.Button(mlx_btn_row, text=_("BTN_SAVE"), command=self.save_mlx_sensor_variant).pack(side="left", padx=(4, 0))
+        self.mlx_variant_query_btn = ttk.Button(mlx_btn_row, text=_("BTN_QUERY"), command=self.query_mlx_sensor_variant)
+        self.mlx_variant_query_btn.pack(side="left")
+        self.mlx_variant_save_btn = ttk.Button(mlx_btn_row, text=_("BTN_SAVE"), command=self.save_mlx_sensor_variant)
+        self.mlx_variant_save_btn.pack(side="left", padx=(4, 0))
         self.query_btn_holder.append(self.mlx_variant_combo)
+        # Same gap as expansion_type's own Query/Save buttons just above -
+        # only the combo was locked here before, leaving these two able to
+        # send 0x1A6 queries/writes over the same transport an active flash
+        # thread may still be using.
+        self.query_btn_holder.append(self.mlx_variant_query_btn)
+        self.query_btn_holder.append(self.mlx_variant_save_btn)
         row += 1
         # --- Tabbed body: CAN-OTA and SWD/JTAG are two genuinely different
         # operating modes (an auto-recovering OTA update vs. a destructive
@@ -1626,6 +1645,27 @@ class FlasherGUI:
         )
         self.swd_flash_btn.config(
             state="disabled" if (busy or not (self._pyocd_ok or self._cube_ok)) else "normal"
+        )
+        # Check Option Bytes connects via the exact same CubeProgrammerCLI
+        # (same "-c port=SWD ..." connect syntax) that full_chip_flash uses
+        # against the exact same physical probe - left unlocked here, it
+        # could launch a second STM32CubeProgrammer CLI process against
+        # that probe while an SWD full-chip erase/write is already
+        # in-flight, which is exactly the kind of interrupted-write
+        # scenario this section's own docstring warns can leave the board
+        # with no valid firmware until reprogrammed.
+        self.check_ob_btn.config(state="disabled" if (busy or not self._cube_ok) else "normal")
+        # Auto Detect Bitrate opens up to 9 successive SLCAN connections on
+        # this same COM port, one per candidate bitrate, each held open for
+        # up to ~0.8s - a scan already in progress (itself a "busy" state,
+        # see auto_detect_bitrate) left this button clickable, so a second
+        # click could open a second SLCAN instance on the exact same port
+        # while the first scan still has it open, corrupting both scans'
+        # reads/writes against each other. Also respects is_serial the same
+        # way on_transport_change already does - never enabled for
+        # SocketCAN, which has no bitrate of its own to detect.
+        self.autobaud_btn.config(
+            state="disabled" if (busy or self.transport_var.get() != "serial") else "normal"
         )
 
     def _on_flash_target_change(self):
