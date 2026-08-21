@@ -4,6 +4,7 @@
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 # GPL-3.0 - see LICENSE
 # =============================================================================
+import errno
 import os
 import socket
 import struct
@@ -345,10 +346,34 @@ class SocketCAN:
         data = bytes(data)  # normalizes bytearray/memoryview too - a memoryview specifically has no __add__ at all, so the concatenation below would otherwise raise TypeError for that one input type
         padded = data + bytes(8 - len(data))
         frame = struct.pack(self._FRAME_FMT, can_id, len(data), padded)
-        try:
-            self.sock.send(frame)
-        except OSError as e:
-            raise SocketCANError(f"send failed on '{self.interface}': {e}")
+        # ENOBUFS ("No buffer space available") means the kernel's own CAN
+        # TX queue for this interface is momentarily full - a real,
+        # confirmed condition on a heavily loaded bus (this application
+        # sending a burst of frames faster than the controller can actually
+        # get them onto the wire), not a broken link the way any other
+        # OSError here would be. It's normally transient: the queue drains
+        # as frames actually go out, typically within milliseconds. Retried
+        # a few times with a short backoff before giving up - confirmed
+        # real finding, 20 August 2026 external audit; every other OSError
+        # (ENETDOWN, EBADF, etc.) still fails immediately below, unchanged.
+        last_err = None
+        for attempt in range(5):
+            if attempt > 0:
+                time.sleep(0.005 * attempt)  # 5ms, 10ms, 15ms, 20ms
+            try:
+                self.sock.send(frame)
+                return
+            except OSError as e:
+                last_err = e
+                if e.errno != errno.ENOBUFS:
+                    raise SocketCANError(f"send failed on '{self.interface}': {e}")
+        raise SocketCANError(
+            f"send failed on '{self.interface}': kernel TX queue stayed full "
+            f"(ENOBUFS) after 5 retries - {last_err}. The bus is likely "
+            f"severely congested or stuck (check termination/wiring), or the "
+            f"interface's own TX queue length ('ip link show {self.interface}', "
+            f"txqueuelen) is too small for how fast this tool is sending."
+        )
 
     def read_frame(self, timeout=0.05):
         # settimeout() is itself a syscall - skipped when the caller asks
@@ -361,8 +386,25 @@ class SocketCAN:
         try:
             frame = self.sock.recv(self._FRAME_SIZE)
         except socket.timeout:
-            return None
-        except OSError:
+            return None  # the one genuinely expected "nothing arrived yet" case
+        except OSError as e:
+            # socket.timeout above is the ONLY case that means "no data
+            # right now, keep waiting" - every other OSError here means
+            # something actually broke (interface removed/ENXIO, taken
+            # down mid-read/ENETDOWN, socket closed from under this call/
+            # EBADF, etc.), which this used to swallow identically to a
+            # plain timeout - the caller would then just sit through its
+            # own full timeout budget, over and over, with no indication
+            # the interface had actually failed rather than just being
+            # quiet. Confirmed real finding, 20 August 2026 external
+            # audit. Logged once per occurrence rather than raised: every
+            # caller in this project treats a None return as "nothing
+            # this round" and is built to retry/time out on its own
+            # (check_carrier() at connect time already gives a clearer
+            # up-front signal for a bus-off/down interface) - raising here
+            # would turn a single transient read into a hard abort of
+            # whatever multi-frame protocol exchange is in progress.
+            self.log(_("WARN_SOCKETCAN_READ_ERROR", interface=self.interface, e=e))
             return None
         try:
             can_id_raw, dlc, data = struct.unpack(self._FRAME_FMT, frame)

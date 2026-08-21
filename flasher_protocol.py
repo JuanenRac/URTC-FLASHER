@@ -61,8 +61,15 @@ class URTCFlasher:
         deadline = time.time() + timeout
         result = None
         grace_deadline = None
+        # 0.8s, not the original 0.3s: on a busy/industrial bus, 0x7FA can
+        # legitimately land noticeably later than 0x7F9 (both frames still
+        # have to make it through arbitration against other real traffic),
+        # and 0.3s left too little margin for that - confirmed real external
+        # audit finding, 20 August 2026 external audit (see this project's
+        # own auditoria_historial.txt for the finding number).
+        GRACE_WINDOW = 0.8
         pending_bootloader_version = None  # in case 0x7FA arrives before 0x7F9
-        while time.time() < deadline:
+        while time.time() < deadline or (grace_deadline is not None and time.time() < grace_deadline):
             if result is not None and grace_deadline is not None and time.time() >= grace_deadline:
                 return result  # got 0x7F9, grace window for 0x7FA expired with nothing more
             frame = self.can.read_frame(timeout=0.1)
@@ -85,7 +92,7 @@ class URTCFlasher:
                     return result  # application never sends 0x7FA - no point waiting for it
                 if pending_bootloader_version is not None:
                     return result  # 0x7FA already arrived first - no need for the grace window
-                grace_deadline = time.time() + 0.3
+                grace_deadline = time.time() + GRACE_WINDOW
             elif can_id == CAN_ID_BOOTLOADER_VERSION_RESPONSE and len(data) == 3:
                 if result is not None:
                     result["bootloader_version"] = (data[0], data[1], data[2])
@@ -292,7 +299,26 @@ class URTCFlasher:
             for i in range(0, len(page_data), 8):
                 chunk = page_data[i:i+8]
                 self.can.send_frame(CAN_ID_DATA, chunk)
-                time.sleep(0.001)  # small pacing gap - avoids overrunning the bootloader's own receive/flash-write pace
+                # Small pacing gap - avoids overrunning the bootloader's own
+                # receive/flash-write pace. On Windows specifically, this
+                # relies on time.sleep() actually resolving to something
+                # close to 1ms rather than the old ~15.6ms default system
+                # timer tick that pre-3.11 CPython was subject to (which
+                # would have made this whole page-transfer loop roughly an
+                # order of magnitude slower than intended - a real,
+                # previously-documented Windows Python gotcha, raised again
+                # by the 20 August 2026 external audit). Measured directly
+                # on this project's own target platform with the CPython
+                # version this tool is actually built with: avg ~1.5ms,
+                # nowhere near 15ms - CPython 3.11+ switched Windows
+                # time.sleep() to a high-resolution waitable timer (see
+                # CPython's own changelog, gh-93209) that no longer needs
+                # the old timeBeginPeriod(1) workaround. requirements.txt
+                # notes the recommended minimum Python version for this
+                # reason - not enforced here, since a slower-than-ideal
+                # transfer degrading gracefully is preferable to this tool
+                # refusing to run at all on an older interpreter.
+                time.sleep(0.001)
             # wait for this page's ACK before sending the next one - retries
             # the WAIT itself (not a resend of the page data) up to 2 extra
             # times with a short backoff, recovering from an ACK that was
@@ -477,11 +503,38 @@ class URTCFlasher:
             raise FlashError(_("LOG_READBACK_NOTHING_INSTALLED"))
         self.log(_("LOG_READBACK_SIZE", size=total_size, kb=total_size / 1024))
 
+        # The caller's own `timeout` (default 180s) was a flat constant
+        # regardless of image size or bus speed - fine for a typical
+        # update at 500 kbit/s, but a large image (up to APP_MAX_SIZE) at
+        # one of this tool's own slower selectable SLCAN bitrates (as low
+        # as 10 kbit/s - see SLCAN_BITRATES) can genuinely need longer than
+        # that just for the raw transfer, before any retries - confirmed
+        # real finding, 20 August 2026 external audit. Scaled by the now-
+        # known total_size using a deliberately conservative floor
+        # throughput (300 bytes/s - well under even 10 kbit/s's raw framed
+        # ceiling, to also absorb per-page ACK round-trip overhead), with
+        # a flat margin for connection/protocol overhead - never LOWER
+        # than the caller's own request, only ever extended when the size
+        # genuinely calls for it.
+        MIN_READBACK_BPS = 300
+        READBACK_MARGIN_S = 30.0
+        effective_timeout = max(timeout, total_size / MIN_READBACK_BPS + READBACK_MARGIN_S)
+        if effective_timeout > timeout:
+            # Plain, untranslated diagnostic note (same pattern as
+            # _check_manifest's own MANIFEST MISMATCH log above) rather
+            # than a new language key - a one-line informational aside,
+            # not user-facing UI text.
+            self.log(
+                f"Readback timeout extended to {int(effective_timeout)}s for this "
+                f"{total_size}-byte image (the default {int(timeout)}s was sized "
+                f"for a smaller image/faster bus than this one)."
+            )
+
         buf = bytearray()
         page_index = 0
         transfer_start = time.time()
         while len(buf) < total_size:
-            if time.time() - transfer_start > timeout:
+            if time.time() - transfer_start > effective_timeout:
                 raise FlashError(_("LOG_READBACK_TIMEOUT"))
             page_target = min(len(buf) + FLASH_PAGE_SIZE, total_size)
             page_deadline = time.time() + 5.0
@@ -622,6 +675,22 @@ class URTCFlasher:
         transfer_start = time.time()
         offset = 0
         last_progress_check = 0
+        # Consecutive 0x216 polls that got no response at all - per
+        # CANBUS.TXT's own 0x216 note, "no response" only ever means the
+        # I2C transaction to the slave itself failed (bridge/slave gone),
+        # never a legitimate "0% progress" answer (that case is 0xFF, a
+        # real response). Without this counter, this loop would keep
+        # blindly sending 0x213 frames into a stalled/disconnected bridge
+        # all the way to the end of a large image (up to
+        # SLAVE_APP_MAX_SIZE) before the failure ever surfaced, at
+        # END_UPDATE - confirmed real finding, 20 August 2026 external
+        # audit. 3 consecutive misses (roughly 6KB of blind sending, at
+        # this loop's own ~2KB polling cadence) tolerates a single lost
+        # 0x216 reply on a noisy bus without over-reacting, while still
+        # aborting long before the remaining image would otherwise be
+        # sent into nothing.
+        consecutive_no_response = 0
+        STALL_THRESHOLD = 3
         while offset < size:
             if self.stop_flag():
                 raise FlashError("Cancelled by user")
@@ -645,7 +714,20 @@ class URTCFlasher:
                 pct = int((offset / size) * 70)  # same 0-70% reservation as the main board's own flow, see flash() above
                 self.progress_cb(pct)
                 if progress is not None:
+                    consecutive_no_response = 0
                     self.log(_("LOG_SLAVE_PROGRESS", offset=offset, size=size, slave_pct=progress))
+                else:
+                    consecutive_no_response += 1
+                    if consecutive_no_response >= STALL_THRESHOLD:
+                        raise FlashError(
+                            f"Expansion slave's I2C bridge stopped responding "
+                            f"({consecutive_no_response} consecutive 0x216 progress "
+                            f"queries with no answer) after sending {offset} of "
+                            f"{size} bytes - aborting rather than continuing to "
+                            f"send the rest of the image into a stalled/disconnected "
+                            f"bridge. Check the slave chip is present and the I2C "
+                            f"link is intact, then retry."
+                        )
 
         transfer_elapsed = time.time() - transfer_start
         overall_kbps = (size / 1024) / transfer_elapsed if transfer_elapsed > 0 else 0.0

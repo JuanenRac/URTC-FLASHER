@@ -1,5 +1,18 @@
 pyserial>=3.5
 
+# Recommended minimum interpreter: Python 3.11+. Not enforced by this file
+# (pip has no clean way to gate on interpreter version here without also
+# blocking older installs entirely) - noted because flasher_protocol.py's
+# own CAN data-transfer pacing (time.sleep(0.001) between frames) relies on
+# an accurate small sleep to keep flashing at its intended speed. CPython
+# 3.11+ uses a high-resolution waitable timer for time.sleep() on Windows;
+# older versions could round a 1ms sleep up to the old ~15.6ms default
+# system timer tick, making a full firmware transfer noticeably slower on
+# Windows specifically (real audit finding, 20 August 2026 - see this
+# project's own SONNET/URTC-FLASHER/auditoria_historial.txt for the
+# verification). The tool still works correctly either way - only the
+# transfer speed on an old interpreter is affected, not correctness.
+
 # Optional, for section "4. Program complete chip via SWD/JTAG":
 # - pyOCD: pip install pyocd (installs the `pyocd` command used via subprocess -
 #   this script never does `import pyocd`, so it isn't a hard dependency of
