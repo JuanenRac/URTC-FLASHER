@@ -4,9 +4,12 @@
 
 # URTC Flasher (Windows / Linux)
 
-**Version :** 1.1 (la version de cet outil - affichée dans la bannière
+**Version :** 1.1.0 (la version de cet outil - affichée dans la bannière
 de la fenêtre et la barre de titre, suivie séparément de la version du
-firmware de la carte URTC qu'il écrit)
+firmware de la carte URTC qu'il écrit. Suit un schéma X.Y.Z où le numéro
+de patch augmente automatiquement à chaque build réel via
+build_exe.bat/build_exe.sh - voir CHANGELOG.md pour l'historique des
+versions et bump_version.py pour la règle exacte de report)
 
 **Auteur :** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 

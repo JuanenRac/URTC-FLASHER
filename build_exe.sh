@@ -17,14 +17,25 @@
 # somewhere on PATH.
 set -euo pipefail
 
+# Keeps the terminal window open long enough to actually read the output
+# when this script was launched by double-clicking rather than from an
+# already-open shell - fires on a normal successful finish AND on any
+# failure exit, including one `set -euo pipefail` triggers on its own for
+# a command with no explicit error handling below (a plain `exit 1` placed
+# only at the bottom of the file would never run in that case, since
+# `set -e` jumps straight past it). Reading into a throwaway variable
+# because `read -p` alone still needs somewhere to put its input.
+trap 'read -p "Pulsa Enter para cerrar..." _' EXIT
+
 echo
 echo " ==============================================================="
-echo "  U R T C   F L A S H E R  -  Linux build"
+echo "  URTC-FLASHER - build_exe.sh"
+echo "  Builds a standalone Linux binary (dist/URTC_Flasher) via"
+echo "  PyInstaller - no Python installation needed to run the result."
 echo " ==============================================================="
-echo "  Universal Robot Tool Controller"
-echo "  Author:  JuanenRac (Electro Hobby 3D)"
-echo "  E-mail:  electrohobby3d@gmail.com"
-echo "  License: GPL-3.0"
+echo "  Copyright (C) 2026 JuanenRac (Electro Hobby 3D)"
+echo "  <electrohobby3d@gmail.com>"
+echo "  GPL-3.0 - see LICENSE"
 echo " ==============================================================="
 echo
 
@@ -32,7 +43,7 @@ echo
 # tkinter isn't pulled in automatically by "pip install", since it isn't a
 # pip package at all. Check for it explicitly with a clear message instead
 # of letting the build succeed and then fail confusingly at runtime.
-echo "[1/5] Checking for tkinter..."
+echo "[1/6] Checking for tkinter..."
 if ! python3 -c "import tkinter" 2>/dev/null; then
     echo "      tkinter isn't available for this Python install."
     echo "      On Debian/Ubuntu:  sudo apt install python3-tk"
@@ -43,14 +54,23 @@ fi
 echo "      Found."
 echo
 
-echo "[2/5] Installing Python dependencies..."
+echo "[2/6] Installing Python dependencies..."
 python3 -m pip install --upgrade pip >/dev/null
 python3 -m pip install -r requirements.txt
 python3 -m pip install pyinstaller
 echo "      Done."
 echo
 
-echo "[3/5] Cleaning previous build..."
+echo "[3/6] Bumping FLASHER_VERSION (ecosystem-wide build-version policy)..."
+# Every real packaged build gets a new patch version automatically - see
+# bump_version.py's own docstring for the base-10 carry rule
+# (1.1.9 -> 1.2.0). Runs before PyInstaller so the bumped value is what
+# actually gets compiled into this binary, not the pre-bump value.
+python3 bump_version.py
+echo "      Done."
+echo
+
+echo "[4/6] Cleaning previous build..."
 # Clean slate before compiling: build/ holds PyInstaller's intermediate
 # artifacts (its own bytecode/dependency cache), and dist/ holds the
 # previous output - removing both first means nothing stale from an
@@ -60,7 +80,7 @@ rm -rf build dist
 echo "      Done."
 echo
 
-echo "[4/5] Compiling URTC_Flasher with PyInstaller..."
+echo "[5/6] Compiling URTC_Flasher with PyInstaller..."
 # --hidden-import for each of this project's own modules: this file was
 # split from one large urtc_flasher.py into several (flasher_config.py,
 # flasher_transports.py, etc.) for readability. PyInstaller's static
@@ -86,7 +106,7 @@ fi
 echo "      Done."
 echo
 
-echo "[5/5] Copying files that must sit next to the binary, not inside it..."
+echo "[6/6] Copying files that must sit next to the binary, not inside it..."
 # firmware/ and language/ are deliberately NOT bundled into the binary
 # itself (unlike assets/ above) - both are meant to stay editable without
 # a rebuild, and FIRMWARE_FOLDER/LANGUAGE_FOLDER both resolve next to the

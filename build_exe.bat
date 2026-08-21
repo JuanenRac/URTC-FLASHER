@@ -10,12 +10,13 @@ REM Output: dist\URTC_Flasher.exe (no Python installation needed to run it)
 
 echo.
 echo  ===============================================================
-echo   U R T C   F L A S H E R  -  Windows build
+echo   URTC-FLASHER - build_exe.bat
+echo   Builds a standalone Windows .exe (dist\URTC_Flasher.exe) via
+echo   PyInstaller - no Python installation needed to run the result.
 echo  ===============================================================
-echo   Universal Robot Tool Controller
-echo   Author:  JuanenRac (Electro Hobby 3D)
-echo   E-mail:  electrohobby3d@gmail.com
-echo   License: GPL-3.0
+echo   Copyright (C) 2026 JuanenRac (Electro Hobby 3D)
+echo   ^<electrohobby3d@gmail.com^>
+echo   GPL-3.0 - see LICENSE
 echo  ===============================================================
 echo.
 
@@ -28,14 +29,28 @@ REM error even though the install itself succeeded. "python -m" sidesteps
 REM this by finding the installed module directly rather than needing its
 REM wrapper .exe to be on PATH.
 
-echo [1/5] Installing Python dependencies...
+echo [1/6] Installing Python dependencies...
 python -m pip install --upgrade pip >nul
 python -m pip install -r requirements.txt
 python -m pip install pyinstaller
 echo       Done.
 echo.
 
-echo [2/5] Cleaning previous build...
+echo [2/6] Bumping FLASHER_VERSION (ecosystem-wide build-version policy)...
+REM Every real packaged build gets a new patch version automatically -
+REM see bump_version.py's own docstring for the base-10 carry rule
+REM (1.1.9 -> 1.2.0). Runs before PyInstaller so the bumped value is what
+REM actually gets compiled into this .exe, not the pre-bump value.
+python bump_version.py
+if errorlevel 1 (
+    echo       ERROR: version bump failed - see the output above.
+    pause
+    exit /b 1
+)
+echo       Done.
+echo.
+
+echo [3/6] Cleaning previous build...
 REM Clean slate before compiling: build\ holds PyInstaller's intermediate
 REM artifacts (its own bytecode/dependency cache), and dist\ holds the
 REM previous output - removing both first means nothing stale from an
@@ -47,13 +62,14 @@ if exist dist (
     if exist dist (
         echo       ERROR: couldn't remove dist\ - is URTC_Flasher.exe currently running?
         echo       Close it first, then run this script again.
+        pause
         exit /b 1
     )
 )
 echo       Done.
 echo.
 
-echo [3/5] Compiling URTC_Flasher.exe with PyInstaller...
+echo [4/6] Compiling URTC_Flasher.exe with PyInstaller...
 REM --add-data uses ";" as the source/destination separator on Windows -
 REM Linux/Mac PyInstaller uses ":" instead (see build_exe.sh). Bundles the
 REM assets/ folder (the banner + icon images) into the .exe itself so it
@@ -84,12 +100,13 @@ python -m PyInstaller --onefile --windowed --noconfirm --name "URTC_Flasher" ^
     urtc_flasher.py
 if not exist dist\URTC_Flasher.exe (
     echo       ERROR: PyInstaller did not produce dist\URTC_Flasher.exe - see the output above.
+    pause
     exit /b 1
 )
 echo       Done.
 echo.
 
-echo [4/5] Copying files that must sit next to the .exe, not inside it...
+echo [5/6] Copying files that must sit next to the .exe, not inside it...
 REM firmware/ and language/ are deliberately NOT bundled into the .exe
 REM itself (unlike assets/ above) - both are meant to stay editable
 REM without a rebuild, and FIRMWARE_FOLDER/LANGUAGE_FOLDER both resolve
@@ -135,7 +152,7 @@ if exist urtc_config.json.example (
 echo       Done.
 echo.
 
-echo [5/5] Build complete.
+echo [6/6] Build complete.
 echo  ===============================================================
 echo   dist\URTC_Flasher.exe is ready to run - no Python needed.
 echo  ===============================================================

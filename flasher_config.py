@@ -133,7 +133,7 @@ FIRMWARE_VERSION_MINOR = 0
 # the *board firmware's* version this tool writes into the end-update
 # frame. The two will often move together but aren't the same number by
 # definition - this one's about the flasher script itself.
-FLASHER_VERSION = "1.1"
+FLASHER_VERSION = "1.1.0"
 FLASHER_AUTHOR = "JuanenRac"
 
 # --- HMAC signing keys - deliberately NOT real key material in source ---
