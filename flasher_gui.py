@@ -1754,6 +1754,14 @@ class FlasherGUI:
         if self._flash_thread and self._flash_thread.is_alive():
             messagebox.showerror(_("TITLE_BUSY"), _("MSG_FLASH_ALREADY_IN_PROGRESS"))
             return
+        # Mirrors the symmetric check start_swd_flash() already does against
+        # self._flash_thread - added as defense in depth even though it isn't
+        # reachable through normal UI use today (_set_ui_busy_state(True)
+        # already disables flash_btn synchronously, on the same click that
+        # starts start_swd_flash(), before _swd_flash_thread itself exists).
+        if self._swd_flash_thread and self._swd_flash_thread.is_alive():
+            messagebox.showerror(_("TITLE_BUSY"), _("MSG_SWD_FLASH_ALREADY_IN_PROGRESS"))
+            return
         target_label = _("OPT_TARGET_SLAVE") if self.flash_target_var.get() == "slave" else _("OPT_TARGET_MASTER")
         if not messagebox.askyesno(
             _("TITLE_CONFIRM_FLASH"),
