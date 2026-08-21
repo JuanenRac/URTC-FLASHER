@@ -353,9 +353,9 @@ class SocketCAN:
         # get them onto the wire), not a broken link the way any other
         # OSError here would be. It's normally transient: the queue drains
         # as frames actually go out, typically within milliseconds. Retried
-        # a few times with a short backoff before giving up - confirmed
-        # real finding, 20 August 2026 external audit; every other OSError
-        # (ENETDOWN, EBADF, etc.) still fails immediately below, unchanged.
+        # a few times with a short backoff before giving up; every other
+        # OSError (ENETDOWN, EBADF, etc.) still fails immediately below,
+        # unchanged.
         last_err = None
         for attempt in range(5):
             if attempt > 0:
@@ -396,8 +396,7 @@ class SocketCAN:
             # plain timeout - the caller would then just sit through its
             # own full timeout budget, over and over, with no indication
             # the interface had actually failed rather than just being
-            # quiet. Confirmed real finding, 20 August 2026 external
-            # audit. Logged once per occurrence rather than raised: every
+            # quiet. Logged once per occurrence rather than raised: every
             # caller in this project treats a None return as "nothing
             # this round" and is built to retry/time out on its own
             # (check_carrier() at connect time already gives a clearer

@@ -8,10 +8,8 @@ pyserial>=3.5
 # 3.11+ uses a high-resolution waitable timer for time.sleep() on Windows;
 # older versions could round a 1ms sleep up to the old ~15.6ms default
 # system timer tick, making a full firmware transfer noticeably slower on
-# Windows specifically (real audit finding, 20 August 2026 - see this
-# project's own SONNET/URTC-FLASHER/auditoria_historial.txt for the
-# verification). The tool still works correctly either way - only the
-# transfer speed on an old interpreter is affected, not correctness.
+# Windows specifically. The tool still works correctly either way - only
+# the transfer speed on an old interpreter is affected, not correctness.
 
 # Optional, for section "4. Program complete chip via SWD/JTAG":
 # - pyOCD: pip install pyocd (installs the `pyocd` command used via subprocess -

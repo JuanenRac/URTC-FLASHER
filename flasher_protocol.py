@@ -64,9 +64,7 @@ class URTCFlasher:
         # 0.8s, not the original 0.3s: on a busy/industrial bus, 0x7FA can
         # legitimately land noticeably later than 0x7F9 (both frames still
         # have to make it through arbitration against other real traffic),
-        # and 0.3s left too little margin for that - confirmed real external
-        # audit finding, 20 August 2026 external audit (see this project's
-        # own auditoria_historial.txt for the finding number).
+        # and 0.3s left too little margin for that.
         GRACE_WINDOW = 0.8
         pending_bootloader_version = None  # in case 0x7FA arrives before 0x7F9
         while time.time() < deadline or (grace_deadline is not None and time.time() < grace_deadline):
@@ -306,10 +304,9 @@ class URTCFlasher:
                 # timer tick that pre-3.11 CPython was subject to (which
                 # would have made this whole page-transfer loop roughly an
                 # order of magnitude slower than intended - a real,
-                # previously-documented Windows Python gotcha, raised again
-                # by the 20 August 2026 external audit). Measured directly
-                # on this project's own target platform with the CPython
-                # version this tool is actually built with: avg ~1.5ms,
+                # previously-documented Windows Python gotcha). Measured
+                # directly on this project's own target platform with the
+                # CPython version this tool is actually built with: avg ~1.5ms,
                 # nowhere near 15ms - CPython 3.11+ switched Windows
                 # time.sleep() to a high-resolution waitable timer (see
                 # CPython's own changelog, gh-93209) that no longer needs
@@ -508,9 +505,8 @@ class URTCFlasher:
         # update at 500 kbit/s, but a large image (up to APP_MAX_SIZE) at
         # one of this tool's own slower selectable SLCAN bitrates (as low
         # as 10 kbit/s - see SLCAN_BITRATES) can genuinely need longer than
-        # that just for the raw transfer, before any retries - confirmed
-        # real finding, 20 August 2026 external audit. Scaled by the now-
-        # known total_size using a deliberately conservative floor
+        # that just for the raw transfer, before any retries. Scaled by
+        # the now-known total_size using a deliberately conservative floor
         # throughput (300 bytes/s - well under even 10 kbit/s's raw framed
         # ceiling, to also absorb per-page ACK round-trip overhead), with
         # a flat margin for connection/protocol overhead - never LOWER
@@ -683,8 +679,7 @@ class URTCFlasher:
         # blindly sending 0x213 frames into a stalled/disconnected bridge
         # all the way to the end of a large image (up to
         # SLAVE_APP_MAX_SIZE) before the failure ever surfaced, at
-        # END_UPDATE - confirmed real finding, 20 August 2026 external
-        # audit. 3 consecutive misses (roughly 6KB of blind sending, at
+        # END_UPDATE. 3 consecutive misses (roughly 6KB of blind sending, at
         # this loop's own ~2KB polling cadence) tolerates a single lost
         # 0x216 reply on a noisy bus without over-reacting, while still
         # aborting long before the remaining image would otherwise be
