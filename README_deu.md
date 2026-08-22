@@ -4,6 +4,14 @@
 
 # URTC Flasher (Windows / Linux)
 
+<p align="left">
+  <img src="https://img.shields.io/badge/Lizenz-GPL%203.0-blue.svg" alt="GPL 3.0">
+  <img src="https://img.shields.io/badge/Sprache-Python-3776AB.svg" alt="Python">
+  <img src="https://img.shields.io/badge/UI-Tkinter-lightgrey.svg" alt="Tkinter">
+  <img src="https://img.shields.io/badge/Protokoll-CAN--OTA-orange.svg" alt="CAN-OTA">
+</p>
+
+
 **Version:** 1.1.0 (die Version dieses Tools selbst - angezeigt im
 Fenster-Banner und in der Titelleiste, getrennt verfolgt von der
 Firmware-Version der URTC-Platine, die es schreibt. Folgt einem
