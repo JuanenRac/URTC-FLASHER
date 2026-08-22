@@ -4,6 +4,15 @@
 
 # URTC Flasher (Windows / Linux)
 
+<p align="center">
+  <a href="README.md">🇺🇸 English</a> |
+  <a href="README_spa.md">🇪🇸 Español</a> |
+  <a href="README_fra.md">🇫🇷 Français</a> |
+  <a href="README_ita.md">🇮🇹 Italiano</a> |
+  🇩🇪 <b>Deutsch</b>
+</p>
+
+
 <p align="left">
   <img src="https://img.shields.io/badge/Lizenz-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Sprache-Python-3776AB.svg" alt="Python">
