@@ -235,6 +235,34 @@ def main():
         argv = [a for a in sys.argv[1:] if a != "--cli"]
         sys.exit(run_cli(argv))
     from flasher_gui import FlasherGUI  # deferred: only needed once --cli is ruled out above, matching the tkinter import's own reasoning at the top of this file
+
+    # Windows-only DPI awareness, requested before any Tk window exists -
+    # a process that never declares itself DPI-aware gets DPI-virtualized
+    # by Windows on a scaled display (125%/150%/etc.): Tk's own
+    # winfo_screenwidth()/height() (used by _center_geometry below to fit
+    # this window on screen) then report a shrunk *virtual* resolution
+    # instead of the real physical one, so a fixed 1235x1040 window can
+    # end up taller than what the OS claims is available and get placed
+    # partly off-screen - the same failure mode regardless of how
+    # generously the window itself is sized. PROCESS_SYSTEM_DPI_AWARE (1)
+    # is enough to fix that (PROCESS_PER_MONITOR_DPI_AWARE (2) would also
+    # need active handling of DPI-change events when the window is
+    # dragged between differently-scaled monitors, which this simple
+    # single-window app doesn't do). shcore is Windows 8.1+; the
+    # user32 fallback covers Windows Vista/7/8. Both are best-effort:
+    # silently skipped on any failure (missing DLL, older Windows,
+    # non-Windows platform) since a blurry-but-correctly-placed window is
+    # far better than a crash on startup.
+    if sys.platform == "win32":
+        try:
+            import ctypes
+            try:
+                ctypes.windll.shcore.SetProcessDpiAwareness(1)
+            except (AttributeError, OSError):
+                ctypes.windll.user32.SetProcessDPIAware()
+        except Exception:
+            pass
+
     root = tk.Tk()
     root.withdraw()  # hidden until the splash finishes, rather than flashing empty then populated
     # Sized from actual measured content across all 5 supported languages
