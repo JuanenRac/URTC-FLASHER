@@ -791,18 +791,3 @@ CERN-OHL-S v2；本工具自身的许可证并不延伸至那个独立的项目�
 **JuanenRac**（Electro Hobby 3D）
 📧 electrohobby3d@gmail.com
 📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
-
-## 关联项目
-
-> 规范的 URTC 关系图。
-
-**URTC 核心与相关工具：**
-[URTC](https://github.com/JuanenRac/URTC) · [URTC-TESTER](https://github.com/JuanenRac/URTC-TESTER) · [URTC-WEB-STUDIO](https://github.com/JuanenRac/URTC-WEB-STUDIO) · [URTC-SMART-RACK](https://github.com/JuanenRac/URTC-SMART-RACK) · [URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL)
-
-**可选的 HYDRA-UMC 集成：**
-[HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC) · [HYDRA-UMC-SDK](https://github.com/JuanenRac/HYDRA-UMC-SDK)
-
-URTC 是独立的控制子系统。它通过公开 SDK 契约与 HYDRA-UMC 集成，但不属于 HYDRA-UMC 核心。
-
-**其余生态系统：**
-其余公开项目可在 [JuanenRac 生态系统仪表板](https://juanenrac.github.io/JuanenRac/) 查看。

@@ -1034,18 +1034,3 @@ attribuzione a questo progetto e al suo autore.
 **JuanenRac** (Electro Hobby 3D)
 📧 electrohobby3d@gmail.com
 📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
-
-## Progetti correlati
-
-> Mappa canonica delle relazioni URTC.
-
-**Core URTC e strumenti correlati:**
-[URTC](https://github.com/JuanenRac/URTC) · [URTC-TESTER](https://github.com/JuanenRac/URTC-TESTER) · [URTC-WEB-STUDIO](https://github.com/JuanenRac/URTC-WEB-STUDIO) · [URTC-SMART-RACK](https://github.com/JuanenRac/URTC-SMART-RACK) · [URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL)
-
-**Integrazione HYDRA-UMC opzionale:**
-[HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC) · [HYDRA-UMC-SDK](https://github.com/JuanenRac/HYDRA-UMC-SDK)
-
-URTC è un sottosistema di controllo indipendente. La sua integrazione con HYDRA-UMC usa contratti pubblici SDK e non rende URTC parte del core HYDRA-UMC.
-
-**Resto dell’ecosistema:**
-Gli altri progetti pubblici sono disponibili nella [dashboard dell’ecosistema JuanenRac](https://juanenrac.github.io/JuanenRac/).
