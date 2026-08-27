@@ -180,6 +180,11 @@ class SLCAN:
                     can_id = int(line[1:9], 16)
                     dlc = int(line[9:10], 16)
                     data_start = 10
+                # CAN 2.0 carries at most eight bytes.  A noisy serial line
+                # with SLCAN DLC 9..F used to pass the length check below and
+                # be delivered as an impossible frame to the flashing logic.
+                if dlc > 8:
+                    continue
                 expected_len = data_start + dlc * 2
                 if len(line) != expected_len:
                     continue  # length doesn't match what this line's own DLC implies - malformed, keep listening
@@ -514,5 +519,4 @@ class MockCAN:
             time.sleep(0.005)  # a small, fixed delay - realistic enough without slowing tests down
             return self._response_queue.pop(0)
         return None
-
 

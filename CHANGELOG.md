@@ -41,6 +41,11 @@ build script) never changes the version - only a real build does.
   project's own versioning convention only advances it on a real
   `build_exe.bat`/`build_exe.sh` packaged build.
 
+### Fixed
+- SLCAN reception now rejects impossible CAN 2.0 DLC values (`9`-`F`) before
+  they can be exposed to the flashing protocol. Valid standard and extended
+  frames remain parsed exactly as before.
+
 ## [0.1.0]
 
 ### Added
