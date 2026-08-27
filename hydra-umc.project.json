@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "ecosystem": "HYDRA-UMC",
+  "name": "URTC-FLASHER",
+  "version": "0.1.0",
+  "role": "tool",
+  "stack": "python-bare",
+  "technologies": [
+    "Python",
+    "Tkinter",
+    "CAN-OTA",
+    "SWD/JTAG"
+  ],
+  "deployment_target": "user-pc",
+  "maturity": "established",
+  "family": "URTC Tool Platform",
+  "parent": "URTC",
+  "build": "Standalone Tkinter script. pip install -r requirements.txt.",
+  "notes": "Real, long-shipping GUI flashing tool (CAN-OTA + full-chip SWD/JTAG) with an extensive real version history of its own.",
+  "native_version": {
+    "file": "flasher_config.py",
+    "pattern": "FLASHER_VERSION\\s*=\\s*\"(\\d+)\\.(\\d+)\\.(\\d+)\""
+  }
+}
