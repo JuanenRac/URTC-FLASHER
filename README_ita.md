@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="/images/URTC_LOGO_FLASHER.svg" alt="URTC Flasher Logo" width="100%">
+  <img src="/images/URTC_FLASHER_BANNER.svg" alt="URTC Flasher Logo" width="100%">
 </p>
 
 # URTC Flasher (Windows / Linux)
