@@ -791,3 +791,14 @@ CERN-OHL-S v2；本工具自身的许可证并不延伸至那个独立的项目�
 **JuanenRac**（Electro Hobby 3D）
 📧 electrohobby3d@gmail.com
 📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
+
+## 🛠️ BUILD & RUN
+
+请在发布构建前使用不改动版本的构建检查：
+
+| 操作 | Windows | Linux / macOS |
+|---|---|---|
+| 构建检查（不修改版本或 CHANGELOG） | `build-test.bat` | `./build-test.sh` |
+| 运行 / 开发（如提供） | `run*.bat` 或 `dev*.bat` | `./run*.sh` 或 `./dev*.sh` |
+
+`build-test.bat` 和 `build-test.sh` 会编译或验证项目技术栈，但不会递增 `hydra-umc.project.json`，也不会修改 `CHANGELOG.md`。它们仅可能生成正常的编译器输出。现有的 `build*.bat`、`build*.sh`、`run*` 和 `dev*` 脚本保留各自的版本化或运行时行为；需要该行为时请使用它们。
