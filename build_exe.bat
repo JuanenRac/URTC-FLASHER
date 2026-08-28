@@ -1,35 +1,32 @@
 @echo off
+REM HYDRA_UMC_SCRIPT_STANDARD_HEADER_BEGIN
+REM *****************************************************************************
+REM Project   : URTC-FLASHER
+REM Script    : build_exe.bat
+REM Purpose   : Incremental standalone executable build and packaging workflow.
+REM Author    : JuanenRac (Electro Hobby 3D)
+REM Email     : electrohobby3d@gmail.com
+REM Copyright : (C) 2026 JuanenRac
+REM License   : GPL-3.0 - see LICENSE
+REM *****************************************************************************
+REM HYDRA_UMC_SCRIPT_STANDARD_HEADER_END
+REM HYDRA_UMC_SCRIPT_STANDARD_BANNER_BEGIN
+echo.
+echo *****************************************************************************
+echo * URTC-FLASHER - build_exe.bat
+echo * Mode      : INCREMENTAL BUILD
+echo * Author    : JuanenRac (Electro Hobby 3D)
+echo * Email     : electrohobby3d@gmail.com
+echo * Copyright : (C) 2026 JuanenRac
+echo * License   : GPL-3.0 - see LICENSE
+echo * ------------------------------------------------------------------------- *
+echo * 1. Increment the project version and synchronise its manifest.
+echo * 2. Run this project's declared build, verification and packaging commands.
+echo * 3. Report the result and keep an interactive terminal open.
+echo *****************************************************************************
+echo.
+REM HYDRA_UMC_SCRIPT_STANDARD_BANNER_END
 setlocal EnableDelayedExpansion
-REM Builds a standalone Windows .exe for the URTC Flasher.
-REM Run this on a Windows machine with Python installed.
-REM
-REM Usage:
-REM   build_exe.bat
-REM
-REM Output: dist\URTC_Flasher.exe (no Python installation needed to run it)
-
-echo.
-echo  ===============================================================
-echo   URTC-FLASHER - build_exe.bat
-echo   Builds a standalone Windows .exe (dist\URTC_Flasher.exe) via
-echo   PyInstaller - no Python installation needed to run the result.
-echo  ===============================================================
-echo   Copyright (C) 2026 JuanenRac (Electro Hobby 3D)
-echo   ^<electrohobby3d@gmail.com^>
-echo   GPL-3.0 - see LICENSE
-echo  ===============================================================
-echo.
-
-REM NOTE: every step below runs through "python -m" rather than calling
-REM pip/pyinstaller directly. pip.exe and pyinstaller.exe both get installed
-REM into Python's Scripts\ folder, which on plenty of Windows setups isn't
-REM on PATH (common if Python was installed without checking "Add Python to
-REM PATH") - calling them directly then fails with a "not recognized"
-REM error even though the install itself succeeded. "python -m" sidesteps
-REM this by finding the installed module directly rather than needing its
-REM wrapper .exe to be on PATH.
-
-echo [1/6] Installing Python dependencies...
 python -m pip install --upgrade pip >nul
 python -m pip install -r requirements.txt
 python -m pip install pyinstaller
@@ -41,8 +38,12 @@ REM Every real packaged build gets a new patch version automatically -
 REM see bump_version.py's own docstring for the base-10 carry rule
 REM (1.1.9 -> 1.2.0). Runs before PyInstaller so the bumped value is what
 REM actually gets compiled into this .exe, not the pre-bump value.
+REM HYDRA_UMC_SCRIPT_STANDARD_VERSION_STEP
+echo [1/6] Incrementing project version and synchronising its manifest...
 python bump_version.py
 if errorlevel 1 ( echo NATIVE VERSION BUMP FAILED. & pause & exit /b 1 )
+REM HYDRA_UMC_SCRIPT_STANDARD_VERSION_CAPTURE_BEFORE
+for /f "usebackq delims=" %%V in (`python -c "import json; print(json.load(open(r'%~dp0hydra-umc.project.json', encoding='utf-8'))['version'])"`) do set "HYDRA_UMC_VERSION_BEFORE=%%V"
 python "%~dp0bump_manifest_version.py" --sync
 if errorlevel 1 ( echo VERSION SYNCHRONIZATION FAILED. & pause & exit /b 1 )
 if errorlevel 1 (
@@ -50,6 +51,18 @@ if errorlevel 1 (
     pause
     exit /b 1
 )
+REM HYDRA_UMC_SCRIPT_STANDARD_VERSION_CAPTURE_AFTER
+for /f "usebackq delims=" %%V in (`python -c "import json; print(json.load(open(r'%~dp0hydra-umc.project.json', encoding='utf-8'))['version'])"`) do set "HYDRA_UMC_VERSION_AFTER=%%V"
+if not defined HYDRA_UMC_VERSION_BEFORE set "HYDRA_UMC_VERSION_BEFORE=unknown"
+if not defined HYDRA_UMC_VERSION_AFTER set "HYDRA_UMC_VERSION_AFTER=unknown"
+echo.
+echo *****************************************************************************
+echo * VERSION INCREMENT COMPLETED
+echo * v%HYDRA_UMC_VERSION_BEFORE% ^> v%HYDRA_UMC_VERSION_AFTER%
+echo * Project manifest has been synchronised by the project build flow.
+echo *****************************************************************************
+echo.
+echo.
 echo       Done.
 echo.
 
