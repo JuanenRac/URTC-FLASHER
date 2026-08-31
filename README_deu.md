@@ -153,6 +153,14 @@ die Animation in Tkinter und im eigenständigen Programm ohne zusätzliche
 grafische Laufzeitabhängigkeit. Das native URTC-Fenster-/Taskleisten-Symbol
 bleibt bewusst statisch.
 
+### Visuelles Steuerpult
+
+Der bewährte CAN-OTA- und SWD/JTAG-Ablauf bleibt erhalten und liegt nun auf
+einer dunkelblau-cyanfarbenen Steueroberfläche: Produktkopf, kontrastreiche
+Verbindungskarte, lesbare Firmware-Tabellen, dunkles Prüfprotokoll und
+sichtbarer Fortschritt. Dies verbessert Darstellung und Zugänglichkeit, ohne
+Bootloader-Protokoll oder Hardware-Sicherheitsverhalten zu verändern.
+
 ### Menüleiste
 
 - **Datei** - Protokolle speichern (das Protokoll auf dem Bildschirm als

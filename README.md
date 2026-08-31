@@ -134,6 +134,14 @@ HYDRA-UMC mark. Its maintained SVG source is
 in Tkinter and in the standalone executable without adding a runtime GUI
 dependency. The native URTC window/taskbar icon remains static by design.
 
+### Visual command deck
+
+The live flasher keeps its established CAN-OTA and SWD/JTAG workflow, now on
+a dark navy/cyan command-deck surface: a product header, high-contrast
+connection card, readable firmware tables, dark verification log and visible
+progress channel. This is a visual and accessibility improvement only; it
+does not alter the bootloader protocol or hardware safety behaviour.
+
 ### Menu bar
 
 - **File** - Save Logs (the on-screen log as plain text; for a fuller

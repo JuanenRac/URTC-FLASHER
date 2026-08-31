@@ -147,6 +147,14 @@ fotogrammi PNG inclusi conservano l’animazione in Tkinter e nell’eseguibile
 autonomo senza aggiungere una dipendenza grafica a runtime. L’icona nativa
 URTC della finestra/barra delle applicazioni rimane volutamente statica.
 
+### Console visiva di controllo
+
+Il flusso consolidato CAN-OTA e SWD/JTAG è mantenuto su una superficie di
+controllo blu notte/ciano: intestazione di prodotto, scheda di connessione ad
+alto contrasto, tabelle firmware leggibili, registro di verifica scuro e
+progresso visibile. È un miglioramento visivo e di accessibilità; non altera
+il protocollo del bootloader né il comportamento di sicurezza hardware.
+
 ### Barra dei menu
 
 - **File** - Salva Registri (il registro a schermo come testo semplice;

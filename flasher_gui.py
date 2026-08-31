@@ -40,6 +40,7 @@ from flasher_github import list_firmware_files, download_file, GitHubDownloadErr
 from flasher_swd_tools import SWDFlashError, PyOCDCLI, CubeProgrammerCLI
 from flasher_validation import validate_firmware_file, validate_swd_image_file
 from hydra_umc_animation import AnimatedHydraUMCMark
+from hydra_umc_deck_widgets import RoundedDeckCard
 
 try:
     import serial
@@ -55,6 +56,117 @@ HAVE_SOCKETCAN = hasattr(socket, "AF_CAN")
 # GUI
 # =============================================================================
 class FlasherGUI:
+    # Command-deck palette shared by the fixed connection card, operation
+    # pages and status surfaces.  The tooling remains intentionally Tkinter
+    # based; this is a visual layer over the proven flashing workflow, not a
+    # replacement for it with a non-functional mock-up.
+    BG = "#07131B"
+    PANEL = "#0C1A24"
+    PANEL_ALT = "#102431"
+    BORDER = "#1B4051"
+    ACCENT = "#23C9E8"
+    TEXT = "#E8F4F8"
+    MUTED = "#91A9B5"
+    SUCCESS = "#65DE91"
+    WARNING = "#F7B955"
+    DANGER = "#FF6B78"
+
+    def _configure_command_deck_theme(self):
+        """Apply the common dark control-deck surface before any widgets exist."""
+        self.root.configure(bg=self.BG)
+        style = ttk.Style(self.root)
+        # clam honours colours consistently on Windows and Linux, unlike the
+        # platform-native themes which silently discard several background
+        # settings and leave white fields inside an otherwise dark interface.
+        try:
+            style.theme_use("clam")
+        except tk.TclError:
+            pass
+        style.configure(".", background=self.PANEL, foreground=self.TEXT, font=("Segoe UI", 10))
+        style.configure("TFrame", background=self.PANEL)
+        style.configure("TLabel", background=self.PANEL, foreground=self.TEXT)
+        style.configure(
+            "TLabelframe", background=self.PANEL, foreground=self.ACCENT,
+            bordercolor=self.BORDER, lightcolor=self.BORDER, darkcolor=self.BORDER,
+            borderwidth=1, relief="solid",
+        )
+        style.configure(
+            "TLabelframe.Label", background=self.PANEL, foreground=self.ACCENT,
+            font=("Segoe UI Semibold", 11),
+        )
+        style.configure(
+            "TButton", background=self.PANEL_ALT, foreground=self.TEXT,
+            bordercolor=self.BORDER, lightcolor=self.BORDER, darkcolor=self.BORDER,
+            padding=(12, 7), font=("Segoe UI Semibold", 10),
+        )
+        style.map(
+            "TButton", background=[("active", "#173544"), ("pressed", "#0A6579")],
+            foreground=[("disabled", "#5D7480")], bordercolor=[("active", self.ACCENT)],
+        )
+        style.configure(
+            "Accent.TButton", background="#0B7187", foreground="#F3FDFF",
+            bordercolor=self.ACCENT, padding=(13, 7), font=("Segoe UI Semibold", 10),
+        )
+        style.map("Accent.TButton", background=[("active", "#109DB9"), ("pressed", "#07566A")])
+        style.configure(
+            "TEntry", fieldbackground="#09151D", foreground=self.TEXT,
+            insertcolor=self.ACCENT, bordercolor=self.BORDER, padding=6,
+        )
+        style.configure(
+            "TCombobox", fieldbackground="#09151D", background=self.PANEL_ALT,
+            foreground=self.TEXT, arrowcolor=self.ACCENT, bordercolor=self.BORDER,
+            padding=5,
+        )
+        style.map("TCombobox", fieldbackground=[("readonly", "#09151D")], foreground=[("readonly", self.TEXT)])
+        style.configure("TCheckbutton", background=self.PANEL, foreground=self.TEXT)
+        style.configure("TRadiobutton", background=self.PANEL, foreground=self.TEXT)
+        style.configure("TNotebook", background=self.BG, borderwidth=0, tabmargins=(0, 0, 0, 0))
+        style.configure(
+            "TNotebook.Tab", background="#0A1821", foreground=self.MUTED,
+            bordercolor=self.BORDER, padding=(16, 9), font=("Segoe UI Semibold", 10),
+        )
+        style.map("TNotebook.Tab", background=[("selected", self.PANEL_ALT), ("active", "#132D3A")], foreground=[("selected", self.ACCENT), ("active", self.TEXT)])
+        style.configure(
+            "Treeview", background="#09151D", fieldbackground="#09151D",
+            foreground=self.TEXT, bordercolor=self.BORDER, rowheight=28,
+        )
+        style.map("Treeview", background=[("selected", "#155269")], foreground=[("selected", "#FFFFFF")])
+        style.configure(
+            "Treeview.Heading", background="#122A36", foreground=self.ACCENT,
+            bordercolor=self.BORDER, relief="flat", font=("Segoe UI Semibold", 9), padding=(8, 7),
+        )
+        style.map("Treeview.Heading", background=[("active", "#173A49")])
+        style.configure(
+            "Horizontal.TProgressbar", troughcolor="#071018", background=self.ACCENT,
+            bordercolor=self.BORDER, lightcolor=self.ACCENT, darkcolor=self.ACCENT,
+        )
+        style.configure("TScrollbar", background=self.PANEL_ALT, troughcolor="#071018", bordercolor=self.BORDER, arrowcolor=self.ACCENT)
+
+    def _build_command_deck_header(self):
+        """Add a compact application identity/status deck above all real controls."""
+        header = tk.Frame(self.root, bg=self.BG, height=76, highlightthickness=0)
+        header.grid(row=0, column=0, sticky="ew", padx=8, pady=(7, 4))
+        header.grid_propagate(False)
+        header.grid_columnconfigure(1, weight=1)
+        tk.Frame(header, bg=self.ACCENT, width=4).grid(row=0, column=0, sticky="ns", padx=(0, 13))
+        title_block = tk.Frame(header, bg=self.BG)
+        title_block.grid(row=0, column=1, sticky="w")
+        tk.Label(title_block, text="URTC", bg=self.BG, fg=self.ACCENT, font=("Segoe UI Semibold", 12)).pack(anchor="w")
+        tk.Label(title_block, text="Flasher", bg=self.BG, fg=self.TEXT, font=("Segoe UI", 20, "bold")).pack(anchor="w")
+        tk.Label(title_block, text="CAN-OTA  •  SWD/JTAG  •  FIRMWARE CONTROL DECK", bg=self.BG, fg=self.MUTED, font=("Segoe UI Semibold", 8)).pack(anchor="w", pady=(1, 0))
+        state = tk.Frame(header, bg="#0B202A", highlightbackground=self.BORDER, highlightthickness=1)
+        state.grid(row=0, column=2, sticky="e", padx=(12, 0))
+        tk.Label(state, text="●  HARDWARE SAFE", bg="#0B202A", fg=self.SUCCESS, font=("Segoe UI Semibold", 9)).pack(padx=12, pady=(8, 1))
+        tk.Label(state, text=f"APP v{FLASHER_VERSION}", bg="#0B202A", fg=self.MUTED, font=("Segoe UI", 8)).pack(padx=12, pady=(0, 8))
+
+    def _new_deck_card(self, parent, title):
+        """Create an Updater-style 16px surface without changing flash logic."""
+        return RoundedDeckCard(
+            parent, title, canvas_color=self.BG, panel_color=self.PANEL,
+            border_color=self.BORDER, accent_color=self.ACCENT,
+            text_color=self.TEXT,
+        )
+
     @staticmethod
     def _make_scrollable_tab(notebook, tab_text):
         """Adds a new notebook tab whose content sits inside a vertically
@@ -64,7 +176,7 @@ class FlasherGUI:
         this needs to know its parent is a canvas rather than the notebook
         directly."""
         outer = ttk.Frame(notebook)
-        canvas = tk.Canvas(outer, highlightthickness=0)
+        canvas = tk.Canvas(outer, highlightthickness=0, background=FlasherGUI.PANEL, borderwidth=0)
         vscroll = ttk.Scrollbar(outer, orient="vertical", command=canvas.yview)
         canvas.configure(yscrollcommand=vscroll.set)
         canvas.pack(side="left", fill="both", expand=True)
@@ -96,6 +208,7 @@ class FlasherGUI:
     def __init__(self, root):
         self.root = root
         root.title(f"URTC Flasher v{FLASHER_VERSION}")
+        self._configure_command_deck_theme()
         self._build_menu_bar()
         # Geometry (size + centered position) is set once in main(), before
         # this class is constructed - not here, so it isn't overwritten by
@@ -150,10 +263,12 @@ class FlasherGUI:
         # SWD/JTAG - is currently selected, so it doesn't get hidden behind
         # a tab switch the way the rest of the controls do) ---
         root.grid_columnconfigure(0, weight=1)
-        root.grid_rowconfigure(1, weight=1)  # notebook row
-        root.grid_rowconfigure(3, weight=1)  # log row - the one that should actually grow
-        conn_frame = ttk.LabelFrame(root, text=_("TAB_CONNECT_TITLE"))
-        conn_frame.grid(row=0, column=0, sticky="nsew", padx=4, pady=4)
+        root.grid_rowconfigure(2, weight=1)  # notebook row
+        root.grid_rowconfigure(4, weight=1)  # log row - the one that should actually grow
+        self._build_command_deck_header()
+        conn_card = self._new_deck_card(root, _("TAB_CONNECT_TITLE"))
+        conn_card.grid(row=1, column=0, sticky="nsew", padx=8, pady=4)
+        conn_frame = conn_card.content
 
         # Tkinter cannot play the animated SVG directly.  This deliberately
         # small mark plays twelve pre-rendered frames derived from the
@@ -201,7 +316,10 @@ class FlasherGUI:
         self.port_combo = ttk.Combobox(conn_frame, textvariable=self.port_var, width=20, state="readonly")
         self.port_combo.grid(row=row, column=1, **pad)
         ttk.Button(conn_frame, text=_("BTN_REFRESH"), command=self.refresh_ports).grid(row=row, column=2, **pad)
-        self.connect_btn = ttk.Button(conn_frame, text=_("BTN_CONNECT"), command=self.toggle_connect)
+        self.connect_btn = ttk.Button(
+            conn_frame, text=_("BTN_CONNECT"), command=self.toggle_connect,
+            style="Accent.TButton",
+        )
         self.connect_btn.grid(row=row, column=3, **pad)
         self.conn_status = ttk.Label(conn_frame, text=_("STATUS_NOT_CONNECTED"), foreground="red")
         self.conn_status.grid(row=row, column=4, **pad)
@@ -316,7 +434,7 @@ class FlasherGUI:
         # visible columns - the window only needs to be wide enough to
         # show whichever single tab is open. ---
         notebook = ttk.Notebook(root)
-        notebook.grid(row=1, column=0, sticky="nsew", padx=4, pady=(0, 4))
+        notebook.grid(row=2, column=0, sticky="nsew", padx=8, pady=(0, 4))
         self._notebook = notebook
         # Each tab's content lives inside its own scrollable canvas rather
         # than a plain Frame. root's own fixed 1235x1040 initial geometry
@@ -345,8 +463,9 @@ class FlasherGUI:
         canota_tab.grid_columnconfigure(1, weight=1)
 
         # --- Firmware frame (left column, top) ---
-        fw_frame = ttk.LabelFrame(canota_tab, text=_("TITLE_SELECT_FIRMWARE"))
-        fw_frame.grid(row=0, column=0, sticky="new", **pad)
+        fw_card = self._new_deck_card(canota_tab, _("TITLE_SELECT_FIRMWARE"))
+        fw_card.grid(row=0, column=0, sticky="new", **pad)
+        fw_frame = fw_card.content
 
         ttk.Label(fw_frame, text=_("LBL_DETECTED_IN_FIRMWARE")).grid(row=0, column=0, sticky="w", **pad)
         ttk.Button(fw_frame, text=_("BTN_REFRESH"), command=self.scan_firmware_folder).grid(row=0, column=1, sticky="w", **pad)
@@ -369,7 +488,7 @@ class FlasherGUI:
         self.fw_tree.grid(row=1, column=0, columnspan=3, sticky="ew", padx=8, pady=2)
         self.fw_tree.bind("<<TreeviewSelect>>", self.select_detected_firmware)
         self.fw_tree.tag_configure("invalid", foreground="red")
-        self.fw_tree.tag_configure("valid", foreground="black")
+        self.fw_tree.tag_configure("valid", foreground=self.TEXT)
 
         ttk.Label(fw_frame, text=_("LBL_OR_BROWSE_ELSEWHERE")).grid(row=2, column=0, sticky="w", **pad)
         ttk.Button(fw_frame, text=_("BTN_BROWSE_BIN"), command=self.browse_firmware).grid(row=2, column=1, sticky="w", **pad)
@@ -387,8 +506,9 @@ class FlasherGUI:
         # original single-column stack it was meant to shrink. Pairing just
         # the controls (which do save real rows) while leaving prose at full
         # width is the actual net height win.
-        act_frame = ttk.LabelFrame(canota_tab, text=_("TITLE_FLASH_BY_CAN_OTA"))
-        act_frame.grid(row=1, column=0, sticky="new", **pad)
+        act_card = self._new_deck_card(canota_tab, _("TITLE_FLASH_BY_CAN_OTA"))
+        act_card.grid(row=1, column=0, sticky="new", **pad)
+        act_frame = act_card.content
         act_frame.grid_columnconfigure(0, weight=1)
         act_frame.grid_columnconfigure(1, weight=1)
         full_wrap = 380  # same wraplength the single-column layout used - help text always gets the frame's full width, never a half-column
@@ -477,7 +597,10 @@ class FlasherGUI:
 
         flash_btn_row = ttk.Frame(act_frame)
         flash_btn_row.grid(row=8, column=0, columnspan=2, sticky="w", **pad)
-        self.flash_btn = ttk.Button(flash_btn_row, text=_("BTN_FLASH_FIRMWARE"), command=self.start_flash)
+        self.flash_btn = ttk.Button(
+            flash_btn_row, text=_("BTN_FLASH_FIRMWARE"), command=self.start_flash,
+            style="Accent.TButton",
+        )
         self.flash_btn.pack(side="left")
         self.cancel_btn = ttk.Button(flash_btn_row, text=_("BTN_CANCEL"), command=self.cancel_flash, state="disabled")
         self.cancel_btn.pack(side="left", padx=(8, 0))
@@ -488,8 +611,9 @@ class FlasherGUI:
         # mechanism. This tool is the only one that writes it - the
         # Tester can read it back but doesn't offer a way to change it,
         # same asymmetry as the OTA update process itself. ---
-        free_tool_frame = ttk.LabelFrame(canota_tab, text=_("TITLE_FREE_TOOL_CONFIG"))
-        free_tool_frame.grid(row=0, column=1, sticky="new", **pad)
+        free_tool_card = self._new_deck_card(canota_tab, _("TITLE_FREE_TOOL_CONFIG"))
+        free_tool_card.grid(row=0, column=1, sticky="new", **pad)
+        free_tool_frame = free_tool_card.content
         ttk.Label(
             free_tool_frame,
             text=_("HELP_FREE_TOOL_CONFIG"),
@@ -519,8 +643,9 @@ class FlasherGUI:
         # editable. Serial number is the one real writable value here,
         # same asymmetry as free tool configuration above: this tool
         # writes it, the Tester can only read it back. ---
-        peripheral_frame = ttk.LabelFrame(canota_tab, text=_("TITLE_PERIPHERAL_INFO"))
-        peripheral_frame.grid(row=1, column=1, sticky="new", **pad)
+        peripheral_card = self._new_deck_card(canota_tab, _("TITLE_PERIPHERAL_INFO"))
+        peripheral_card.grid(row=1, column=1, sticky="new", **pad)
+        peripheral_frame = peripheral_card.content
         ttk.Label(
             peripheral_frame,
             text=_("HELP_PERIPHERAL_INFO"),
@@ -544,10 +669,9 @@ class FlasherGUI:
             row=2, column=0, columnspan=4, sticky="w", padx=8, pady=(0, 4))
 
         # --- SWD/JTAG full-chip programming frame (advanced, separate risk profile) ---
-        swd_frame = ttk.LabelFrame(
-            swdjtag_tab, text=_("TITLE_PROGRAM_COMPLETE_CHIP")
-        )
-        swd_frame.pack(fill="both", expand=True, **pad)
+        swd_card = self._new_deck_card(swdjtag_tab, _("TITLE_PROGRAM_COMPLETE_CHIP"))
+        swd_card.pack(fill="both", expand=True, **pad)
+        swd_frame = swd_card.content
 
         # Which chip a probe is actually connected to - genuinely
         # different silicon (STM32F303CC vs STM32F303CB), different
@@ -643,6 +767,7 @@ class FlasherGUI:
         self.swd_flash_btn = ttk.Button(
             swd_frame, text=_("BTN_FLASH_COMPLETE_CHIP"), command=self.start_swd_flash,
             state="normal" if (self._pyocd_ok or self._cube_ok) else "disabled",
+            style="Accent.TButton",
         )
         self.swd_flash_btn.grid(row=10, column=0, columnspan=3, sticky="w", **pad)
         ttk.Label(
@@ -652,17 +777,22 @@ class FlasherGUI:
         ).grid(row=9, column=0, columnspan=3, sticky="w", padx=8)
 
         self.progress = ttk.Progressbar(root, orient="horizontal", mode="determinate", maximum=100)
-        self.progress.grid(row=2, column=0, sticky="ew", padx=8, pady=(4, 8))
+        self.progress.grid(row=3, column=0, sticky="ew", padx=12, pady=(4, 8))
 
         # --- Log frame ---
-        log_frame = ttk.LabelFrame(root, text=_("TITLE_LOG"))
-        log_frame.grid(row=3, column=0, sticky="nsew", **pad)
+        log_card = self._new_deck_card(root, _("TITLE_LOG"))
+        log_card.grid(row=4, column=0, sticky="nsew", padx=8, pady=(0, 8))
+        log_frame = log_card.content
         log_toolbar = ttk.Frame(log_frame)
         log_toolbar.pack(fill="x", side="top")
         ttk.Button(log_toolbar, text=_("BTN_EXPORT_DEBUG_BUNDLE"), command=self.export_debug_bundle).pack(
             side="left", padx=4, pady=2
         )
-        self.log_text = tk.Text(log_frame, height=5, state="disabled", wrap="word")
+        self.log_text = tk.Text(
+            log_frame, height=5, state="disabled", wrap="word", bg="#071018",
+            fg=self.TEXT, insertbackground=self.ACCENT, relief="flat", borderwidth=0,
+            selectbackground="#155269", selectforeground="#FFFFFF", font=("Cascadia Mono", 9),
+        )
         self.log_text.pack(fill="both", expand=True, side="left")
         scrollbar = ttk.Scrollbar(log_frame, command=self.log_text.yview)
         scrollbar.pack(side="right", fill="y")
@@ -727,10 +857,15 @@ class FlasherGUI:
             messagebox.showerror(_("TITLE_EXPORT_FAILED"), str(e))
 
     def _build_menu_bar(self):
-        menubar = tk.Menu(self.root)
+        menu_style = {
+            "background": self.PANEL_ALT, "foreground": self.TEXT,
+            "activebackground": self.ACCENT, "activeforeground": "#03161D",
+            "borderwidth": 0,
+        }
+        menubar = tk.Menu(self.root, **menu_style)
         self.root.config(menu=menubar)
 
-        file_menu = tk.Menu(menubar, tearoff=False)
+        file_menu = tk.Menu(menubar, tearoff=False, **menu_style)
         file_menu.add_command(label=_("MENU_SAVE_LOGS"), command=self._menu_save_logs)
         file_menu.add_separator()
         file_menu.add_command(label=_("MENU_EXIT"), command=self.on_close)
@@ -741,7 +876,7 @@ class FlasherGUI:
         # with its own fixed code regardless of this variable's value),
         # but confirms at a glance which one is actually active without
         # opening a submenu of plain, unmarked entries.
-        language_menu = tk.Menu(menubar, tearoff=False)
+        language_menu = tk.Menu(menubar, tearoff=False, **menu_style)
         self._menu_lang_var = tk.StringVar(value=flasher_config._current_language)
         for code, display in AVAILABLE_LANGUAGES:
             language_menu.add_radiobutton(
@@ -750,7 +885,7 @@ class FlasherGUI:
             )
         menubar.add_cascade(label=_("MENU_LANGUAGE"), menu=language_menu)
 
-        help_menu = tk.Menu(menubar, tearoff=False)
+        help_menu = tk.Menu(menubar, tearoff=False, **menu_style)
         help_menu.add_command(label=_("MENU_README"), command=self._menu_show_readme)
         help_menu.add_command(label=_("MENU_GITHUB"), command=self._menu_show_github)
         help_menu.add_separator()
@@ -2103,4 +2238,3 @@ class FlasherGUI:
             self.root.after(0, lambda: messagebox.showerror(_("TITLE_UNEXPECTED_ERROR"), msg))
         finally:
             self.root.after(0, lambda: self._set_ui_busy_state(False))
-

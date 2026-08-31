@@ -150,6 +150,14 @@ images PNG incluses conservent l’animation dans Tkinter et dans l’exécutabl
 autonome sans ajouter de dépendance graphique à l’exécution. L’icône native
 URTC de fenêtre/barre des tâches reste volontairement statique.
 
+### Console visuelle de contrôle
+
+Le flux CAN-OTA et SWD/JTAG établi est conservé sur une surface de contrôle
+bleu nuit/cyan : en-tête produit, carte de connexion contrastée, tableaux de
+firmware lisibles, journal de vérification sombre et progression visible.
+Cette amélioration visuelle et d’accessibilité ne modifie ni le protocole du
+bootloader ni le comportement de sécurité matériel.
+
 ### Barre de menu
 
 - **Fichier** - Enregistrer les journaux (le journal à l'écran en texte

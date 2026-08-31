@@ -143,6 +143,14 @@ animación en Tkinter y en el ejecutable autónomo sin añadir una dependencia
 gráfica en tiempo de ejecución. El icono nativo URTC de ventana/barra de
 tareas se mantiene estático por diseño.
 
+### Panel visual de control
+
+El flujo consolidado CAN-OTA y SWD/JTAG se conserva, ahora sobre una
+superficie de control azul marino/cian: cabecera de producto, tarjeta de
+conexión de alto contraste, tablas de firmware legibles, registro de
+verificación oscuro y canal de progreso visible. Es una mejora visual y de
+accesibilidad; no modifica el protocolo de bootloader ni la seguridad física.
+
 ### Barra de menú
 
 - **Archivo** - Guardar registros (el registro en pantalla como texto
