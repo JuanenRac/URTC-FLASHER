@@ -520,6 +520,9 @@ else:
     _assets_base = os.path.dirname(os.path.abspath(__file__))
 BANNER_IMAGE_PATH = os.path.normpath(os.path.join(_assets_base, "assets", "urtc_banner.png"))
 ICON_IMAGE_PATH = os.path.normpath(os.path.join(_assets_base, "assets", "urtc_icon.png"))
+HYDRA_UMC_ICON_FRAMES_DIR = os.path.normpath(
+    os.path.join(_assets_base, "assets", "hydra_umc_icon_frames")
+)
 
 
 def _center_geometry(win, width, height):

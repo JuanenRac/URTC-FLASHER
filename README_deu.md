@@ -146,6 +146,13 @@ Neubau über einem bereits existierenden `dist/URTC_Flasher` dieses
 direkt ersetzt, statt auf eine "ersetzen?"-Eingabeaufforderung zu
 warten, die in der Ausgabe eines Skripts leicht übersehen wird.
 
+Im Verbindungsbereich erscheint außerdem die animierte offizielle
+HYDRA-UMC-Marke. Ihre gepflegte SVG-Quelle ist
+`assets/HYDRA_UMC_ICON.svg`; zwölf mitgelieferte PNG-Einzelbilder erhalten
+die Animation in Tkinter und im eigenständigen Programm ohne zusätzliche
+grafische Laufzeitabhängigkeit. Das native URTC-Fenster-/Taskleisten-Symbol
+bleibt bewusst statisch.
+
 ### Menüleiste
 
 - **Datei** - Protokolle speichern (das Protokoll auf dem Bildschirm als

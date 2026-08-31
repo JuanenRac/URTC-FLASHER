@@ -141,6 +141,12 @@ ricompilare sopra un `dist/URTC_Flasher` già esistente lo sostituisce
 direttamente invece di aspettare un prompt "sostituire?" facile da
 perdere nell'output di uno script.
 
+Il pannello di connessione mostra anche il marchio ufficiale HYDRA-UMC
+animato. La sua sorgente SVG mantenuta è `assets/HYDRA_UMC_ICON.svg`; dodici
+fotogrammi PNG inclusi conservano l’animazione in Tkinter e nell’eseguibile
+autonomo senza aggiungere una dipendenza grafica a runtime. L’icona nativa
+URTC della finestra/barra delle applicazioni rimane volutamente statica.
+
 ### Barra dei menu
 
 - **File** - Salva Registri (il registro a schermo come testo semplice;

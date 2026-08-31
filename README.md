@@ -128,6 +128,12 @@ Both scripts pass `--noconfirm` to PyInstaller, so rebuilding over an
 existing `dist/URTC_Flasher` replaces it directly rather than waiting on
 a "replace it?" prompt that's easy to miss in a script's output.
 
+Inside the connection panel, the application also shows the official animated
+HYDRA-UMC mark. Its maintained SVG source is
+`assets/HYDRA_UMC_ICON.svg`; twelve bundled PNG frames preserve the animation
+in Tkinter and in the standalone executable without adding a runtime GUI
+dependency. The native URTC window/taskbar icon remains static by design.
+
 ### Menu bar
 
 - **File** - Save Logs (the on-screen log as plain text; for a fuller
@@ -810,6 +816,11 @@ partition scheme.
 </p>
 
 ## 📂 Repository Structure
+
+The `assets/` directory also contains `HYDRA_UMC_ICON.svg`, the maintained
+animated vector source, and `hydra_umc_icon_frames/`, its twelve bundled
+Tkinter PNG frames. `tools/render_hydra_umc_icon_frames.py` regenerates them
+from the SVG during development; it is not required to run the application.
 
 ```
 ├── assets/

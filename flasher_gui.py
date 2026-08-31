@@ -24,7 +24,7 @@ from flasher_config import (
     BOOTLOADER_FLASH_ADDR, BOOTLOADER_MAX_SIZE, CONFIG_FILE_PATH, DEFAULT_LANGUAGE,
     EXPANSION_BOARD_TYPES, MLX_SENSOR_VARIANTS, FIRMWARE_FOLDER, FIRMWARE_VERSION_MAJOR, FIRMWARE_VERSION_MINOR,
     FLASHER_AUTHOR, FLASHER_VERSION,
-    ICON_IMAGE_PATH, LOGS_FOLDER, PYOCD_TARGET_NAME, SLCAN_BITRATES,
+    HYDRA_UMC_ICON_FRAMES_DIR, ICON_IMAGE_PATH, LOGS_FOLDER, PYOCD_TARGET_NAME, SLCAN_BITRATES,
     SLAVE_BOOTLOADER_FLASH_ADDR, SLAVE_APP_FLASH_ADDR, SLAVE_BOOTLOADER_MAX_SIZE,
     SLAVE_APP_MAX_SIZE, SLAVE_PYOCD_TARGET_NAME, SLAVE_TOTAL_FLASH_SIZE,
     STATUS_NAMES, THIS_HARDWARE_ID, TOOL_NAMES, CAN_ID_SET_FREE_TOOL, CAN_ID_FREE_TOOL_CONFIG_RESP,
@@ -39,6 +39,7 @@ from flasher_protocol import URTCFlasher, FlashError
 from flasher_github import list_firmware_files, download_file, GitHubDownloadError
 from flasher_swd_tools import SWDFlashError, PyOCDCLI, CubeProgrammerCLI
 from flasher_validation import validate_firmware_file, validate_swd_image_file
+from hydra_umc_animation import AnimatedHydraUMCMark
 
 try:
     import serial
@@ -153,6 +154,23 @@ class FlasherGUI:
         root.grid_rowconfigure(3, weight=1)  # log row - the one that should actually grow
         conn_frame = ttk.LabelFrame(root, text=_("TAB_CONNECT_TITLE"))
         conn_frame.grid(row=0, column=0, sticky="nsew", padx=4, pady=4)
+
+        # Tkinter cannot play the animated SVG directly.  This deliberately
+        # small mark plays twelve pre-rendered frames derived from the
+        # official HYDRA-UMC SVG, while the native window/taskbar icon keeps
+        # the URTC-specific static asset appropriate for 16-32px surfaces.
+        self._hydra_umc_mark = None
+        try:
+            self._hydra_umc_mark = AnimatedHydraUMCMark(
+                conn_frame, HYDRA_UMC_ICON_FRAMES_DIR
+            )
+            self._hydra_umc_mark.widget.grid(
+                row=0, column=5, rowspan=3, sticky="ne", padx=(8, 10), pady=(2, 2)
+            )
+        except (OSError, tk.TclError):
+            # Branding is cosmetic. Missing/corrupt generated frames must
+            # never prevent a technician from flashing a board.
+            self._hydra_umc_mark = None
 
         row = 0
         # Transport choice only appears at all when SocketCAN is actually
@@ -2085,5 +2103,4 @@ class FlasherGUI:
             self.root.after(0, lambda: messagebox.showerror(_("TITLE_UNEXPECTED_ERROR"), msg))
         finally:
             self.root.after(0, lambda: self._set_ui_busy_state(False))
-
 

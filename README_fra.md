@@ -144,6 +144,12 @@ par-dessus un `dist/URTC_Flasher` déjà existant le remplace directement
 au lieu d'attendre une invite "remplacer ?" facile à manquer dans la
 sortie d'un script.
 
+Le panneau de connexion affiche également la marque officielle HYDRA-UMC
+animée. Sa source SVG maintenue est `assets/HYDRA_UMC_ICON.svg` ; douze
+images PNG incluses conservent l’animation dans Tkinter et dans l’exécutable
+autonome sans ajouter de dépendance graphique à l’exécution. L’icône native
+URTC de fenêtre/barre des tâches reste volontairement statique.
+
 ### Barre de menu
 
 - **Fichier** - Enregistrer les journaux (le journal à l'écran en texte
