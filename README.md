@@ -18,7 +18,7 @@
 <p align="left">
   <img src="https://img.shields.io/badge/License-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
-  <img src="https://img.shields.io/badge/UI-Tkinter-lightgrey.svg" alt="Tkinter">
+  <img src="https://img.shields.io/badge/UI-Tkinter%20%7C%20Qt%20Quick-38d4e6.svg" alt="Tkinter and Qt Quick">
   <img src="https://img.shields.io/badge/Protocol-CAN--OTA-orange.svg" alt="CAN-OTA">
 </p>
 
@@ -135,6 +135,16 @@ in Tkinter and in the standalone executable without adding a runtime GUI
 dependency. The native URTC window/taskbar icon remains static by design.
 
 ### Visual command deck
+
+The shared **Qt Quick** command deck is available for the real CAN-OTA
+workflow:
+~~~
+python urtc_flasher.py --qtquick
+~~~
+It uses the same production transport, validation and signed flashing code as
+the established interface. The default interface remains Tkinter while the
+advanced SWD/JTAG and board-configuration screens are brought to feature
+parity; do not use Qt Quick for those advanced operations yet.
 
 The live flasher keeps its established CAN-OTA and SWD/JTAG workflow, now on
 a dark navy/cyan command-deck surface: a product header, high-contrast
@@ -887,6 +897,7 @@ between having them as separate files versus one large one.
 This project is part of a larger robotics ecosystem by the same author (JuanenRac / Electro Hobby 3D). Worth knowing about, since a request might actually be about one of these rather than this repository:
 
 **Directly related to this tool**
+- **[URTC](https://github.com/JuanenRac/URTC)** — the exact firmware this tool flashes over CAN-OTA/SWD/JTAG.
 - **[HYDRA-UMC-TOOL-CLI](https://github.com/JuanenRac/HYDRA-UMC-TOOL-CLI)** — does at fleet scale (the `flash-all` command) what this tool does for a single board.
 
 **HYDRA-UMC platform** — the multi-robot micro-factory cell
