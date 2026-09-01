@@ -18,7 +18,7 @@
 <p align="left">
   <img src="https://img.shields.io/badge/License-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
-  <img src="https://img.shields.io/badge/UI-Tkinter-lightgrey.svg" alt="Tkinter">
+  <img src="https://img.shields.io/badge/UI-Tkinter%20%7C%20Qt%20Quick-38d4e6.svg" alt="Tkinter and Qt Quick">
   <img src="https://img.shields.io/badge/Protocol-CAN--OTA-orange.svg" alt="CAN-OTA">
 </p>
 
@@ -120,6 +120,14 @@ python3 urtc_flasher.py
 按设计保持静态。
 
 ### 可视化控制台
+
+共享的 **Qt Quick** 命令控制台可用于真实 CAN-OTA 工作流：
+~~~
+python urtc_flasher.py --qtquick
+~~~
+它使用与既有界面相同的生产传输、验证和签名刷写代码。在高级 SWD/JTAG 与板卡
+配置页面达到功能对等之前，默认界面仍为 Tkinter；暂时不要将 Qt Quick 用于这些
+高级操作。
 
 成熟的 CAN-OTA 与 SWD/JTAG 流程保持不变，现在使用深海军蓝/青色控制界面：
 产品标题、高对比度连接卡、清晰的固件表格、深色验证日志以及可见的进度通道。

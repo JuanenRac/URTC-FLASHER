@@ -25,7 +25,44 @@ build script) never changes the version - only a real build does.
 
 ## [Unreleased]
 
+### Fixed
+- `flasher_gui.py`'s manual serial connect crashed with `NameError:
+  BITRATE_500K_SLCAN_CODE` whenever the saved bitrate label didn't match a
+  known entry (a blank or corrupted config value) - the constant was used
+  as a fallback but never imported from `flasher_config`.
+- The GitHub firmware-browser dialog's error handlers (`_load_list` and
+  `_do_download`) crashed with `NameError` reporting a download/list
+  failure: each `except ... as e:` scheduled a `lambda` referencing `e` via
+  `root.after()`, but Python deletes the exception variable the moment the
+  `except` block exits, before the deferred lambda ever runs. Fixed by
+  capturing the message into a plain string first, the same pattern
+  already used correctly elsewhere in this file (see the `_connect_worker`
+  comment).
+
 ### Added
+- The Qt Quick CAN-OTA flow snapshots the selected firmware before its worker
+  starts and locks firmware/transport selection while an operation is active.
+  A running update therefore cannot silently switch to another file from the
+  visible inventory.
+- The Qt Quick transport selector now recognises the actual discovered
+  SocketCAN interface set instead of guessing from names such as `can0`.
+  This also handles valid interfaces such as `vcan0`. Combining `--cli`
+  and `--qtquick` is rejected explicitly because they are separate modes.
+- Qt Quick worker logs are now marshalled back to the GUI thread before the
+  QML log model is updated. This removes a possible cross-thread UI race
+  during connection and CAN-OTA progress. Selecting `--qtquick` without
+  PySide6 now reports the missing dependency clearly instead of exposing an
+  import traceback.
+- An explicit Qt Quick CAN-OTA command deck is now available with
+  python urtc_flasher.py --qtquick. It is a real front end over the
+  established SLCAN/SocketCAN transports, firmware validation and signed
+  URTCFlasher protocol: port discovery, connection, firmware selection,
+  cancellation, progress and outcome logs are not simulated. The established
+  Tkinter UI remains the default until its advanced SWD/JTAG and
+  board-configuration workflows have equivalent Qt Quick pages.
+- PyInstaller build scripts now collect the Qt Quick/QML runtime and the
+  staged command-deck entry point. This prevents a packaged executable from
+  silently omitting the renderer selected by --qtquick.
 - A full dark navy/cyan command-deck presentation now wraps the established
   flashing UI: product/status header, real 16px rounded canvas cards on the
   connection, CAN-OTA, SWD/JTAG and log surfaces, 10px curved primary actions,

@@ -18,7 +18,7 @@
 <p align="left">
   <img src="https://img.shields.io/badge/Licence-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Langage-Python-3776AB.svg" alt="Python">
-  <img src="https://img.shields.io/badge/UI-Tkinter-lightgrey.svg" alt="Tkinter">
+  <img src="https://img.shields.io/badge/UI-Tkinter%20%7C%20Qt%20Quick-38d4e6.svg" alt="Tkinter and Qt Quick">
   <img src="https://img.shields.io/badge/Protocole-CAN--OTA-orange.svg" alt="CAN-OTA">
 </p>
 
@@ -151,6 +151,17 @@ autonome sans ajouter de dépendance graphique à l’exécution. L’icône nat
 URTC de fenêtre/barre des tâches reste volontairement statique.
 
 ### Console visuelle de contrôle
+
+La console de commandes partagée **Qt Quick** est disponible pour le flux
+CAN-OTA réel :
+~~~
+python urtc_flasher.py --qtquick
+~~~
+Elle utilise les mêmes transports de production, validations et code de
+flashage signé que l'interface établie. Tkinter reste l'interface par défaut
+tant que les écrans avancés SWD/JTAG et de configuration de carte n'ont pas
+atteint la parité fonctionnelle ; n'utilisez pas encore Qt Quick pour ces
+opérations avancées.
 
 Le flux CAN-OTA et SWD/JTAG établi est conservé sur une surface de contrôle
 bleu nuit/cyan : en-tête produit, carte de connexion contrastée, tableaux de

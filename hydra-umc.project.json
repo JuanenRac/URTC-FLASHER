@@ -4,10 +4,12 @@
   "name": "URTC-FLASHER",
   "version": "0.1.0",
   "role": "tool",
-  "stack": "python-bare",
+  "stack": "python-qtquick",
   "technologies": [
     "Python",
-    "Tkinter",
+    "Tkinter (legacy advanced workflow)",
+    "PySide6",
+    "Qt Quick",
     "CAN-OTA",
     "SWD/JTAG"
   ],
@@ -15,8 +17,8 @@
   "maturity": "established",
   "family": "URTC Tool Platform",
   "parent": "URTC",
-  "build": "Standalone Tkinter script. pip install -r requirements.txt.",
-  "notes": "Real, long-shipping GUI flashing tool (CAN-OTA + full-chip SWD/JTAG) with an extensive real version history of its own.",
+  "build": "Standalone Python desktop tool. pip install -r requirements.txt; Qt Quick CAN-OTA deck is started with --qtquick.",
+  "notes": "Real GUI flashing tool (CAN-OTA + full-chip SWD/JTAG). Qt Quick is the shared command-deck renderer for the real CAN-OTA flow; the established Tkinter UI remains the default until advanced SWD/JTAG parity is complete.",
   "native_version": {
     "file": "flasher_config.py",
     "pattern": "FLASHER_VERSION\\s*=\\s*\"(\\d+)\\.(\\d+)\\.(\\d+)\""

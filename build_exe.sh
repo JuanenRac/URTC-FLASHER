@@ -119,6 +119,12 @@ python3 -m PyInstaller --onefile --noconfirm --name "URTC_Flasher" \
     --hidden-import flasher_protocol \
     --hidden-import flasher_github \
     --hidden-import flasher_gui \
+    --hidden-import qt_flasher \
+    --hidden-import PySide6.QtQml \
+    --hidden-import PySide6.QtQuick \
+    --hidden-import PySide6.QtQuickControls2 \
+    --collect-all PySide6.QtQuick \
+    --collect-all PySide6.QtQuickControls2 \
     urtc_flasher.py
 if [ ! -f dist/URTC_Flasher ]; then
     echo "      ERROR: PyInstaller did not produce dist/URTC_Flasher - see the output above."

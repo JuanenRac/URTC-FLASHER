@@ -50,7 +50,7 @@ import argparse
 # tkinter at all. Checking sys.argv directly here (rather than waiting for
 # argparse further down) is deliberate: this has to happen before the
 # import is ever attempted.
-if "--cli" not in sys.argv:
+if "--cli" not in sys.argv and "--qtquick" not in sys.argv:
     import tkinter as tk
 
 try:
@@ -231,9 +231,27 @@ def _show_splash_then(root, on_done):
 
 
 def main():
+    if "--cli" in sys.argv and "--qtquick" in sys.argv:
+        print("ERROR: --cli and --qtquick are mutually exclusive modes.", file=sys.stderr)
+        return 2
     if "--cli" in sys.argv:
         argv = [a for a in sys.argv[1:] if a != "--cli"]
-        sys.exit(run_cli(argv))
+        return run_cli(argv)
+    if "--qtquick" in sys.argv:
+        # The Qt Quick surface is deliberately selected explicitly until its
+        # SWD/JTAG and advanced-board pages reach parity with the established
+        # Tk tool. Its CAN-OTA workflow is real, never a mock-up.
+        try:
+            from qt_flasher import run_qtquick
+        except ImportError as exc:
+            print(
+                "ERROR: Qt Quick mode requires PySide6. "
+                "Install this repository's requirements.txt first. "
+                f"Details: {exc}",
+                file=sys.stderr,
+            )
+            return 2
+        return run_qtquick()
     from flasher_gui import FlasherGUI  # deferred: only needed once --cli is ruled out above, matching the tkinter import's own reasoning at the top of this file
 
     # Windows-only DPI awareness, requested before any Tk window exists -
@@ -285,4 +303,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

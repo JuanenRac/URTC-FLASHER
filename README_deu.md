@@ -18,7 +18,7 @@
 <p align="left">
   <img src="https://img.shields.io/badge/Lizenz-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Sprache-Python-3776AB.svg" alt="Python">
-  <img src="https://img.shields.io/badge/UI-Tkinter-lightgrey.svg" alt="Tkinter">
+  <img src="https://img.shields.io/badge/UI-Tkinter%20%7C%20Qt%20Quick-38d4e6.svg" alt="Tkinter and Qt Quick">
   <img src="https://img.shields.io/badge/Protokoll-CAN--OTA-orange.svg" alt="CAN-OTA">
 </p>
 
@@ -154,6 +154,17 @@ grafische Laufzeitabhängigkeit. Das native URTC-Fenster-/Taskleisten-Symbol
 bleibt bewusst statisch.
 
 ### Visuelles Steuerpult
+
+Das gemeinsame **Qt-Quick**-Kommandopult steht für den echten CAN-OTA-Ablauf
+bereit:
+~~~
+python urtc_flasher.py --qtquick
+~~~
+Es verwendet dieselben Produktions-Transporte, Validierungen und den
+signierten Flash-Code wie die bewährte Oberfläche. Tkinter bleibt die
+Standardschnittstelle, bis die erweiterten SWD/JTAG- und
+Platineneinstellungsseiten Funktionsparität erreicht haben; verwenden Sie Qt
+Quick noch nicht für diese erweiterten Vorgänge.
 
 Der bewährte CAN-OTA- und SWD/JTAG-Ablauf bleibt erhalten und liegt nun auf
 einer dunkelblau-cyanfarbenen Steueroberfläche: Produktkopf, kontrastreiche

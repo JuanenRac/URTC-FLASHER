@@ -21,7 +21,7 @@ from tkinter import filedialog, messagebox, ttk
 import flasher_config
 from flasher_config import (
     _, _CONFIG_LOADED, APP_FLASH_ADDR, APP_MAX_SIZE, AVAILABLE_LANGUAGES, BANNER_IMAGE_PATH,
-    BOOTLOADER_FLASH_ADDR, BOOTLOADER_MAX_SIZE, CONFIG_FILE_PATH, DEFAULT_LANGUAGE,
+    BITRATE_500K_SLCAN_CODE, BOOTLOADER_FLASH_ADDR, BOOTLOADER_MAX_SIZE, CONFIG_FILE_PATH, DEFAULT_LANGUAGE,
     EXPANSION_BOARD_TYPES, MLX_SENSOR_VARIANTS, FIRMWARE_FOLDER, FIRMWARE_VERSION_MAJOR, FIRMWARE_VERSION_MINOR,
     FLASHER_AUTHOR, FLASHER_VERSION,
     HYDRA_UMC_ICON_FRAMES_DIR, ICON_IMAGE_PATH, LOGS_FOLDER, PYOCD_TARGET_NAME, SLCAN_BITRATES,
@@ -1262,10 +1262,14 @@ class FlasherGUI:
             try:
                 entries = list_firmware_files(log=self.log)
             except GitHubDownloadError as e:
-                self.root.after(0, lambda: status_var.set(str(e)))
+                # Captured now - 'e' itself is deleted the moment this except
+                # block exits, but the lambda below runs later, via root.after().
+                error_msg = str(e)
+                self.root.after(0, lambda: status_var.set(error_msg))
                 return
             except Exception as e:
-                self.root.after(0, lambda: status_var.set(_("ERR_GITHUB_UNEXPECTED", e=e)))
+                error_msg = _("ERR_GITHUB_UNEXPECTED", e=e)
+                self.root.after(0, lambda: status_var.set(error_msg))
                 return
 
             def _populate():
@@ -1310,9 +1314,12 @@ class FlasherGUI:
                     self.root.after(0, lambda: status_var.set(_("LBL_GITHUB_DOWNLOAD_DONE", name=entry["name"])))
                     self.root.after(0, self.scan_firmware_folder)
                 except GitHubDownloadError as e:
-                    self.root.after(0, lambda: status_var.set(str(e)))
+                    # Same capture-before-schedule fix as _load_list() above.
+                    error_msg = str(e)
+                    self.root.after(0, lambda: status_var.set(error_msg))
                 except Exception as e:
-                    self.root.after(0, lambda: status_var.set(_("ERR_GITHUB_UNEXPECTED", e=e)))
+                    error_msg = _("ERR_GITHUB_UNEXPECTED", e=e)
+                    self.root.after(0, lambda: status_var.set(error_msg))
                 finally:
                     self.root.after(0, lambda: download_btn.config(state="normal"))
 

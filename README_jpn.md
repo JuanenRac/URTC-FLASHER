@@ -18,7 +18,7 @@
 <p align="left">
   <img src="https://img.shields.io/badge/License-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
-  <img src="https://img.shields.io/badge/UI-Tkinter-lightgrey.svg" alt="Tkinter">
+  <img src="https://img.shields.io/badge/UI-Tkinter%20%7C%20Qt%20Quick-38d4e6.svg" alt="Tkinter and Qt Quick">
   <img src="https://img.shields.io/badge/Protocol-CAN--OTA-orange.svg" alt="CAN-OTA">
 </p>
 
@@ -149,6 +149,15 @@ PNG フレームにより、追加の GUI 実行時依存関係なしで Tkinter
 アイコンは設計上、静的なままです。
 
 ### ビジュアル・コマンドデッキ
+
+共有 **Qt Quick** コマンドデッキは、実機 CAN-OTA ワークフローで利用できます。
+~~~
+python urtc_flasher.py --qtquick
+~~~
+既存の画面と同じ本番用トランスポート、検証、および署名付きフラッシュコードを
+使用します。SWD/JTAG と基板設定の高度な画面が機能面で同等になるまで、既定の
+インターフェースは Tkinter のままです。それらの高度な操作にはまだ Qt Quick を
+使用しないでください。
 
 確立済みの CAN-OTA および SWD/JTAG ワークフローは維持したまま、ダークネイビー/
 シアンの操作面に刷新しました。製品ヘッダー、高コントラストの接続カード、読みやすい

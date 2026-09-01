@@ -1,4 +1,8 @@
 pyserial>=3.5
+# Qt Quick is the shared desktop renderer used by HYDRA-UMC-UPDATER.  The
+# legacy Tk interface remains available during the staged migration, while
+# --qtquick exposes the real CAN-OTA command deck through the same engine.
+PySide6>=6.8,<7
 
 # Recommended minimum interpreter: Python 3.11+. Not enforced by this file
 # (pip has no clean way to gate on interpreter version here without also
