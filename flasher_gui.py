@@ -40,7 +40,7 @@ from flasher_github import list_firmware_files, download_file, GitHubDownloadErr
 from flasher_swd_tools import SWDFlashError, PyOCDCLI, CubeProgrammerCLI
 from flasher_validation import validate_firmware_file, validate_swd_image_file
 from hydra_umc_animation import AnimatedHydraUMCMark
-from hydra_umc_deck_widgets import RoundedDeckCard
+from hydra_umc_deck_widgets import RoundedDeckButton, RoundedDeckCard
 
 try:
     import serial
@@ -165,6 +165,14 @@ class FlasherGUI:
             parent, title, canvas_color=self.BG, panel_color=self.PANEL,
             border_color=self.BORDER, accent_color=self.ACCENT,
             text_color=self.TEXT,
+        )
+
+    def _new_deck_button(self, parent, text, command, *, accent=False, state="normal"):
+        """Create an Updater-style action while preserving Button semantics."""
+        return RoundedDeckButton(
+            parent, text=text, command=command, panel_color=self.PANEL_ALT,
+            border_color=self.BORDER, text_color=self.TEXT, muted_color=self.MUTED,
+            accent_color=self.ACCENT, accent=accent, state=state,
         )
 
     @staticmethod
@@ -316,9 +324,8 @@ class FlasherGUI:
         self.port_combo = ttk.Combobox(conn_frame, textvariable=self.port_var, width=20, state="readonly")
         self.port_combo.grid(row=row, column=1, **pad)
         ttk.Button(conn_frame, text=_("BTN_REFRESH"), command=self.refresh_ports).grid(row=row, column=2, **pad)
-        self.connect_btn = ttk.Button(
-            conn_frame, text=_("BTN_CONNECT"), command=self.toggle_connect,
-            style="Accent.TButton",
+        self.connect_btn = self._new_deck_button(
+            conn_frame, _("BTN_CONNECT"), self.toggle_connect, accent=True
         )
         self.connect_btn.grid(row=row, column=3, **pad)
         self.conn_status = ttk.Label(conn_frame, text=_("STATUS_NOT_CONNECTED"), foreground="red")
@@ -597,12 +604,13 @@ class FlasherGUI:
 
         flash_btn_row = ttk.Frame(act_frame)
         flash_btn_row.grid(row=8, column=0, columnspan=2, sticky="w", **pad)
-        self.flash_btn = ttk.Button(
-            flash_btn_row, text=_("BTN_FLASH_FIRMWARE"), command=self.start_flash,
-            style="Accent.TButton",
+        self.flash_btn = self._new_deck_button(
+            flash_btn_row, _("BTN_FLASH_FIRMWARE"), self.start_flash, accent=True
         )
         self.flash_btn.pack(side="left")
-        self.cancel_btn = ttk.Button(flash_btn_row, text=_("BTN_CANCEL"), command=self.cancel_flash, state="disabled")
+        self.cancel_btn = self._new_deck_button(
+            flash_btn_row, _("BTN_CANCEL"), self.cancel_flash, state="disabled"
+        )
         self.cancel_btn.pack(side="left", padx=(8, 0))
 
         # --- Free tool configuration (right column, top) - (0x1A2/0x1A3),
@@ -764,10 +772,9 @@ class FlasherGUI:
             foreground="gray", wraplength=680, justify="left",
         ).grid(row=9, column=0, columnspan=3, sticky="w", padx=8)
 
-        self.swd_flash_btn = ttk.Button(
-            swd_frame, text=_("BTN_FLASH_COMPLETE_CHIP"), command=self.start_swd_flash,
-            state="normal" if (self._pyocd_ok or self._cube_ok) else "disabled",
-            style="Accent.TButton",
+        self.swd_flash_btn = self._new_deck_button(
+            swd_frame, _("BTN_FLASH_COMPLETE_CHIP"), self.start_swd_flash,
+            accent=True, state="normal" if (self._pyocd_ok or self._cube_ok) else "disabled",
         )
         self.swd_flash_btn.grid(row=10, column=0, columnspan=3, sticky="w", **pad)
         ttk.Label(

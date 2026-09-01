@@ -28,7 +28,8 @@ build script) never changes the version - only a real build does.
 ### Added
 - A full dark navy/cyan command-deck presentation now wraps the established
   flashing UI: product/status header, real 16px rounded canvas cards on the
-  connection, CAN-OTA, SWD/JTAG and log surfaces, plus coherent tab surfaces,
+  connection, CAN-OTA, SWD/JTAG and log surfaces, 10px curved primary actions,
+  plus coherent tab surfaces,
   high-contrast controls, readable firmware table and a dark monospace
   verification log. It is visual-only; CAN-OTA/SWD command and safety flows
   are unchanged.
