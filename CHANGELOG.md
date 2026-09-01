@@ -25,7 +25,22 @@ build script) never changes the version - only a real build does.
 
 ## [Unreleased]
 
+### Added
+- **Real About window**, matching HYDRA-UMC-STUDIO's own `About.tsx` and
+  the ecosystem's PySide6 tools: the Tkinter About window now shows a
+  tagline, a one-paragraph description, and a real Version/Author/Email/
+  License info block, not just a banner and one line of text. New
+  `TITLE_ABOUT`/`ABOUT_TAGLINE`/`ABOUT_DESCRIPTION`/`ABOUT_VERSION`/
+  `ABOUT_AUTHOR`/`ABOUT_EMAIL`/`ABOUT_LICENSE` keys across all 7
+  languages, replacing the old `LBL_ABOUT_AUTHOR` - full key parity
+  verified across every language file.
+
 ### Fixed
+- `qt_flasher.py`'s SWD probe scan shadowed the module-level `serial`
+  import with a loop variable of the same name (`for serial in
+  CubeProgrammerCLI(...).list_probes()`) - harmless in that one function
+  today, but a real footgun for whoever edits it next expecting `serial`
+  to still mean the pyserial module. Renamed to `probe_serial`.
 - `flasher_gui.py`'s manual serial connect crashed with `NameError:
   BITRATE_500K_SLCAN_CODE` whenever the saved bitrate label didn't match a
   known entry (a blank or corrupted config value) - the constant was used
@@ -40,6 +55,16 @@ build script) never changes the version - only a real build does.
   comment).
 
 ### Added
+- The Qt Quick deck now includes a **Board snapshot** action after an active
+  CAN connection. It performs only the existing documented version, counter
+  and peripheral read queries and renders their responses in the deck; it
+  cannot alter firmware, persistent board configuration or option bytes.
+- The Qt Quick deck now exposes an **Advanced diagnostics** card for
+  non-destructive SWD/JTAG readiness: it reports the actual local pyOCD and
+  STM32CubeProgrammer executables and can enumerate USB debug probes through
+  their existing listing commands. It intentionally does not connect to,
+  erase, write or reset a target; full-chip SWD/JTAG programming remains in
+  the established Tkinter workflow pending physical validation.
 - The Qt Quick CAN-OTA flow snapshots the selected firmware before its worker
   starts and locks firmware/transport selection while an operation is active.
   A running update therefore cannot silently switch to another file from the

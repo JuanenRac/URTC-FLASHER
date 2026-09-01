@@ -15,6 +15,7 @@ import glob
 import os
 import sys
 import threading
+import time
 from pathlib import Path
 
 from PySide6.QtCore import QObject, Property, QUrl, Signal, Slot
@@ -22,8 +23,15 @@ from PySide6.QtGui import QGuiApplication, QIcon
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuickControls2 import QQuickStyle
 
-from flasher_config import APP_FLASH_ADDR, APP_MAX_SIZE, BITRATE_500K_SLCAN_CODE, FIRMWARE_FOLDER, FLASHER_VERSION, ICON_IMAGE_PATH
+from flasher_config import (
+    APP_FLASH_ADDR, APP_MAX_SIZE, BITRATE_500K_SLCAN_CODE,
+    CAN_ID_ERROR_COUNTERS_RESPONSE, CAN_ID_EXPANSION_TYPE_RESP,
+    CAN_ID_MLX_VARIANT_RESP, CAN_ID_PERIPHERAL_INFO_RESP,
+    CAN_ID_QUERY_ERROR_COUNTERS, EXPANSION_BOARD_TYPES, FIRMWARE_FOLDER,
+    FLASHER_VERSION, ICON_IMAGE_PATH, MLX_SENSOR_VARIANTS, _,
+)
 from flasher_protocol import FlashError, URTCFlasher
+from flasher_swd_tools import CubeProgrammerCLI, PyOCDCLI
 from flasher_transports import SLCAN, SocketCAN, list_socketcan_interfaces
 from flasher_validation import validate_firmware_file
 
@@ -42,6 +50,8 @@ class FlasherQtBridge(QObject):
     _connectionResult = Signal(object, str)
     _flashResult = Signal(str)
     _flashProgress = Signal(int)
+    _swdProbeResult = Signal("QVariantList")
+    _snapshotResult = Signal(object, str)
     _logRequested = Signal(str)
 
     def __init__(self) -> None:
@@ -58,12 +68,19 @@ class FlasherQtBridge(QObject):
         self._logs: list[str] = []
         self._cancel_requested = False
         self._flash_path = ""
+        self._swd_scanning = False
+        self._swd_tools: list[dict[str, object]] = []
+        self._swd_probes: list[dict[str, str]] = []
+        self._board_snapshot: list[dict[str, object]] = []
         self._connectionResult.connect(self._on_connection_result)
         self._flashResult.connect(self._on_flash_result)
         self._flashProgress.connect(self._on_flash_progress)
+        self._swdProbeResult.connect(self._on_swd_probe_result)
+        self._snapshotResult.connect(self._on_snapshot_result)
         self._logRequested.connect(self._append_log)
         self.scanPorts()
         self.scanFirmware()
+        self.scanSwdCapabilities()
 
     @Property(str, constant=True)
     def title(self) -> str:
@@ -76,6 +93,35 @@ class FlasherQtBridge(QObject):
     @Property(str, constant=True)
     def iconSource(self) -> str:
         return QUrl.fromLocalFile(str(Path(ICON_IMAGE_PATH))).toString()
+
+    @Slot(str, result=str)
+    def uiText(self, key: str) -> str:
+        """Expose the established .lng lookup to the QML surface."""
+        translated = _(key)
+        return translated if translated != key else {
+            "QT_CONNECTION": "CONNECTION",
+            "QT_FIRMWARE_INVENTORY": "FIRMWARE INVENTORY",
+            "QT_SCAN_FIRMWARE": "SCAN FIRMWARE",
+            "QT_VALID": "VALID",
+            "QT_INVALID": "INVALID",
+            "QT_UPDATE_CHECKPOINTS": "CAN-OTA UPDATE CHECKPOINTS",
+            "QT_CHECKPOINTS": "1  Validate selected firmware\n2  Enter signed bootloader session\n3  Transfer and verify backup image\n4  Confirm safe completion",
+            "QT_START_CAN_OTA": "START CAN-OTA",
+            "QT_ACTIVITY_LOG": "ACTIVITY LOG",
+            "QT_CONFIRM_CAN_OTA": "Confirm CAN-OTA update",
+            "QT_CONFIRM_CAN_OTA_BODY": "The selected application firmware will be sent to the connected board. Continue?",
+            "QT_CONFIRM_FLASH": "CONFIRM FLASH",
+            "QT_ADVANCED_DIAGNOSTICS": "ADVANCED DIAGNOSTICS",
+            "QT_SWD_JTAG_READONLY": "SWD/JTAG READ-ONLY DISCOVERY",
+            "QT_SCAN_PROBES": "SCAN PROBES",
+            "QT_NOT_INSTALLED": "NOT INSTALLED",
+            "QT_NO_PROBES": "No USB debug probe detected.",
+            "QT_SWD_SAFETY_NOTE": "Discovery only: no target is erased, written or reset. Full-chip SWD/JTAG programming remains in the established Tkinter workflow until hardware validation.",
+            "QT_BOARD_SNAPSHOT": "BOARD SNAPSHOT",
+            "QT_READ_BOARD_STATE": "READ BOARD STATE",
+            "QT_BOARD_SNAPSHOT_HELP": "Active diagnostics send documented read queries only. No persistent setting, firmware or option byte is changed.",
+            "QT_NO_BOARD_SNAPSHOT": "No board state read yet.",
+        }.get(key, key)
 
     @Property("QVariantList", notify=changed)
     def ports(self) -> list[str]:
@@ -116,6 +162,26 @@ class FlasherQtBridge(QObject):
     @Property(bool, notify=changed)
     def canFlash(self) -> bool:
         return self.connected and bool(self._selected_firmware) and not self._busy
+
+    @Property("QVariantList", notify=changed)
+    def swdTools(self) -> list[dict[str, object]]:
+        return self._swd_tools
+
+    @Property("QVariantList", notify=changed)
+    def swdProbes(self) -> list[dict[str, str]]:
+        return self._swd_probes
+
+    @Property(bool, notify=changed)
+    def swdScanning(self) -> bool:
+        return self._swd_scanning
+
+    @Property("QVariantList", notify=changed)
+    def boardSnapshot(self) -> list[dict[str, object]]:
+        return self._board_snapshot
+
+    @Property(bool, notify=changed)
+    def canReadBoardSnapshot(self) -> bool:
+        return self.connected and not self._busy
 
     def _log(self, message: str) -> None:
         """Queue logs from CAN worker threads onto the Qt GUI thread."""
@@ -182,6 +248,201 @@ class FlasherQtBridge(QObject):
         ):
             self._selected_firmware = path
             self.changed.emit()
+
+    @Slot()
+    def scanSwdCapabilities(self) -> None:
+        """Report actual local SWD tooling without touching a target device."""
+        pyocd = PyOCDCLI()
+        cube = CubeProgrammerCLI()
+        self._swd_tools = [
+            {"name": "pyOCD", "available": bool(pyocd.exe), "path": pyocd.exe or ""},
+            {
+                "name": "STM32CubeProgrammer",
+                "available": bool(cube.exe),
+                "path": cube.exe or "",
+            },
+        ]
+        self._log(
+            "SWD_CAPABILITIES "
+            + " ".join(
+                f"{item['name']}={'READY' if item['available'] else 'MISSING'}"
+                for item in self._swd_tools
+            )
+        )
+        self.changed.emit()
+
+    @Slot()
+    def scanSwdProbes(self) -> None:
+        """Enumerate USB debug probes only; never connect to or program a chip."""
+        if self._busy or self._swd_scanning:
+            return
+        self.scanSwdCapabilities()
+        if not any(bool(item["available"]) for item in self._swd_tools):
+            self._swd_probes = []
+            self._log("SWD_PROBE_SCAN_SKIPPED no supported programmer found")
+            self.changed.emit()
+            return
+        self._swd_scanning = True
+        self._swd_probes = []
+        self._log("SWD_PROBE_SCAN_STARTED read-only USB enumeration")
+        self.changed.emit()
+        threading.Thread(
+            target=self._scan_swd_probes_worker,
+            daemon=True,
+            name="urtc-qt-swd-probe-scan",
+        ).start()
+
+    def _scan_swd_probes_worker(self) -> None:
+        probes: list[dict[str, str]] = []
+        if PyOCDCLI.available():
+            try:
+                for uid, description in PyOCDCLI(log=self._log).list_probes():
+                    probes.append(
+                        {"tool": "pyOCD", "identifier": uid, "description": description}
+                    )
+            except Exception as exc:
+                self._log(f"SWD_PROBE_SCAN_PYOCD_FAILED {exc}")
+        if CubeProgrammerCLI.available():
+            try:
+                for probe_serial in CubeProgrammerCLI(log=self._log).list_probes():
+                    probes.append(
+                        {
+                            "tool": "STM32CubeProgrammer",
+                            "identifier": probe_serial,
+                            "description": "ST-LINK serial",
+                        }
+                    )
+            except Exception as exc:
+                self._log(f"SWD_PROBE_SCAN_CUBE_FAILED {exc}")
+        self._swdProbeResult.emit(probes)
+
+    @Slot("QVariantList")
+    def _on_swd_probe_result(self, probes: list[dict[str, str]]) -> None:
+        # One physical ST-Link may be reported by both tools.  Keep both
+        # reports visible because they prove which CLI can address it later.
+        self._swd_probes = probes
+        self._swd_scanning = False
+        self._log(f"SWD_PROBE_SCAN_COMPLETE count={len(probes)}")
+        self.changed.emit()
+
+    @Slot()
+    def readBoardSnapshot(self) -> None:
+        """Read documented runtime identity/configuration responses only."""
+        if not self.canReadBoardSnapshot:
+            self._log("BOARD_SNAPSHOT_BLOCKED connect first")
+            return
+        transport = self._transport
+        if transport is None:
+            return
+        self._set_state(status="READING BOARD STATE", busy=True)
+        self._log("BOARD_SNAPSHOT_STARTED documented read queries only")
+        threading.Thread(
+            target=self._read_board_snapshot_worker,
+            args=(transport,),
+            daemon=True,
+            name="urtc-qt-board-snapshot",
+        ).start()
+
+    @staticmethod
+    def _wait_for_frame(transport, expected_id: int, minimum_size: int, timeout: float = 1.5):
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            frame = transport.read_frame(timeout=0.1)
+            if frame is not None and frame[0] == expected_id and len(frame[1]) >= minimum_size:
+                return frame[1]
+        return None
+
+    def _read_board_snapshot_worker(self, transport) -> None:
+        items: list[dict[str, object]] = []
+        try:
+            version = URTCFlasher(transport, log=self._log).query_version()
+            if version is None:
+                items.append({"label": "Version", "value": "No response", "ok": False})
+            else:
+                suffix = ""
+                if version["bootloader_version"] is not None:
+                    suffix = " / bootloader " + ".".join(map(str, version["bootloader_version"]))
+                items.append(
+                    {
+                        "label": "Version",
+                        "value": (
+                            f"{version['responder']} v{version['version_major']}."
+                            f"{version['version_minor']} / HW 0x{version['hardware_id']:08X}{suffix}"
+                        ),
+                        "ok": True,
+                    }
+                )
+
+            transport.send_frame(CAN_ID_QUERY_ERROR_COUNTERS, b"")
+            counters = self._wait_for_frame(transport, CAN_ID_ERROR_COUNTERS_RESPONSE, 2)
+            if counters is None:
+                items.append({"label": "CAN health", "value": "No response", "ok": False})
+            else:
+                tec, rec = counters[0], counters[1]
+                items.append(
+                    {
+                        "label": "CAN health",
+                        "value": f"TEC {tec} / REC {rec}",
+                        "ok": tec == 0 and rec == 0,
+                    }
+                )
+
+            transport.send_frame(CAN_ID_EXPANSION_TYPE_RESP, b"")
+            expansion = self._wait_for_frame(transport, CAN_ID_EXPANSION_TYPE_RESP, 1)
+            expansion_value = expansion[0] if expansion is not None else -1
+            items.append(
+                {
+                    "label": "Expansion",
+                    "value": (
+                        EXPANSION_BOARD_TYPES[expansion_value]
+                        if 0 <= expansion_value < len(EXPANSION_BOARD_TYPES)
+                        else "No response"
+                    ),
+                    "ok": expansion is not None,
+                }
+            )
+
+            transport.send_frame(CAN_ID_MLX_VARIANT_RESP, b"")
+            mlx = self._wait_for_frame(transport, CAN_ID_MLX_VARIANT_RESP, 1)
+            mlx_value = mlx[0] if mlx is not None else -1
+            items.append(
+                {
+                    "label": "MLX sensor",
+                    "value": (
+                        MLX_SENSOR_VARIANTS[mlx_value]
+                        if 0 <= mlx_value < len(MLX_SENSOR_VARIANTS)
+                        else "No response"
+                    ),
+                    "ok": mlx is not None,
+                }
+            )
+
+            transport.send_frame(CAN_ID_PERIPHERAL_INFO_RESP, b"")
+            peripheral = self._wait_for_frame(transport, CAN_ID_PERIPHERAL_INFO_RESP, 2)
+            items.append(
+                {
+                    "label": "Peripheral",
+                    "value": (
+                        f"type 0x{peripheral[0]:02X} / serial {peripheral[1]}"
+                        if peripheral is not None
+                        else "No response"
+                    ),
+                    "ok": peripheral is not None,
+                }
+            )
+            self._snapshotResult.emit(items, "")
+        except Exception as exc:
+            self._snapshotResult.emit(items, str(exc))
+
+    @Slot(object, str)
+    def _on_snapshot_result(self, items: list[dict[str, object]], error: str) -> None:
+        self._board_snapshot = items
+        if error:
+            self._set_state(status="BOARD STATE FAILED", busy=False)
+            self._log(f"BOARD_SNAPSHOT_FAILED {error}")
+        else:
+            self._set_state(status="BOARD STATE COMPLETE", busy=False)
+            self._log(f"BOARD_SNAPSHOT_COMPLETE fields={len(items)}")
 
     @Slot()
     def toggleConnection(self) -> None:

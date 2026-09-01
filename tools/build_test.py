@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -51,10 +52,27 @@ def validate_qtquick_deck() -> None:
     qml_sources = sorted((ROOT / "assets" / "qml").glob("*.qml"))
     if not qml_sources:
         fail("Qt Quick stack is missing assets/qml/*.qml")
+    qml_keys: set[str] = set()
     for source in qml_sources:
         text = source.read_text(encoding="utf-8", errors="replace")
         if "import QtQuick" not in text:
             fail(f"Qt Quick import missing from {source.relative_to(ROOT)}")
+        qml_keys.update(re.findall(r'uiText\("([A-Z0-9_]+)"\)', text))
+    language_files = sorted((ROOT / "language").glob("*.lng"))
+    if qml_keys and language_files:
+        for language_file in language_files:
+            keys = {
+                line.split("=", 1)[0].strip()
+                for line in language_file.read_text(encoding="utf-8", errors="replace").splitlines()
+                if "=" in line and not line.lstrip().startswith("#")
+            }
+            missing = sorted(qml_keys - keys)
+            if missing:
+                fail(
+                    f"QML language keys missing from {language_file.relative_to(ROOT)}: "
+                    + ", ".join(missing)
+                )
+        print(f"QML_I18N=PASS keys={len(qml_keys)} languages={len(language_files)}")
     print(f"QML_SOURCE=PASS files={len(qml_sources)} runtime=manual-visual-check")
 
 

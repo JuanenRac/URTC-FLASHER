@@ -12,6 +12,28 @@ SWD/JTAG full-chip programming path is deliberately GUI-only. Every
 example below was captured from a real run of the installed script — not
 written from memory.
 
+## Qt Quick diagnostic surface
+
+The command python urtc_flasher.py --qtquick opens the optional Qt Quick command deck.
+Its **Advanced diagnostics** card can detect whether `pyOCD` and
+`STM32CubeProgrammer` are installed and can enumerate USB debug probes using
+their existing read-only listing commands. This is deliberately not an SWD
+programming interface: the scan neither connects to a target chip nor erases,
+writes or resets one. The established Tkinter SWD/JTAG workflow remains the
+only full-chip programming surface until the complete operation is validated
+against physical hardware.
+
+After a normal active CAN connection, the deck's **Board snapshot** action
+uses only documented query frames to collect the board version, CAN error
+counters, expansion type, MLX variant and peripheral information. It never
+writes configuration, firmware or option bytes. It is unavailable in
+listen-only mode because these protocol queries require a response from the
+board.
+
+The non-versioning build check also extracts every `uiText("KEY")` call from
+the QML deck and requires that key in all seven shipped language files. It
+checks localization coverage without launching Qt or opening a transport.
+
 ## Usage
 
 ```

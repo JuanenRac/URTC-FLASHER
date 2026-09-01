@@ -99,13 +99,13 @@ ApplicationWindow {
         anchors.centerIn: parent
         modal: true
         width: 440
-        title: "Confirm CAN-OTA update"
+        title: flasherBackend.uiText("QT_CONFIRM_CAN_OTA")
         standardButtons: Dialog.Cancel
         background: Rectangle { color: window.panel; radius: 16; border.width: 1; border.color: window.panelBorder }
         contentItem: ColumnLayout {
             spacing: 14
-            Text { text: "The selected application firmware will be sent to the connected board. Continue?"; color: window.textPrimary; wrapMode: Text.WordWrap; Layout.preferredWidth: 380 }
-            GameButton { text: "CONFIRM FLASH"; Layout.fillWidth: true; onClicked: { confirm.close(); flasherBackend.confirmCanOtaFlash() } }
+            Text { text: flasherBackend.uiText("QT_CONFIRM_CAN_OTA_BODY"); color: window.textPrimary; wrapMode: Text.WordWrap; Layout.preferredWidth: 380 }
+            GameButton { text: flasherBackend.uiText("QT_CONFIRM_FLASH"); Layout.fillWidth: true; onClicked: { confirm.close(); flasherBackend.confirmCanOtaFlash() } }
         }
     }
 
@@ -120,16 +120,16 @@ ApplicationWindow {
                 anchors.fill: parent
                 anchors.margins: 16
                 spacing: 10
-                Text { text: "CONNECTION"; color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
+                Text { text: flasherBackend.uiText("QT_CONNECTION"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
                 ComboBox { id: ports; Layout.fillWidth: true; model: flasherBackend.ports; enabled: !flasherBackend.connected && !flasherBackend.busy; onActivated: flasherBackend.selectPort(currentText) }
                 RowLayout {
                     Layout.fillWidth: true
-                    GameButton { text: "REFRESH"; accent: "#24465e"; Layout.fillWidth: true; onClicked: flasherBackend.scanPorts() }
-                    GameButton { text: flasherBackend.connected ? "DISCONNECT" : "CONNECT"; Layout.fillWidth: true; enabled: !flasherBackend.busy; onClicked: flasherBackend.toggleConnection() }
+                    GameButton { text: flasherBackend.uiText("BTN_REFRESH"); accent: "#24465e"; Layout.fillWidth: true; onClicked: flasherBackend.scanPorts() }
+                    GameButton { text: flasherBackend.connected ? flasherBackend.uiText("BTN_DISCONNECT") : flasherBackend.uiText("BTN_CONNECT"); Layout.fillWidth: true; enabled: !flasherBackend.busy; onClicked: flasherBackend.toggleConnection() }
                 }
                 Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
-                Text { text: "FIRMWARE INVENTORY"; color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
-                    GameButton { text: "SCAN FIRMWARE"; accent: "#24465e"; Layout.fillWidth: true; enabled: !flasherBackend.busy; onClicked: flasherBackend.scanFirmware() }
+                Text { text: flasherBackend.uiText("QT_FIRMWARE_INVENTORY"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
+                    GameButton { text: flasherBackend.uiText("QT_SCAN_FIRMWARE"); accent: "#24465e"; Layout.fillWidth: true; enabled: !flasherBackend.busy; onClicked: flasherBackend.scanFirmware() }
                 ListView {
                     id: files
                     Layout.fillWidth: true
@@ -148,7 +148,7 @@ ApplicationWindow {
                             anchors.fill: parent
                             anchors.margins: 9
                             Text { text: modelData.name; color: textPrimary; font.bold: true; elide: Text.ElideRight; width: parent.width }
-                            Text { text: (modelData.valid ? "VALID • " : "INVALID • ") + modelData.reason; color: modelData.valid ? "#43db9b" : "#ee6b80"; font.pixelSize: 10; width: parent.width; elide: Text.ElideRight }
+                            Text { text: (modelData.valid ? flasherBackend.uiText("QT_VALID") + " • " : flasherBackend.uiText("QT_INVALID") + " • ") + modelData.reason; color: modelData.valid ? "#43db9b" : "#ee6b80"; font.pixelSize: 10; width: parent.width; elide: Text.ElideRight }
                         }
                         MouseArea { anchors.fill: parent; enabled: modelData.valid && !flasherBackend.busy; onClicked: flasherBackend.selectFirmware(modelData.path) }
                     }
@@ -162,8 +162,8 @@ ApplicationWindow {
                 anchors.fill: parent
                 anchors.margins: 16
                 spacing: 12
-                Text { text: "CAN-OTA UPDATE CHECKPOINTS"; color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 14 }
-                Text { text: "1  Validate selected firmware\n2  Enter signed bootloader session\n3  Transfer and verify backup image\n4  Confirm safe completion"; color: muted; font.family: "Bahnschrift"; font.pixelSize: 12; lineHeight: 1.55 }
+                Text { text: flasherBackend.uiText("QT_UPDATE_CHECKPOINTS"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 14 }
+                Text { text: flasherBackend.uiText("QT_CHECKPOINTS"); color: muted; font.family: "Bahnschrift"; font.pixelSize: 12; lineHeight: 1.55 }
                 ProgressBar {
                     Layout.fillWidth: true
                     value: flasherBackend.progress / 100
@@ -173,19 +173,92 @@ ApplicationWindow {
                 Text { text: flasherBackend.progress + "%"; color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 20 }
                 RowLayout {
                     Layout.fillWidth: true
-                    GameButton { text: "START CAN-OTA"; Layout.fillWidth: true; enabled: flasherBackend.canFlash; onClicked: confirm.open() }
-                    GameButton { text: "CANCEL"; accent: "#7c3543"; enabled: flasherBackend.busy; onClicked: flasherBackend.cancelFlash() }
+                    GameButton { text: flasherBackend.uiText("QT_START_CAN_OTA"); Layout.fillWidth: true; enabled: flasherBackend.canFlash; onClicked: confirm.open() }
+                    GameButton { text: flasherBackend.uiText("BTN_CANCEL"); accent: "#7c3543"; enabled: flasherBackend.busy; onClicked: flasherBackend.cancelFlash() }
                 }
                 Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
-                Text { text: "ACTIVITY LOG"; color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
+                Text { text: flasherBackend.uiText("QT_BOARD_SNAPSHOT"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
+                Text { text: flasherBackend.uiText("QT_BOARD_SNAPSHOT_HELP"); color: muted; font.pixelSize: 9; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                GameButton { text: flasherBackend.uiText("QT_READ_BOARD_STATE"); accent: "#24465e"; Layout.fillWidth: true; enabled: flasherBackend.canReadBoardSnapshot; onClicked: flasherBackend.readBoardSnapshot() }
+                Text { visible: flasherBackend.boardSnapshot.length === 0; text: flasherBackend.uiText("QT_NO_BOARD_SNAPSHOT"); color: muted; font.pixelSize: 9 }
+                ListView {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: Math.min(contentHeight, 105)
+                    visible: flasherBackend.boardSnapshot.length > 0
+                    model: flasherBackend.boardSnapshot
+                    clip: true
+                    spacing: 2
+                    delegate: Text {
+                        required property var modelData
+                        text: modelData.label + ": " + modelData.value
+                        color: modelData.ok ? "#43db9b" : "#f7b955"
+                        font.family: "Cascadia Mono"
+                        font.pixelSize: 9
+                        width: parent.width
+                        elide: Text.ElideRight
+                    }
+                }
+                Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
+                Text { text: flasherBackend.uiText("QT_ACTIVITY_LOG"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
                 ListView {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     model: flasherBackend.logs
                     clip: true
                     delegate: Text { required property string modelData; text: modelData; color: muted; font.family: "Cascadia Mono"; font.pixelSize: 10; width: parent.width; wrapMode: Text.WrapAnywhere }
+                    }
+                }
+                Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
+                Text { text: flasherBackend.uiText("QT_ADVANCED_DIAGNOSTICS"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
+                Text { text: flasherBackend.uiText("QT_SWD_JTAG_READONLY"); color: muted; font.family: "Bahnschrift"; font.pixelSize: 10 }
+                Repeater {
+                    model: flasherBackend.swdTools
+                    delegate: Text {
+                        required property var modelData
+                        text: modelData.name + ": " + (modelData.available ? modelData.path : flasherBackend.uiText("QT_NOT_INSTALLED"))
+                        color: modelData.available ? "#43db9b" : "#ee6b80"
+                        font.family: "Cascadia Mono"
+                        font.pixelSize: 9
+                        width: parent.width
+                        elide: Text.ElideMiddle
+                    }
+                }
+                GameButton {
+                    text: flasherBackend.swdScanning ? "..." : flasherBackend.uiText("QT_SCAN_PROBES")
+                    accent: "#24465e"
+                    Layout.fillWidth: true
+                    enabled: !flasherBackend.busy && !flasherBackend.swdScanning
+                    onClicked: flasherBackend.scanSwdProbes()
+                }
+                ListView {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: Math.min(contentHeight, 78)
+                    visible: flasherBackend.swdProbes.length > 0
+                    model: flasherBackend.swdProbes
+                    clip: true
+                    delegate: Text {
+                        required property var modelData
+                        text: modelData.tool + " • " + modelData.identifier + " — " + modelData.description
+                        color: "#43db9b"
+                        font.family: "Cascadia Mono"
+                        font.pixelSize: 9
+                        width: parent.width
+                        elide: Text.ElideMiddle
+                    }
+                }
+                Text {
+                    visible: !flasherBackend.swdScanning && flasherBackend.swdProbes.length === 0
+                    text: flasherBackend.uiText("QT_NO_PROBES")
+                    color: muted
+                    font.pixelSize: 9
+                }
+                Text {
+                    text: flasherBackend.uiText("QT_SWD_SAFETY_NOTE")
+                    color: muted
+                    font.pixelSize: 8
+                    wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
                 }
             }
         }
-    }
 }
