@@ -992,14 +992,3 @@ URTC Flasher の著作権は (c) 2026 JuanenRac（Electro Hobby 3D）に帰属�
 **JuanenRac**（Electro Hobby 3D）
 📧 electrohobby3d@gmail.com
 📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
-
-## 🛠️ BUILD & RUN
-
-リリースビルドの前に、バージョンを変更しないビルドチェックを使用してください。
-
-| 操作 | Windows | Linux / macOS |
-|---|---|---|
-| ビルドチェック（バージョンと CHANGELOG を変更しない） | `build-test.bat` | `./build-test.sh` |
-| 実行 / 開発（提供されている場合） | `run*.bat` または `dev*.bat` | `./run*.sh` または `./dev*.sh` |
-
-`build-test.bat` と `build-test.sh` は、`hydra-umc.project.json` をインクリメントせず、`CHANGELOG.md` も変更せずにプロジェクトのスタックをコンパイルまたは検証します。通常のコンパイラ出力だけが作成される場合があります。既存の `build*.bat`、`build*.sh`、`run*`、`dev*` は、各プロジェクト固有のバージョン化または実行時の動作を維持します。その動作が必要な場合はそれらを使用してください。
