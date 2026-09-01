@@ -982,7 +982,7 @@ JSON 数値（`50580689`）のどちらも受け付けます——ファイル�
 
 **🛠️ 補完ツール：** [URTC-SMART-RACK](https://github.com/JuanenRac/URTC-SMART-RACK)、[URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL)、[HYDRA-UMC-WATCH](https://github.com/JuanenRac/HYDRA-UMC-WATCH)、[HYDRA-UMC-DASHBOARD-AI](https://github.com/JuanenRac/HYDRA-UMC-DASHBOARD-AI)
 
-## 📜 ライセンスと著作権表示
+## 📜 ライセンス
 
 URTC Flasher の著作権は (c) 2026 JuanenRac（Electro Hobby 3D）に帰属します。本プロジェクトまたはその派生物を配布する際は、この表示を必ず含めてください。
 

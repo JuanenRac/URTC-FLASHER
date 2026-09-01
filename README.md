@@ -932,7 +932,7 @@ This project is part of a larger robotics ecosystem by the same author (JuanenRa
 
 **🛠️ Complementary Tools:** [URTC-SMART-RACK](https://github.com/JuanenRac/URTC-SMART-RACK), [URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL), [HYDRA-UMC-WATCH](https://github.com/JuanenRac/HYDRA-UMC-WATCH), [HYDRA-UMC-DASHBOARD-AI](https://github.com/JuanenRac/HYDRA-UMC-DASHBOARD-AI)
 
-## 📜 License and Copyright Notices
+## 📜 LICENSE
 
 URTC Flasher is (c) 2026 JuanenRac (Electro Hobby 3D). This notice must
 be included in any distributions of this project or derivative works.
@@ -967,7 +967,7 @@ If you build on this project, keep the licensing split in mind: code
 changes should stay GPL-3.0, documentation derivatives should stay CC
 BY-SA - each with attribution back to this project and its author.
 
-## 👤 Author
+## 👤 AUTHOR
 
 **JuanenRac** (Electro Hobby 3D)
 📧 electrohobby3d@gmail.com

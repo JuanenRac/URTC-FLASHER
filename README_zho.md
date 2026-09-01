@@ -777,7 +777,7 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 
 **🛠️ 配套工具：** [URTC-SMART-RACK](https://github.com/JuanenRac/URTC-SMART-RACK)、[URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL)、[HYDRA-UMC-WATCH](https://github.com/JuanenRac/HYDRA-UMC-WATCH)、[HYDRA-UMC-DASHBOARD-AI](https://github.com/JuanenRac/HYDRA-UMC-DASHBOARD-AI)
 
-## 📜 许可证与版权声明
+## 📜 许可证
 
 URTC Flasher 版权所有 (c) 2026 JuanenRac（Electro Hobby 3D）。分发本项目
 或其衍生作品时必须包含此声明。
