@@ -687,36 +687,49 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 
 ## 📂 仓库结构
 
+`assets/` 目录还包含 `HYDRA_UMC_ICON.svg`（维护中的动画矢量源文件）
+和 `hydra_umc_icon_frames/`（其随附的十二帧 Tkinter PNG 帧）。
+`tools/render_hydra_umc_icon_frames.py` 在开发期间从 SVG 重新生成
+这些帧；运行应用程序并不需要它。
+
 ```
 ├── assets/
 │   ├── URTC_APP_ICON.svg          <- 共享的应用/任务栏图标源文件（矢量图）
 │   ├── URTC_LOGO_FLASHER.svg      <- 横幅源文件（矢量图），启动时居中显示 5 秒
+│   ├── HYDRA_UMC_ICON.svg         <- 维护中的动画 HYDRA-UMC 矢量源文件
+│   ├── hydra_umc_icon_frames/     <- 由上方 SVG 渲染出的十二帧 Tkinter PNG 帧
+│   ├── qml/
+│   │   └── FlasherDeck.qml        <- `--qtquick` CAN-OTA 指令面板的 Qt Quick UI
 │   ├── urtc_banner.png            <- 由上方的 .svg 渲染而成，显示在窗口顶部
 │   ├── urtc_icon.ico              <- Windows 任务栏/窗口图标
 │   └── urtc_icon.png              <- Linux 任务栏/窗口图标
 ├── firmware/
-│   ├── URTC_V1.1_F303CC.bin       <- 当前的主板应用固件
-│   ├── URTC_v1.0_F303CC.bin       <- 较旧的主板构建版本，保留作为“多个有效文件”
-│   │                                  的真实示例（见上方第 3 节）
-│   ├── URTC_BOOTLOADER.bin        <- 主板引导程序（仅限 SWD/JTAG，从 CAN-OTA
-│   │                                  固件列表中过滤掉——见上方第 3 节）
-│   ├── URTC_SLAVE_APP.bin         <- 扩展从属应用程序（仅限高级扩展板）
-│   └── URTC_SLAVE_BOOTLOADER.bin  <- 扩展从属引导程序
+│   ├── URTC_MAIN_FIRMWARE_v0.2.5.bin     <- 当前的主板应用固件
+│   ├── URTC_MAIN_BOOTLOADER_v0.3.4.bin   <- 主板引导程序（仅限 SWD/JTAG，从 CAN-OTA
+│   │                                         固件列表中过滤掉——见上方第 3 节）
+│   ├── URTC_SLAVE_FIRMWARE_v0.1.4.bin    <- 扩展从属应用程序（仅限高级扩展板）
+│   └── URTC_SLAVE_BOOTLOADER_v0.1.7.bin  <- 扩展从属引导程序
 ├── images/
-│   ├── URTC_FLASHER_V1_1.png      <- 真实的窗口截图，显示于上方“照片”一节
-│   └── URTC_LOGO_FLASHER.svg      <- 上方 assets/URTC_LOGO_FLASHER.svg 的画廊副本
+│   ├── URTC_FLASHER_BANNER.svg    <- 显示在本 README 顶部的 Logo 横幅
+│   └── URTC_FLASHER_V1_1.png      <- 真实的窗口截图，显示于上方“照片”一节
 ├── language/
 │   ├── english.lng                <- 默认语言，纯 KEY=Value 键值对
 │   ├── spanish.lng
 │   ├── italian.lng
 │   ├── french.lng
-│   └── german.lng
+│   ├── german.lng
+│   ├── japanese.lng
+│   └── chinese.lng
 ├── logs/                           <- 自动创建，每个会话一个文件
 ├── urtc_config.json.example        <- 可选的 urtc_config.json 覆盖文件的模板
 │                                       （见上方“更改 HMAC 密钥 / HardwareID”）——
 │                                       将其复制为 urtc_config.json 并编辑，
 │                                       而不是从零开始
 ├── urtc_flasher.py                <- 入口点：CLI 参数、启动画面、主窗口设置
+├── qt_flasher.py                  <- Qt Quick 前端——真实的 `--qtquick` CAN-OTA 指令面板，
+│                                       复用下方相同的传输/验证/协议类
+├── hydra_umc_animation.py         <- 用于 Tkinter 的动画 HYDRA-UMC 身份标识控件
+├── hydra_umc_deck_widgets.py      <- 实时诊断界面共享的圆角 HYDRA-UMC 指令面板控件
 ├── flasher_config.py              <- 配置文件 I/O、语言加载、协议常量
 ├── flasher_transports.py          <- SLCAN、SocketCAN、MockCAN
 ├── flasher_swd_tools.py           <- STM32CubeProgrammer / pyOCD 包装器
@@ -724,12 +737,22 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 ├── flasher_protocol.py            <- CAN OTA 状态机本身
 ├── flasher_github.py              <- 从 URTC 自身的 GitHub 仓库下载固件
 ├── flasher_gui.py                 <- 主窗口（FlasherGUI）及其菜单栏
-├── requirements.txt
+├── requirements.txt                <- pyserial>=3.5（Tkinter 测试器）+ PySide6>=6.8,<7（`--qtquick` 面板）
 ├── build_exe.bat                  <- Windows 独立构建
 ├── build_exe.sh                   <- Linux 独立构建
+├── build-test.bat                 <- 不递增版本号的构建/编译检查
+├── build-test.sh                  <- 同上，适用于 Linux
+├── bump_version.py                <- 里程表式版本递增，由构建脚本运行
+├── bump_manifest_version.py       <- 将 hydra-umc.project.json 的版本与原生版本同步（--sync）
 ├── URTC_Flasher.spec              <- 以上两个构建脚本所使用的 PyInstaller 规范文件
-├── README.md                      <- 本文件
-├── README_spa.md / README_ita.md / README_fra.md / README_deu.md  <- 翻译
+├── docs/
+│   └── CLI_REFERENCE.md           <- 命令行参数参考
+├── tools/
+│   ├── ci_validate.py                    <- CI 使用的 manifest/CHANGELOG/docs 校验
+│   └── render_hydra_umc_icon_frames.py   <- 从 SVG 重新生成 assets/hydra_umc_icon_frames/（仅限开发）
+├── README.md                      <- 英文原版
+├── README_zho.md                  <- 本文件
+├── README_spa.md / README_ita.md / README_fra.md / README_deu.md / README_jpn.md  <- 其他翻译
 ├── LICENSE
 ├── .gitattributes
 └── .gitignore

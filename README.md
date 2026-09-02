@@ -844,32 +844,41 @@ from the SVG during development; it is not required to run the application.
 ├── assets/
 │   ├── URTC_APP_ICON.svg          <- shared app/taskbar icon source (vector)
 │   ├── URTC_LOGO_FLASHER.svg      <- banner source (vector), shown centered for 5s on startup
+│   ├── HYDRA_UMC_ICON.svg         <- maintained animated HYDRA-UMC vector source
+│   ├── hydra_umc_icon_frames/     <- twelve bundled Tkinter PNG frames rendered from the SVG above
+│   ├── qml/
+│   │   └── FlasherDeck.qml        <- Qt Quick UI for the `--qtquick` CAN-OTA command deck
 │   ├── urtc_banner.png            <- rendered from the .svg above, shown at the top of the window
 │   ├── urtc_icon.ico              <- Windows taskbar/window icon
 │   └── urtc_icon.png              <- Linux taskbar/window icon
 ├── firmware/
-│   ├── URTC_V1.1_F303CC.bin       <- current main-board application firmware
-│   ├── URTC_v1.0_F303CC.bin       <- older main-board build, kept as a real example of "more than
-│   │                                  one valid file" (see section 3 above)
-│   ├── URTC_BOOTLOADER.bin        <- main-board bootloader (SWD/JTAG only, filtered out of the
-│   │                                  CAN-OTA firmware list - see section 3 above)
-│   ├── URTC_SLAVE_APP.bin         <- expansion slave application (advanced expansion boards only)
-│   └── URTC_SLAVE_BOOTLOADER.bin  <- expansion slave bootloader
+│   ├── URTC_MAIN_FIRMWARE_v0.2.5.bin     <- current main-board application firmware
+│   ├── URTC_MAIN_BOOTLOADER_v0.3.4.bin   <- main-board bootloader (SWD/JTAG only, filtered out of
+│   │                                         the CAN-OTA firmware list - see section 3 above)
+│   ├── URTC_SLAVE_FIRMWARE_v0.1.4.bin    <- expansion slave application (advanced expansion boards only)
+│   └── URTC_SLAVE_BOOTLOADER_v0.1.7.bin  <- expansion slave bootloader
 ├── images/
-│   ├── URTC_FLASHER_V1_1.png      <- real window screenshot, shown in the Photos section above
-│   └── URTC_LOGO_FLASHER.svg      <- gallery copy of assets/URTC_LOGO_FLASHER.svg above
+│   ├── URTC_FLASHER_BANNER.svg    <- logo banner shown at the top of this README
+│   └── URTC_FLASHER_V1_1.png      <- real window screenshot, shown in the Photos section above
 ├── language/
 │   ├── english.lng                <- default language, plain KEY=Value pairs
 │   ├── spanish.lng
 │   ├── italian.lng
 │   ├── french.lng
-│   └── german.lng
+│   ├── german.lng
+│   ├── japanese.lng
+│   └── chinese.lng
 ├── logs/                           <- created automatically, one file per session
 ├── urtc_config.json.example        <- template for the optional urtc_config.json override file
 │                                       (see "Changing the HMAC key / HardwareID" above) - copy it
 │                                       to urtc_config.json and edit, rather than starting from
 │                                       scratch
 ├── urtc_flasher.py                <- entry point: CLI args, splash screen, main window setup
+├── qt_flasher.py                  <- Qt Quick front end - real `--qtquick` CAN-OTA command deck,
+│                                       reuses the same transport/validation/protocol classes below
+├── hydra_umc_animation.py         <- animated HYDRA-UMC identity widget for Tkinter
+├── hydra_umc_deck_widgets.py      <- rounded HYDRA-UMC command-deck widgets shared by the
+│                                       live diagnostic surfaces
 ├── flasher_config.py              <- config file I/O, language loading, protocol constants
 ├── flasher_transports.py          <- SLCAN, SocketCAN, MockCAN
 ├── flasher_swd_tools.py           <- STM32CubeProgrammer / pyOCD wrappers
@@ -877,10 +886,19 @@ from the SVG during development; it is not required to run the application.
 ├── flasher_protocol.py            <- the CAN OTA state machine itself
 ├── flasher_github.py              <- downloads firmware from URTC's own GitHub repo
 ├── flasher_gui.py                 <- the main window (FlasherGUI) and its menu bar
-├── requirements.txt
+├── requirements.txt                <- pyserial>=3.5 (Tkinter tester) + PySide6>=6.8,<7 (`--qtquick` deck)
 ├── build_exe.bat                  <- Windows standalone build
 ├── build_exe.sh                   <- Linux standalone build
+├── build-test.bat                 <- non-versioning build/compile check
+├── build-test.sh                  <- same, for Linux
+├── bump_version.py                <- odometer-style version bump, run by the build scripts
+├── bump_manifest_version.py       <- syncs hydra-umc.project.json's version to the native one (--sync)
 ├── URTC_Flasher.spec              <- PyInstaller spec used by both build scripts above
+├── docs/
+│   └── CLI_REFERENCE.md           <- command-line flags reference
+├── tools/
+│   ├── ci_validate.py                    <- manifest/CHANGELOG/docs validation used by CI
+│   └── render_hydra_umc_icon_frames.py   <- regenerates assets/hydra_umc_icon_frames/ from the SVG (dev-only)
 ├── README.md                      <- this file
 ├── README_spa.md / README_ita.md / README_fra.md / README_deu.md / README_zho.md / README_jpn.md  <- translations
 ├── LICENSE

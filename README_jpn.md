@@ -890,37 +890,51 @@ JSON 数値（`50580689`）のどちらも受け付けます——ファイル�
 
 ## 📂 リポジトリ構成
 
+`assets/` ディレクトリには `HYDRA_UMC_ICON.svg`（維持されているアニメーション
+ベクターソース）と `hydra_umc_icon_frames/`（同梱の 12 枚の Tkinter 用 PNG
+フレーム）も含まれます。`tools/render_hydra_umc_icon_frames.py` は開発中に
+これらを SVG から再生成します。アプリケーションの実行には不要です。
+
 ```
 ├── assets/
 │   ├── URTC_APP_ICON.svg          <- 共有アプリ/タスクバーアイコンのソース（ベクター）
 │   ├── URTC_LOGO_FLASHER.svg      <- バナーのソース（ベクター）、起動時に 5 秒間中央表示
+│   ├── HYDRA_UMC_ICON.svg         <- 維持されているアニメーション HYDRA-UMC ベクターソース
+│   ├── hydra_umc_icon_frames/     <- 上記の SVG からレンダリングされた 12 枚の Tkinter 用 PNG フレーム
+│   ├── qml/
+│   │   └── FlasherDeck.qml        <- `--qtquick` CAN-OTA コマンドデッキの Qt Quick UI
 │   ├── urtc_banner.png            <- 上記 .svg からレンダリング、ウィンドウ上部に表示
 │   ├── urtc_icon.ico              <- Windows タスクバー/ウィンドウアイコン
 │   └── urtc_icon.png              <- Linux タスクバー/ウィンドウアイコン
 ├── firmware/
-│   ├── URTC_V1.1_F303CC.bin       <- 現在のメインボードアプリケーションファームウェア
-│   ├── URTC_v1.0_F303CC.bin       <- 古いメインボードビルド、「複数の有効なファイル」
-│   │                                  （上記のセクション 3 参照）の実際の例として保持
-│   ├── URTC_BOOTLOADER.bin        <- メインボードブートローダー（SWD/JTAG のみ、
-│   │                                  CAN-OTA ファームウェアリストからフィルタリング
-│   │                                  除外——上記のセクション 3 参照）
-│   ├── URTC_SLAVE_APP.bin         <- 拡張スレーブアプリケーション（Advanced 拡張ボードのみ）
-│   └── URTC_SLAVE_BOOTLOADER.bin  <- 拡張スレーブブートローダー
+│   ├── URTC_MAIN_FIRMWARE_v0.2.5.bin     <- 現在のメインボードアプリケーションファームウェア
+│   ├── URTC_MAIN_BOOTLOADER_v0.3.4.bin   <- メインボードブートローダー（SWD/JTAG のみ、
+│   │                                         CAN-OTA ファームウェアリストからフィルタリング
+│   │                                         除外——上記のセクション 3 参照）
+│   ├── URTC_SLAVE_FIRMWARE_v0.1.4.bin    <- 拡張スレーブアプリケーション（Advanced 拡張ボードのみ）
+│   └── URTC_SLAVE_BOOTLOADER_v0.1.7.bin  <- 拡張スレーブブートローダー
 ├── images/
-│   ├── URTC_FLASHER_V1_1.png      <- 実際のウィンドウのスクリーンショット、上記の写真セクションに表示
-│   └── URTC_LOGO_FLASHER.svg      <- 上記 assets/URTC_LOGO_FLASHER.svg のギャラリー用コピー
+│   ├── URTC_FLASHER_BANNER.svg    <- 本 README の先頭に表示される Logo バナー
+│   └── URTC_FLASHER_V1_1.png      <- 実際のウィンドウのスクリーンショット、上記の写真セクションに表示
 ├── language/
 │   ├── english.lng                <- デフォルト言語、プレーンな KEY=Value ペア
 │   ├── spanish.lng
 │   ├── italian.lng
 │   ├── french.lng
-│   └── german.lng
+│   ├── german.lng
+│   ├── japanese.lng
+│   └── chinese.lng
 ├── logs/                           <- 自動作成、セッションごとに 1 ファイル
 ├── urtc_config.json.example        <- 任意の urtc_config.json オーバーライドファイルの
 │                                       テンプレート（上記「HMAC キー / HardwareID の変更」
 │                                       参照）——ゼロから始めるのではなく、これを
 │                                       urtc_config.json にコピーして編集してください
 ├── urtc_flasher.py                <- エントリポイント：CLI 引数、スプラッシュ画面、メインウィンドウ設定
+├── qt_flasher.py                  <- Qt Quick フロントエンド——実際の `--qtquick` CAN-OTA
+│                                       コマンドデッキ、下記と同じ transport/validation/protocol クラスを再利用
+├── hydra_umc_animation.py         <- Tkinter 用のアニメーション HYDRA-UMC アイデンティティウィジェット
+├── hydra_umc_deck_widgets.py      <- ライブ診断画面が共有する丸みを帯びた HYDRA-UMC
+│                                       コマンドデッキウィジェット
 ├── flasher_config.py              <- 設定ファイル I/O、言語読み込み、プロトコル定数
 ├── flasher_transports.py          <- SLCAN、SocketCAN、MockCAN
 ├── flasher_swd_tools.py           <- STM32CubeProgrammer / pyOCD ラッパー
@@ -928,12 +942,22 @@ JSON 数値（`50580689`）のどちらも受け付けます——ファイル�
 ├── flasher_protocol.py            <- CAN OTA ステートマシン本体
 ├── flasher_github.py              <- URTC 自身の GitHub リポジトリからファームウェアをダウンロード
 ├── flasher_gui.py                 <- メインウィンドウ（FlasherGUI）とそのメニューバー
-├── requirements.txt
+├── requirements.txt                <- pyserial>=3.5（Tkinter テスター）+ PySide6>=6.8,<7（`--qtquick` デッキ）
 ├── build_exe.bat                  <- Windows 独立ビルド
 ├── build_exe.sh                   <- Linux 独立ビルド
+├── build-test.bat                 <- バージョンを更新しないビルド/コンパイル確認
+├── build-test.sh                  <- 同上、Linux 向け
+├── bump_version.py                <- オドメーター式バージョンインクリメント、ビルドスクリプトが実行
+├── bump_manifest_version.py       <- hydra-umc.project.json のバージョンをネイティブ側と同期（--sync）
 ├── URTC_Flasher.spec              <- 上記両方のビルドスクリプトが使用する PyInstaller の spec
-├── README.md                      <- 本ファイル
-├── README_spa.md / README_ita.md / README_fra.md / README_deu.md  <- 翻訳
+├── docs/
+│   └── CLI_REFERENCE.md           <- コマンドラインフラグのリファレンス
+├── tools/
+│   ├── ci_validate.py                    <- CI が使用する manifest/CHANGELOG/docs の検証
+│   └── render_hydra_umc_icon_frames.py   <- assets/hydra_umc_icon_frames/ を SVG から再生成（開発専用）
+├── README.md                      <- 英語版
+├── README_jpn.md                  <- 本ファイル
+├── README_spa.md / README_ita.md / README_fra.md / README_deu.md / README_zho.md  <- 他の翻訳
 ├── LICENSE
 ├── .gitattributes
 └── .gitignore
