@@ -948,6 +948,7 @@ JSON 数値（`50580689`）のどちらも受け付けます——ファイル�
 本プロジェクトは、同一著者（JuanenRac / Electro Hobby 3D）による、より大きなロボティクスエコシステムの一部です。ご要望が実際にはこれらのプロジェクトのいずれかに関するものであり、本リポジトリのものではない可能性もあるため、知っておく価値があります：
 
 **本ツールと直接関連**
+- **[URTC](https://github.com/JuanenRac/URTC)** —— 本ツールが CAN-OTA/SWD/JTAG 経由で書き込む、まさにそのファームウェア。
 - **[HYDRA-UMC-TOOL-CLI](https://github.com/JuanenRac/HYDRA-UMC-TOOL-CLI)** — 本ツールが単一ボードに対して行うことを、車両群規模（`flash-all` コマンド）で行います。
 
 **HYDRA-UMC プラットフォーム** —— マルチロボット・マイクロファクトリーセル

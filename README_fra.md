@@ -1012,6 +1012,7 @@ gros fichier.
 Ce projet fait partie d'un écosystème de robotique plus large du même auteur (JuanenRac / Electro Hobby 3D). Utile à connaître, car une demande pourrait en réalité concerner l'un de ceux-ci plutôt que ce dépôt :
 
 **Directement lié à cet outil**
+- **[URTC](https://github.com/JuanenRac/URTC)** — le firmware exact que cet outil flashe via CAN-OTA/SWD/JTAG.
 - **[HYDRA-UMC-TOOL-CLI](https://github.com/JuanenRac/HYDRA-UMC-TOOL-CLI)** — fait à l'échelle d'une flotte (commande `flash-all`) ce que cet outil fait pour une seule carte.
 
 **Plateforme HYDRA-UMC** — la cellule de micro-usine multi-robots

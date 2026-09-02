@@ -983,6 +983,7 @@ grande.
 Este proyecto forma parte de un ecosistema de robótica más amplio del mismo autor (JuanenRac / Electro Hobby 3D). Vale la pena conocerlo, ya que una petición podría en realidad tratarse de uno de estos en vez de este repositorio:
 
 **Directamente relacionado con esta herramienta**
+- **[URTC](https://github.com/JuanenRac/URTC)** — el firmware exacto que esta herramienta flashea por CAN-OTA/SWD/JTAG.
 - **[HYDRA-UMC-TOOL-CLI](https://github.com/JuanenRac/HYDRA-UMC-TOOL-CLI)** — hace a escala de flota (comando `flash-all`) lo que esta herramienta hace para una sola placa.
 
 **Plataforma HYDRA-UMC** — la célula de micro-fábrica multi-robot

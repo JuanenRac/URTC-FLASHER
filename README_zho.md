@@ -743,6 +743,7 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 本项目是同一作者（JuanenRac / Electro Hobby 3D）打造的更大规模机器人生态系统的一部分。值得了解，因为某个请求实际所指的可能正是这些项目之一，而非本仓库：
 
 **与本工具直接相关**
+- **[URTC](https://github.com/JuanenRac/URTC)** —— 本工具通过 CAN-OTA/SWD/JTAG 刷写的正是这个固件。
 - **[HYDRA-UMC-TOOL-CLI](https://github.com/JuanenRac/HYDRA-UMC-TOOL-CLI)** — 以车队规模（`flash-all` 指令）执行本工具为单块板卡所做的事情。
 
 **HYDRA-UMC 平台** —— 多机器人微工厂单元

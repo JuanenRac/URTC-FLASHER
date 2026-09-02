@@ -1027,6 +1027,7 @@ Unterschied zwischen getrennten Dateien und einer einzigen großen Datei.
 Dieses Projekt ist Teil eines größeren Robotik-Ökosystems desselben Autors (JuanenRac / Electro Hobby 3D). Gut zu wissen, da sich eine Anfrage eigentlich auf eines dieser Projekte statt auf dieses Repository beziehen könnte:
 
 **Direkt mit diesem Tool verwandt**
+- **[URTC](https://github.com/JuanenRac/URTC)** — genau die Firmware, die dieses Tool über CAN-OTA/SWD/JTAG flasht.
 - **[HYDRA-UMC-TOOL-CLI](https://github.com/JuanenRac/HYDRA-UMC-TOOL-CLI)** — macht im Flottenmaßstab (Befehl `flash-all`), was dieses Tool für eine einzelne Platine macht.
 
 **HYDRA-UMC-Plattform** — die Multi-Roboter-Mikrofabrikzelle
