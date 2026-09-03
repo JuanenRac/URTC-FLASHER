@@ -178,7 +178,7 @@ Bootloader-Protokoll oder Hardware-Sicherheitsverhalten zu verändern.
   Klartext; für ein vollständigeres Paket mit Systemdiagnose und der
   aktuell ausgewählten Firmware-Datei siehe stattdessen "Diagnose"
   weiter unten), und Beenden.
-- **Sprache** - zwischen den 5 verfügbaren Sprachen wechseln (siehe
+- **Sprache** - zwischen den 7 verfügbaren Sprachen wechseln (siehe
   "Sprache" weiter unten, wie Übersetzungen funktionieren).
 - **Hilfe** - Readme (öffnet diese Datei in einem schreibgeschützten
   Betrachterfenster; übernimmt automatisch eine übersetzte Version,

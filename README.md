@@ -157,7 +157,7 @@ does not alter the bootloader protocol or hardware safety behaviour.
 - **File** - Save Logs (the on-screen log as plain text; for a fuller
   bundle including system diagnostics and the currently-selected
   firmware file, see "Diagnostics" below instead), and Exit.
-- **Language** - switch between the 5 available languages (see
+- **Language** - switch between the 7 available languages (see
   "Language" further down for how translations work).
 - **Help** - Readme (opens this file in a read-only viewer window;
   picks up a translated version automatically once one exists for the

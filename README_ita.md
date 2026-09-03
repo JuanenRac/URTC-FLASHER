@@ -172,7 +172,7 @@ il protocollo del bootloader né il comportamento di sicurezza hardware.
   per un pacchetto più completo che include diagnostica di sistema e il
   file firmware attualmente selezionato, vedi "Diagnostica" più sotto),
   ed Esci.
-- **Lingua** - passa tra le 5 lingue disponibili (vedi "Lingua" più
+- **Lingua** - passa tra le 7 lingue disponibili (vedi "Lingua" più
   sotto per come funzionano le traduzioni).
 - **Aiuto** - Readme (apre questo file in una finestra visualizzatore di
   sola lettura; recupera automaticamente una versione tradotta appena

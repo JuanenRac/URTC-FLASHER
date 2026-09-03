@@ -168,7 +168,7 @@ accesibilidad; no modifica el protocolo de bootloader ni la seguridad física.
   plano; para un paquete más completo que incluya diagnósticos del
   sistema y el archivo de firmware seleccionado actualmente, ver
   "Diagnósticos" más abajo), y Salir.
-- **Idioma** - cambia entre los 5 idiomas disponibles (ver "Idioma" más
+- **Idioma** - cambia entre los 7 idiomas disponibles (ver "Idioma" más
   abajo para saber cómo funcionan las traducciones).
 - **Ayuda** - Readme (abre este archivo en una ventana de solo lectura;
   recoge automáticamente una versión traducida en cuanto exista una para

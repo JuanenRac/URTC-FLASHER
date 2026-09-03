@@ -175,7 +175,7 @@ bootloader ni le comportement de sécurité matériel.
   brut ; pour un paquet plus complet incluant les diagnostics système et
   le fichier de firmware actuellement sélectionné, voir "Diagnostics"
   plus bas), et Quitter.
-- **Langue** - basculer entre les 5 langues disponibles (voir "Langue"
+- **Langue** - basculer entre les 7 langues disponibles (voir "Langue"
   plus bas pour savoir comment fonctionnent les traductions).
 - **Aide** - Lisez-moi (ouvre ce fichier dans une fenêtre visualiseur en
   lecture seule ; récupère automatiquement une version traduite dès
