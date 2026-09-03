@@ -873,6 +873,16 @@ CERN-OHL-S v2；本工具自身的许可证并不延伸至那个独立的项目�
 如果你基于本项目进行开发，请留意这种许可证划分：代码更改应保持 GPL-3.0，
 文档衍生品应保持 CC BY-SA——每一项都需附带指向本项目及其作者的署名。
 
+---
+
+## 📚 文档与社区
+
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** —— 提交 Pull Request 所需的技术栈和编码规范。
+- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** —— 本社区所期望的行为准则。
+- **[SECURITY.md](SECURITY.md)** —— 如何报告漏洞，以及本项目真实的安全关注重点。
+- **[SUPPORT.md](SUPPORT.md)** —— 在哪里提问和报告缺陷。
+- **[LICENSE.md](LICENSE.md)** —— 本项目自身的许可证。
+
 ## 👤 作者
 
 **JuanenRac**（Electro Hobby 3D）

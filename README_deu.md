@@ -1169,6 +1169,16 @@ Codeänderungen sollten GPL-3.0 bleiben, Dokumentationsableitungen
 sollten CC BY-SA bleiben - jeweils mit Zuschreibung zurück an dieses
 Projekt und seinen Autor.
 
+---
+
+## 📚 Dokumentation & Community
+
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** — Technologie-Stack und Coding-Richtlinien für einen Pull Request.
+- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — die in dieser Community erwarteten Verhaltensstandards.
+- **[SECURITY.md](SECURITY.md)** — wie man eine Schwachstelle meldet, und die echten Sicherheitsschwerpunkte dieses Projekts.
+- **[SUPPORT.md](SUPPORT.md)** — wo man Fragen stellt und Fehler meldet.
+- **[LICENSE.md](LICENSE.md)** — die eigene Lizenz dieses Projekts.
+
 ## 👤 AUTOR
 
 **JuanenRac** (Electro Hobby 3D)

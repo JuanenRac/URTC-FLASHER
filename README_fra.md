@@ -1154,6 +1154,16 @@ l'esprit : les modifications de code devraient rester GPL-3.0, les
 dérivés de documentation devraient rester CC BY-SA - chacun avec une
 attribution à ce projet et son auteur.
 
+---
+
+## 📚 Documentation & Communauté
+
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** — pile technologique et lignes directrices de codage pour une pull request.
+- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — les normes de comportement attendues dans cette communauté.
+- **[SECURITY.md](SECURITY.md)** — comment signaler une vulnérabilité, et les véritables axes de sécurité de ce projet.
+- **[SUPPORT.md](SUPPORT.md)** — où poser des questions et signaler des bugs.
+- **[LICENSE.md](LICENSE.md)** — la licence propre de ce projet.
+
 ## 👤 AUTEUR
 
 **JuanenRac** (Electro Hobby 3D)
