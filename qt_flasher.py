@@ -25,18 +25,22 @@ from PySide6.QtQuickControls2 import QQuickStyle
 
 from flasher_config import (
     APP_FLASH_ADDR, APP_MAX_SIZE, BITRATE_500K_SLCAN_CODE,
+    BOOTLOADER_FLASH_ADDR, BOOTLOADER_MAX_SIZE,
     CAN_ID_ERROR_COUNTERS_RESPONSE, CAN_ID_EXPANSION_TYPE_RESP,
     CAN_ID_FREE_TOOL_CONFIG_RESP, CAN_ID_MLX_VARIANT_RESP,
     CAN_ID_PERIPHERAL_INFO_RESP, CAN_ID_QUERY_ERROR_COUNTERS,
     CAN_ID_SET_DEVICE_SERIAL, CAN_ID_SET_EXPANSION_TYPE,
     CAN_ID_SET_FREE_TOOL, CAN_ID_SET_MLX_VARIANT,
     EXPANSION_BOARD_TYPES, FIRMWARE_FOLDER,
-    FLASHER_VERSION, ICON_IMAGE_PATH, MLX_SENSOR_VARIANTS, TOOL_NAMES, _,
+    FLASHER_VERSION, ICON_IMAGE_PATH, MLX_SENSOR_VARIANTS,
+    PYOCD_TARGET_NAME, SLAVE_APP_FLASH_ADDR, SLAVE_APP_MAX_SIZE,
+    SLAVE_BOOTLOADER_FLASH_ADDR, SLAVE_BOOTLOADER_MAX_SIZE,
+    SLAVE_PYOCD_TARGET_NAME, SLAVE_TOTAL_FLASH_SIZE, TOOL_NAMES, _,
 )
 from flasher_protocol import FlashError, URTCFlasher
-from flasher_swd_tools import CubeProgrammerCLI, PyOCDCLI
+from flasher_swd_tools import CubeProgrammerCLI, PyOCDCLI, SWDFlashError
 from flasher_transports import SLCAN, SocketCAN, list_socketcan_interfaces
-from flasher_validation import validate_firmware_file
+from flasher_validation import validate_firmware_file, validate_swd_image_file
 
 try:
     import serial.tools.list_ports
@@ -54,6 +58,8 @@ class FlasherQtBridge(QObject):
     _flashResult = Signal(str)
     _flashProgress = Signal(int)
     _swdProbeResult = Signal("QVariantList")
+    _swdFlashResult = Signal(str)
+    _swdOptionByteResult = Signal(str, str)
     _snapshotResult = Signal(object, str)
     _logRequested = Signal(str)
     # Real device-configuration writes (expansion board type/MLX sensor
@@ -83,6 +89,24 @@ class FlasherQtBridge(QObject):
         self._swd_scanning = False
         self._swd_tools: list[dict[str, object]] = []
         self._swd_probes: list[dict[str, str]] = []
+        # Full-chip SWD/JTAG programming - real state mirroring the
+        # established Tkinter panel's own swd_target_var/swd_tool_var/
+        # swd_probe_var/swd_dry_run_var/swd_backup_var (flasher_gui.py).
+        # Same real safe defaults: master board, whichever tool is
+        # actually installed, dry-run ON, backup OFF.
+        self._swd_target = "master"
+        self._swd_tool = "pyocd" if PyOCDCLI.available() else "cube"
+        self._swd_selected_probe = ""
+        self._swd_dry_run = True
+        self._swd_backup = False
+        self._swd_bootloader_path = ""
+        self._swd_bootloader_valid = True
+        self._swd_bootloader_reason = ""
+        self._swd_app_path = ""
+        self._swd_app_valid = True
+        self._swd_app_reason = ""
+        self._swd_flash_result = ""
+        self._swd_option_byte_text = ""
         self._board_snapshot: list[dict[str, object]] = []
         self._config_write_texts: dict[str, str] = {
             "expansion_type": "", "mlx_variant": "", "free_tool": "", "device_serial": "",
@@ -91,6 +115,8 @@ class FlasherQtBridge(QObject):
         self._flashResult.connect(self._on_flash_result)
         self._flashProgress.connect(self._on_flash_progress)
         self._swdProbeResult.connect(self._on_swd_probe_result)
+        self._swdFlashResult.connect(self._on_swd_flash_result)
+        self._swdOptionByteResult.connect(self._on_swd_option_byte_result)
         self._snapshotResult.connect(self._on_snapshot_result)
         self._logRequested.connect(self._append_log)
         self._configWriteResult.connect(self._on_config_write_result)
@@ -129,10 +155,16 @@ class FlasherQtBridge(QObject):
             "QT_CONFIRM_FLASH": "CONFIRM FLASH",
             "QT_ADVANCED_DIAGNOSTICS": "ADVANCED DIAGNOSTICS",
             "QT_SWD_JTAG_READONLY": "SWD/JTAG READ-ONLY DISCOVERY",
+            "QT_SWD_FULL_CHIP_SECTION": "FULL-CHIP PROGRAMMING (SWD/JTAG)",
             "QT_SCAN_PROBES": "SCAN PROBES",
             "QT_NOT_INSTALLED": "NOT INSTALLED",
             "QT_NO_PROBES": "No USB debug probe detected.",
-            "QT_SWD_SAFETY_NOTE": "Discovery only: no target is erased, written or reset. Full-chip SWD/JTAG programming remains in the established Tkinter workflow until hardware validation.",
+            "QT_SWD_SAFETY_NOTE": (
+                "Discovery is read-only. Full-chip programming below talks to the target "
+                "directly over SWD/JTAG (not this app's CAN-OTA connection) - it genuinely "
+                "erases and reprograms the whole chip. Dry run is on by default; read the "
+                "log before turning it off."
+            ),
             "QT_BOARD_SNAPSHOT": "BOARD SNAPSHOT",
             "QT_READ_BOARD_STATE": "READ BOARD STATE",
             "QT_BOARD_SNAPSHOT_HELP": "Active diagnostics send documented read queries only. No persistent setting, firmware or option byte is changed.",
@@ -191,6 +223,132 @@ class FlasherQtBridge(QObject):
     @Property(bool, notify=changed)
     def swdScanning(self) -> bool:
         return self._swd_scanning
+
+    # -- Full-chip SWD/JTAG programming - real state mirroring
+    # flasher_gui.py's own swd_target_var/swd_tool_var/swd_probe_var/
+    # swd_dry_run_var/swd_backup_var. This talks to the target directly
+    # over the debug probe, NOT the CAN transport - every gate below is
+    # deliberately independent of self.connected. --
+    @Property(str, notify=changed)
+    def swdTarget(self) -> str:
+        return self._swd_target
+
+    @Property(str, notify=changed)
+    def swdTool(self) -> str:
+        return self._swd_tool
+
+    @Property(str, notify=changed)
+    def swdSelectedProbe(self) -> str:
+        return self._swd_selected_probe
+
+    @Property(bool, notify=changed)
+    def swdDryRun(self) -> bool:
+        return self._swd_dry_run
+
+    @Property(bool, notify=changed)
+    def swdBackup(self) -> bool:
+        return self._swd_backup
+
+    @Property(str, notify=changed)
+    def swdBootloaderPath(self) -> str:
+        return self._swd_bootloader_path
+
+    @Property(bool, notify=changed)
+    def swdBootloaderValid(self) -> bool:
+        return self._swd_bootloader_valid
+
+    @Property(str, notify=changed)
+    def swdBootloaderReason(self) -> str:
+        return self._swd_bootloader_reason
+
+    @Property(str, notify=changed)
+    def swdAppPath(self) -> str:
+        return self._swd_app_path
+
+    @Property(bool, notify=changed)
+    def swdAppValid(self) -> bool:
+        return self._swd_app_valid
+
+    @Property(str, notify=changed)
+    def swdAppReason(self) -> str:
+        return self._swd_app_reason
+
+    @Property(str, notify=changed)
+    def swdFlashResult(self) -> str:
+        return self._swd_flash_result
+
+    @Property(str, notify=changed)
+    def swdOptionByteText(self) -> str:
+        return self._swd_option_byte_text
+
+    def _swd_tool_display_name(self) -> str:
+        return "pyOCD" if self._swd_tool == "pyocd" else "STM32CubeProgrammer"
+
+    @Property("QVariantList", notify=changed)
+    def swdMatchingProbes(self) -> list[dict[str, str]]:
+        """swdProbes (above) intentionally lists every probe both CLIs
+        found, even the same physical ST-Link reported twice - real,
+        useful for the read-only discovery panel. Picking a probe to
+        actually flash with needs the subset that answers to the
+        CURRENTLY selected tool, since a pyOCD uid isn't a valid
+        STM32CubeProgrammer --sn (and vice versa)."""
+        tool_name = self._swd_tool_display_name()
+        return [p for p in self._swd_probes if p.get("tool") == tool_name]
+
+    @Property(bool, notify=changed)
+    def canCheckSwdOptionBytes(self) -> bool:
+        """Real STM32CubeProgrammer-only check - pyOCD doesn't expose
+        option bytes the same way (see HELP_RDP_CHECK_READONLY's own
+        real text)."""
+        cube_available = any(item["name"] == "STM32CubeProgrammer" and item["available"] for item in self._swd_tools)
+        return cube_available and not self._busy
+
+    @Property(bool, notify=changed)
+    def canFullChipFlash(self) -> bool:
+        """Same real preconditions as flasher_gui.py's own
+        start_swd_flash(): a supported tool actually installed, both
+        real image files selected, and - if more than one probe answers
+        to the selected tool - one of them explicitly chosen rather
+        than letting the CLI guess which ST-Link to erase."""
+        tool_available = any(item["name"] == self._swd_tool_display_name() and item["available"] for item in self._swd_tools)
+        matching_probes = self.swdMatchingProbes
+        probe_ok = len(matching_probes) <= 1 or bool(self._swd_selected_probe)
+        return (
+            not self._busy
+            and tool_available
+            and probe_ok
+            and bool(self._swd_bootloader_path)
+            and bool(self._swd_app_path)
+        )
+
+    @Property(bool, notify=changed)
+    def swdNeedsProbeChoice(self) -> bool:
+        return len(self.swdMatchingProbes) > 1 and not self._swd_selected_probe
+
+    @Property(str, notify=changed)
+    def swdFlashConfirmTitle(self) -> str:
+        return _("TITLE_DRY_RUN") if self._swd_dry_run else _("TITLE_CONFIRM_FULL_CHIP")
+
+    @Slot(str, result=str)
+    def buildSwdFlashConfirmBody(self, backup_path: str) -> str:
+        """Real message assembly, matching flasher_gui.py's own
+        start_swd_flash() probe_line/backup_line construction exactly -
+        kept here rather than chained QML .replace() calls since
+        MSG_CONFIRM_FULL_CHIP alone carries 5 real placeholders, more
+        than any other confirm dialog this deck shows. backup_path is
+        "" whenever no backup was requested (or this is a dry run,
+        which never needs one)."""
+        tool_name = self._swd_tool_display_name()
+        if self._swd_dry_run:
+            return _("MSG_DRY_RUN_CONFIRM", tool=tool_name)
+        probe_line = _("LBL_PROBE") + f" {self._swd_selected_probe}\n" if self._swd_selected_probe else ""
+        backup_line = _("LOG_BACKUP_TO_LINE", path=backup_path) if backup_path else ""
+        return _(
+            "MSG_CONFIRM_FULL_CHIP",
+            tool=tool_name, probe_line=probe_line,
+            bootloader=self._swd_bootloader_path, app=self._swd_app_path,
+            backup_line=backup_line,
+        )
 
     @Property("QVariantList", notify=changed)
     def boardSnapshot(self) -> list[dict[str, object]]:
@@ -380,6 +538,202 @@ class FlasherQtBridge(QObject):
         self._swd_scanning = False
         self._log(f"SWD_PROBE_SCAN_COMPLETE count={len(probes)}")
         self.changed.emit()
+
+    def _swd_target_addrs(self) -> tuple[int, int, int, int]:
+        """(bootloader_addr, bootloader_max_size, app_addr, app_max_size)
+        for the currently selected target - same real per-chip table as
+        flasher_gui.py's own browse_swd_bootloader/browse_swd_app."""
+        if self._swd_target == "slave":
+            return SLAVE_BOOTLOADER_FLASH_ADDR, SLAVE_BOOTLOADER_MAX_SIZE, SLAVE_APP_FLASH_ADDR, SLAVE_APP_MAX_SIZE
+        return BOOTLOADER_FLASH_ADDR, BOOTLOADER_MAX_SIZE, APP_FLASH_ADDR, APP_MAX_SIZE
+
+    @Slot(str)
+    def setSwdTarget(self, target: str) -> None:
+        if target not in ("master", "slave") or self._busy:
+            return
+        self._swd_target = target
+        # Re-validate both already-selected files against the new
+        # target's own real addr/size table - start_swd_flash() itself
+        # re-checks on every flash attempt for the same real reason: a
+        # bootloader picked while "master" was selected shouldn't keep
+        # showing green after switching to "slave".
+        if self._swd_bootloader_path:
+            self.setSwdBootloaderPath(self._swd_bootloader_path)
+        if self._swd_app_path:
+            self.setSwdAppPath(self._swd_app_path)
+        self.changed.emit()
+
+    @Slot(str)
+    def setSwdTool(self, tool: str) -> None:
+        if tool in ("pyocd", "cube") and not self._busy:
+            self._swd_tool = tool
+            self._swd_selected_probe = ""  # a probe uid/serial from one CLI is meaningless to the other
+            self.changed.emit()
+
+    @Slot(str)
+    def setSwdSelectedProbe(self, identifier: str) -> None:
+        if not self._busy:
+            self._swd_selected_probe = identifier
+            self.changed.emit()
+
+    @Slot(bool)
+    def setSwdDryRun(self, enabled: bool) -> None:
+        if not self._busy:
+            self._swd_dry_run = enabled
+            self.changed.emit()
+
+    @Slot(bool)
+    def setSwdBackup(self, enabled: bool) -> None:
+        if not self._busy:
+            self._swd_backup = enabled
+            self.changed.emit()
+
+    @Slot(str)
+    def setSwdBootloaderPath(self, path: str) -> None:
+        """path is either a plain filesystem path (re-validation call
+        from setSwdTarget above, or a manually typed/pasted TextField
+        value) or a file:// URL (QML's own FileDialog.selectedFile) -
+        both normalized to a plain path here, same real re-validate-on
+        every-entry-point discipline flasher_gui.py's own
+        browse_swd_bootloader has (its own docstring: "the path fields
+        are plain text entries, so a manually typed or pasted path
+        would otherwise skip the check entirely")."""
+        if self._busy:
+            return
+        local_path = QUrl(path).toLocalFile() or path
+        self._swd_bootloader_path = local_path
+        if local_path and os.path.isfile(local_path):
+            boot_addr, boot_max, _app_addr, _app_max = self._swd_target_addrs()
+            ok, reason, _size = validate_swd_image_file(local_path, boot_max, "bootloader", boot_addr)
+            self._swd_bootloader_valid, self._swd_bootloader_reason = ok, reason
+        else:
+            self._swd_bootloader_valid, self._swd_bootloader_reason = False, "file not found"
+        self._log(f"SWD_BOOTLOADER_SELECTED {local_path} valid={self._swd_bootloader_valid}")
+        self.changed.emit()
+
+    @Slot(str)
+    def setSwdAppPath(self, path: str) -> None:
+        if self._busy:
+            return
+        local_path = QUrl(path).toLocalFile() or path
+        self._swd_app_path = local_path
+        if local_path and os.path.isfile(local_path):
+            _boot_addr, _boot_max, app_addr, app_max = self._swd_target_addrs()
+            ok, reason, _size = validate_swd_image_file(local_path, app_max, "application", app_addr)
+            self._swd_app_valid, self._swd_app_reason = ok, reason
+        else:
+            self._swd_app_valid, self._swd_app_reason = False, "file not found"
+        self._log(f"SWD_APP_SELECTED {local_path} valid={self._swd_app_valid}")
+        self.changed.emit()
+
+    @Slot(str)
+    def startFullChipFlash(self, backup_path: str) -> None:
+        """Called once the user has confirmed via the shared
+        configConfirm dialog (see FlasherDeck.qml's own
+        fullChipFlashButton handler) - backup_path is "" whenever no
+        backup was requested (or this is a dry run, which never
+        actually needs a real file). This is the one real destructive
+        action this whole method migrates from flasher_gui.py's own
+        start_swd_flash()/_swd_flash_worker - full_chip_flash() itself
+        (flasher_swd_tools.py) is reused completely unchanged."""
+        if not self.canFullChipFlash:
+            self._log("SWD_FLASH_BLOCKED not ready - busy, missing tool/files, or multiple probes with none selected")
+            return
+        is_slave = self._swd_target == "slave"
+        self._set_state(
+            status="SWD/JTAG DRY RUN" if self._swd_dry_run else "SWD/JTAG FULL-CHIP PROGRAMMING",
+            busy=True,
+        )
+        self._log(
+            f"SWD_FLASH_STARTED tool={self._swd_tool} target={self._swd_target} "
+            f"dry_run={self._swd_dry_run} backup={'yes' if backup_path else 'no'}"
+        )
+        threading.Thread(
+            target=self._swd_flash_worker,
+            args=(
+                self._swd_bootloader_path, self._swd_app_path, self._swd_tool, self._swd_dry_run,
+                self._swd_selected_probe or None, backup_path or None, is_slave,
+            ),
+            daemon=True,
+            name="urtc-qt-swd-flash",
+        ).start()
+
+    def _swd_flash_worker(
+        self, bootloader_path: str, app_path: str, tool: str, dry_run: bool,
+        probe_uid: str | None, backup_path: str | None, is_slave: bool,
+    ) -> None:
+        try:
+            if is_slave:
+                target_kwargs = {
+                    "bootloader_addr": SLAVE_BOOTLOADER_FLASH_ADDR,
+                    "app_addr": SLAVE_APP_FLASH_ADDR,
+                    "total_flash_size": SLAVE_TOTAL_FLASH_SIZE,
+                }
+            else:
+                target_kwargs = {}  # main board's own defaults already baked into full_chip_flash's own signature
+            if tool == "pyocd":
+                programmer = PyOCDCLI(log=self._log)
+                pyocd_target = SLAVE_PYOCD_TARGET_NAME if is_slave else PYOCD_TARGET_NAME
+                programmer.full_chip_flash(
+                    bootloader_path, app_path, dry_run=dry_run, probe_uid=probe_uid,
+                    backup_path=backup_path, target=pyocd_target, **target_kwargs,
+                )
+            else:
+                programmer = CubeProgrammerCLI(log=self._log)
+                programmer.full_chip_flash(
+                    bootloader_path, app_path, dry_run=dry_run, serial=probe_uid,
+                    backup_path=backup_path, **target_kwargs,
+                )
+            self._swdFlashResult.emit("SWD_FLASH_DRY_RUN_COMPLETE" if dry_run else "SWD_FLASH_COMPLETE")
+        except SWDFlashError as exc:
+            self._swdFlashResult.emit(f"SWD_FLASH_FAILED {exc}")
+        except Exception as exc:
+            self._swdFlashResult.emit(f"SWD_FLASH_UNEXPECTED {exc}")
+
+    @Slot(str)
+    def _on_swd_flash_result(self, result: str) -> None:
+        self._swd_flash_result = result
+        self._set_state(status=result, busy=False)
+        self._log(result)
+
+    @Slot()
+    def checkSwdOptionBytes(self) -> None:
+        """Real, read-only RDP (readout protection) level check - see
+        HELP_RDP_CHECK_READONLY's own real text for why this is
+        STM32CubeProgrammer-only."""
+        if not self.canCheckSwdOptionBytes:
+            self._log("SWD_OPTION_BYTE_CHECK_BLOCKED needs STM32CubeProgrammer specifically, or busy")
+            return
+        self._set_state(status="CHECKING OPTION BYTES", busy=True)
+        threading.Thread(
+            target=self._check_option_bytes_worker,
+            daemon=True,
+            name="urtc-qt-swd-optionbytes",
+        ).start()
+
+    def _check_option_bytes_worker(self) -> None:
+        try:
+            prog = CubeProgrammerCLI(log=self._log)
+            level, _output = prog.read_option_bytes(serial=self._swd_selected_probe or None, dry_run=False)
+            self._swdOptionByteResult.emit(level or "", "")
+        except SWDFlashError as exc:
+            self._swdOptionByteResult.emit("", str(exc))
+        except Exception as exc:
+            self._swdOptionByteResult.emit("", str(exc))
+
+    @Slot(str, str)
+    def _on_swd_option_byte_result(self, level: str, error: str) -> None:
+        if error:
+            self._swd_option_byte_text = f"{_('TITLE_SWD_FLASH_FAILED')}: {error}"
+        else:
+            texts = {
+                "0": _("MSG_NO_READOUT_PROTECTION"),
+                "1": _("MSG_RDP_LEVEL_1_DETAIL"),
+                "2": _("MSG_RDP_LEVEL_2_DETAIL"),
+            }
+            self._swd_option_byte_text = texts.get(level, _("MSG_RDP_UNPARSEABLE_DETAIL"))
+        self._log(f"SWD_OPTION_BYTE_CHECK_RESULT level={level!r} error={error!r}")
+        self._set_state(status="READY" if not error else "OPTION BYTE CHECK FAILED", busy=False)
 
     @Slot()
     def readBoardSnapshot(self) -> None:

@@ -5,6 +5,7 @@
 // =============================================================================
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Dialogs
 import QtQuick.Layouts
 import QtQuick.VectorImage
 
@@ -39,6 +40,24 @@ ApplicationWindow {
         pendingConfigTitle = title
         pendingConfigBody = body
         pendingConfigAction = action
+        configConfirm.open()
+    }
+
+    // Full-chip SWD/JTAG flash reuses this SAME confirm dialog (title/
+    // body assembled backend-side by buildSwdFlashConfirmBody - see its
+    // own docstring for why) rather than a second dialog component -
+    // one real destructive-action confirm shell for the whole app.
+    // Backup, when requested and not a dry run, needs its own save-file
+    // path BEFORE the confirm body can even be built (the real message
+    // includes a backup_line naming that path), so that FileDialog is
+    // opened first when needed; requestFullChipFlash(backupPath) is the
+    // shared continuation both branches funnel into.
+    function requestFullChipFlash(backupPath) {
+        if (!flasherBackend.canFullChipFlash)
+            return
+        pendingConfigTitle = flasherBackend.swdFlashConfirmTitle
+        pendingConfigBody = flasherBackend.buildSwdFlashConfirmBody(backupPath)
+        pendingConfigAction = function() { flasherBackend.startFullChipFlash(backupPath) }
         configConfirm.open()
     }
 
@@ -144,6 +163,28 @@ ApplicationWindow {
                 onClicked: { configConfirm.close(); if (window.pendingConfigAction) window.pendingConfigAction() }
             }
         }
+    }
+
+    FileDialog {
+        id: swdBootloaderDialog
+        title: flasherBackend.uiText("LBL_BOOTLOADER_FILE")
+        fileMode: FileDialog.OpenFile
+        nameFilters: ["Bootloader image (*.bin *.hex *.elf *.axf)", "All files (*)"]
+        onAccepted: flasherBackend.setSwdBootloaderPath(selectedFile.toString())
+    }
+    FileDialog {
+        id: swdAppDialog
+        title: flasherBackend.uiText("LBL_APPLICATION_FILE")
+        fileMode: FileDialog.OpenFile
+        nameFilters: ["Application image (*.bin *.hex *.elf *.axf)", "All files (*)"]
+        onAccepted: flasherBackend.setSwdAppPath(selectedFile.toString())
+    }
+    FileDialog {
+        id: swdBackupDialog
+        title: "Save flash backup as..."
+        fileMode: FileDialog.SaveFile
+        nameFilters: ["Binary files (*.bin)"]
+        onAccepted: window.requestFullChipFlash(selectedFile.toString().replace("file:///", ""))
     }
 
     RowLayout {
@@ -382,6 +423,220 @@ ApplicationWindow {
                 Text {
                     text: flasherBackend.uiText("QT_SWD_SAFETY_NOTE")
                     color: muted
+                    font.pixelSize: 8
+                    wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
+                }
+
+                Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
+                // -- Full-chip SWD/JTAG programming - the one real
+                // destructive action this deck migrates from
+                // flasher_gui.py's own start_swd_flash()/_swd_flash_worker.
+                // flasher_swd_tools.py's PyOCDCLI/CubeProgrammerCLI are
+                // reused completely unchanged; only the UI is new. See
+                // startFullChipFlash's own docstring in qt_flasher.py.
+                Text { text: flasherBackend.uiText("QT_SWD_FULL_CHIP_SECTION"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 10
+                    Text { text: flasherBackend.uiText("LBL_SWD_TARGET"); color: muted; font.pixelSize: 9 }
+                    RadioButton {
+                        id: swdTargetMaster
+                        text: flasherBackend.uiText("OPT_TARGET_MASTER")
+                        checked: flasherBackend.swdTarget === "master"
+                        enabled: !flasherBackend.busy
+                        contentItem: Text { text: swdTargetMaster.text; color: muted; leftPadding: swdTargetMaster.indicator.width + 4; verticalAlignment: Text.AlignVCenter; font.pixelSize: 9 }
+                        onToggled: if (checked) flasherBackend.setSwdTarget("master")
+                    }
+                    RadioButton {
+                        id: swdTargetSlave
+                        text: flasherBackend.uiText("OPT_TARGET_SLAVE")
+                        checked: flasherBackend.swdTarget === "slave"
+                        enabled: !flasherBackend.busy
+                        contentItem: Text { text: swdTargetSlave.text; color: muted; leftPadding: swdTargetSlave.indicator.width + 4; verticalAlignment: Text.AlignVCenter; font.pixelSize: 9 }
+                        onToggled: if (checked) flasherBackend.setSwdTarget("slave")
+                    }
+                }
+                Text { text: flasherBackend.uiText("HELP_SWD_TARGET_SLAVE"); color: muted; font.pixelSize: 8; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 10
+                    RadioButton {
+                        id: swdToolPyocd
+                        text: flasherBackend.uiText("RADIO_PYOCD_BUILTIN")
+                        checked: flasherBackend.swdTool === "pyocd"
+                        enabled: !flasherBackend.busy
+                        contentItem: Text { text: swdToolPyocd.text; color: muted; leftPadding: swdToolPyocd.indicator.width + 4; verticalAlignment: Text.AlignVCenter; font.pixelSize: 9 }
+                        onToggled: if (checked) flasherBackend.setSwdTool("pyocd")
+                    }
+                    RadioButton {
+                        id: swdToolCube
+                        text: flasherBackend.uiText("RADIO_STM32CUBEPROGRAMMER")
+                        checked: flasherBackend.swdTool === "cube"
+                        enabled: !flasherBackend.busy
+                        contentItem: Text { text: swdToolCube.text; color: muted; leftPadding: swdToolCube.indicator.width + 4; verticalAlignment: Text.AlignVCenter; font.pixelSize: 9 }
+                        onToggled: if (checked) flasherBackend.setSwdTool("cube")
+                    }
+                }
+
+                // Only the probes that answer to the currently selected
+                // tool (see swdMatchingProbes' own docstring) - clicking
+                // one selects it for the actual flash below.
+                Text { text: flasherBackend.uiText("LBL_PROBE"); color: muted; font.pixelSize: 9; visible: flasherBackend.swdMatchingProbes.length > 0 }
+                ListView {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: Math.min(contentHeight, 84)
+                    visible: flasherBackend.swdMatchingProbes.length > 0
+                    model: flasherBackend.swdMatchingProbes
+                    clip: true
+                    spacing: 3
+                    delegate: Rectangle {
+                        required property var modelData
+                        width: ListView.view.width
+                        height: 24
+                        radius: 6
+                        color: flasherBackend.swdSelectedProbe === modelData.identifier ? "#1a4967" : "transparent"
+                        border.width: 1
+                        border.color: flasherBackend.swdSelectedProbe === modelData.identifier ? "#43db9b" : panelBorder
+                        Text {
+                            anchors.fill: parent
+                            anchors.margins: 4
+                            text: modelData.identifier + " - " + modelData.description
+                            color: muted
+                            font.family: "Cascadia Mono"
+                            font.pixelSize: 9
+                            elide: Text.ElideMiddle
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        MouseArea { anchors.fill: parent; enabled: !flasherBackend.busy; onClicked: flasherBackend.setSwdSelectedProbe(modelData.identifier) }
+                    }
+                }
+                Text {
+                    visible: flasherBackend.swdNeedsProbeChoice
+                    text: flasherBackend.uiText("MSG_MULTIPLE_PROBES_PICK_ONE_FULLCHIP")
+                    color: "#f7b955"
+                    font.pixelSize: 9
+                    wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+                    Text { text: flasherBackend.uiText("LBL_BOOTLOADER_FILE"); color: muted; font.pixelSize: 9; Layout.preferredWidth: 120; wrapMode: Text.WordWrap }
+                    TextField {
+                        id: swdBootloaderField
+                        text: flasherBackend.swdBootloaderPath
+                        color: textPrimary
+                        Layout.fillWidth: true
+                        background: Rectangle { radius: 8; color: panelAlt; border.width: 1; border.color: panelBorder }
+                        onEditingFinished: flasherBackend.setSwdBootloaderPath(text)
+                    }
+                    GameButton { text: flasherBackend.uiText("BTN_BROWSE"); accent: "#24465e"; Layout.preferredWidth: 90; enabled: !flasherBackend.busy; onClicked: swdBootloaderDialog.open() }
+                }
+                Text {
+                    visible: swdBootloaderField.text !== "" && !flasherBackend.swdBootloaderValid
+                    text: flasherBackend.uiText("TITLE_BOOTLOADER_FILE_LOOKS_INVALID") + ": " + flasherBackend.swdBootloaderReason
+                    color: "#f7b955"
+                    font.pixelSize: 9
+                    wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+                    Text { text: flasherBackend.uiText("LBL_APPLICATION_FILE"); color: muted; font.pixelSize: 9; Layout.preferredWidth: 120; wrapMode: Text.WordWrap }
+                    TextField {
+                        id: swdAppField
+                        text: flasherBackend.swdAppPath
+                        color: textPrimary
+                        Layout.fillWidth: true
+                        background: Rectangle { radius: 8; color: panelAlt; border.width: 1; border.color: panelBorder }
+                        onEditingFinished: flasherBackend.setSwdAppPath(text)
+                    }
+                    GameButton { text: flasherBackend.uiText("BTN_BROWSE"); accent: "#24465e"; Layout.preferredWidth: 90; enabled: !flasherBackend.busy; onClicked: swdAppDialog.open() }
+                }
+                Text {
+                    visible: swdAppField.text !== "" && !flasherBackend.swdAppValid
+                    text: flasherBackend.uiText("TITLE_APPLICATION_FILE_LOOKS_INVALID") + ": " + flasherBackend.swdAppReason
+                    color: "#f7b955"
+                    font.pixelSize: 9
+                    wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
+                }
+
+                CheckBox {
+                    id: swdDryRunCheck
+                    text: flasherBackend.uiText("CHK_DRY_RUN")
+                    checked: flasherBackend.swdDryRun
+                    enabled: !flasherBackend.busy
+                    contentItem: Text { text: swdDryRunCheck.text; color: muted; leftPadding: swdDryRunCheck.indicator.width + 4; verticalAlignment: Text.AlignVCenter; wrapMode: Text.WordWrap; width: swdDryRunCheck.width - swdDryRunCheck.indicator.width - 4; font.pixelSize: 9 }
+                    onToggled: { flasherBackend.setSwdDryRun(checked); checked = flasherBackend.swdDryRun }
+                }
+                CheckBox {
+                    id: swdBackupCheck
+                    text: flasherBackend.uiText("CHK_BACKUP_BEFORE_ERASING")
+                    checked: flasherBackend.swdBackup
+                    enabled: !flasherBackend.busy
+                    contentItem: Text { text: swdBackupCheck.text; color: muted; leftPadding: swdBackupCheck.indicator.width + 4; verticalAlignment: Text.AlignVCenter; wrapMode: Text.WordWrap; width: swdBackupCheck.width - swdBackupCheck.indicator.width - 4; font.pixelSize: 9 }
+                    onToggled: { flasherBackend.setSwdBackup(checked); checked = flasherBackend.swdBackup }
+                }
+
+                GameButton {
+                    text: flasherBackend.uiText("BTN_CHECK_OPTION_BYTES")
+                    accent: "#24465e"
+                    Layout.fillWidth: true
+                    enabled: flasherBackend.canCheckSwdOptionBytes
+                    onClicked: flasherBackend.checkSwdOptionBytes()
+                }
+                Text {
+                    visible: flasherBackend.swdOptionByteText !== ""
+                    text: flasherBackend.swdOptionByteText
+                    color: muted
+                    wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
+                    font.pixelSize: 9
+                }
+                Text {
+                    text: flasherBackend.uiText("HELP_RDP_CHECK_READONLY")
+                    color: muted
+                    font.pixelSize: 8
+                    wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
+                }
+
+                GameButton {
+                    id: fullChipFlashButton
+                    text: flasherBackend.uiText("BTN_FLASH_COMPLETE_CHIP")
+                    accent: "#b86a35"
+                    Layout.fillWidth: true
+                    enabled: flasherBackend.canFullChipFlash
+                    onClicked: {
+                        // Same real condition as flasher_gui.py's own
+                        // start_swd_flash(): a backup is only ever taken
+                        // for a real (non-dry-run) flash - matches
+                        // startFullChipFlash's own dry_run short-circuit.
+                        if (swdBackupCheck.checked && !swdDryRunCheck.checked) {
+                            swdBackupDialog.open()
+                        } else {
+                            window.requestFullChipFlash("")
+                        }
+                    }
+                }
+                Text {
+                    visible: flasherBackend.swdFlashResult !== ""
+                    text: flasherBackend.swdFlashResult
+                    color: flasherBackend.swdFlashResult.indexOf("FAILED") >= 0 || flasherBackend.swdFlashResult.indexOf("UNEXPECTED") >= 0 ? "#ee6b80" : "#43db9b"
+                    font.family: "Cascadia Mono"
+                    wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
+                    font.pixelSize: 9
+                }
+                Text {
+                    text: flasherBackend.uiText("HELP_ERASES_WHOLE_CHIP")
+                    color: "#f7b955"
                     font.pixelSize: 8
                     wrapMode: Text.WordWrap
                     Layout.fillWidth: true

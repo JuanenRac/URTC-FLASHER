@@ -26,6 +26,30 @@ build script) never changes the version - only a real build does.
 ## [Unreleased]
 
 ### Added
+- **Full-chip SWD/JTAG programming** is now available in the Qt Quick
+  deck, completing its migration - the one real gap left after CAN-OTA,
+  read-only SWD/JTAG discovery, Board Snapshot and device-configuration
+  writes. Reuses `flasher_swd_tools.py`'s `PyOCDCLI`/`CubeProgrammerCLI`
+  completely unchanged (only the UI is new): target chip (this board /
+  expansion slave), tool (pyOCD / STM32CubeProgrammer), a probe picker
+  scoped to whichever tool is selected (a pyOCD uid and a
+  STM32CubeProgrammer serial are never interchangeable), bootloader/
+  application file pickers (editable path field + native file dialog,
+  both re-validated against the real per-target flash address/size
+  table on every selection AND on every target switch), dry run
+  (default on) and back-up-before-erasing toggles, a real read-only RDP
+  (readout protection) option-byte check, and the full-chip flash
+  itself behind the same shared confirm dialog every other real
+  persistent write in this deck already uses - its title/body are
+  assembled from the real selected tool/target/files, matching the
+  established Tkinter panel's own confirmation message. An invalid
+  file shows an inline warning rather than hard-blocking the button,
+  same real "proceed anyway" latitude the Tkinter panel gives (the
+  destructive action still requires a second, explicit confirmation
+  either way). Zero new i18n keys beyond one new section header
+  (`QT_SWD_FULL_CHIP_SECTION`, added across all 7 languages) - every
+  other label, help text and confirmation message reuses the legacy
+  panel's own already-translated keys verbatim.
 - **Real About window**, matching HYDRA-UMC-STUDIO's own `About.tsx` and
   the ecosystem's PySide6 tools: the Tkinter About window now shows a
   tagline, a one-paragraph description, and a real Version/Author/Email/
