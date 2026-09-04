@@ -123,6 +123,18 @@ build script) never changes the version - only a real build does.
   they can be exposed to the flashing protocol. Valid standard and extended
   frames remain parsed exactly as before.
 
+## [0.1.2]
+
+- **Converted every remaining `ttk.Button` in `flasher_gui.py` to the
+  app's own `RoundedDeckButton`** (20 call sites) - the real, larger
+  follow-up v0.1.1's own changelog entry named. One real special case:
+  the GitHub firmware-browser dialog's own `download_btn` started with
+  no `command` at all (wired later via `.config(command=...)` once a
+  real selection exists) - `RoundedDeckButton` requires a `command` at
+  construction, so this one call passes `command=None` explicitly;
+  verified directly that a `None`-command button stays inert while
+  disabled and a later `.config(command=...)` correctly takes over.
+
 ## [0.1.1]
 
 - **Same real fix as URTC-TESTER's own v0.1.2** (real user feedback,

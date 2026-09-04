@@ -370,7 +370,7 @@ class FlasherGUI:
         ttk.Label(conn_frame, text=_("LBL_CURRENTLY_INSTALLED")).grid(row=row, column=0, sticky="w", **pad)
         self.current_version_label = ttk.Label(conn_frame, text=_("STATUS_CONNECT_TO_CHECK"), foreground="gray")
         self.current_version_label.grid(row=row, column=1, columnspan=3, sticky="w", **pad)
-        self.query_btn = ttk.Button(conn_frame, text=_("BTN_QUERY"), command=self.query_current_version)
+        self.query_btn = self._new_deck_button(conn_frame, text=_("BTN_QUERY"), command=self.query_current_version)
         self.query_btn.grid(row=row, column=4, **pad)
         self.query_btn_holder = [self.query_btn]
         row += 1
@@ -378,7 +378,7 @@ class FlasherGUI:
         ttk.Label(conn_frame, text=_("LBL_BUS_ACTIVITY")).grid(row=row, column=0, sticky="w", **pad)
         self.bus_activity_label = ttk.Label(conn_frame, text=_("STATUS_CHECK_REQUIRES_CONNECTION"), foreground="gray")
         self.bus_activity_label.grid(row=row, column=1, columnspan=3, sticky="w", **pad)
-        self.bus_activity_btn = ttk.Button(conn_frame, text=_("BTN_CHECK_2S"), command=self.check_bus_activity)
+        self.bus_activity_btn = self._new_deck_button(conn_frame, text=_("BTN_CHECK_2S"), command=self.check_bus_activity)
         self.bus_activity_btn.grid(row=row, column=4, **pad)
         self.query_btn_holder.append(self.bus_activity_btn)  # locked by _set_ui_busy_state the same way Query is
         row += 1
@@ -386,7 +386,7 @@ class FlasherGUI:
         ttk.Label(conn_frame, text=_("LBL_ERROR_COUNTERS")).grid(row=row, column=0, sticky="w", **pad)
         self.error_counters_label = ttk.Label(conn_frame, text=_("STATUS_CHECK_REQUIRES_CONNECTION"), foreground="gray")
         self.error_counters_label.grid(row=row, column=1, columnspan=3, sticky="w", **pad)
-        self.error_counters_btn = ttk.Button(conn_frame, text=_("BTN_QUERY"), command=self.query_error_counters)
+        self.error_counters_btn = self._new_deck_button(conn_frame, text=_("BTN_QUERY"), command=self.query_error_counters)
         self.error_counters_btn.grid(row=row, column=4, **pad)
         self.query_btn_holder.append(self.error_counters_btn)  # locked by _set_ui_busy_state the same way Query is
         row += 1
@@ -400,9 +400,9 @@ class FlasherGUI:
         self.expansion_type_combo.grid(row=row, column=1, columnspan=3, sticky="w", **pad)
         exp_btn_row = ttk.Frame(conn_frame)
         exp_btn_row.grid(row=row, column=4, **pad)
-        self.expansion_type_query_btn = ttk.Button(exp_btn_row, text=_("BTN_QUERY"), command=self.query_expansion_board_type)
+        self.expansion_type_query_btn = self._new_deck_button(exp_btn_row, text=_("BTN_QUERY"), command=self.query_expansion_board_type)
         self.expansion_type_query_btn.pack(side="left")
-        self.expansion_type_save_btn = ttk.Button(exp_btn_row, text=_("BTN_SAVE"), command=self.save_expansion_board_type)
+        self.expansion_type_save_btn = self._new_deck_button(exp_btn_row, text=_("BTN_SAVE"), command=self.save_expansion_board_type)
         self.expansion_type_save_btn.pack(side="left", padx=(4, 0))
         self.query_btn_holder.append(self.expansion_type_combo)
         # Both buttons send their own CAN frames (0x1A0 query, 0x1A0 write)
@@ -434,9 +434,9 @@ class FlasherGUI:
         self.mlx_variant_combo.grid(row=row, column=1, columnspan=3, sticky="w", **pad)
         mlx_btn_row = ttk.Frame(conn_frame)
         mlx_btn_row.grid(row=row, column=4, **pad)
-        self.mlx_variant_query_btn = ttk.Button(mlx_btn_row, text=_("BTN_QUERY"), command=self.query_mlx_sensor_variant)
+        self.mlx_variant_query_btn = self._new_deck_button(mlx_btn_row, text=_("BTN_QUERY"), command=self.query_mlx_sensor_variant)
         self.mlx_variant_query_btn.pack(side="left")
-        self.mlx_variant_save_btn = ttk.Button(mlx_btn_row, text=_("BTN_SAVE"), command=self.save_mlx_sensor_variant)
+        self.mlx_variant_save_btn = self._new_deck_button(mlx_btn_row, text=_("BTN_SAVE"), command=self.save_mlx_sensor_variant)
         self.mlx_variant_save_btn.pack(side="left", padx=(4, 0))
         self.query_btn_holder.append(self.mlx_variant_combo)
         # Same gap as expansion_type's own Query/Save buttons just above -
@@ -487,7 +487,7 @@ class FlasherGUI:
         fw_frame = fw_card.content
 
         ttk.Label(fw_frame, text=_("LBL_DETECTED_IN_FIRMWARE")).grid(row=0, column=0, sticky="w", **pad)
-        ttk.Button(fw_frame, text=_("BTN_REFRESH"), command=self.scan_firmware_folder).grid(row=0, column=1, sticky="w", **pad)
+        self._new_deck_button(fw_frame, text=_("BTN_REFRESH"), command=self.scan_firmware_folder).grid(row=0, column=1, sticky="w", **pad)
 
         columns = ("file", "size", "status")
         self.fw_tree = ttk.Treeview(fw_frame, columns=columns, show="headings", height=3, selectmode="browse")
@@ -510,8 +510,8 @@ class FlasherGUI:
         self.fw_tree.tag_configure("valid", foreground=self.TEXT)
 
         ttk.Label(fw_frame, text=_("LBL_OR_BROWSE_ELSEWHERE")).grid(row=2, column=0, sticky="w", **pad)
-        ttk.Button(fw_frame, text=_("BTN_BROWSE_BIN"), command=self.browse_firmware).grid(row=2, column=1, sticky="w", **pad)
-        ttk.Button(fw_frame, text=_("BTN_DOWNLOAD_FROM_GITHUB"), command=self.open_github_download_dialog).grid(row=2, column=2, sticky="w", **pad)
+        self._new_deck_button(fw_frame, text=_("BTN_BROWSE_BIN"), command=self.browse_firmware).grid(row=2, column=1, sticky="w", **pad)
+        self._new_deck_button(fw_frame, text=_("BTN_DOWNLOAD_FROM_GITHUB"), command=self.open_github_download_dialog).grid(row=2, column=2, sticky="w", **pad)
 
         self.fw_label = ttk.Label(fw_frame, text=_("STATUS_NO_FILE_SELECTED"), foreground="gray", wraplength=350)
         self.fw_label.grid(row=3, column=0, columnspan=3, sticky="w", padx=8, pady=(0, 4))
@@ -598,7 +598,7 @@ class FlasherGUI:
         # reasoning as Allow downgrade above - the expansion slave's own
         # bootloader doesn't implement this yet), disabled the same way
         # for the slave target.
-        self.readback_btn = ttk.Button(
+        self.readback_btn = self._new_deck_button(
             act_frame, text=_("BTN_BACKUP_FIRMWARE_CAN"), command=self.start_readback,
         )
         self.readback_btn.grid(row=5, column=1, sticky="w", **pad)
@@ -647,7 +647,7 @@ class FlasherGUI:
             free_tool_frame, textvariable=self.free_tool_var, state="readonly", width=22,
             values=list(self._free_tool_display_to_selection.keys()),
         ).grid(row=1, column=0, sticky="w", **pad)
-        self.free_tool_program_btn = ttk.Button(
+        self.free_tool_program_btn = self._new_deck_button(
             free_tool_frame, text=_("BTN_PROGRAM"), command=self.program_free_tool_config)
         self.free_tool_program_btn.grid(row=1, column=1, **pad)
         self.query_btn_holder.append(self.free_tool_program_btn)  # locked by _set_ui_busy_state the same way Query is - writes 0x1A2 over the same serial/CAN link an active flash is using, same concurrent-port-access hazard as the buttons already in this list
@@ -671,7 +671,7 @@ class FlasherGUI:
             text=_("HELP_PERIPHERAL_INFO"),
             foreground="gray", wraplength=380, justify="left",
         ).grid(row=0, column=0, columnspan=4, sticky="w", padx=8, pady=(4, 4))
-        self.peripheral_query_btn = ttk.Button(
+        self.peripheral_query_btn = self._new_deck_button(
             peripheral_frame, text=_("BTN_QUERY"), command=self.query_peripheral_info)
         self.peripheral_query_btn.grid(row=1, column=0, **pad)
         self.query_btn_holder.append(self.peripheral_query_btn)  # locked by _set_ui_busy_state the same way Query is - queries 0x1A5 over the same serial/CAN link an active flash is using, same concurrent-port-access hazard as the buttons already in this list
@@ -680,7 +680,7 @@ class FlasherGUI:
         ttk.Spinbox(
             peripheral_frame, textvariable=self.device_serial_var, from_=0, to=255, width=6,
         ).grid(row=1, column=2, sticky="w", **pad)
-        self.device_serial_program_btn = ttk.Button(
+        self.device_serial_program_btn = self._new_deck_button(
             peripheral_frame, text=_("BTN_PROGRAM"), command=self.program_device_serial)
         self.device_serial_program_btn.grid(row=1, column=3, **pad)
         self.query_btn_holder.append(self.device_serial_program_btn)  # locked by _set_ui_busy_state the same way Query is - writes 0x1A4 over the same serial/CAN link an active flash is using, same concurrent-port-access hazard as the buttons already in this list
@@ -735,7 +735,7 @@ class FlasherGUI:
         self.swd_probe_var = tk.StringVar(value="")
         self.swd_probe_combo = ttk.Combobox(probe_sub, textvariable=self.swd_probe_var, width=20, state="readonly")
         self.swd_probe_combo.pack(side="left", padx=(4, 4))
-        self.swd_probe_refresh_btn = ttk.Button(probe_sub, text=_("BTN_REFRESH"), command=self.refresh_swd_probes)
+        self.swd_probe_refresh_btn = self._new_deck_button(probe_sub, text=_("BTN_REFRESH"), command=self.refresh_swd_probes)
         self.swd_probe_refresh_btn.pack(side="left")
         # uid -> description, for turning the combobox's shown text back
         # into the actual --probe/sn value to pass to the subprocess
@@ -751,12 +751,12 @@ class FlasherGUI:
         ttk.Label(swd_frame, text=_("LBL_BOOTLOADER_FILE")).grid(row=4, column=0, sticky="w", **pad)
         self.swd_bootloader_var = tk.StringVar()
         ttk.Entry(swd_frame, textvariable=self.swd_bootloader_var, width=20).grid(row=4, column=1, sticky="ew", **pad)
-        ttk.Button(swd_frame, text=_("BTN_BROWSE"), command=self.browse_swd_bootloader).grid(row=4, column=2, **pad)
+        self._new_deck_button(swd_frame, text=_("BTN_BROWSE"), command=self.browse_swd_bootloader).grid(row=4, column=2, **pad)
 
         ttk.Label(swd_frame, text=_("LBL_APPLICATION_FILE")).grid(row=5, column=0, sticky="w", **pad)
         self.swd_app_var = tk.StringVar()
         ttk.Entry(swd_frame, textvariable=self.swd_app_var, width=20).grid(row=5, column=1, sticky="ew", **pad)
-        ttk.Button(swd_frame, text=_("BTN_BROWSE"), command=self.browse_swd_app).grid(row=5, column=2, **pad)
+        self._new_deck_button(swd_frame, text=_("BTN_BROWSE"), command=self.browse_swd_app).grid(row=5, column=2, **pad)
 
         self.swd_dry_run_var = tk.BooleanVar(value=True)
         ttk.Checkbutton(
@@ -772,7 +772,7 @@ class FlasherGUI:
             variable=self.swd_backup_var,
         ).grid(row=7, column=0, columnspan=3, sticky="w", padx=8)
 
-        self.check_ob_btn = ttk.Button(
+        self.check_ob_btn = self._new_deck_button(
             swd_frame, text=_("BTN_CHECK_OPTION_BYTES"), command=self.start_check_option_bytes,
             state="normal" if self._cube_ok else "disabled",
         )
@@ -1300,9 +1300,9 @@ class FlasherGUI:
         btn_row.pack(fill="x", padx=8, pady=(4, 8))
         progress = ttk.Progressbar(btn_row, mode="determinate", maximum=100)
         progress.pack(side="left", fill="x", expand=True, padx=(0, 8))
-        download_btn = ttk.Button(btn_row, text=_("BTN_DOWNLOAD_SELECTED"), state="disabled")
+        download_btn = self._new_deck_button(btn_row, text=_("BTN_DOWNLOAD_SELECTED"), command=None, state="disabled")
         download_btn.pack(side="left")
-        ttk.Button(btn_row, text=_("BTN_CLOSE"), command=win.destroy).pack(side="left", padx=(8, 0))
+        self._new_deck_button(btn_row, text=_("BTN_CLOSE"), command=win.destroy).pack(side="left", padx=(8, 0))
 
         entries_by_iid = {}
 
