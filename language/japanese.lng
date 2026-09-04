@@ -377,3 +377,4 @@ QT_BOARD_SNAPSHOT=ボード状態
 QT_READ_BOARD_STATE=ボード状態を読む
 QT_BOARD_SNAPSHOT_HELP=アクティブ診断は文書化された読み取りクエリのみを送信します。永続設定、ファームウェア、オプションバイトは変更しません。
 QT_NO_BOARD_SNAPSHOT=まだボード状態は読み取られていません。
+QT_DEVICE_CONFIG=デバイス設定

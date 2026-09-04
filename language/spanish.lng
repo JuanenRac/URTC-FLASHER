@@ -378,3 +378,4 @@ QT_BOARD_SNAPSHOT=ESTADO DE LA PLACA
 QT_READ_BOARD_STATE=LEER ESTADO DE PLACA
 QT_BOARD_SNAPSHOT_HELP=Los diagnosticos activos solo envian consultas documentadas de lectura. No se cambia ningun ajuste persistente, firmware ni byte de opcion.
 QT_NO_BOARD_SNAPSHOT=Aun no se ha leido el estado de la placa.
+QT_DEVICE_CONFIG=CONFIGURACION DEL DISPOSITIVO

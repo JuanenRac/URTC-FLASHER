@@ -24,6 +24,23 @@ ApplicationWindow {
     property color textPrimary: "#edf7ff"
     property color muted: "#91a8bd"
     property color cyan: "#38d4e6"
+    property var pendingConfigAction: null
+    property string pendingConfigTitle: ""
+    property string pendingConfigBody: ""
+
+    // Real, generic confirmation for the 4 device-configuration writes
+    // (separate from the CAN-OTA `confirm` dialog below, which stays
+    // dedicated to that one real flow) - each real write persists a
+    // real EEPROM field, so every one of them asks first, same as the
+    // established Tkinter panel's own messagebox.askyesno.
+    function requestConfigWrite(title, body, action) {
+        if (!flasherBackend.canWriteDeviceConfig)
+            return
+        pendingConfigTitle = title
+        pendingConfigBody = body
+        pendingConfigAction = action
+        configConfirm.open()
+    }
 
     component Card: Rectangle {
         color: window.panel
@@ -109,6 +126,26 @@ ApplicationWindow {
         }
     }
 
+    Dialog {
+        id: configConfirm
+        anchors.centerIn: parent
+        modal: true
+        width: 440
+        title: window.pendingConfigTitle
+        standardButtons: Dialog.Cancel
+        background: Rectangle { color: window.panel; radius: 16; border.width: 1; border.color: window.panelBorder }
+        contentItem: ColumnLayout {
+            spacing: 14
+            Text { text: window.pendingConfigBody; color: window.textPrimary; wrapMode: Text.WordWrap; Layout.preferredWidth: 380 }
+            GameButton {
+                text: flasherBackend.uiText("BTN_SAVE")
+                accent: "#b86a35"
+                Layout.fillWidth: true
+                onClicked: { configConfirm.close(); if (window.pendingConfigAction) window.pendingConfigAction() }
+            }
+        }
+    }
+
     RowLayout {
         anchors.fill: parent
         anchors.margins: 16
@@ -158,9 +195,18 @@ ApplicationWindow {
         Card {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            ColumnLayout {
+            // Real scroll wrapper - added alongside the new device-
+            // configuration sections below (see their own header
+            // comment), since this card's real content no longer
+            // reliably fits the window's own default height.
+            ScrollView {
                 anchors.fill: parent
                 anchors.margins: 16
+                clip: true
+                contentWidth: availableWidth
+                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+            ColumnLayout {
+                width: parent.width
                 spacing: 12
                 Text { text: flasherBackend.uiText("QT_UPDATE_CHECKPOINTS"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 14 }
                 Text { text: flasherBackend.uiText("QT_CHECKPOINTS"); color: muted; font.family: "Bahnschrift"; font.pixelSize: 12; lineHeight: 1.55 }
@@ -199,14 +245,95 @@ ApplicationWindow {
                     }
                 }
                 Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
+
+                // -- Device configuration writes - real, persistent
+                // EEPROM fields only this tool ever writes (every other
+                // real app, including URTC-TESTER's own Qt Quick deck,
+                // only reads them). Each Save asks for the same real
+                // confirmation the established Tkinter panel already
+                // does (see flasher_gui.py's own save_expansion_board_
+                // type/save_mlx_sensor_variant/program_free_tool_config/
+                // program_device_serial) via the one shared configConfirm
+                // dialog below.
+                Text { text: flasherBackend.uiText("QT_DEVICE_CONFIG"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+                    ComboBox { id: expansionTypeCombo; model: flasherBackend.expansionBoardTypeOptions; Layout.fillWidth: true }
+                    GameButton {
+                        text: flasherBackend.uiText("BTN_SAVE")
+                        accent: "#b86a35"
+                        Layout.preferredWidth: 100
+                        enabled: flasherBackend.canWriteDeviceConfig
+                        onClicked: window.requestConfigWrite(
+                            flasherBackend.uiText("TITLE_CONFIRM_EXPANSION_BOARD_TYPE"),
+                            flasherBackend.uiText("MSG_CONFIRM_EXPANSION_BOARD_TYPE").replace("{type}", expansionTypeCombo.currentText),
+                            function() { flasherBackend.saveExpansionBoardType(expansionTypeCombo.currentIndex) })
+                    }
+                }
+                Text { text: flasherBackend.expansionBoardTypeResult; visible: flasherBackend.expansionBoardTypeResult !== ""; color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 9 }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+                    ComboBox { id: mlxVariantCombo; model: flasherBackend.mlxSensorVariantOptions; Layout.fillWidth: true }
+                    GameButton {
+                        text: flasherBackend.uiText("BTN_SAVE")
+                        accent: "#b86a35"
+                        Layout.preferredWidth: 100
+                        enabled: flasherBackend.canWriteDeviceConfig
+                        onClicked: window.requestConfigWrite(
+                            flasherBackend.uiText("TITLE_CONFIRM_MLX_VARIANT"),
+                            flasherBackend.uiText("MSG_CONFIRM_MLX_VARIANT").replace("{type}", mlxVariantCombo.currentText),
+                            function() { flasherBackend.saveMlxSensorVariant(mlxVariantCombo.currentIndex) })
+                    }
+                }
+                Text { text: flasherBackend.mlxSensorVariantResult; visible: flasherBackend.mlxSensorVariantResult !== ""; color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 9 }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+                    ComboBox { id: freeToolCombo; model: flasherBackend.freeToolOptions; Layout.fillWidth: true }
+                    GameButton {
+                        text: flasherBackend.uiText("BTN_SAVE")
+                        accent: "#b86a35"
+                        Layout.preferredWidth: 100
+                        enabled: flasherBackend.canWriteDeviceConfig
+                        onClicked: window.requestConfigWrite(
+                            flasherBackend.uiText("TITLE_CONFIRM_FREE_TOOL_CONFIG"),
+                            flasherBackend.uiText("MSG_CONFIRM_FREE_TOOL_CONFIG").replace("{tool}", freeToolCombo.currentText),
+                            function() { flasherBackend.saveFreeToolConfig(freeToolCombo.currentIndex) })
+                    }
+                }
+                Text { text: flasherBackend.freeToolConfigResult; visible: flasherBackend.freeToolConfigResult !== ""; color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 9 }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+                    TextField { id: deviceSerialField; text: "0"; inputMethodHints: Qt.ImhDigitsOnly; color: textPrimary; placeholderText: "0-255"; Layout.fillWidth: true; background: Rectangle { radius: 8; color: panelAlt; border.width: 1; border.color: panelBorder } }
+                    GameButton {
+                        text: flasherBackend.uiText("BTN_SAVE")
+                        accent: "#b86a35"
+                        Layout.preferredWidth: 100
+                        enabled: flasherBackend.canWriteDeviceConfig
+                        onClicked: window.requestConfigWrite(
+                            flasherBackend.uiText("TITLE_CONFIRM_DEVICE_SERIAL"),
+                            flasherBackend.uiText("MSG_CONFIRM_DEVICE_SERIAL").replace("{serial}", deviceSerialField.text),
+                            function() { flasherBackend.saveDeviceSerial(parseInt(deviceSerialField.text, 10) || 0) })
+                    }
+                }
+                Text { text: flasherBackend.deviceSerialResult; visible: flasherBackend.deviceSerialResult !== ""; color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 9 }
+
+                Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
                 Text { text: flasherBackend.uiText("QT_ACTIVITY_LOG"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
                 ListView {
                     Layout.fillWidth: true
-                    Layout.fillHeight: true
+                    // Was Layout.fillHeight: true - meaningless now that
+                    // this whole ColumnLayout lives inside a ScrollView
+                    // (see this Card's own comment above) rather than a
+                    // fixed-height parent; a real, generous fixed
+                    // viewport instead.
+                    Layout.preferredHeight: 200
                     model: flasherBackend.logs
                     clip: true
                     delegate: Text { required property string modelData; text: modelData; color: muted; font.family: "Cascadia Mono"; font.pixelSize: 10; width: parent.width; wrapMode: Text.WrapAnywhere }
-                    }
                 }
                 Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
                 Text { text: flasherBackend.uiText("QT_ADVANCED_DIAGNOSTICS"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
@@ -260,5 +387,7 @@ ApplicationWindow {
                     Layout.fillWidth: true
                 }
             }
+            }
         }
+    }
 }

@@ -26,9 +26,12 @@ from PySide6.QtQuickControls2 import QQuickStyle
 from flasher_config import (
     APP_FLASH_ADDR, APP_MAX_SIZE, BITRATE_500K_SLCAN_CODE,
     CAN_ID_ERROR_COUNTERS_RESPONSE, CAN_ID_EXPANSION_TYPE_RESP,
-    CAN_ID_MLX_VARIANT_RESP, CAN_ID_PERIPHERAL_INFO_RESP,
-    CAN_ID_QUERY_ERROR_COUNTERS, EXPANSION_BOARD_TYPES, FIRMWARE_FOLDER,
-    FLASHER_VERSION, ICON_IMAGE_PATH, MLX_SENSOR_VARIANTS, _,
+    CAN_ID_FREE_TOOL_CONFIG_RESP, CAN_ID_MLX_VARIANT_RESP,
+    CAN_ID_PERIPHERAL_INFO_RESP, CAN_ID_QUERY_ERROR_COUNTERS,
+    CAN_ID_SET_DEVICE_SERIAL, CAN_ID_SET_EXPANSION_TYPE,
+    CAN_ID_SET_FREE_TOOL, CAN_ID_SET_MLX_VARIANT,
+    EXPANSION_BOARD_TYPES, FIRMWARE_FOLDER,
+    FLASHER_VERSION, ICON_IMAGE_PATH, MLX_SENSOR_VARIANTS, TOOL_NAMES, _,
 )
 from flasher_protocol import FlashError, URTCFlasher
 from flasher_swd_tools import CubeProgrammerCLI, PyOCDCLI
@@ -53,6 +56,15 @@ class FlasherQtBridge(QObject):
     _swdProbeResult = Signal("QVariantList")
     _snapshotResult = Signal(object, str)
     _logRequested = Signal(str)
+    # Real device-configuration writes (expansion board type/MLX sensor
+    # variant/free tool selection/device serial) - one shared signal,
+    # keyed by which real field it is (mirrors URTC-TESTER's own
+    # _queryResult, added for the exact same real reason there: one
+    # generic worker instead of 4 near-duplicate ones). confirmed is the
+    # real value the board echoed back (or None on a genuine timeout);
+    # expected is what was actually sent, so _on_config_write_result can
+    # tell a real match from a real mismatch without re-deriving it.
+    _configWriteResult = Signal(str, object, object)
 
     def __init__(self) -> None:
         super().__init__()
@@ -72,12 +84,16 @@ class FlasherQtBridge(QObject):
         self._swd_tools: list[dict[str, object]] = []
         self._swd_probes: list[dict[str, str]] = []
         self._board_snapshot: list[dict[str, object]] = []
+        self._config_write_texts: dict[str, str] = {
+            "expansion_type": "", "mlx_variant": "", "free_tool": "", "device_serial": "",
+        }
         self._connectionResult.connect(self._on_connection_result)
         self._flashResult.connect(self._on_flash_result)
         self._flashProgress.connect(self._on_flash_progress)
         self._swdProbeResult.connect(self._on_swd_probe_result)
         self._snapshotResult.connect(self._on_snapshot_result)
         self._logRequested.connect(self._append_log)
+        self._configWriteResult.connect(self._on_config_write_result)
         self.scanPorts()
         self.scanFirmware()
         self.scanSwdCapabilities()
@@ -121,6 +137,7 @@ class FlasherQtBridge(QObject):
             "QT_READ_BOARD_STATE": "READ BOARD STATE",
             "QT_BOARD_SNAPSHOT_HELP": "Active diagnostics send documented read queries only. No persistent setting, firmware or option byte is changed.",
             "QT_NO_BOARD_SNAPSHOT": "No board state read yet.",
+            "QT_DEVICE_CONFIG": "DEVICE CONFIGURATION",
         }.get(key, key)
 
     @Property("QVariantList", notify=changed)
@@ -182,6 +199,45 @@ class FlasherQtBridge(QObject):
     @Property(bool, notify=changed)
     def canReadBoardSnapshot(self) -> bool:
         return self.connected and not self._busy
+
+    # -- device configuration writes (real, persistent EEPROM fields -
+    # only this tool ever writes them; every other real app in this
+    # ecosystem, including URTC-TESTER's own Qt Quick deck, only reads
+    # them). Same real gate as the board snapshot above. --
+    @Property(bool, notify=changed)
+    def canWriteDeviceConfig(self) -> bool:
+        return self.connected and not self._busy
+
+    @Property("QVariantList", constant=True)
+    def expansionBoardTypeOptions(self) -> list[str]:
+        return list(EXPANSION_BOARD_TYPES)
+
+    @Property("QVariantList", constant=True)
+    def mlxSensorVariantOptions(self) -> list[str]:
+        return list(MLX_SENSOR_VARIANTS)
+
+    @Property("QVariantList", constant=True)
+    def freeToolOptions(self) -> list[str]:
+        """Real display labels, index-aligned with the real selection
+        value each one writes (0 = none, matching
+        flasher_gui.py's own _free_tool_display_to_selection)."""
+        return [_("OPT_FREE_TOOL_NONE")] + [f"{tool_id + 1} - {name}" for tool_id, name in TOOL_NAMES.items()]
+
+    @Property(str, notify=changed)
+    def expansionBoardTypeResult(self) -> str:
+        return self._config_write_texts["expansion_type"]
+
+    @Property(str, notify=changed)
+    def mlxSensorVariantResult(self) -> str:
+        return self._config_write_texts["mlx_variant"]
+
+    @Property(str, notify=changed)
+    def freeToolConfigResult(self) -> str:
+        return self._config_write_texts["free_tool"]
+
+    @Property(str, notify=changed)
+    def deviceSerialResult(self) -> str:
+        return self._config_write_texts["device_serial"]
 
     def _log(self, message: str) -> None:
         """Queue logs from CAN worker threads onto the Qt GUI thread."""
@@ -443,6 +499,114 @@ class FlasherQtBridge(QObject):
         else:
             self._set_state(status="BOARD STATE COMPLETE", busy=False)
             self._log(f"BOARD_SNAPSHOT_COMPLETE fields={len(items)}")
+
+    # -- device configuration writes ------------------------------------
+
+    def _run_config_write(self, key: str, request: tuple[int, bytes], response_id: int, min_size: int, extract, expected: object) -> None:
+        """Real, generic write-then-confirm worker every one of the 4
+        real config writes below shares - send the real SET frame, wait
+        up to 1.5s for the board's own real response on response_id,
+        extract the real confirmed value from it, and emit it (or None
+        on a genuine timeout) through the one shared _configWriteResult
+        signal - not 4 near-duplicate workers, mirroring the same real
+        pattern already established for URTC-TESTER's own _run_query."""
+        transport = self._transport
+        if transport is None:
+            return
+        self._set_state(status=f"SAVING {key.upper()}", busy=True)
+
+        def _worker() -> None:
+            try:
+                transport.send_frame(*request)
+                frame = self._wait_for_frame(transport, response_id, min_size)
+                confirmed = extract(frame) if frame is not None else None
+                self._configWriteResult.emit(key, confirmed, expected)
+            except Exception as exc:
+                self._log(f"CONFIG_WRITE_FAILED key={key} error={exc}")
+                self._configWriteResult.emit(key, None, expected)
+
+        threading.Thread(target=_worker, daemon=True, name=f"urtc-qt-config-write-{key}").start()
+
+    # Real, pre-existing per-field i18n keys (already used by the
+    # established Tkinter panel for this exact same real confirmation) -
+    # reused here verbatim rather than inventing generic ones, so both
+    # UIs show identical, already-translated wording for the same event.
+    _CONFIG_WRITE_LABELS = {
+        "expansion_type": (EXPANSION_BOARD_TYPES, "LOG_EXPANSION_TYPE_SAVED_CONFIRMED", "LOG_EXPANSION_TYPE_MISMATCH", "LOG_EXPANSION_TYPE_NO_CONFIRMATION"),
+        "mlx_variant": (MLX_SENSOR_VARIANTS, "LOG_MLX_VARIANT_SAVED_CONFIRMED", "LOG_MLX_VARIANT_MISMATCH", "LOG_MLX_VARIANT_NO_CONFIRMATION"),
+    }
+
+    @Slot(str, object, object)
+    def _on_config_write_result(self, key: str, confirmed: object, expected: object) -> None:
+        if key in self._CONFIG_WRITE_LABELS:
+            labels, confirmed_key, mismatch_key, no_confirm_key = self._CONFIG_WRITE_LABELS[key]
+            if confirmed == expected:
+                text = _(confirmed_key, type=labels[expected])
+            elif confirmed is not None:
+                text = _(mismatch_key, value=expected, confirmed=confirmed)
+            else:
+                text = _(no_confirm_key)
+        elif key == "free_tool":
+            if confirmed == expected:
+                tool_display = _("OPT_FREE_TOOL_NONE") if expected == 0 else f"{expected} - {TOOL_NAMES.get(expected - 1, '?')}"
+                text = _("LOG_FREE_TOOL_SAVED_CONFIRMED", tool=tool_display)
+            elif confirmed is not None:
+                text = _("LOG_FREE_TOOL_MISMATCH", value=expected, confirmed=confirmed)
+            else:
+                text = _("LOG_FREE_TOOL_NO_CONFIRMATION")
+        elif key == "device_serial":
+            if confirmed == expected:
+                text = _("LOG_DEVICE_SERIAL_SAVED_CONFIRMED", serial=expected)
+            elif confirmed is not None:
+                text = _("LOG_DEVICE_SERIAL_MISMATCH", value=expected, confirmed=confirmed)
+            else:
+                text = _("LOG_DEVICE_SERIAL_NO_CONFIRMATION")
+        else:
+            return
+        self._log(f"CONFIG_WRITE key={key} sent={expected} confirmed={confirmed}")
+        self._config_write_texts[key] = text
+        self._set_state(status="READY", busy=False)
+
+    @Slot(int)
+    def saveExpansionBoardType(self, index: int) -> None:
+        """QML asks for an explicit confirmation immediately before
+        calling this Slot (same real requestConfigWrite pattern as
+        every other real persistent write below) - this changes a real,
+        persistent EEPROM field on the board."""
+        if not self.canWriteDeviceConfig or not 0 <= index < len(EXPANSION_BOARD_TYPES):
+            self._log("EXPANSION_TYPE_SAVE_BLOCKED not connected, busy, or index out of range")
+            return
+        self._run_config_write("expansion_type", (CAN_ID_SET_EXPANSION_TYPE, bytes([index])), CAN_ID_EXPANSION_TYPE_RESP, 1, lambda f: f[0], index)
+
+    @Slot(int)
+    def saveMlxSensorVariant(self, index: int) -> None:
+        if not self.canWriteDeviceConfig or not 0 <= index < len(MLX_SENSOR_VARIANTS):
+            self._log("MLX_VARIANT_SAVE_BLOCKED not connected, busy, or index out of range")
+            return
+        self._run_config_write("mlx_variant", (CAN_ID_SET_MLX_VARIANT, bytes([index])), CAN_ID_MLX_VARIANT_RESP, 1, lambda f: f[0], index)
+
+    @Slot(int)
+    def saveFreeToolConfig(self, selection: int) -> None:
+        """selection is the real value already resolved by QML from
+        freeToolOptions' own index (0 = none, matching
+        flasher_gui.py's own _free_tool_display_to_selection), not a
+        raw combo index - see that Property's own docstring."""
+        if not self.canWriteDeviceConfig or not 0 <= selection <= len(TOOL_NAMES):
+            self._log("FREE_TOOL_SAVE_BLOCKED not connected, busy, or selection out of range")
+            return
+        # frame[1] is the real resolved selection; frame[0] is the raw
+        # ID-jumper reading, not relevant to confirming this write.
+        self._run_config_write("free_tool", (CAN_ID_SET_FREE_TOOL, bytes([selection])), CAN_ID_FREE_TOOL_CONFIG_RESP, 2, lambda f: f[1], selection)
+
+    @Slot(int)
+    def saveDeviceSerial(self, serial: int) -> None:
+        if not self.canWriteDeviceConfig or not 0 <= serial <= 255:
+            self._log("DEVICE_SERIAL_SAVE_BLOCKED not connected, busy, or serial out of range (0-255)")
+            return
+        # Confirms via CAN_ID_PERIPHERAL_INFO_RESP, the same real ID the
+        # board snapshot's own peripheral-info read already uses -
+        # frame[0] is the fixed peripheral type, not relevant here.
+        self._run_config_write("device_serial", (CAN_ID_SET_DEVICE_SERIAL, bytes([serial])), CAN_ID_PERIPHERAL_INFO_RESP, 2, lambda f: f[1], serial)
 
     @Slot()
     def toggleConnection(self) -> None:

@@ -377,3 +377,4 @@ QT_BOARD_SNAPSHOT=BOARD SNAPSHOT
 QT_READ_BOARD_STATE=READ BOARD STATE
 QT_BOARD_SNAPSHOT_HELP=Active diagnostics send documented read queries only. No persistent setting, firmware or option byte is changed.
 QT_NO_BOARD_SNAPSHOT=No board state read yet.
+QT_DEVICE_CONFIG=DEVICE CONFIGURATION

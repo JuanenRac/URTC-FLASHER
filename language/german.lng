@@ -378,3 +378,4 @@ QT_BOARD_SNAPSHOT=PLATINENSTATUS
 QT_READ_BOARD_STATE=PLATINENSTATUS LESEN
 QT_BOARD_SNAPSHOT_HELP=Die aktive Diagnose sendet nur dokumentierte Leseanfragen. Keine persistente Einstellung, Firmware oder Option-Byte wird geaendert.
 QT_NO_BOARD_SNAPSHOT=Noch kein Platinenstatus gelesen.
+QT_DEVICE_CONFIG=GERAETEKONFIGURATION

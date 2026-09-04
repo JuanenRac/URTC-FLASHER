@@ -377,3 +377,4 @@ QT_BOARD_SNAPSHOT=控制板状态
 QT_READ_BOARD_STATE=读取控制板状态
 QT_BOARD_SNAPSHOT_HELP=主动诊断仅发送已文档化的读取查询。不会修改持久设置、固件或选项字节。
 QT_NO_BOARD_SNAPSHOT=尚未读取控制板状态。
+QT_DEVICE_CONFIG=设备配置

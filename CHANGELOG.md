@@ -123,6 +123,46 @@ build script) never changes the version - only a real build does.
   they can be exposed to the flashing protocol. Valid standard and extended
   frames remain parsed exactly as before.
 
+## [0.1.3]
+
+- **The Qt Quick deck now has real device-configuration writes**:
+  expansion board type, MLX9064x sensor variant, free tool selection,
+  and device serial number - the real last gap between it and the
+  established Tkinter panel (whose own docstring already said "Tkinter
+  remains the default until the SWD/JTAG and configuration pages reach
+  parity"; Board Snapshot already covered every one of these fields
+  read-only, so the write side was the one real thing missing). Each
+  Save asks for the same real confirmation the Tkinter panel's own
+  `save_expansion_board_type`/`save_mlx_sensor_variant`/
+  `program_free_tool_config`/`program_device_serial` already require -
+  every one of these persists a real EEPROM field on the board.
+- New `_run_config_write()` - one real generic write-then-confirm
+  worker all 4 writes share (send the real SET frame, wait up to 1.5s
+  for the board's own real confirmation, compare against what was
+  actually sent) - not 4 near-duplicate workers. Reuses the exact same
+  real, already-translated per-field result wording the Tkinter panel
+  already has (`LOG_EXPANSION_TYPE_SAVED_CONFIRMED`/`_MISMATCH`/
+  `_NO_CONFIRMATION` and the equivalent 3 sets for the other fields) -
+  no new duplicate translations invented for the same real event.
+- The right-hand card **now scrolls** - real content no longer reliably
+  fit the window once these 4 new sections landed; the Activity Log's
+  own real height, previously `Layout.fillHeight: true` against a
+  fixed-height parent, is now a real fixed 200px viewport instead.
+- New `verify_qt_device_config.py` (repo root - needs a real PySide6
+  event loop): a fake transport answers each real SET frame from a
+  separate thread - real confirmed writes, a real out-of-range value
+  rejected before ever reaching the transport, a real MISMATCH
+  correctly reported as one (not read as success), a genuine timeout
+  producing real "no confirmation" text, `busy` correctly blocking a
+  second write from starting concurrently, and a final real QML load
+  with zero warnings.
+- **Full-chip SWD/JTAG programming remains deliberately in the
+  established Tkinter workflow** - unchanged in this pass. The Qt Quick
+  deck's own real SWD/JTAG discovery (tool capability detection + probe
+  enumeration) was already real and read-only; porting the actual
+  destructive programming flow is explicitly gated on real hardware
+  validation, per this file's own existing `QT_SWD_SAFETY_NOTE`.
+
 ## [0.1.2]
 
 - **Converted every remaining `ttk.Button` in `flasher_gui.py` to the
