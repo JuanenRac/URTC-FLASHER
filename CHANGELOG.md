@@ -123,6 +123,19 @@ build script) never changes the version - only a real build does.
   they can be exposed to the flashing protocol. Valid standard and extended
   frames remain parsed exactly as before.
 
+## [0.1.1]
+
+- **Same real fix as URTC-TESTER's own v0.1.2** (real user feedback,
+  button shapes and header not fully matching HYDRA-UMC-UPDATER's
+  visual language despite `RoundedDeckCard`/`RoundedDeckButton`
+  already existing for exactly that purpose). Refresh, Auto-Detect,
+  Export Debug Bundle, and the License/About dialogs' own Accept/Close
+  converted from plain `ttk.Button` to the app's own `RoundedDeckButton`.
+  The animated HYDRA-UMC mark moved from inside the Connect card into
+  the header row itself, directly left of the "URTC Flasher" wordmark.
+  Many more `ttk.Button` calls remain across the flashing/SWD panels -
+  not converted in this pass, a real, larger follow-up.
+
 ## [0.1.0]
 
 ### Added

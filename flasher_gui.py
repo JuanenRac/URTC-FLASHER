@@ -150,19 +150,37 @@ class FlasherGUI:
         style.configure("TScrollbar", background=self.PANEL_ALT, troughcolor="#071018", bordercolor=self.BORDER, arrowcolor=self.ACCENT)
 
     def _build_command_deck_header(self):
-        """Add a compact application identity/status deck above all real controls."""
+        """Add a compact application identity/status deck above all real
+        controls - logo, app name and slogan together in the header row
+        itself, matching HYDRA-UMC-UPDATER's own header layout (icon left
+        of the wordmark). Real user feedback (see URTC-TESTER's own
+        identical fix): this animated mark used to live inside the
+        Connect card instead, nowhere near the app name/slogan it
+        belongs next to."""
         header = tk.Frame(self.root, bg=self.BG, height=76, highlightthickness=0)
         header.grid(row=0, column=0, sticky="ew", padx=8, pady=(7, 4))
         header.grid_propagate(False)
-        header.grid_columnconfigure(1, weight=1)
-        tk.Frame(header, bg=self.ACCENT, width=4).grid(row=0, column=0, sticky="ns", padx=(0, 13))
+        header.grid_columnconfigure(2, weight=1)
+        self._hydra_umc_mark = None
+        try:
+            self._hydra_umc_mark = AnimatedHydraUMCMark(header, HYDRA_UMC_ICON_FRAMES_DIR)
+            # A plain ttk.Label, styled for the panel background it used to
+            # sit on inside the Connect card - overridden for the header's
+            # own, slightly darker self.BG.
+            self._hydra_umc_mark.widget.configure(background=self.BG)
+            self._hydra_umc_mark.widget.grid(row=0, column=0, sticky="w", padx=(2, 10))
+        except (OSError, tk.TclError):
+            # Branding is cosmetic: the app remains usable if a source
+            # checkout lacks the generated frame assets.
+            self._hydra_umc_mark = None
+        tk.Frame(header, bg=self.ACCENT, width=4).grid(row=0, column=1, sticky="ns", padx=(0, 13))
         title_block = tk.Frame(header, bg=self.BG)
-        title_block.grid(row=0, column=1, sticky="w")
+        title_block.grid(row=0, column=2, sticky="w")
         tk.Label(title_block, text="URTC", bg=self.BG, fg=self.ACCENT, font=("Segoe UI Semibold", 12)).pack(anchor="w")
         tk.Label(title_block, text="Flasher", bg=self.BG, fg=self.TEXT, font=("Segoe UI", 20, "bold")).pack(anchor="w")
         tk.Label(title_block, text="CAN-OTA  •  SWD/JTAG  •  FIRMWARE CONTROL DECK", bg=self.BG, fg=self.MUTED, font=("Segoe UI Semibold", 8)).pack(anchor="w", pady=(1, 0))
         state = tk.Frame(header, bg="#0B202A", highlightbackground=self.BORDER, highlightthickness=1)
-        state.grid(row=0, column=2, sticky="e", padx=(12, 0))
+        state.grid(row=0, column=3, sticky="e", padx=(12, 0))
         tk.Label(state, text="●  HARDWARE SAFE", bg="#0B202A", fg=self.SUCCESS, font=("Segoe UI Semibold", 9)).pack(padx=12, pady=(8, 1))
         tk.Label(state, text=f"APP v{FLASHER_VERSION}", bg="#0B202A", fg=self.MUTED, font=("Segoe UI", 8)).pack(padx=12, pady=(0, 8))
 
@@ -285,22 +303,9 @@ class FlasherGUI:
         conn_card.grid(row=1, column=0, sticky="nsew", padx=8, pady=4)
         conn_frame = conn_card.content
 
-        # Tkinter cannot play the animated SVG directly.  This deliberately
-        # small mark plays twelve pre-rendered frames derived from the
-        # official HYDRA-UMC SVG, while the native window/taskbar icon keeps
-        # the URTC-specific static asset appropriate for 16-32px surfaces.
-        self._hydra_umc_mark = None
-        try:
-            self._hydra_umc_mark = AnimatedHydraUMCMark(
-                conn_frame, HYDRA_UMC_ICON_FRAMES_DIR
-            )
-            self._hydra_umc_mark.widget.grid(
-                row=0, column=5, rowspan=3, sticky="ne", padx=(8, 10), pady=(2, 2)
-            )
-        except (OSError, tk.TclError):
-            # Branding is cosmetic. Missing/corrupt generated frames must
-            # never prevent a technician from flashing a board.
-            self._hydra_umc_mark = None
+        # The animated HYDRA-UMC mark used to live here (column 5, top-right
+        # of this card) - moved into _build_command_deck_header() instead,
+        # next to the app name/slogan it actually belongs with.
 
         row = 0
         # Transport choice only appears at all when SocketCAN is actually
@@ -330,7 +335,7 @@ class FlasherGUI:
         self.port_var = tk.StringVar()
         self.port_combo = ttk.Combobox(conn_frame, textvariable=self.port_var, width=20, state="readonly")
         self.port_combo.grid(row=row, column=1, **pad)
-        ttk.Button(conn_frame, text=_("BTN_REFRESH"), command=self.refresh_ports).grid(row=row, column=2, **pad)
+        self._new_deck_button(conn_frame, _("BTN_REFRESH"), self.refresh_ports).grid(row=row, column=2, **pad)
         self.connect_btn = self._new_deck_button(
             conn_frame, _("BTN_CONNECT"), self.toggle_connect, accent=True
         )
@@ -353,7 +358,7 @@ class FlasherGUI:
             values=[label for label, _ in SLCAN_BITRATES],
         )
         self.bitrate_combo.grid(row=row, column=1, **pad)
-        self.autobaud_btn = ttk.Button(conn_frame, text=_("BTN_AUTO_DETECT"), command=self.auto_detect_bitrate)
+        self.autobaud_btn = self._new_deck_button(conn_frame, _("BTN_AUTO_DETECT"), self.auto_detect_bitrate)
         self.autobaud_btn.grid(row=row, column=2, **pad)
         self.bitrate_status = ttk.Label(conn_frame, text="", foreground="gray")
         self.bitrate_status.grid(row=row, column=3, columnspan=2, sticky="w", **pad)
@@ -799,7 +804,7 @@ class FlasherGUI:
         log_frame = log_card.content
         log_toolbar = ttk.Frame(log_frame)
         log_toolbar.pack(fill="x", side="top")
-        ttk.Button(log_toolbar, text=_("BTN_EXPORT_DEBUG_BUNDLE"), command=self.export_debug_bundle).pack(
+        self._new_deck_button(log_toolbar, _("BTN_EXPORT_DEBUG_BUNDLE"), self.export_debug_bundle).pack(
             side="left", padx=4, pady=2
         )
         self.log_text = tk.Text(
@@ -994,7 +999,7 @@ class FlasherGUI:
         except OSError:
             content = _("MSG_LICENSE_FALLBACK")
         win = self._show_text_window(_("MENU_LICENSE"), content, width=80, height=24)
-        ttk.Button(win, text=_("BTN_ACCEPT"), command=win.destroy).pack(pady=(0, 8))
+        self._new_deck_button(win, _("BTN_ACCEPT"), win.destroy, accent=True).pack(pady=(0, 8))
 
     def _menu_show_about(self):
         """Real About window - logo, tagline, description and a real
@@ -1036,7 +1041,7 @@ class FlasherGUI:
         self._about_info_row(rows, _("ABOUT_EMAIL"), ABOUT_AUTHOR_EMAIL)
         self._about_info_row(rows, _("ABOUT_LICENSE"), ABOUT_LICENSE_NAME)
 
-        ttk.Button(win, text=_("BTN_CLOSE"), command=win.destroy).pack(pady=(0, 16))
+        self._new_deck_button(win, _("BTN_CLOSE"), win.destroy, accent=True).pack(pady=(0, 16))
         win.update_idletasks()
         win.geometry(_center_geometry(win, win.winfo_reqwidth(), win.winfo_reqheight()))
 
