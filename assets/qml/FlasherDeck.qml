@@ -99,6 +99,16 @@ ApplicationWindow {
     }
 
     header: ToolBar {
+        // Explicit, not left implicit - a real on-screen check showed this
+        // ToolBar's own Basic-style implicit sizing collapsing to 0 height
+        // for this window (branding/status text all overlapping at the
+        // top-left corner instead of laid out in a row), the same real bug
+        // HYDRA-UMC-SUITE's own Qt Quick shell already found and fixed the
+        // same way - never propagated back to this sibling app until now.
+        // Sized to comfortably fit the 50px icon box plus this Card's own
+        // 7px and this RowLayout's own 10px margins top and bottom
+        // (50 + 2*7 + 2*10).
+        height: 84
         background: Rectangle { color: "#07111e" }
         Card {
             anchors.fill: parent

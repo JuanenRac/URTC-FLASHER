@@ -60,6 +60,13 @@ build script) never changes the version - only a real build does.
   verified across every language file.
 
 ### Fixed
+- The Qt Quick deck's own header `ToolBar` relied on the Basic style's
+  implicit sizing, which collapsed to 0 height for this specific window -
+  the branding/status text all overlapped at the top-left corner instead
+  of laying out in a real row. The same real bug HYDRA-UMC-SUITE's own
+  Qt Quick shell already found and fixed (an explicit `height: 84`,
+  sized to fit the header's own 50px icon plus its Card/RowLayout
+  margins) - never propagated back to this sibling app until now.
 - `qt_flasher.py`'s SWD probe scan shadowed the module-level `serial`
   import with a loop variable of the same name (`for serial in
   CubeProgrammerCLI(...).list_probes()`) - harmless in that one function
