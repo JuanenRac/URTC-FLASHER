@@ -6,10 +6,7 @@ in the window title bar and the Help > About dialog) - it is tracked
 separately from the URTC board firmware version this tool writes to a
 connected board.
 
-This is a condensed summary of real development history; the full
-day-by-day internal record (audits, bugs found and fixed, verification
-methodology) lives in the project owner's private internal log and is not
-published here.
+This is a condensed summary of real development history.
 
 ## Versioning scheme
 

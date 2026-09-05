@@ -358,7 +358,7 @@ verglichen, wobei `version`/`build_date` zur Referenz daneben protokolliert
 werden.
 
 ```json
-{"version": "1.1", "build_date": "2026-07-23", "sha256": "e5a4918c..."}
+{"version": "1.1", "build_date": "2024-01-15", "sha256": "e5a4918c..."}
 ```
 
 Eine Abweichung wird als klare Warnung protokolliert, kein harter

@@ -350,7 +350,7 @@ son champ `sha256` est comparé au fichier réel juste avant de flasher,
 avec `version`/`build_date` enregistrés à côté pour référence.
 
 ```json
-{"version": "1.1", "build_date": "2026-07-23", "sha256": "e5a4918c..."}
+{"version": "1.1", "build_date": "2024-01-15", "sha256": "e5a4918c..."}
 ```
 
 Une discordance est enregistrée comme un avertissement clair, pas un

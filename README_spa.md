@@ -344,7 +344,7 @@ flashear, con `version`/`build_date` registrados junto a ello como
 referencia.
 
 ```json
-{"version": "1.1", "build_date": "2026-07-23", "sha256": "e5a4918c..."}
+{"version": "1.1", "build_date": "2024-01-15", "sha256": "e5a4918c..."}
 ```
 
 Un desajuste se registra como una advertencia clara, no como una parada

@@ -344,7 +344,7 @@ confrontato con il file reale appena prima di flashare, con
 `version`/`build_date` registrati accanto come riferimento.
 
 ```json
-{"version": "1.1", "build_date": "2026-07-23", "sha256": "e5a4918c..."}
+{"version": "1.1", "build_date": "2024-01-15", "sha256": "e5a4918c..."}
 ```
 
 Una discrepanza viene registrata come un avviso chiaro, non un blocco
