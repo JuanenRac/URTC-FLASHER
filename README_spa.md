@@ -146,15 +146,17 @@ tareas se mantiene estático por diseño.
 ### Panel visual de control
 
 El panel compartido de comandos **Qt Quick** está disponible para el flujo
-CAN-OTA real:
+real completo, no solo CAN-OTA:
 ~~~
 python urtc_flasher.py --qtquick
 ~~~
 Utiliza el mismo transporte de producción, validación y código de flasheo
-firmado que la interfaz establecida. La interfaz predeterminada sigue siendo
-Tkinter mientras las pantallas avanzadas de SWD/JTAG y configuración de placa
-alcanzan paridad funcional; todavía no utilices Qt Quick para esas operaciones
-avanzadas.
+firmado que la interfaz establecida - CAN-OTA, descubrimiento SWD/JTAG de
+solo lectura, Board Snapshot, las 4 escrituras de configuración de
+dispositivo y la programación completa SWD/JTAG (borrado/escritura, dry
+run, copia de seguridad antes de borrar, comprobación RDP) son todas reales
+aquí, no un subconjunto. La interfaz predeterminada sigue siendo Tkinter,
+pero ya nada es exclusivo de Tkinter.
 
 El flujo consolidado CAN-OTA y SWD/JTAG se conserva, ahora sobre una
 superficie de control azul marino/cian: cabecera de producto, tarjeta de

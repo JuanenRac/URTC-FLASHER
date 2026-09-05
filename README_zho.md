@@ -121,13 +121,14 @@ python3 urtc_flasher.py
 
 ### 可视化控制台
 
-共享的 **Qt Quick** 命令控制台可用于真实 CAN-OTA 工作流：
+共享的 **Qt Quick** 命令控制台可用于完整的真实工作流，而不仅仅是 CAN-OTA：
 ~~~
 python urtc_flasher.py --qtquick
 ~~~
-它使用与既有界面相同的生产传输、验证和签名刷写代码。在高级 SWD/JTAG 与板卡
-配置页面达到功能对等之前，默认界面仍为 Tkinter；暂时不要将 Qt Quick 用于这些
-高级操作。
+它使用与既有界面相同的生产传输、验证和签名刷写代码——CAN-OTA、只读 SWD/JTAG
+探测、Board Snapshot、4 项设备配置写入，以及完整的 SWD/JTAG 编程（擦除/写入、
+演练模式、擦除前备份、RDP 检查）在这里都是真实的，不是其中的一部分。默认界面
+仍为 Tkinter，但已经没有任何功能是 Tkinter 独有的了。
 
 成熟的 CAN-OTA 与 SWD/JTAG 流程保持不变，现在使用深海军蓝/青色控制界面：
 产品标题、高对比度连接卡、清晰的固件表格、深色验证日志以及可见的进度通道。

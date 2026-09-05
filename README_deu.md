@@ -155,16 +155,17 @@ bleibt bewusst statisch.
 
 ### Visuelles Steuerpult
 
-Das gemeinsame **Qt-Quick**-Kommandopult steht für den echten CAN-OTA-Ablauf
-bereit:
+Das gemeinsame **Qt-Quick**-Kommandopult steht für den gesamten echten
+Ablauf bereit, nicht nur CAN-OTA:
 ~~~
 python urtc_flasher.py --qtquick
 ~~~
 Es verwendet dieselben Produktions-Transporte, Validierungen und den
-signierten Flash-Code wie die bewährte Oberfläche. Tkinter bleibt die
-Standardschnittstelle, bis die erweiterten SWD/JTAG- und
-Platineneinstellungsseiten Funktionsparität erreicht haben; verwenden Sie Qt
-Quick noch nicht für diese erweiterten Vorgänge.
+signierten Flash-Code wie die bewährte Oberfläche - CAN-OTA, schreibgeschützte
+SWD/JTAG-Erkennung, Board Snapshot, die 4 Geräte-Konfigurationsschreibvorgänge
+und die vollständige SWD/JTAG-Programmierung (Löschen/Schreiben, Testlauf,
+Sicherung vor dem Löschen, RDP-Prüfung) sind hier alle echt, keine Teilmenge.
+Die Standardoberfläche bleibt Tkinter, aber nichts ist mehr Tkinter-exklusiv.
 
 Der bewährte CAN-OTA- und SWD/JTAG-Ablauf bleibt erhalten und liegt nun auf
 einer dunkelblau-cyanfarbenen Steueroberfläche: Produktkopf, kontrastreiche

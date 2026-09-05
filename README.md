@@ -136,15 +136,17 @@ dependency. The native URTC window/taskbar icon remains static by design.
 
 ### Visual command deck
 
-The shared **Qt Quick** command deck is available for the real CAN-OTA
-workflow:
+The shared **Qt Quick** command deck is available for the full real
+workflow, not just CAN-OTA:
 ~~~
 python urtc_flasher.py --qtquick
 ~~~
 It uses the same production transport, validation and signed flashing code as
-the established interface. The default interface remains Tkinter while the
-advanced SWD/JTAG and board-configuration screens are brought to feature
-parity; do not use Qt Quick for those advanced operations yet.
+the established interface - CAN-OTA, read-only SWD/JTAG discovery, Board
+Snapshot, the 4 device-configuration writes, and full-chip SWD/JTAG
+programming (erase/write, dry run, back-up-before-erasing, RDP check) are
+all real here, not a subset. The default interface remains Tkinter, but
+nothing is Tkinter-only anymore.
 
 The live flasher keeps its established CAN-OTA and SWD/JTAG workflow, now on
 a dark navy/cyan command-deck surface: a product header, high-contrast

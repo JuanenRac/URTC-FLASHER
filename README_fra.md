@@ -152,16 +152,18 @@ URTC de fenêtre/barre des tâches reste volontairement statique.
 
 ### Console visuelle de contrôle
 
-La console de commandes partagée **Qt Quick** est disponible pour le flux
-CAN-OTA réel :
+La console de commandes partagée **Qt Quick** est disponible pour tout le
+flux réel, pas seulement CAN-OTA :
 ~~~
 python urtc_flasher.py --qtquick
 ~~~
 Elle utilise les mêmes transports de production, validations et code de
-flashage signé que l'interface établie. Tkinter reste l'interface par défaut
-tant que les écrans avancés SWD/JTAG et de configuration de carte n'ont pas
-atteint la parité fonctionnelle ; n'utilisez pas encore Qt Quick pour ces
-opérations avancées.
+flashage signé que l'interface établie - CAN-OTA, découverte SWD/JTAG en
+lecture seule, Board Snapshot, les 4 écritures de configuration de
+l'appareil et la programmation complète SWD/JTAG (effacement/écriture, dry
+run, sauvegarde avant effacement, vérification RDP) sont toutes réelles ici,
+pas un sous-ensemble. L'interface par défaut reste Tkinter, mais plus rien
+n'est exclusif à Tkinter.
 
 Le flux CAN-OTA et SWD/JTAG établi est conservé sur une surface de contrôle
 bleu nuit/cyan : en-tête produit, carte de connexion contrastée, tableaux de
