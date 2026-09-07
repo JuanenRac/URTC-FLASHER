@@ -1,0 +1,15 @@
+build/
+dist/
+__pycache__/
+*.pyc
+logs/*.log
+
+# Real per-machine overrides, including the real hmac_key_hex/slave_hmac_key_hex
+# signing keys (see flasher_config.py's own comment on _INSECURE_DEV_HMAC_KEY
+# for why these must never be committed). Only urtc_config.json.example - a
+# placeholder, never real key material - is meant to be tracked.
+urtc_config.json
+# HYDRA-UMC shared secret protection
+.env
+.env.*
+!.env.example
