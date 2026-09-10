@@ -153,7 +153,7 @@ build script) never changes the version - only a real build does.
 
 ## [0.1.4] - Every timeout uses the monotonic clock, not the civil one (FLASH-01)
 
-Found in an ecosystem-wide software-improvements audit, P1:
+Found while auditing the code:
 `flasher_protocol.py`'s every deadline/duration computation (`query_version`,
 `_wait_for`, the page-transfer/readback loops, `query_slave_version`, the
 slave status/progress queries - 33 call sites total) used `time.time()`, the
@@ -300,7 +300,7 @@ after the user reported still seeing "v0.0" post-migration.
 - **Critical**: `-c` probe-selection parameters were passed to
   `subprocess` as separate arguments instead of one combined string,
   breaking selection of a specific probe by serial number.
-  10 further real bugs fixed in the same audit pass: byte-at-a-time SLCAN
+  10 further real bugs fixed in the same review pass: byte-at-a-time SLCAN
   reads, a BELL character corrupting valid CAN frames, an uncaught
   `struct.error` in the SocketCAN path, a socket descriptor leak on a
   failed `bind()`, unquoted pyOCD paths breaking on spaces, blind
