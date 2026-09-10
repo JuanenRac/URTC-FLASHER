@@ -3,7 +3,7 @@
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 # GPL-3.0 - see LICENSE
 # =============================================================================
-"""FLASH-01 (found in an ecosystem-wide software-improvements audit, P1):
+"""FLASH-01 (P1):
 flasher_protocol.py's own deadline/duration math used to read time.time()
 (the civil/wall clock), which an NTP sync or a manual clock change can move
 at any moment with no relation to real elapsed time - shortening a real

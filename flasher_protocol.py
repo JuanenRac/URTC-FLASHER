@@ -6,7 +6,7 @@
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 # GPL-3.0 - see LICENSE
 #
-# FLASH-01 (found in an ecosystem-wide software-improvements audit, P1):
+# FLASH-01 (P1):
 # every deadline/elapsed-time computation in this file uses time.monotonic()
 # now, not time.time() - the civil (wall) clock can jump forward or backward
 # at any moment (an NTP sync, a manual clock change) with no relation to how
