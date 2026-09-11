@@ -67,6 +67,8 @@ primer intento real de flasheo con la misma precaución que darías a
 cualquier herramienta nueva que hable con un bootloader: ten JTAG a mano
 como respaldo.
 
+**Comprobación de honestidad - lo que realmente funciona hoy:** `tests/test_flasher_protocol_clock.py` es el único archivo que pytest recoge (4 tests que pasan, `pytest tests/`), y la propia CI de este repositorio (`.github/workflows/ci.yml`) nunca lo ejecuta - la CI solo compila cada archivo `.py` y ejecuta `tools/ci_validate.py`, así que hoy una regresión bajo `tests/` no haría fallar una build. Los dos scripts `verify_qt_*.py` en la raíz del repositorio (`verify_qt_device_config.py`, `verify_qt_swd_full_chip_flash.py`) son comprobaciones reales de extremo a extremo, deliberadamente fuera de pytest - necesitan un bucle de eventos Qt real para la entrega real de señales entre hilos, se ejecutan a mano con `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, y ambos pasan; `verify_qt_swd_full_chip_flash.py` ejercita la construcción real de comandos de `PyOCDCLI`/`CubeProgrammerCLI` con `dry_run=True`, nunca una llamada real a `subprocess.Popen`. Ese es el techo honesto de lo que se verifica automáticamente: las matemáticas de CRC32/HMAC-SHA256, el empaquetado de tramas SocketCAN, las escrituras de configuración de dispositivo de Qt Quick y la construcción de comandos de programación completa por SWD/JTAG son reales y se comprueban contra referencias conocidas como correctas, pero - como ya dice la línea de Estado de arriba - nada de esto se ha ejecutado contra una placa real sobre hardware real en este entorno. `flasher_protocol.py`, `flasher_swd_tools.py`, `flasher_validation.py` y `flasher_config.py` son implementaciones reales y sustanciales (decenas de miles de líneas combinadas) que se ejercitan mediante los dos scripts de verificación y el uso manual, no mediante un volumen equivalente de tests automatizados. Consulta `CHANGELOG.md` para ver exactamente qué se ha entregado hasta ahora.
+
 ## 1. 🔌 Consigue que tu adaptador hable CAN
 Cuál de estos necesitas depende de tu plataforma y de qué transporte
 vayas a usar:
@@ -978,6 +980,10 @@ ejecutar la aplicación.
 ├── flasher_protocol.py            <- la propia máquina de estados de CAN OTA
 ├── flasher_github.py              <- descarga firmware desde el propio repositorio de GitHub de URTC
 ├── flasher_gui.py                 <- la ventana principal (FlasherGUI) y su barra de menú
+├── verify_qt_device_config.py     <- comprobación real de extremo a extremo, fuera de pytest, de las escrituras de configuración de Qt Quick (necesita un bucle de eventos Qt real)
+├── verify_qt_swd_full_chip_flash.py <- comprobación real de extremo a extremo, fuera de pytest, del panel Qt Quick de programación completa por SWD/JTAG (solo dry-run)
+├── tests/
+│   └── test_flasher_protocol_clock.py <- el único archivo que recoge pytest (4 tests) - no lo ejecuta la CI, ver Comprobación de honestidad arriba
 ├── requirements.txt                <- pyserial>=3.5 (tester Tkinter) + PySide6>=6.8,<7 (deck `--qtquick`)
 ├── build_exe.bat                  <- compilación independiente para Windows
 ├── build_exe.sh                   <- compilación independiente para Linux
@@ -989,6 +995,7 @@ ejecutar la aplicación.
 ├── docs/
 │   └── CLI_REFERENCE.md           <- referencia de flags de línea de comandos
 ├── tools/
+│   ├── build_test.py                     <- comprobación de compilación sin subir versión + validación de fuentes del deck Qt Quick
 │   ├── ci_validate.py                    <- validación de manifest/CHANGELOG/docs usada por la CI
 │   └── render_hydra_umc_icon_frames.py   <- regenera assets/hydra_umc_icon_frames/ desde el SVG (solo desarrollo)
 ├── README.md                      <- (versión en inglés)
