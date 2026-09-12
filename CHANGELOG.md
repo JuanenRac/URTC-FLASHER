@@ -151,6 +151,21 @@ build script) never changes the version - only a real build does.
   they can be exposed to the flashing protocol. Valid standard and extended
   frames remain parsed exactly as before.
 
+### Tests
+- `flash()`'s own verify-failure reporting is now exercised end-to-end for
+  real, not just reachable by hand via `--mock-fail`: a simulated
+  bootloader (`MockCAN(simulate_failure=...)`) accepts every real page of
+  a real firmware file, then fails final verification - `flash()` raises
+  `FlashError` with the real, human-readable `VERIFY_FAIL_REASONS` text
+  (never a generic "failed"), and `progress_cb` reaches its real 70% page-
+  transfer ceiling but never 100% on that path (100% would read as
+  "verified", which never happened). Parametrized across all 5 real
+  documented failure reasons, plus one unrecognized reason byte (a
+  possible future firmware revision) still reported honestly rather than
+  swallowed, plus a positive control confirming a genuine success does
+  reach 100%. Doesn't bump `FLASHER_VERSION` on its own, same convention
+  as this file's own note above.
+
 ## [0.1.4] - Every timeout uses the monotonic clock, not the civil one (FLASH-01)
 
 Found while auditing the code:
