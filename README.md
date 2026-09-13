@@ -23,7 +23,7 @@
 </p>
 
 
-**Version:** 0.1.4 (this tool's own version - shown in the window banner and
+**Version:** 0.1.5 (this tool's own version - shown in the window banner and
 title bar, tracked separately from the URTC board firmware version it
 writes. Follows an X.Y.Z scheme where the patch number bumps automatically
 on every real build via build_exe.bat/build_exe.sh - see CHANGELOG.md for

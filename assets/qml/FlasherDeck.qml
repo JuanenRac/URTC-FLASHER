@@ -191,7 +191,7 @@ ApplicationWindow {
     }
     FileDialog {
         id: swdBackupDialog
-        title: "Save flash backup as..."
+        title: flasherBackend.uiText("QT_SWD_BACKUP_DIALOG_TITLE")
         fileMode: FileDialog.SaveFile
         nameFilters: ["Binary files (*.bin)"]
         onAccepted: window.requestFullChipFlash(selectedFile.toString().replace("file:///", ""))

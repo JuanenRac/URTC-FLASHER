@@ -166,6 +166,17 @@ build script) never changes the version - only a real build does.
   reach 100%. Doesn't bump `FLASHER_VERSION` on its own, same convention
   as this file's own note above.
 
+## [0.1.5] - H063: the SWD backup save-file dialog title was hardcoded English, never routed through the language files
+
+- The full-chip SWD/JTAG flow's "Save flash backup as..." `FileDialog`
+  title was a plain literal QML string, never calling
+  `flasherBackend.uiText()` - every non-English language always showed
+  English text there. New `QT_SWD_BACKUP_DIALOG_TITLE` key added to all
+  7 `language/*.lng` files, wired into `assets/qml/FlasherDeck.qml`.
+- `python tools/build_test.py`'s own real QML-key extraction now reports
+  `QML_I18N=PASS keys=57 languages=7` (up from 56), proving the new key
+  is required and present in every language.
+
 ## [0.1.4] - Every timeout uses the monotonic clock, not the civil one (FLASH-01)
 
 Found while auditing the code:
