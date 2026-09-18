@@ -20,7 +20,7 @@ increments instead (e.g. `0.1.9` -> `0.2.0`), and the same carry applies
 from `MINOR` into `MAJOR`. Running the tool from source (not through a
 build script) never changes the version - only a real build does.
 
-## [Unreleased]
+## [0.1.7] - Full-chip SWD/JTAG programming in the Qt Quick deck, real About window
 
 ### Added
 - **Full-chip SWD/JTAG programming** is now available in the Qt Quick

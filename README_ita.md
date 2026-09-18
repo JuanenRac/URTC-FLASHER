@@ -23,7 +23,7 @@
 </p>
 
 
-**Versione:** 0.1.6 (la versione di questo strumento - mostrata nel banner
+**Versione:** 0.1.7 (la versione di questo strumento - mostrata nel banner
 della finestra e nella barra del titolo, tracciata separatamente dalla
 versione del firmware della scheda URTC che scrive. Segue uno schema
 X.Y.Z in cui il numero di patch aumenta automaticamente a ogni build
