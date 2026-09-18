@@ -196,7 +196,7 @@ build script) never changes the version - only a real build does.
   verify-fail reporting path and the monotonic-clock usage had automated
   coverage - the size guards and manifest check had none.
 
-## [0.1.5] - H063: the SWD backup save-file dialog title was hardcoded English, never routed through the language files
+## [0.1.5] - The SWD backup save-file dialog title was hardcoded English, never routed through the language files
 
 - The full-chip SWD/JTAG flow's "Save flash backup as..." `FileDialog`
   title was a plain literal QML string, never calling

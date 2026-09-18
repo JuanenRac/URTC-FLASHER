@@ -951,7 +951,7 @@ JSON 数値（`50580689`）のどちらも受け付けます——ファイル�
 ├── verify_qt_swd_full_chip_flash.py <- Qt Quick のフルチップ SWD/JTAG パネルに対する、意図的に pytest の外に置かれた本物のエンドツーエンド検証（dry-run のみ）
 ├── tests/
 │   ├── test_flasher_protocol_clock.py <- 4件のテスト
-│   └── test_flash_verify_fail_reporting.py <- 8件のテスト、I54 自身の本物の受け入れテスト——CI では実行されない、上記の正直な現状確認を参照
+│   └── test_flash_verify_fail_reporting.py <- 8件のテスト、自身の本物の受け入れテスト——CI では実行されない、上記の正直な現状確認を参照
 ├── requirements.txt                <- pyserial>=3.5（Tkinter テスター）+ PySide6>=6.8,<7（`--qtquick` デッキ）
 ├── build_exe.bat                  <- Windows 独立ビルド
 ├── build_exe.sh                   <- Linux 独立ビルド

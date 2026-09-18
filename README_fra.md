@@ -1013,7 +1013,7 @@ pour exécuter l'application.
 ├── verify_qt_swd_full_chip_flash.py <- vraie vérification de bout en bout, délibérément hors pytest, du panneau Qt Quick de programmation complète SWD/JTAG (dry-run uniquement)
 ├── tests/
 │   ├── test_flasher_protocol_clock.py <- 4 tests
-│   └── test_flash_verify_fail_reporting.py <- 8 tests, le propre test d'acceptation réel d'I54 - non exécuté par la CI, voir Vérification d'honnêteté ci-dessus
+│   └── test_flash_verify_fail_reporting.py <- 8 tests, le propre test d'acceptation réel - non exécuté par la CI, voir Vérification d'honnêteté ci-dessus
 ├── requirements.txt                <- pyserial>=3.5 (tester Tkinter) + PySide6>=6.8,<7 (deck `--qtquick`)
 ├── build_exe.bat                  <- build autonome pour Windows
 ├── build_exe.sh                   <- build autonome pour Linux
