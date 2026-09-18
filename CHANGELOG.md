@@ -166,6 +166,16 @@ build script) never changes the version - only a real build does.
   reach 100%. Doesn't bump `FLASHER_VERSION` on its own, same convention
   as this file's own note above.
 
+## [0.1.6] - Real automated test coverage for flash()/flash_slave() dispatch
+
+- `tests/test_flash_protocol_dispatch.py` (new): `flash()`/`flash_slave()`'s
+  own size guards (empty/oversized firmware, both rejected before any CAN
+  frame is sent) are now exercised directly, alongside `query_version()`
+  against the real `MockCAN` simulated peer and the manifest sha256
+  cross-check's real "warn, never abort" behavior. Previously only the
+  verify-fail reporting path and the monotonic-clock usage had automated
+  coverage - the size guards and manifest check had none.
+
 ## [0.1.5] - H063: the SWD backup save-file dialog title was hardcoded English, never routed through the language files
 
 - The full-chip SWD/JTAG flow's "Save flash backup as..." `FileDialog`
