@@ -744,7 +744,7 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 ├── verify_qt_swd_full_chip_flash.py <- 真实的、刻意放在 pytest 之外的端到端检查，验证 Qt Quick 全芯片 SWD/JTAG 面板（仅 dry-run）
 ├── tests/
 │   ├── test_flasher_protocol_clock.py <- 4 个测试
-│   └── test_flash_verify_fail_reporting.py <- 8 个测试，I54 自己真正的验收测试——CI 不会运行它，见上文诚实核查
+│   └── test_flash_verify_fail_reporting.py <- 8 个测试，自己真正的验收测试——CI 不会运行它，见上文诚实核查
 ├── requirements.txt                <- pyserial>=3.5（Tkinter 测试器）+ PySide6>=6.8,<7（`--qtquick` 面板）
 ├── build_exe.bat                  <- Windows 独立构建
 ├── build_exe.sh                   <- Linux 独立构建

@@ -894,7 +894,7 @@ from the SVG during development; it is not required to run the application.
 ├── verify_qt_swd_full_chip_flash.py <- real, outside-pytest end-to-end check of the Qt Quick full-chip SWD/JTAG panel (dry-run only)
 ├── tests/
 │   ├── test_flasher_protocol_clock.py <- 4 tests
-│   └── test_flash_verify_fail_reporting.py <- 8 tests, I54's own real acceptance test - not run by CI, see Honesty check above
+│   └── test_flash_verify_fail_reporting.py <- 8 tests, its own real acceptance test - not run by CI, see Honesty check above
 ├── requirements.txt                <- pyserial>=3.5 (Tkinter tester) + PySide6>=6.8,<7 (`--qtquick` deck)
 ├── build_exe.bat                  <- Windows standalone build
 ├── build_exe.sh                   <- Linux standalone build

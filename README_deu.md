@@ -1027,7 +1027,7 @@ nicht erforderlich.
 ├── verify_qt_swd_full_chip_flash.py <- echte End-to-End-Prüfung außerhalb von pytest des Qt-Quick-Vollchip-SWD/JTAG-Panels (nur Dry-Run)
 ├── tests/
 │   ├── test_flasher_protocol_clock.py <- 4 Tests
-│   └── test_flash_verify_fail_reporting.py <- 8 Tests, I54's eigener echter Abnahmetest - nicht von der CI ausgeführt, siehe Ehrlichkeitscheck oben
+│   └── test_flash_verify_fail_reporting.py <- 8 Tests, eigener echter Abnahmetest - nicht von der CI ausgeführt, siehe Ehrlichkeitscheck oben
 ├── requirements.txt                <- pyserial>=3.5 (Tkinter-Tester) + PySide6>=6.8,<7 (`--qtquick`-Deck)
 ├── build_exe.bat                  <- eigenständiger Build für Windows
 ├── build_exe.sh                   <- eigenständiger Build für Linux
