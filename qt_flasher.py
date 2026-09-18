@@ -18,7 +18,7 @@ import threading
 import time
 from pathlib import Path
 
-from PySide6.QtCore import QObject, Property, QUrl, Signal, Slot
+from PySide6.QtCore import QObject, Property, QTimer, QUrl, Signal, Slot
 from PySide6.QtGui import QGuiApplication, QIcon
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuickControls2 import QQuickStyle
@@ -57,6 +57,7 @@ class FlasherQtBridge(QObject):
     _connectionResult = Signal(object, str)
     _flashResult = Signal(str)
     _flashProgress = Signal(int)
+    _flashSpeed = Signal(float)
     _swdProbeResult = Signal("QVariantList")
     _swdFlashResult = Signal(str)
     _swdOptionByteResult = Signal(str, str)
@@ -86,6 +87,18 @@ class FlasherQtBridge(QObject):
         self._logs: list[str] = []
         self._cancel_requested = False
         self._flash_path = ""
+        # Live transfer speed (kB/s, from URTCFlasher's speed_cb) plus a
+        # reactive "still waiting" indicator driven by a plain QTimer -
+        # deliberately not derived from _flashProgress/_flashSpeed alone,
+        # since a genuinely stalled transfer means NEITHER of those signals
+        # fires at all; only a timer ticking independently of the worker
+        # thread can notice that and surface it.
+        self._transfer_speed_kbps = 0.0
+        self._transfer_last_update: float | None = None
+        self._transfer_liveness_timer = QTimer(self)
+        self._transfer_liveness_timer.setInterval(500)
+        self._transfer_liveness_timer.timeout.connect(self._poll_transfer_liveness)
+        self._transfer_idle_seconds = 0
         self._swd_scanning = False
         self._swd_tools: list[dict[str, object]] = []
         self._swd_probes: list[dict[str, str]] = []
@@ -114,6 +127,7 @@ class FlasherQtBridge(QObject):
         self._connectionResult.connect(self._on_connection_result)
         self._flashResult.connect(self._on_flash_result)
         self._flashProgress.connect(self._on_flash_progress)
+        self._flashSpeed.connect(self._on_flash_speed)
         self._swdProbeResult.connect(self._on_swd_probe_result)
         self._swdFlashResult.connect(self._on_swd_flash_result)
         self._swdOptionByteResult.connect(self._on_swd_option_byte_result)
@@ -199,6 +213,18 @@ class FlasherQtBridge(QObject):
     @Property(int, notify=changed)
     def progress(self) -> int:
         return self._progress
+
+    @Property(str, notify=changed)
+    def transferSpeedText(self) -> str:
+        if not self._busy or self._transfer_speed_kbps <= 0:
+            return ""
+        return _("LBL_TRANSFER_SPEED", kbps=f"{self._transfer_speed_kbps:.1f}")
+
+    @Property(str, notify=changed)
+    def transferStalledText(self) -> str:
+        if not self._busy or self._transfer_idle_seconds < 2:
+            return ""
+        return _("LBL_TRANSFER_STALLED", secs=self._transfer_idle_seconds)
 
     @Property(str, notify=changed)
     def status(self) -> str:
@@ -1007,6 +1033,10 @@ class FlasherQtBridge(QObject):
             return
         self._cancel_requested = False
         self._progress = 0
+        self._transfer_speed_kbps = 0.0
+        self._transfer_idle_seconds = 0
+        self._transfer_last_update = time.monotonic()
+        self._transfer_liveness_timer.start()
         self._flash_path = self._selected_firmware
         self._set_state(status="CAN-OTA IN PROGRESS", busy=True)
         self._log(f"FLASH_STARTED {Path(self._flash_path).name}")
@@ -1028,6 +1058,7 @@ class FlasherQtBridge(QObject):
             flasher = URTCFlasher(
                 self._transport, log=self._log, progress_cb=self._flashProgress.emit,
                 stop_flag=lambda: self._cancel_requested,
+                speed_cb=self._flashSpeed.emit,
             )
             flasher.trigger_bootloader_entry()
             flasher.flash(firmware_path)
@@ -1039,9 +1070,25 @@ class FlasherQtBridge(QObject):
 
     def _on_flash_progress(self, progress: int) -> None:
         self._progress = max(0, min(100, progress))
+        self._transfer_last_update = time.monotonic()
+        self._transfer_idle_seconds = 0
+        self.changed.emit()
+
+    def _on_flash_speed(self, kbps: float) -> None:
+        self._transfer_speed_kbps = kbps
+        self._transfer_last_update = time.monotonic()
+        self._transfer_idle_seconds = 0
+        self.changed.emit()
+
+    def _poll_transfer_liveness(self) -> None:
+        if self._transfer_last_update is None:
+            return
+        self._transfer_idle_seconds = int(time.monotonic() - self._transfer_last_update)
         self.changed.emit()
 
     def _on_flash_result(self, result: str) -> None:
+        self._transfer_liveness_timer.stop()
+        self._transfer_last_update = None
         self._set_state(status=result, busy=False)
         self._log(result)
 

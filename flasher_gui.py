@@ -795,8 +795,26 @@ class FlasherGUI:
             foreground="#b35900", wraplength=680, justify="left",
         ).grid(row=9, column=0, columnspan=3, sticky="w", padx=8)
 
-        self.progress = ttk.Progressbar(root, orient="horizontal", mode="determinate", maximum=100)
-        self.progress.grid(row=3, column=0, sticky="ew", padx=12, pady=(4, 8))
+        progress_frame = ttk.Frame(root)
+        progress_frame.grid(row=3, column=0, sticky="ew", padx=12, pady=(4, 8))
+        progress_frame.columnconfigure(0, weight=1)
+        self.progress = ttk.Progressbar(progress_frame, orient="horizontal", mode="determinate", maximum=100)
+        self.progress.grid(row=0, column=0, sticky="ew")
+        # Live transfer status - speed (kB/s, from URTCFlasher's new
+        # speed_cb) plus a reactive "still waiting" indicator that turns
+        # visible on its own, without any new backend event, whenever this
+        # label hasn't been refreshed in a while (see
+        # _poll_transfer_liveness below): a stalled bus/board otherwise
+        # looks identical to one making normal progress, since the
+        # progress bar itself simply stops moving in both cases.
+        self.transfer_status_var = tk.StringVar(value="")
+        self.transfer_status_label = ttk.Label(
+            progress_frame, textvariable=self.transfer_status_var, foreground="gray",
+            font=("Cascadia Mono", 9),
+        )
+        self.transfer_status_label.grid(row=1, column=0, sticky="w", pady=(2, 0))
+        self._last_transfer_update = None
+        self._transfer_liveness_after_id = None
 
         # --- Log frame ---
         log_card = self._new_deck_card(root, _("TITLE_LOG"))
@@ -1932,6 +1950,8 @@ class FlasherGUI:
         self._set_ui_busy_state(True)
         self.cancel_btn.config(state="normal")
         self.progress["value"] = 0
+        self.transfer_status_var.set("")
+        self._start_transfer_liveness_watch()
 
         def _worker():
             try:
@@ -1940,6 +1960,7 @@ class FlasherGUI:
                     log=self.log,
                     progress_cb=lambda pct: self.root.after(0, lambda: self.progress.configure(value=pct)),
                     stop_flag=lambda: self._stop_requested,
+                    speed_cb=lambda kbps: self.root.after(0, lambda: self._on_transfer_speed(kbps)),
                 )
                 size = flasher.read_back_flash(save_path)
                 self.root.after(0, lambda: messagebox.showinfo(
@@ -1955,6 +1976,7 @@ class FlasherGUI:
             finally:
                 self.root.after(0, lambda: self._set_ui_busy_state(False))
                 self.root.after(0, lambda: self.cancel_btn.config(state="disabled"))
+                self.root.after(0, self._stop_transfer_liveness_watch)
 
         self._flash_thread = threading.Thread(target=_worker, daemon=True)
         self._flash_thread.start()
@@ -1998,6 +2020,8 @@ class FlasherGUI:
         self._set_ui_busy_state(True)
         self.cancel_btn.config(state="normal")
         self.progress["value"] = 0
+        self.transfer_status_var.set("")
+        self._start_transfer_liveness_watch()
 
         self._flash_thread = threading.Thread(target=self._flash_worker, daemon=True)
         self._flash_thread.start()
@@ -2006,6 +2030,35 @@ class FlasherGUI:
         self._stop_requested = True
         self.log(_("LOG_CANCEL_REQUESTED"))
 
+    def _on_transfer_speed(self, kbps):
+        self._last_transfer_update = time.monotonic()
+        self.transfer_status_var.set(_("LBL_TRANSFER_SPEED", kbps=f"{kbps:.1f}"))
+        self.transfer_status_label.config(foreground="gray")
+
+    def _start_transfer_liveness_watch(self):
+        self._last_transfer_update = time.monotonic()
+        self._poll_transfer_liveness()
+
+    def _poll_transfer_liveness(self):
+        # Reactive timeout indicator: this fires on its own timer
+        # (independent of progress_cb/speed_cb) so a stalled transfer -
+        # where neither callback is being invoked at all - is visibly
+        # different from one still making progress, instead of the status
+        # label just freezing on its last "N kB/s" value with no cue that
+        # it's now stale.
+        if self._last_transfer_update is not None:
+            idle = time.monotonic() - self._last_transfer_update
+            if idle >= 2.0:
+                self.transfer_status_var.set(_("LBL_TRANSFER_STALLED", secs=int(idle)))
+                self.transfer_status_label.config(foreground="#e0a030" if idle < 6.0 else "#e05050")
+        self._transfer_liveness_after_id = self.root.after(500, self._poll_transfer_liveness)
+
+    def _stop_transfer_liveness_watch(self):
+        if self._transfer_liveness_after_id is not None:
+            self.root.after_cancel(self._transfer_liveness_after_id)
+            self._transfer_liveness_after_id = None
+        self._last_transfer_update = None
+
     def _flash_worker(self):
         try:
             flasher = URTCFlasher(
@@ -2013,6 +2066,7 @@ class FlasherGUI:
                 log=self.log,
                 progress_cb=lambda pct: self.root.after(0, lambda: self.progress.configure(value=pct)),
                 stop_flag=lambda: self._stop_requested,
+                speed_cb=lambda kbps: self.root.after(0, lambda: self._on_transfer_speed(kbps)),
             )
             if self.flash_target_var.get() == "slave":
                 if self.trigger_var.get():
@@ -2039,6 +2093,7 @@ class FlasherGUI:
         finally:
             self.root.after(0, lambda: self._set_ui_busy_state(False))
             self.root.after(0, lambda: self.cancel_btn.config(state="disabled"))
+            self.root.after(0, self._stop_transfer_liveness_watch)
 
     def browse_swd_bootloader(self):
         path = filedialog.askopenfilename(

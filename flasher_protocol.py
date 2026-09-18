@@ -47,11 +47,20 @@ class FlashError(Exception):
 
 
 class URTCFlasher:
-    def __init__(self, slcan, log, progress_cb=None, stop_flag=None):
+    def __init__(self, slcan, log, progress_cb=None, stop_flag=None, speed_cb=None):
         self.can = slcan
         self.log = log
         self.progress_cb = progress_cb or (lambda pct: None)
         self.stop_flag = stop_flag or (lambda: False)
+        # Separate, optional callback carrying the live transfer speed (in
+        # kB/s) at the same cadence progress_cb already fires at. Kept
+        # independent from progress_cb (rather than adding a second
+        # positional/keyword argument to it) so every existing progress_cb
+        # caller - including the ones already wired as single-argument
+        # `lambda pct: ...` in both the Tkinter panel and the Qt Quick deck -
+        # keeps working unchanged; only callers that want the speed figure
+        # need to pass this new callback.
+        self.speed_cb = speed_cb or (lambda kbps: None)
         self._last_heartbeat_pct = None  # tracked across _wait_for calls for the page-ACK retry's active confirmation check
 
     def query_version(self, timeout=1.5):
@@ -393,6 +402,7 @@ class URTCFlasher:
             # 30% for that phase keeps it monotonically increasing instead.
             pct = int((page_index / total_pages) * 70)
             self.progress_cb(pct)
+            self.speed_cb(page_kbps)
             self.log(_("LOG_PAGE_WRITTEN_ACKED", page=page_index, total=total_pages,
                       elapsed=page_elapsed, kbps=page_kbps))
 
@@ -568,6 +578,9 @@ class URTCFlasher:
             page_index += 1
             pct = int((min(len(buf), total_size) / total_size) * 100)
             self.progress_cb(pct)
+            running_elapsed = time.monotonic() - transfer_start
+            running_kbps = (min(len(buf), total_size) / 1024) / running_elapsed if running_elapsed > 0 else 0.0
+            self.speed_cb(running_kbps)
 
         with open(output_path, "wb") as f:
             f.write(bytes(buf[:total_size]))
@@ -721,6 +734,9 @@ class URTCFlasher:
                 progress = self._query_slave_progress(timeout=0.5)
                 pct = int((offset / size) * 70)  # same 0-70% reservation as the main board's own flow, see flash() above
                 self.progress_cb(pct)
+                running_elapsed = time.monotonic() - transfer_start
+                running_kbps = (offset / 1024) / running_elapsed if running_elapsed > 0 else 0.0
+                self.speed_cb(running_kbps)
                 if progress is not None:
                     consecutive_no_response = 0
                     self.log(_("LOG_SLAVE_PROGRESS", offset=offset, size=size, slave_pct=progress))
