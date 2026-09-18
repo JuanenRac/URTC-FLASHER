@@ -20,6 +20,26 @@ increments instead (e.g. `0.1.9` -> `0.2.0`), and the same carry applies
 from `MINOR` into `MAJOR`. Running the tool from source (not through a
 build script) never changes the version - only a real build does.
 
+## [0.1.8] - Live transfer speed and a reactive stall indicator during CAN-OTA
+
+### Added
+- **Live transfer speed (kB/s)** during a CAN-OTA update/readback, in both
+  the established Tkinter panel and the Qt Quick deck. `flasher_protocol.py`
+  already computed per-page and overall kB/s for its own log lines; a new,
+  independent `speed_cb` callback on `URTCFlasher` now carries that same
+  figure out to the UI at the same cadence the existing `progress_cb`
+  already fires at (kept as a separate callback, not a second argument on
+  `progress_cb`, so every existing single-argument `progress_cb` caller
+  keeps working unchanged). Both flashing UIs show it next to the
+  percentage while a transfer is running.
+- **Reactive stall indicator**, driven independently of the flash worker
+  thread (a Tkinter `after` poll / a Qt `QTimer`, not the callbacks
+  themselves) so a genuinely stalled transfer - where neither `progress_cb`
+  nor the new `speed_cb` fires at all - is visibly different from one still
+  making progress, instead of the UI just freezing on its last known
+  percentage with no cue that it's now stale. New
+  `LBL_TRANSFER_SPEED`/`LBL_TRANSFER_STALLED` keys across all 7 languages.
+
 ## [0.1.7] - Full-chip SWD/JTAG programming in the Qt Quick deck, real About window
 
 ### Added

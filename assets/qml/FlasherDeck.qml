@@ -268,6 +268,20 @@ ApplicationWindow {
                     contentItem: Item { implicitHeight: 12; Rectangle { width: parent.width * flasherBackend.progress / 100; height: parent.height; radius: 5; color: cyan } }
                 }
                 Text { text: flasherBackend.progress + "%"; color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 20 }
+                Text {
+                    visible: flasherBackend.transferSpeedText.length > 0
+                    text: flasherBackend.transferSpeedText
+                    color: muted
+                    font.family: "Cascadia Mono"
+                    font.pixelSize: 11
+                }
+                Text {
+                    visible: flasherBackend.transferStalledText.length > 0
+                    text: flasherBackend.transferStalledText
+                    color: "#e0a030"
+                    font.family: "Cascadia Mono"
+                    font.pixelSize: 11
+                }
                 RowLayout {
                     Layout.fillWidth: true
                     GameButton { text: flasherBackend.uiText("QT_START_CAN_OTA"); Layout.fillWidth: true; enabled: flasherBackend.canFlash; onClicked: confirm.open() }
