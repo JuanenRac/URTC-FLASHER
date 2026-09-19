@@ -94,6 +94,18 @@ def main() -> int:
         compile_python_sources()
         if stack == "python-qtquick":
             validate_qtquick_deck()
+        # Real gap: this generic template only ever syntax-checked Python
+        # sources, never actually ran this repo's own real, passing pytest
+        # suite (tests/) - a real regression in flasher_protocol.py or
+        # flasher_validation.py could pass build_test.py cleanly. Modules
+        # under test live at the repo root (not under src/), so PYTHONPATH
+        # points there directly.
+        tests_dir = ROOT / "tests"
+        if tests_dir.is_dir():
+            python = sys.executable
+            environment = dict(os.environ)
+            environment["PYTHONPATH"] = str(ROOT)
+            run(python, "-m", "pytest", str(tests_dir), env=environment)
     elif stack == "node":
         npm = "npm.cmd" if os.name == "nt" else "npm"
         # Reuse an existing local dependency tree so a running editor/linter

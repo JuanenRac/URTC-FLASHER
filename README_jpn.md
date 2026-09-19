@@ -23,7 +23,7 @@
 </p>
 
 
-**バージョン：** 0.1.8（本ツール自身のバージョン——ウィンドウのバナーと
+**バージョン：** 0.1.9（本ツール自身のバージョン——ウィンドウのバナーと
 タイトルバーに表示され、書き込み先の URTC ボードファームウェアのバージョン
 とは別に管理されます。X.Y.Z 方式に従い、パッチ番号は build_exe.bat/
 build_exe.sh による実際のビルドのたびに自動的に加算されます——バージョン
@@ -69,7 +69,7 @@ HMAC-SHA256 署名、ゴールデンイメージのバックアップスロッ�
 最初の実際のフラッシュ試行に臨んでください：フォールバックとして手元に
 JTAG を用意しておいてください。
 
-**正直な現状確認 - 実際に今動くもの:** `tests/` には pytest が収集する本物のファイルが2つある——`test_flasher_protocol_clock.py` と `test_flash_verify_fail_reporting.py`（合計12件のテストが通過、`pytest tests/`）——このリポジトリ自身の CI（`.github/workflows/ci.yml`）はそれを一度も実行しない——CI は各 `.py` ファイルをコンパイルして `tools/ci_validate.py` を実行するだけなので、今日の時点では `tests/` 配下のリグレッションがビルドを失敗させることはない。リポジトリ直下にある2つの `verify_qt_*.py` スクリプト（`verify_qt_device_config.py`、`verify_qt_swd_full_chip_flash.py`）は、意図的に pytest の外に置かれた本物のエンドツーエンドチェックだ——本物のクロススレッドシグナル配信のために本物の Qt イベントループを必要とし、`QT_QPA_PLATFORM=offscreen python verify_qt_*.py` で手動実行され、どちらも通過している。`verify_qt_swd_full_chip_flash.py` は `dry_run=True` を使い、本物の `subprocess.Popen` 呼び出しには一切至らせずに、`PyOCDCLI`/`CubeProgrammerCLI` の実際のコマンド構築を検証する。これが自動的に検証されている範囲の正直な上限だ。CRC32/HMAC-SHA256 の計算、SocketCAN のフレームパッキング、Qt Quick のデバイス設定書き込み、そしてフルチップ SWD/JTAG プログラミングのコマンド構築は本物であり、既知の正しい参照と照合されているが——上記の状態の行がすでに述べている通り——これらはこの環境において実機ボード上の実際のハードウェアに対しては一度も実行されていない。`flasher_protocol.py`、`flasher_swd_tools.py`、`flasher_validation.py`、`flasher_config.py` は本物で相当な規模の実装であり（合計で数万行）、この2つの検証スクリプトと手動での使用によって検証されているのであって、それに見合う量の自動化された単体テストによってではない。これまでに実際に出荷されたものの詳細は `CHANGELOG.md` を参照。
+**正直な現状確認 - 実際に今動くもの:** `tests/` には pytest が収集する本物のファイルが3つある——`test_flash_protocol_dispatch.py`、`test_flash_verify_fail_reporting.py`、`test_flasher_protocol_clock.py`（合計20件のテストが通過、`pytest tests/`）——本物の `MockCAN` トランスポート（`flasher_transports.py`）も含まれており、これは完全なシミュレート済みブートローダーのシーケンス（起動/消去/受信、データページ + PAGE_ACK、HMAC チャンク、実際の成功または具体的な `VERIFY_FAIL_REASON` でのアップデート終了）を再生する。`tools/build_test.py` は今やこのスイートを `build-test.sh`/`build-test.bat` の一部として実行する——しかしこのリポジトリ自身の GitHub Actions CI（`.github/workflows/ci.yml`）は依然として各 `.py` ファイルをコンパイルして `tools/ci_validate.py` を実行するだけで、`build_test.py` 自体は一度も実行しない（そのワークフローはエコシステム全体で共有されるベースラインであり、Python 用の汎用的な pytest ステップは存在しない）ため、今日の時点でも `tests/` 配下のリグレッションは GitHub Actions の実行を失敗させることはない——ローカルの `build-test.sh` だけが失敗させる。リポジトリ直下にある2つの `verify_qt_*.py` スクリプト（`verify_qt_device_config.py`、`verify_qt_swd_full_chip_flash.py`）は、意図的に pytest の外に置かれた本物のエンドツーエンドチェックだ——本物のクロススレッドシグナル配信のために本物の Qt イベントループを必要とし、`QT_QPA_PLATFORM=offscreen python verify_qt_*.py` で手動実行され、どちらも通過している。`verify_qt_swd_full_chip_flash.py` は `dry_run=True` を使い、本物の `subprocess.Popen` 呼び出しには一切至らせずに、`PyOCDCLI`/`CubeProgrammerCLI` の実際のコマンド構築を検証する。これが自動的に検証されている範囲の正直な上限だ。CRC32/HMAC-SHA256 の計算、SocketCAN のフレームパッキング、Qt Quick のデバイス設定書き込み、そしてフルチップ SWD/JTAG プログラミングのコマンド構築は本物であり、既知の正しい参照と照合されているが——上記の状態の行がすでに述べている通り——これらはこの環境において実機ボード上の実際のハードウェアに対しては一度も実行されていない。`flasher_protocol.py`、`flasher_swd_tools.py`、`flasher_validation.py`、`flasher_config.py` は本物で相当な規模の実装であり（合計で数万行）、この2つの検証スクリプトと手動での使用によって検証されているのであって、それに見合う量の自動化された単体テストによってではない。これまでに実際に出荷されたものの詳細は `CHANGELOG.md` を参照。
 
 ## 1. 🔌 アダプターを CAN 通信できるようにする
 
@@ -951,7 +951,8 @@ JSON 数値（`50580689`）のどちらも受け付けます——ファイル�
 ├── verify_qt_swd_full_chip_flash.py <- Qt Quick のフルチップ SWD/JTAG パネルに対する、意図的に pytest の外に置かれた本物のエンドツーエンド検証（dry-run のみ）
 ├── tests/
 │   ├── test_flasher_protocol_clock.py <- 4件のテスト
-│   └── test_flash_verify_fail_reporting.py <- 8件のテスト、自身の本物の受け入れテスト——CI では実行されない、上記の正直な現状確認を参照
+│   ├── test_flash_verify_fail_reporting.py <- 8件のテスト
+│   └── test_flash_protocol_dispatch.py <- 8件のテスト、本物のシミュレート済み MockCAN ブートローダーに対して——build-test.sh/.bat が実行、GitHub Actions CI では実行されない、上記の正直な現状確認を参照
 ├── requirements.txt                <- pyserial>=3.5（Tkinter テスター）+ PySide6>=6.8,<7（`--qtquick` デッキ）
 ├── build_exe.bat                  <- Windows 独立ビルド
 ├── build_exe.sh                   <- Linux 独立ビルド

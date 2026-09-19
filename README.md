@@ -23,7 +23,7 @@
 </p>
 
 
-**Version:** 0.1.8 (this tool's own version - shown in the window banner and
+**Version:** 0.1.9 (this tool's own version - shown in the window banner and
 title bar, tracked separately from the URTC board firmware version it
 writes. Follows an X.Y.Z scheme where the patch number bumps automatically
 on every real build via build_exe.bat/build_exe.sh - see CHANGELOG.md for
@@ -64,7 +64,7 @@ either platform is a real board over real hardware — treat a first
 real-world flash attempt with the same caution you'd give any new tool
 talking to a bootloader: have JTAG on hand as a fallback.
 
-**Honesty check - what actually runs today:** `tests/` holds 2 real files pytest collects - `test_flasher_protocol_clock.py` and `test_flash_verify_fail_reporting.py` (12 passing tests combined, `pytest tests/`) - and this repo's own CI (`.github/workflows/ci.yml`) never runs it - CI only compiles every `.py` file and runs `tools/ci_validate.py`, so a regression under `tests/` would not fail a build today. The two `verify_qt_*.py` scripts at the repo root (`verify_qt_device_config.py`, `verify_qt_swd_full_chip_flash.py`) are real, deliberately-outside-pytest end-to-end checks - they need a real Qt event loop for real cross-thread Signal delivery, run manually with `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, and both pass; `verify_qt_swd_full_chip_flash.py` exercises the real `PyOCDCLI`/`CubeProgrammerCLI` command construction with `dry_run=True`, never a real `subprocess.Popen` call. That's the honest ceiling of what's automatically verified: the CRC32/HMAC-SHA256 math, SocketCAN frame packing, the Qt Quick device-configuration writes and the full-chip SWD/JTAG command construction are real and checked against known-correct references, but - as the Status line above already says - none of it has been run against a real board over real hardware in this environment. `flasher_protocol.py`, `flasher_swd_tools.py`, `flasher_validation.py` and `flasher_config.py` are real, substantial implementations (tens of thousands of lines combined) that are exercised by the two verify scripts and by manual use, not by a matching volume of automated unit tests. See `CHANGELOG.md` for exactly what has shipped so far.
+**Honesty check - what actually runs today:** `tests/` holds 3 real files pytest collects - `test_flash_protocol_dispatch.py`, `test_flash_verify_fail_reporting.py` and `test_flasher_protocol_clock.py` (20 passing tests combined, `pytest tests/`), including a real `MockCAN` transport (`flasher_transports.py`) that plays back a full simulated bootloader sequence (start/erase/receive, page data + PAGE_ACK, HMAC chunks, end-update with a real success or a specific `VERIFY_FAIL_REASON`). `tools/build_test.py` now runs this suite as part of `build-test.sh`/`build-test.bat` - but this repo's own GitHub Actions CI (`.github/workflows/ci.yml`) still only compiles every `.py` file and runs `tools/ci_validate.py`, never `build_test.py` itself (that workflow is the shared ecosystem-wide baseline, with no generic Python-pytest step), so a regression under `tests/` would still not fail a GitHub Actions run today - only a local `build-test.sh`. The two `verify_qt_*.py` scripts at the repo root (`verify_qt_device_config.py`, `verify_qt_swd_full_chip_flash.py`) are real, deliberately-outside-pytest end-to-end checks - they need a real Qt event loop for real cross-thread Signal delivery, run manually with `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, and both pass; `verify_qt_swd_full_chip_flash.py` exercises the real `PyOCDCLI`/`CubeProgrammerCLI` command construction with `dry_run=True`, never a real `subprocess.Popen` call. That's the honest ceiling of what's automatically verified: the CRC32/HMAC-SHA256 math, SocketCAN frame packing, the Qt Quick device-configuration writes and the full-chip SWD/JTAG command construction are real and checked against known-correct references, but - as the Status line above already says - none of it has been run against a real board over real hardware in this environment. `flasher_protocol.py`, `flasher_swd_tools.py`, `flasher_validation.py` and `flasher_config.py` are real, substantial implementations (tens of thousands of lines combined) that are exercised by the two verify scripts and by manual use, not by a matching volume of automated unit tests. See `CHANGELOG.md` for exactly what has shipped so far.
 
 ## 1. 🔌 Get your adapter talking CAN
 
@@ -894,7 +894,8 @@ from the SVG during development; it is not required to run the application.
 ├── verify_qt_swd_full_chip_flash.py <- real, outside-pytest end-to-end check of the Qt Quick full-chip SWD/JTAG panel (dry-run only)
 ├── tests/
 │   ├── test_flasher_protocol_clock.py <- 4 tests
-│   └── test_flash_verify_fail_reporting.py <- 8 tests, its own real acceptance test - not run by CI, see Honesty check above
+│   ├── test_flash_verify_fail_reporting.py <- 8 tests
+│   └── test_flash_protocol_dispatch.py <- 8 tests, against a real simulated MockCAN bootloader - run by build-test.sh/.bat, not by GitHub Actions CI, see Honesty check above
 ├── requirements.txt                <- pyserial>=3.5 (Tkinter tester) + PySide6>=6.8,<7 (`--qtquick` deck)
 ├── build_exe.bat                  <- Windows standalone build
 ├── build_exe.sh                   <- Linux standalone build

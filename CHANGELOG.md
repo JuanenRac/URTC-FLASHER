@@ -20,6 +20,23 @@ increments instead (e.g. `0.1.9` -> `0.2.0`), and the same carry applies
 from `MINOR` into `MAJOR`. Running the tool from source (not through a
 build script) never changes the version - only a real build does.
 
+## [0.1.9] - The real pytest suite now runs as part of build-test, not just manually
+
+- `tools/build_test.py` compiled every `.py` file but never actually ran
+  `tests/` (3 real files, 20 tests, including a full simulated CAN
+  bootloader via `MockCAN`) - a real regression in `flasher_protocol.py`
+  or `flasher_validation.py` could pass `build-test.sh`/`build-test.bat`
+  cleanly. Now runs `pytest tests/` (with `PYTHONPATH` pointed at the
+  repo root, where these modules live) right after the compile check,
+  same pattern already used elsewhere in this ecosystem. GitHub Actions
+  CI itself still doesn't run it (that workflow is the shared
+  ecosystem-wide baseline, with no generic Python-pytest step) -
+  documented honestly in the README rather than silently claimed as
+  covered.
+- README (all 7 languages) "Honesty check" section and file-tree comment
+  corrected: it described 2 test files / 12 tests, actually 3 files / 20
+  tests today - stale since `test_flash_protocol_dispatch.py` was added.
+
 ## [0.1.8] - Live transfer speed and a reactive stall indicator during CAN-OTA
 
 ### Added

@@ -23,7 +23,7 @@
 </p>
 
 
-**版本：** 0.1.8（本工具自身的版本——显示在窗口横幅和标题栏中，与它所写入的
+**版本：** 0.1.9（本工具自身的版本——显示在窗口横幅和标题栏中，与它所写入的
 URTC 板卡固件版本分开跟踪。遵循 X.Y.Z 方案，其中补丁号在每次通过
 build_exe.bat/build_exe.sh 进行的真实构建时自动递增——版本历史见
 CHANGELOG.md，确切的进位规则见 bump_version.py）
@@ -56,7 +56,7 @@ CAN 自我标识），以便你在决定要刷写什么之前，先看看当前�
 针对真实硬件的真实板卡——请以对待任何与引导程序通信的新工具同样的谨慎态度
 对待首次真实刷写尝试：手边备好 JTAG 作为后备手段。
 
-**诚实核查 - 今天真正能运行的部分：** `tests/` 下有 2 个 pytest 会收集的真实文件——`test_flasher_protocol_clock.py` 和 `test_flash_verify_fail_reporting.py`（合计 12 个通过的测试，`pytest tests/`）——而这个仓库自己的 CI（`.github/workflows/ci.yml`）从来不会运行它——CI 只是编译每一个 `.py` 文件并运行 `tools/ci_validate.py`，所以今天 `tests/` 下的一个回归并不会导致构建失败。仓库根目录下的两个 `verify_qt_*.py` 脚本（`verify_qt_device_config.py`、`verify_qt_swd_full_chip_flash.py`）是真实的、刻意放在 pytest 之外的端到端检查——它们需要一个真实的 Qt 事件循环来处理真实的跨线程信号传递，需要手动运行 `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`，并且两者都通过了；`verify_qt_swd_full_chip_flash.py` 使用 `dry_run=True` 来实际验证 `PyOCDCLI`/`CubeProgrammerCLI` 真实的命令构造，而绝不会真正调用 `subprocess.Popen`。这就是自动验证所能达到的诚实上限：CRC32/HMAC-SHA256 的数学运算、SocketCAN 帧打包、Qt Quick 设备配置写入，以及全芯片 SWD/JTAG 编程的命令构造都是真实的，并且针对已知正确的参考进行了验证，但——正如上面的状态说明已经指出的——在这个环境里，这些都从未针对真实硬件上的真实板卡运行过。`flasher_protocol.py`、`flasher_swd_tools.py`、`flasher_validation.py` 和 `flasher_config.py` 都是真实且相当可观的实现（合计数万行代码），它们是通过这两个验证脚本和人工使用来验证的，而不是通过等量的自动化单元测试。具体已经交付了什么，请参见 `CHANGELOG.md`。
+**诚实核查 - 今天真正能运行的部分：** `tests/` 下有 3 个 pytest 会收集的真实文件——`test_flash_protocol_dispatch.py`、`test_flash_verify_fail_reporting.py` 和 `test_flasher_protocol_clock.py`（合计 20 个通过的测试，`pytest tests/`），其中包括一个真实的 `MockCAN` 传输层（`flasher_transports.py`），它会回放一段完整的模拟 bootloader 序列(启动/擦除/接收、数据分页 + PAGE_ACK、HMAC 分片、以真实成功或具体的 `VERIFY_FAIL_REASON` 结束更新)。`tools/build_test.py` 现在会把这套测试作为 `build-test.sh`/`build-test.bat` 的一部分来运行——但这个仓库自己的 GitHub Actions CI（`.github/workflows/ci.yml`）仍然只是编译每一个 `.py` 文件并运行 `tools/ci_validate.py`，从不运行 `build_test.py` 本身(那个工作流是整个生态系统共享的基线，没有任何通用的 Python pytest 步骤)，所以今天 `tests/` 下的一个回归仍然不会导致 GitHub Actions 运行失败——只有本地的 `build-test.sh` 才会。仓库根目录下的两个 `verify_qt_*.py` 脚本（`verify_qt_device_config.py`、`verify_qt_swd_full_chip_flash.py`）是真实的、刻意放在 pytest 之外的端到端检查——它们需要一个真实的 Qt 事件循环来处理真实的跨线程信号传递，需要手动运行 `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`，并且两者都通过了；`verify_qt_swd_full_chip_flash.py` 使用 `dry_run=True` 来实际验证 `PyOCDCLI`/`CubeProgrammerCLI` 真实的命令构造，而绝不会真正调用 `subprocess.Popen`。这就是自动验证所能达到的诚实上限：CRC32/HMAC-SHA256 的数学运算、SocketCAN 帧打包、Qt Quick 设备配置写入，以及全芯片 SWD/JTAG 编程的命令构造都是真实的，并且针对已知正确的参考进行了验证，但——正如上面的状态说明已经指出的——在这个环境里，这些都从未针对真实硬件上的真实板卡运行过。`flasher_protocol.py`、`flasher_swd_tools.py`、`flasher_validation.py` 和 `flasher_config.py` 都是真实且相当可观的实现（合计数万行代码），它们是通过这两个验证脚本和人工使用来验证的，而不是通过等量的自动化单元测试。具体已经交付了什么，请参见 `CHANGELOG.md`。
 
 ## 1. 🔌 让你的适配器与 CAN 通信
 
@@ -744,7 +744,8 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 ├── verify_qt_swd_full_chip_flash.py <- 真实的、刻意放在 pytest 之外的端到端检查，验证 Qt Quick 全芯片 SWD/JTAG 面板（仅 dry-run）
 ├── tests/
 │   ├── test_flasher_protocol_clock.py <- 4 个测试
-│   └── test_flash_verify_fail_reporting.py <- 8 个测试，自己真正的验收测试——CI 不会运行它，见上文诚实核查
+│   ├── test_flash_verify_fail_reporting.py <- 8 个测试
+│   └── test_flash_protocol_dispatch.py <- 8 个测试，针对真实的模拟 MockCAN bootloader——由 build-test.sh/.bat 运行，不由 GitHub Actions CI 运行，见上文诚实核查
 ├── requirements.txt                <- pyserial>=3.5（Tkinter 测试器）+ PySide6>=6.8,<7（`--qtquick` 面板）
 ├── build_exe.bat                  <- Windows 独立构建
 ├── build_exe.sh                   <- Linux 独立构建
