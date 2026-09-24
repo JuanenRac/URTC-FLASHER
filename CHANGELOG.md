@@ -224,7 +224,7 @@ build script) never changes the version - only a real build does.
   `QML_I18N=PASS keys=57 languages=7` (up from 56), proving the new key
   is required and present in every language.
 
-## [0.1.4] - Every timeout uses the monotonic clock, not the civil one (FLASH-01)
+## [0.1.4] - Every timeout uses the monotonic clock, not the civil one
 
 Found while auditing the code:
 `flasher_protocol.py`'s every deadline/duration computation (`query_version`,
