@@ -20,6 +20,14 @@ increments instead (e.g. `0.1.9` -> `0.2.0`), and the same carry applies
 from `MINOR` into `MAJOR`. Running the tool from source (not through a
 build script) never changes the version - only a real build does.
 
+## [0.2.0] - Image and target integrity checks
+
+- `flasher_integrity.py`: `verify_image()` compares a firmware file's SHA-256 (required) and
+  optional CRC-32 with the expected values and names both when they differ; `verify_target()`
+  confirms the board that answered is the board that was meant to be flashed;
+  `may_report_success()` is true only when both passed. A missing expectation is never a pass.
+  Nine new tests. Not yet wired into the flashing screens.
+
 ## [0.1.9] - The real pytest suite now runs as part of build-test, not just manually
 
 - `tools/build_test.py` compiled every `.py` file but never actually ran
