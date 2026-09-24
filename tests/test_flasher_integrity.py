@@ -79,5 +79,59 @@ class SuccessTests(unittest.TestCase):
             self.assertTrue(reasons)
 
 
+
+
+class PreflightTests(unittest.TestCase):
+    def setUp(self):
+        import tempfile as _t
+
+        self._dir = _t.TemporaryDirectory()
+        self.addCleanup(self._dir.cleanup)
+        self.path = os.path.join(self._dir.name, "fw.bin")
+        with open(self.path, "wb") as stream:
+            stream.write(PAYLOAD)
+
+    def _sidecar(self, text):
+        with open(self.path + ".sha256", "w", encoding="utf-8") as stream:
+            stream.write(text)
+
+    def test_without_a_published_digest_it_is_allowed_but_reports_the_digest(self):
+        from flasher_integrity import preflight_image
+
+        result = preflight_image(self.path)
+        self.assertFalse(result.blocked)
+        self.assertFalse(result.verified)
+        self.assertEqual(result.sha256, SHA)
+
+    def test_a_matching_sidecar_verifies_in_both_layouts(self):
+        from flasher_integrity import preflight_image
+
+        for text in (SHA + "\n", f"{SHA.upper()}  fw.bin\n"):
+            self._sidecar(text)
+            result = preflight_image(self.path)
+            self.assertTrue(result.verified)
+            self.assertFalse(result.blocked)
+
+    def test_a_mismatching_sidecar_blocks(self):
+        from flasher_integrity import preflight_image
+
+        self._sidecar("0" * 64 + "\n")
+        result = preflight_image(self.path)
+        self.assertTrue(result.blocked)
+        self.assertIn("mismatch", result.reasons[0])
+
+    def test_a_garbage_sidecar_is_treated_as_absent(self):
+        from flasher_integrity import preflight_image, read_sidecar_sha256
+
+        self._sidecar("not a digest")
+        self.assertIsNone(read_sidecar_sha256(self.path))
+        self.assertFalse(preflight_image(self.path).blocked)
+
+    def test_an_unreadable_image_blocks(self):
+        from flasher_integrity import preflight_image
+
+        self.assertTrue(preflight_image(self.path + ".missing").blocked)
+
+
 if __name__ == "__main__":
     unittest.main()

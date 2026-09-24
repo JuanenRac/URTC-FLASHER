@@ -36,6 +36,7 @@ from flasher_config import (
 )
 from flasher_transports import SLCAN, SLCANError, SocketCAN, list_socketcan_interfaces
 from flasher_protocol import URTCFlasher, FlashError
+from flasher_integrity import preflight_image
 from flasher_github import list_firmware_files, download_file, GitHubDownloadError
 from flasher_swd_tools import SWDFlashError, PyOCDCLI, CubeProgrammerCLI
 from flasher_validation import validate_firmware_file, validate_swd_image_file
@@ -2061,6 +2062,13 @@ class FlasherGUI:
 
     def _flash_worker(self):
         try:
+            # A digest published next to the image (<image>.sha256) must match
+            # it; without one the digest is only logged so it can be recorded.
+            check = preflight_image(self.firmware_path)
+            if check.blocked:
+                self.log(_("LOG_IMAGE_REFUSED", reasons="; ".join(check.reasons)))
+                raise FlashError("; ".join(check.reasons))
+            self.log(_("LOG_IMAGE_DIGEST_VERIFIED" if check.verified else "LOG_IMAGE_DIGEST", sha=check.sha256))
             flasher = URTCFlasher(
                 self.transport,
                 log=self.log,
