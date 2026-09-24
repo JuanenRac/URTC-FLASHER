@@ -82,3 +82,46 @@ def may_report_success(image: IntegrityResult, target: IntegrityResult) -> tuple
     """A flash is reported successful only when both checks passed."""
     reasons = image.reasons + target.reasons
     return (image.ok and target.ok), reasons
+
+
+def read_sidecar_sha256(path: str) -> str | None:
+    """The SHA-256 published next to an image, in `<image>.sha256`.
+
+    Accepts a bare digest or the `sha256sum` layout (`<digest>  <name>`).
+    Returns None when there is no such file or it holds no valid digest.
+    """
+    try:
+        with open(path + ".sha256", "r", encoding="utf-8") as stream:
+            first = stream.read().split()
+    except (OSError, UnicodeDecodeError):
+        return None
+    if first and _SHA256_RE.match(first[0]):
+        return first[0].lower()
+    return None
+
+
+@dataclass(frozen=True)
+class Preflight:
+    """What to do before flashing an image.
+
+    `blocked` is true only when a published digest exists and does not match
+    (or the image cannot be read). An image with no published digest is
+    allowed, but its digest is still reported so it can be recorded.
+    """
+
+    blocked: bool
+    verified: bool
+    sha256: str = ""
+    reasons: tuple[str, ...] = field(default_factory=tuple)
+
+
+def preflight_image(path: str) -> Preflight:
+    expected = read_sidecar_sha256(path)
+    if expected is None:
+        try:
+            sha, _crc = _digests(path)
+        except OSError as exc:
+            return Preflight(True, False, "", (f"cannot read the image: {exc}",))
+        return Preflight(False, False, sha)
+    result = verify_image(path, expected)
+    return Preflight(not result.ok, result.ok, result.sha256, result.reasons)

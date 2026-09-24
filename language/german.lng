@@ -243,6 +243,9 @@ LOG_EXPANSION_TYPE_NO_CONFIRMATION=Typ der Erweiterungsplatine: gesendet, aber k
 LOG_EXPANSION_TYPE_SAVE_FAILED=Speichern des Typs der Erweiterungsplatine fehlgeschlagen: {e}
 LOG_CURRENT_VERSION_QUERY=Abfrage der aktuellen Version: {text}
 LOG_SKIPPING_FRAM_ERASE=F-RAM-Löschung übersprungen: erfordert, dass die Anwendung läuft (die obige Trigger-Checkbox ist nicht aktiviert, daher wird angenommen, dass sich das Board bereits im Bootloader befindet, der diesen Befehl nicht verarbeitet).
+LOG_IMAGE_DIGEST=SHA-256 des Images: {sha}
+LOG_IMAGE_DIGEST_VERIFIED=Das SHA-256 des Images entspricht dem veröffentlichten Wert: {sha}
+LOG_IMAGE_REFUSED=Flash abgelehnt: {reasons}
 
 # --- Menuleiste ---
 MENU_FILE=Datei

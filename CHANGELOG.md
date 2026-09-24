@@ -20,6 +20,10 @@ increments instead (e.g. `0.1.9` -> `0.2.0`), and the same carry applies
 from `MINOR` into `MAJOR`. Running the tool from source (not through a
 build script) never changes the version - only a real build does.
 
+## [0.2.1] - Image digest before flashing
+
+- Before a flash the image's SHA-256 is computed and logged. If a digest is published next to it (image.bin.sha256, bare or sha256sum layout) it must match, otherwise the flash is refused; an image without a published digest is still flashed, with its digest recorded.
+
 ## [0.2.0] - Image and target integrity checks
 
 - `flasher_integrity.py`: `verify_image()` compares a firmware file's SHA-256 (required) and

@@ -242,6 +242,9 @@ LOG_EXPANSION_TYPE_NO_CONFIRMATION=拡張ボードタイプ：送信済みです
 LOG_EXPANSION_TYPE_SAVE_FAILED=拡張ボードタイプの保存に失敗しました：{e}
 LOG_CURRENT_VERSION_QUERY=現在のバージョン照会：{text}
 LOG_SKIPPING_FRAM_ERASE=F-RAM の消去をスキップします：アプリケーションが実行中である必要があります（上記のトリガーチェックボックスがオフのため、ボードはすでにブートローダー内にあると見なされ、ブートローダーはこのコマンドを処理しません）。
+LOG_IMAGE_DIGEST=イメージの SHA-256: {sha}
+LOG_IMAGE_DIGEST_VERIFIED=イメージの SHA-256 は公開値と一致しました: {sha}
+LOG_IMAGE_REFUSED=書き込みを拒否しました: {reasons}
 
 # --- メニューバー（ファイル/言語/ヘルプに相当）---
 MENU_FILE=ファイル

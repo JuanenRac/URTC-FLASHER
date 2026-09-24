@@ -243,6 +243,9 @@ LOG_EXPANSION_TYPE_NO_CONFIRMATION=Type de carte d'extension : envoyé, mais auc
 LOG_EXPANSION_TYPE_SAVE_FAILED=Échec de l'enregistrement du type de carte d'extension : {e}
 LOG_CURRENT_VERSION_QUERY=Interrogation de la version actuelle : {text}
 LOG_SKIPPING_FRAM_ERASE=Effacement F-RAM ignoré : nécessite que l'application soit en cours d'exécution (la case de déclencheur ci-dessus n'est pas cochée, donc on suppose que la carte est déjà dans le bootloader, qui ne gère pas cette commande).
+LOG_IMAGE_DIGEST=SHA-256 de l'image : {sha}
+LOG_IMAGE_DIGEST_VERIFIED=Le SHA-256 de l'image correspond à l'empreinte publiée : {sha}
+LOG_IMAGE_REFUSED=Flash refusé : {reasons}
 
 # --- Barre de menu ---
 MENU_FILE=Fichier
