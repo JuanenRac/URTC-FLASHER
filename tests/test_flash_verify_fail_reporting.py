@@ -3,7 +3,7 @@
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 # GPL-3.0 - see LICENSE
 # =============================================================================
-"""I54's own real acceptance test: "Bootloader falso acepta todos los
+"""this project's own real acceptance test: "Bootloader falso acepta todos los
 bloques pero falla en checksum final: la UI no anuncia exito." -
 MockCAN(simulate_failure=...) and flash()'s own 0x05-handling branch were
 both already real and correct (see flasher_transports.py's own docstring
