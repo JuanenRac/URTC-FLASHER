@@ -1035,7 +1035,7 @@ nicht erforderlich.
 ├── build-test.bat                 <- Build-/Kompilierprüfung ohne Versionserhöhung
 ├── build-test.sh                  <- Dasselbe, für Linux
 ├── bump_version.py                <- Versionserhöhung im Kilometerzähler-Stil, von den Build-Skripten ausgeführt
-├── bump_manifest_version.py       <- Synchronisiert die Version von hydra-umc.project.json mit der nativen (--sync)
+├── bump_manifest_version.py       <- Synchronisiert die Version von urtc.project.json mit der nativen (--sync)
 ├── URTC_Flasher.spec              <- PyInstaller-Spec, die von beiden Build-Skripten oben verwendet wird
 ├── docs/
 │   └── CLI_REFERENCE.md           <- Referenz der Kommandozeilen-Flags

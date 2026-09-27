@@ -78,7 +78,7 @@ def validate_qtquick_deck() -> None:
 
 def main() -> int:
     try:
-        manifest = json.loads((ROOT / "hydra-umc.project.json").read_text(encoding="utf-8"))
+        manifest = json.loads((ROOT / "urtc.project.json").read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         fail(f"cannot read project manifest: {exc}")
 

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "ecosystem": "HYDRA-UMC",
+  "ecosystem": "URTC",
   "name": "URTC-FLASHER",
   "version": "0.2.1",
   "role": "tool",

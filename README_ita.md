@@ -991,7 +991,7 @@ l'applicazione.
 ├── build-test.bat                 <- controllo build/compilazione senza incremento di versione
 ├── build-test.sh                  <- lo stesso, per Linux
 ├── bump_version.py                <- incremento di versione stile contachilometri, eseguito dagli script di build
-├── bump_manifest_version.py       <- sincronizza la versione di hydra-umc.project.json con quella nativa (--sync)
+├── bump_manifest_version.py       <- sincronizza la versione di urtc.project.json con quella nativa (--sync)
 ├── URTC_Flasher.spec              <- spec PyInstaller usata da entrambi gli script di build sopra
 ├── docs/
 │   └── CLI_REFERENCE.md           <- riferimento dei flag della riga di comando

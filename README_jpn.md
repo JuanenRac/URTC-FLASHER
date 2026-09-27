@@ -959,7 +959,7 @@ JSON 数値（`50580689`）のどちらも受け付けます——ファイル�
 ├── build-test.bat                 <- バージョンを更新しないビルド/コンパイル確認
 ├── build-test.sh                  <- 同上、Linux 向け
 ├── bump_version.py                <- オドメーター式バージョンインクリメント、ビルドスクリプトが実行
-├── bump_manifest_version.py       <- hydra-umc.project.json のバージョンをネイティブ側と同期（--sync）
+├── bump_manifest_version.py       <- urtc.project.json のバージョンをネイティブ側と同期（--sync）
 ├── URTC_Flasher.spec              <- 上記両方のビルドスクリプトが使用する PyInstaller の spec
 ├── docs/
 │   └── CLI_REFERENCE.md           <- コマンドラインフラグのリファレンス

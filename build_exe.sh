@@ -78,10 +78,10 @@ echo "[3/6] Bumping FLASHER_VERSION (ecosystem-wide build-version policy)..."
 printf '%s\n' "[1/6] Incrementing project version and synchronising its manifest..."
 python3 bump_version.py || exit 1
 # HYDRA_UMC_SCRIPT_STANDARD_VERSION_CAPTURE_BEFORE
-HYDRA_UMC_VERSION_BEFORE="$(python3 -c 'import json, pathlib, sys; print(json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))["version"])' "$(dirname "$0")/hydra-umc.project.json")"
+HYDRA_UMC_VERSION_BEFORE="$(python3 -c 'import json, pathlib, sys; print(json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))["version"])' "$(dirname "$0")/urtc.project.json")"
 python3 "$(dirname "$0")/bump_manifest_version.py" --sync || exit 1
 # HYDRA_UMC_SCRIPT_STANDARD_VERSION_CAPTURE_AFTER
-HYDRA_UMC_VERSION_AFTER="$(python3 -c 'import json, pathlib, sys; print(json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))["version"])' "$(dirname "$0")/hydra-umc.project.json")"
+HYDRA_UMC_VERSION_AFTER="$(python3 -c 'import json, pathlib, sys; print(json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))["version"])' "$(dirname "$0")/urtc.project.json")"
 printf '\n*******************************************************************************\n'
 printf '%s\n' '* VERSION INCREMENT COMPLETED'
 printf '%s\n' "* v${HYDRA_UMC_VERSION_BEFORE:-unknown} -> v${HYDRA_UMC_VERSION_AFTER:-unknown}"

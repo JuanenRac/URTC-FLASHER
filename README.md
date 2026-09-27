@@ -902,7 +902,7 @@ from the SVG during development; it is not required to run the application.
 ├── build-test.bat                 <- non-versioning build/compile check
 ├── build-test.sh                  <- same, for Linux
 ├── bump_version.py                <- odometer-style version bump, run by the build scripts
-├── bump_manifest_version.py       <- syncs hydra-umc.project.json's version to the native one (--sync)
+├── bump_manifest_version.py       <- syncs urtc.project.json's version to the native one (--sync)
 ├── URTC_Flasher.spec              <- PyInstaller spec used by both build scripts above
 ├── docs/
 │   └── CLI_REFERENCE.md           <- command-line flags reference

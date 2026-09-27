@@ -752,7 +752,7 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 ├── build-test.bat                 <- 不递增版本号的构建/编译检查
 ├── build-test.sh                  <- 同上，适用于 Linux
 ├── bump_version.py                <- 里程表式版本递增，由构建脚本运行
-├── bump_manifest_version.py       <- 将 hydra-umc.project.json 的版本与原生版本同步（--sync）
+├── bump_manifest_version.py       <- 将 urtc.project.json 的版本与原生版本同步（--sync）
 ├── URTC_Flasher.spec              <- 以上两个构建脚本所使用的 PyInstaller 规范文件
 ├── docs/
 │   └── CLI_REFERENCE.md           <- 命令行参数参考
