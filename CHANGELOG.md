@@ -20,6 +20,10 @@ increments instead (e.g. `0.1.9` -> `0.2.0`), and the same carry applies
 from `MINOR` into `MAJOR`. Running the tool from source (not through a
 build script) never changes the version - only a real build does.
 
+## [0.2.2] - The Qt Quick flash checks the image too
+
+- The Qt Quick CAN-OTA flash (`--qtquick`) now runs the same image check as the Tk window: a digest published next to the image (`image.bin.sha256`) must match it or the flash is refused before any frame is sent, and an image with no published digest has its SHA-256 logged so it can be recorded. Two tests cover the refusal and the recording.
+
 ## [0.2.1] - Image digest before flashing
 
 - Before a flash the image's SHA-256 is computed and logged. If a digest is published next to it (image.bin.sha256, bare or sha256sum layout) it must match, otherwise the flash is refused; an image without a published digest is still flashed, with its digest recorded.

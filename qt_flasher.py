@@ -37,6 +37,7 @@ from flasher_config import (
     SLAVE_BOOTLOADER_FLASH_ADDR, SLAVE_BOOTLOADER_MAX_SIZE,
     SLAVE_PYOCD_TARGET_NAME, SLAVE_TOTAL_FLASH_SIZE, TOOL_NAMES, _,
 )
+from flasher_integrity import preflight_image
 from flasher_protocol import FlashError, URTCFlasher
 from flasher_swd_tools import CubeProgrammerCLI, PyOCDCLI, SWDFlashError
 from flasher_transports import SLCAN, SocketCAN, list_socketcan_interfaces
@@ -1055,6 +1056,14 @@ class FlasherQtBridge(QObject):
 
     def _flash_worker(self, firmware_path: str) -> None:
         try:
+            # A digest published next to the image (<image>.sha256) must match it;
+            # without one the digest is only logged so it can be recorded.
+            check = preflight_image(firmware_path)
+            if check.blocked:
+                reasons = "; ".join(check.reasons)
+                self._log(f"IMAGE_REFUSED {reasons}")
+                raise FlashError(reasons)
+            self._log(f"IMAGE_DIGEST_{'VERIFIED' if check.verified else 'RECORDED'} {check.sha256}")
             flasher = URTCFlasher(
                 self._transport, log=self._log, progress_cb=self._flashProgress.emit,
                 stop_flag=lambda: self._cancel_requested,
