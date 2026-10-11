@@ -38,6 +38,10 @@ jobs:
               py_compile.compile(str(path), doraise=True)
           print(f"PYTHON_SYNTAX=PASS files={len(files)}")
           PY
+      - name: Run the flasher test suite (simulated CAN bus, signing, integrity)
+        run: |
+          python -m pip install pyserial pytest
+          python -m pytest -q tests
       - name: Validate v1 SDK contract fixtures
         if: ${{ hashFiles('clients/python/tests/test_validation.py') != '' }}
         env:

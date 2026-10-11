@@ -20,6 +20,28 @@ increments instead (e.g. `0.1.9` -> `0.2.0`), and the same carry applies
 from `MINOR` into `MAJOR`. Running the tool from source (not through a
 build script) never changes the version - only a real build does.
 
+## [0.2.3] - No signing key, published signatures, firmware/ in sync with URTC
+
+- **No default signing key any more.** The placeholder `HMAC_KEY`/`SLAVE_HMAC_KEY`
+  are gone (`None`). `flash()`/`flash_slave()` send the signature the URTC build
+  publishes in `<image>.manifest.json` (`hmac_sha256`); a self-built image with
+  no manifest is only signed with a key from `urtc_config.json`, and refused
+  before any bus traffic otherwise. See URTC `docs/FIRMWARE_SIGNING.TXT`.
+- **A manifest sha256 mismatch now refuses the flash** (it was a warning).
+  `preflight_image()` also checks the manifest's sha256 when there is no
+  `<image>.sha256`, and blocks when the two published digests disagree.
+- **GitHub download brings the sidecars**: picking an image also downloads its
+  `.sha256` and `.manifest.json`, and the sidecars are no longer listed as
+  images of their own.
+- **`firmware/` = URTC's build** (main 0.3.2 / boot 0.3.7, slave 0.1.8 /
+  boot 0.2.1, each with its sidecars). `tools/sync_firmware.py` copies them
+  from URTC after checking every digest; `--check` verifies the folder, and a
+  test runs it.
+- **Tests**: `tests/test_firmware_signature.py` (published signature sent
+  without any key, unsigned image refused, bench-key signing, malformed
+  signature, preflight digests, bundled firmware); `tests/conftest.py` gives
+  the protocol tests a bench key. CI now runs the pytest suite.
+
 ## [0.2.2] - The Qt Quick flash checks the image too
 
 - The Qt Quick CAN-OTA flash (`--qtquick`) now runs the same image check as the Tk window: a digest published next to the image (`image.bin.sha256`) must match it or the flash is refused before any frame is sent, and an image with no published digest has its SHA-256 logged so it can be recorded. Two tests cover the refusal and the recording.

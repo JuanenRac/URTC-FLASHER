@@ -788,12 +788,17 @@ confirmation frame going missing. Check the F-RAM state separately
 
 ## 🔑 Changing the HMAC key / HardwareID
 
-The shared signing key lives in two places that must always match:
-`bootloader_common.h`'s `HMAC_KEY` array, and this tool's `HMAC_KEY` constant near
-the top of `flasher_config.py`. If you change one, change the other and
-rebuild/reflash the bootloader before trying to sign anything with the new
-key - an image signed with a key the bootloader doesn't have will always
-fail verification, safely, with the main slot left untouched.
+This tool holds **no signing key**. The URTC build signs every application
+image and publishes the signature next to it, in `<image>.manifest.json`
+(`hmac_sha256`, plus `<image>.sha256`); the flasher sends that published
+signature and refuses an image whose sha256 does not match its manifest.
+Downloading an image from GitHub also downloads both files, and
+`python tools/sync_firmware.py` refreshes the bundled `firmware/` folder
+from the URTC build (`--check` verifies it). Only a self-built image with
+no manifest, on a bench board, needs a key: set `hmac_key_hex` /
+`slave_hmac_key_hex` in `urtc_config.json` below - without one such an image
+is refused instead of being signed with a key the bootloader cannot have.
+See URTC's `docs/FIRMWARE_SIGNING.TXT`.
 
 **Or override any of this without touching the script:** an optional
 `urtc_config.json` next to `firmware/` can set the signing key, the

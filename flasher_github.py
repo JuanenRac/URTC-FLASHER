@@ -175,3 +175,21 @@ def download_file(download_url, dest_path, log=None, progress_cb=None):
     if log:
         log(_("LOG_GITHUB_DOWNLOAD_COMPLETE", name=os.path.basename(dest_path), size=written))
     return written
+
+
+SIDECAR_SUFFIXES = (".sha256", ".manifest.json")
+
+
+def is_sidecar(name):
+    """True for the <image>.sha256 / <image>.manifest.json files the URTC
+    build publishes next to each image - listed by GitHub as files of their
+    own, but they travel with their image rather than being picked alone."""
+    return name.endswith(SIDECAR_SUFFIXES)
+
+
+def sidecars_for(entries, image_name):
+    """The listing entries holding `image_name`'s sidecars (its published
+    sha256 and its manifest with the signature), in a fixed order."""
+    by_name = {entry["name"]: entry for entry in entries}
+    return [by_name[image_name + suffix] for suffix in SIDECAR_SUFFIXES if image_name + suffix in by_name]
+

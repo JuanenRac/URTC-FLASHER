@@ -37,7 +37,7 @@ from flasher_config import (
 from flasher_transports import SLCAN, SLCANError, SocketCAN, list_socketcan_interfaces
 from flasher_protocol import URTCFlasher, FlashError
 from flasher_integrity import preflight_image
-from flasher_github import list_firmware_files, download_file, GitHubDownloadError
+from flasher_github import list_firmware_files, download_file, GitHubDownloadError, is_sidecar, sidecars_for
 from flasher_swd_tools import SWDFlashError, PyOCDCLI, CubeProgrammerCLI
 from flasher_validation import validate_firmware_file, validate_swd_image_file
 from hydra_umc_animation import AnimatedHydraUMCMark
@@ -1324,6 +1324,7 @@ class FlasherGUI:
         self._new_deck_button(btn_row, text=_("BTN_CLOSE"), command=win.destroy).pack(side="left", padx=(8, 0))
 
         entries_by_iid = {}
+        all_entries = []
 
         def _load_list():
             try:
@@ -1340,14 +1341,16 @@ class FlasherGUI:
                 return
 
             def _populate():
-                if not entries:
+                all_entries[:] = entries
+                images = [entry for entry in entries if not is_sidecar(entry["name"])]
+                if not images:
                     status_var.set(_("LBL_GITHUB_EMPTY"))
                     return
-                for entry in entries:
+                for entry in images:
                     size_kb = entry["size"] / 1024
                     iid = tree.insert("", "end", values=(entry["name"], f"{size_kb:.1f} KB"))
                     entries_by_iid[iid] = entry
-                status_var.set(_("LBL_GITHUB_LOADED_COUNT", count=len(entries)))
+                status_var.set(_("LBL_GITHUB_LOADED_COUNT", count=len(images)))
             self.root.after(0, _populate)
 
         def _on_select(_event=None):
@@ -1378,6 +1381,11 @@ class FlasherGUI:
                         entry["download_url"], dest_path, log=self.log,
                         progress_cb=lambda pct: self.root.after(0, lambda: progress.configure(value=pct)),
                     )
+                    # The published sha256 and manifest (with the signature
+                    # the bootloader expects) travel with the image - without
+                    # them it could not be verified or flashed.
+                    for sidecar in sidecars_for(all_entries, entry["name"]):
+                        download_file(sidecar["download_url"], os.path.join(FIRMWARE_FOLDER, sidecar["name"]), log=self.log)
                     self.root.after(0, lambda: status_var.set(_("LBL_GITHUB_DOWNLOAD_DONE", name=entry["name"])))
                     self.root.after(0, self.scan_firmware_folder)
                 except GitHubDownloadError as e:

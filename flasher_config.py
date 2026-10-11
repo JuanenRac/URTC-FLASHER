@@ -113,16 +113,11 @@ VERIFY_FAIL_REASONS = {
     0x05: "rollback rejected (older version than what's already installed)",
 }
 
-# THIS_HARDWARE_ID/HMAC_KEY must match bootloader_common.h (master board)
-# exactly, and SLAVE_HARDWARE_ID/SLAVE_HMAC_KEY must match
-# slaveboot_common.h (expansion slave) exactly, or every update this tool
-# sends will be rejected (HardwareID mismatch) or fail signature
-# verification (HMAC mismatch). If you change either key in firmware,
-# change the matching one here too - they are not automatically kept in
-# sync. The two keys are deliberately different from each other (see
-# slaveboot_common.h's own comment on why) - flasher_protocol.py signs
-# master updates with HMAC_KEY and slave updates with SLAVE_HMAC_KEY,
-# never the other one for either board.
+# THIS_HARDWARE_ID must match bootloader_common.h (master board) exactly,
+# and SLAVE_HARDWARE_ID must match slaveboot_common.h (expansion slave)
+# exactly, or every update this tool sends will be rejected (HardwareID
+# mismatch). Signatures are not computed here - see the signing-key note
+# below.
 THIS_HARDWARE_ID = 0x0303CC01  # STM32F303CCT6, URTC board revision 1
 SLAVE_HARDWARE_ID = 0x0303CB01  # STM32F303CBT6, expansion slave chip - see slave_common.h's own THIS_HARDWARE_ID, verified against the real source rather than assumed to differ only in the last hex digit
 FIRMWARE_VERSION_MAJOR = 1
@@ -133,40 +128,21 @@ FIRMWARE_VERSION_MINOR = 0
 # the *board firmware's* version this tool writes into the end-update
 # frame. The two will often move together but aren't the same number by
 # definition - this one's about the flasher script itself.
-FLASHER_VERSION = "0.2.2"
+FLASHER_VERSION = "0.2.3"
 FLASHER_AUTHOR = "JuanenRac"
 
-# --- HMAC signing keys - deliberately NOT real key material in source ---
-# The actual signing key pair matching bootloader_crypto.c (master) and
-# slaveboot_crypto.c (slave) is real, CSPRNG-generated cryptographic
-# material - it does not belong spelled out as a literal byte array in a
-# file every clone/fork/GitHub-diff of this project can read. Anyone who
-# can read the key can forge a signed update for every URTC board in the
-# field, and unlike a config file, a value once committed here stays
-# readable in the git history of every fork forever, even after being
-# "removed" in a later commit - so this file only ever holds an obviously
-# fake placeholder, and the real key pair lives exclusively in each
-# machine's own local urtc_config.json (gitignored - see .gitignore),
-# read through _load_config_overrides' own "hmac_key_hex"/
-# "slave_hmac_key_hex" fields below, following urtc_config.json.example's
-# documented format.
-#
-# The two constants below are therefore NOT real keys - they're readable,
-# obviously-fake ASCII placeholders, used only when urtc_config.json doesn't
-# supply "hmac_key_hex"/"slave_hmac_key_hex". Signing with these against
-# real hardware fails HMAC verification loudly (STATUS_VERIFY_FAIL, reason
-# 0x03 - see VERIFY_FAIL_REASONS above) rather than silently doing
-# something insecure - that's deliberate, so a missing/misconfigured key
-# file is impossible to miss. The real key pair now lives only in this
-# machine's own local urtc_config.json (never committed - see .gitignore),
-# copied in following urtc_config.json.example's documented
-# "hmac_key_hex"/"slave_hmac_key_hex" format; _load_config_overrides below
-# logs a loud warning on every startup where it falls back to either
-# placeholder, so the fallback is never silent either.
-_INSECURE_DEV_HMAC_KEY = b"INSECURE-DEV-DEFAULT-KEY-NOTREAL"  # 32 bytes, deliberately readable so it's obviously not a real key if it ever shows up in a log or hex dump
-_INSECURE_DEV_SLAVE_HMAC_KEY = b"INSECURE-DEV-SLAVE-KEY-NOT-REAL!"  # 32 bytes, deliberately different text from the master placeholder above - same "the two keys must differ" reasoning as the real ones
-HMAC_KEY = _INSECURE_DEV_HMAC_KEY
-SLAVE_HMAC_KEY = _INSECURE_DEV_SLAVE_HMAC_KEY
+# --- HMAC signing keys: none by default ---
+# The URTC build signs every application image itself and publishes the
+# signature next to it (<bin>.manifest.json "hmac_sha256" - see URTC
+# docs/FIRMWARE_SIGNING.TXT). flasher_protocol.py sends that published
+# signature, so this tool needs no key at all for official images.
+# The only use for a key here is a self-built image (no manifest) on a bench
+# board: set "hmac_key_hex"/"slave_hmac_key_hex" in this machine's own
+# urtc_config.json (gitignored). Without it such an image is refused with a
+# clear message instead of being signed with a made-up key that the
+# bootloader is guaranteed to reject.
+HMAC_KEY = None
+SLAVE_HMAC_KEY = None
 
 APP_MAX_SIZE = 112 * 1024
 SLAVE_APP_MAX_SIZE = 54 * 1024  # matches STM32F303CBTx_SLAVEAPP.ld's own 54K main slot at 0x08005000 - verified against the real linker script, not assumed to match the main board's own 112K
@@ -346,9 +322,8 @@ def _load_config_overrides(log=None):
     present-but-invalid file is logged and then also falls back to
     defaults for whichever fields it broke, rather than crashing the
     whole tool over a typo in a config file. hmac_key_hex/slave_hmac_key_hex
-    are the one exception to "silent" - see _warn_if_insecure_keys below -
-    since falling back there means every update this tool sends will be
-    rejected by real hardware, not just a cosmetic default.
+    are only needed for self-built images without a published signature -
+    see _warn_if_insecure_keys below.
 
     Expected format (every key optional - only override what's actually
     changing):
@@ -366,29 +341,14 @@ def _load_config_overrides(log=None):
     log = log or (lambda msg: None)
 
     def _warn_if_insecure_keys(overridden_fields):
-        # Called from every return path below - "hmac_key_hex"/
-        # "slave_hmac_key_hex" missing from urtc_config.json (whether
-        # because the file itself doesn't exist yet, or just doesn't
-        # happen to set those two fields) means HMAC_KEY/SLAVE_HMAC_KEY
-        # are still the obviously-fake _INSECURE_DEV_* placeholders
-        # defined above, not real signing keys - worth a loud warning on
-        # every single startup this stays true, not just a one-time note,
-        # since it's easy to fix once and then forget urtc_config.json
-        # needs to travel with this tool onto a new machine too.
-        if "hmac_key_hex" not in overridden_fields:
-            log(f"WARNING: no \"hmac_key_hex\" in {CONFIG_FILE_PATH} - using the "
-                f"INSECURE built-in placeholder HMAC key (see flasher_config.py's "
-                f"own comment on _INSECURE_DEV_HMAC_KEY). This will NOT match any "
-                f"real board's bootloader_crypto.c - every master-board update will "
-                f"fail HMAC verification (STATUS_VERIFY_FAIL, reason 0x03) until the "
-                f"real key is set in urtc_config.json - see urtc_config.json.example.")
-        if "slave_hmac_key_hex" not in overridden_fields:
-            log(f"WARNING: no \"slave_hmac_key_hex\" in {CONFIG_FILE_PATH} - using the "
-                f"INSECURE built-in placeholder HMAC key for the expansion slave (see "
-                f"flasher_config.py's own comment on _INSECURE_DEV_SLAVE_HMAC_KEY). "
-                f"Same consequence as the master key above, for slave-target updates "
-                f"instead, until slaveboot_crypto.c's real key is set in "
-                f"urtc_config.json - see urtc_config.json.example.")
+        # Informational only: official images carry their own published
+        # signature, so no key is the normal case. Without one, only a
+        # self-built image (no .manifest.json) can't be flashed.
+        missing = [f for f in ("hmac_key_hex", "slave_hmac_key_hex") if f not in overridden_fields]
+        if missing:
+            log(f"No {'/'.join(missing)} in {CONFIG_FILE_PATH} - images are flashed with the "
+                f"signature published in their .manifest.json; a self-built image without one "
+                f"needs that key (see urtc_config.json.example).")
 
     hw_id, key, slave_key = THIS_HARDWARE_ID, HMAC_KEY, SLAVE_HMAC_KEY
     app_max_size, bootloader_max_size = APP_MAX_SIZE, BOOTLOADER_MAX_SIZE

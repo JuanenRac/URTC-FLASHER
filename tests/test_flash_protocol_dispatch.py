@@ -97,21 +97,17 @@ def test_query_version_reports_a_bootloader_responder_via_mockcan(tmp_path):
     assert info["bootloader_version"] == (1, 0, 1)
 
 
-def test_manifest_sha256_mismatch_logs_a_warning_but_does_not_abort(tmp_path):
-    # _check_manifest() is documented as "a convenience warning, not an
-    # authoritative gate" - real behavior this test locks in: a
-    # mismatched manifest must not raise or prevent the flash from
-    # proceeding, only be visible in the log.
+def test_manifest_sha256_mismatch_refuses_to_flash_before_sending_anything(tmp_path):
+    # A manifest whose sha256 does not match describes some other file: its
+    # signature cannot be valid for this one, and it usually means a wrong
+    # or corrupted download - refused before any bus traffic.
     firmware_path = _write_firmware(tmp_path, 100)
     manifest_path = Path(firmware_path + ".manifest.json")
     manifest_path.write_text(json.dumps({"sha256": "0" * 64, "version": "1.2"}))
 
-    logged: list[str] = []
-    can = MockCAN()
-    flasher = URTCFlasher(can, log=logged.append)
-
-    assert flasher.flash(firmware_path) is True
-    assert any("MANIFEST MISMATCH" in line for line in logged)
+    flasher = URTCFlasher(_ExplodingCAN(), log=lambda msg: None)
+    with pytest.raises(FlashError, match="MANIFEST MISMATCH"):
+        flasher.flash(firmware_path)
 
 
 def test_manifest_sha256_match_is_logged_as_confirmed(tmp_path):

@@ -197,56 +197,82 @@ class URTCFlasher:
         time.sleep(0.8)  # give the app time to shut down actuators and reset
 
     def _check_manifest(self, firmware_path, actual_sha256):
-        # Returns the manifest's own declared (major, minor) as a parsed
-        # tuple if present and well-formed, else None - flash() uses this
-        # in preference to its own hardcoded FIRMWARE_VERSION_MAJOR/MINOR
-        # when available, same reasoning flash_slave() already documents
-        # for why trusting a fixed constant regardless of which .bin was
-        # actually selected would be wrong (that constant reflects this
-        # tool's own currently-configured version, not necessarily the
-        # specific file on disk - most likely to actually diverge exactly
-        # when deliberately flashing an older file for a downgrade).
+        # Reads <firmware>.manifest.json, published by the URTC build next to
+        # every image (see URTC docs/FIRMWARE_SIGNING.TXT). Returns a dict:
+        #   "version": the declared (major, minor) - flash() reports it to the
+        #              bootloader instead of this tool's own constant, which
+        #              matters most for a deliberate downgrade;
+        #   "hmac":    the published HMAC-SHA256 signature (32 bytes) or None.
+        # A declared sha256 that does not match the file is a hard error: the
+        # signature in that manifest belongs to some other file, so sending it
+        # can only fail, and it usually means a wrong or corrupted download.
+        info = {"version": None, "hmac": None}
         manifest_path = firmware_path + ".manifest.json"
         if not os.path.isfile(manifest_path):
-            return None
+            return info
         try:
             with open(manifest_path, "r") as f:
                 manifest = json.load(f)
         except (OSError, json.JSONDecodeError) as e:
             self.log(_("LOG_MANIFEST_UNREADABLE", e=e))
-            return None
+            return info
+        if not isinstance(manifest, dict):
+            self.log(_("LOG_MANIFEST_UNREADABLE", e="not a JSON object"))
+            return info
 
-        # str() before .lower(): manifest.get() only supplies the ""
-        # default when the key is absent - if it's present but the wrong
-        # JSON type (null, or a bare number instead of a hex string),
-        # .lower() on that would raise AttributeError, uncaught since this
-        # line is outside the try/except above (which only covers the
-        # JSON read/parse itself, not validating the values inside it).
+        # str() before .lower(): a present-but-wrong-type value (null, a bare
+        # number) must not raise AttributeError here.
         expected_sha256 = str(manifest.get("sha256", "") or "").lower().replace("0x", "")
         version = manifest.get("version", "?")
         build_date = manifest.get("build_date", "?")
         self.log(_("LOG_MANIFEST_INFO", version=version, build_date=build_date))
 
-        parsed_version = None
         parts = str(version).split(".")
         if len(parts) >= 2 and parts[0].isdigit() and parts[1].isdigit():
-            parsed_version = (int(parts[0]), int(parts[1]))
+            info["version"] = (int(parts[0]), int(parts[1]))
 
         if not expected_sha256:
             self.log(_("LOG_MANIFEST_NO_SHA256_FIELD"))
-            return parsed_version
-        if expected_sha256 == actual_sha256.lower():
+        elif expected_sha256 == actual_sha256.lower():
             self.log(_("LOG_MANIFEST_SHA256_MATCHES"))
         else:
-            self.log(
-                f"  ** MANIFEST MISMATCH ** - manifest.json declares sha256={expected_sha256}, "
-                f"this file's actual sha256={actual_sha256}. This could mean the wrong file was "
-                f"selected, the file was modified/corrupted after the manifest was written, or "
-                f"the manifest itself is stale. Proceeding anyway - this check is a convenience "
-                f"warning, not an authoritative gate the way the bootloader's own HMAC "
-                f"verification is."
+            raise FlashError(
+                f"MANIFEST MISMATCH - {os.path.basename(manifest_path)} declares "
+                f"sha256={expected_sha256}, this file's actual sha256={actual_sha256}. "
+                f"Wrong file, a corrupted download, or a stale manifest - refusing to flash."
             )
-        return parsed_version
+
+        hmac_hex = str(manifest.get("hmac_sha256", "") or "").strip().lower().replace("0x", "")
+        if hmac_hex:
+            try:
+                sig = bytes.fromhex(hmac_hex)
+            except ValueError:
+                sig = b""
+            if len(sig) != 32:
+                raise FlashError(f"{os.path.basename(manifest_path)}: hmac_sha256 is not 32 bytes of hex")
+            info["hmac"] = sig
+            kind = manifest.get("signing_key_kind", "?")
+            self.log(f"Using the signature published in the manifest (key: {kind}).")
+            if kind == "dev":
+                self.log("NOTE: signed with the PUBLIC development key - only boards whose "
+                         "bootloader was built with that same key accept it.")
+        return info
+
+    def _signature_for(self, firmware, manifest_info, key, board):
+        """The published signature if there is one; otherwise a local HMAC
+        with the key configured in urtc_config.json (bench boards with a
+        self-built image); otherwise refuse - never sign with a made-up key."""
+        if manifest_info["hmac"] is not None:
+            return manifest_info["hmac"]
+        if key:
+            self.log(f"No published signature - signing locally with the {board} key from urtc_config.json.")
+            return hmac.new(key, firmware, hashlib.sha256).digest()
+        raise FlashError(
+            f"This image has no published signature (hmac_sha256 in <file>.manifest.json) "
+            f"and no {board} signing key is configured. Use an image from the URTC build "
+            f"(it ships its .manifest.json), or for a self-built image on a bench board set "
+            f"\"{'hmac_key_hex' if board == 'master' else 'slave_hmac_key_hex'}\" in urtc_config.json."
+        )
 
     def flash(self, firmware_path, allow_downgrade=False):
         self._last_heartbeat_pct = None  # a stale value from a prior flash()
@@ -267,8 +293,9 @@ class URTCFlasher:
             )
 
         crc32 = zlib.crc32(firmware) & 0xFFFFFFFF
-        signature = hmac.new(HMAC_KEY, firmware, hashlib.sha256).digest()
         actual_sha256 = hashlib.sha256(firmware).hexdigest()
+        manifest_info = self._check_manifest(firmware_path, actual_sha256)
+        signature = self._signature_for(firmware, manifest_info, HMAC_KEY, "master")
 
         self.log(_("LOG_FIRMWARE_PATH", path=firmware_path))
         self.log(_("LOG_FIRMWARE_SIZE", size=size, kb=size/1024))
@@ -276,7 +303,7 @@ class URTCFlasher:
         self.log(_("LOG_FIRMWARE_HMAC", hmac=signature.hex()))
         self.log(_("LOG_FIRMWARE_HARDWAREID", hw_id=THIS_HARDWARE_ID))
 
-        manifest_version = self._check_manifest(firmware_path, actual_sha256)
+        manifest_version = manifest_info["version"]
         report_major, report_minor = manifest_version if manifest_version else (FIRMWARE_VERSION_MAJOR, FIRMWARE_VERSION_MINOR)
         if manifest_version is None:
             # No manifest, or no parseable version field in it - falling
@@ -660,21 +687,17 @@ class URTCFlasher:
             )
 
         crc32 = zlib.crc32(firmware) & 0xFFFFFFFF
-        # Slave board's own key, deliberately different from the master
-        # board's HMAC_KEY used in flash_master above (see
-        # slaveboot_common.h's own comment on why) - signing a slave
-        # image with the master's key would make its bootloader reject
-        # every real update sent to it.
-        signature = hmac.new(SLAVE_HMAC_KEY, firmware, hashlib.sha256).digest()
         actual_sha256 = hashlib.sha256(firmware).hexdigest()
+        # Published by the URTC build with the slave board's own key
+        # (different from the master's - see slaveboot_common.h).
+        manifest_info = self._check_manifest(firmware_path, actual_sha256)
+        signature = self._signature_for(firmware, manifest_info, SLAVE_HMAC_KEY, "slave")
 
         self.log(_("LOG_FIRMWARE_PATH", path=firmware_path))
         self.log(_("LOG_FIRMWARE_SIZE", size=size, kb=size/1024))
         self.log(_("LOG_FIRMWARE_CRC32", crc32=crc32))
         self.log(_("LOG_FIRMWARE_HMAC", hmac=signature.hex()))
         self.log(_("LOG_SLAVE_FIRMWARE_HARDWAREID", hw_id=SLAVE_HARDWARE_ID))
-
-        self._check_manifest(firmware_path, actual_sha256)
 
         # --- 0x211: start update (size + slave's own HardwareID) ---
         self.log(_("LOG_SENDING_SLAVE_START_UPDATE"))

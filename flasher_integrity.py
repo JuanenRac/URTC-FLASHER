@@ -15,6 +15,7 @@ against, the result says so.
 
 from __future__ import annotations
 
+import json
 import hashlib
 import re
 import zlib
@@ -104,9 +105,10 @@ def read_sidecar_sha256(path: str) -> str | None:
 class Preflight:
     """What to do before flashing an image.
 
-    `blocked` is true only when a published digest exists and does not match
-    (or the image cannot be read). An image with no published digest is
-    allowed, but its digest is still reported so it can be recorded.
+    `blocked` is true when a published digest (`<image>.sha256` or the
+    manifest's sha256) does not match, or the image cannot be read. An image
+    with no published digest at all (a self-built file) is allowed here, but
+    flasher_protocol.py still refuses it unless a signing key is configured.
     """
 
     blocked: bool
@@ -115,8 +117,26 @@ class Preflight:
     reasons: tuple[str, ...] = field(default_factory=tuple)
 
 
+def read_manifest_sha256(path: str) -> str | None:
+    """The SHA-256 declared in `<image>.manifest.json` (written by the URTC
+    build next to every image), or None when absent/unreadable."""
+    try:
+        with open(path + ".manifest.json", "r", encoding="utf-8") as stream:
+            manifest = json.load(stream)
+    except (OSError, UnicodeDecodeError, ValueError):
+        return None
+    value = str(manifest.get("sha256", "") or "").strip().lower() if isinstance(manifest, dict) else ""
+    return value if _SHA256_RE.match(value) else None
+
+
 def preflight_image(path: str) -> Preflight:
-    expected = read_sidecar_sha256(path)
+    """Every published digest (`<image>.sha256` and the manifest's sha256)
+    must match the image, and must agree with each other."""
+    sidecar = read_sidecar_sha256(path)
+    declared = read_manifest_sha256(path)
+    if sidecar and declared and sidecar != declared:
+        return Preflight(True, False, "", (f"{path}.sha256 ({sidecar}) and its manifest ({declared}) disagree",))
+    expected = sidecar or declared
     if expected is None:
         try:
             sha, _crc = _digests(path)
