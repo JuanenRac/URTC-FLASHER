@@ -23,7 +23,7 @@
 </p>
 
 
-**版本：** 0.2.2（本工具自身的版本——显示在窗口横幅和标题栏中，与它所写入的
+**版本：** 0.2.4（本工具自身的版本——显示在窗口横幅和标题栏中，与它所写入的
 URTC 板卡固件版本分开跟踪。遵循 X.Y.Z 方案，其中补丁号在每次通过
 build_exe.bat/build_exe.sh 进行的真实构建时自动递增——版本历史见
 CHANGELOG.md，确切的进位规则见 bump_version.py）
@@ -56,7 +56,7 @@ CAN 自我标识），以便你在决定要刷写什么之前，先看看当前�
 针对真实硬件的真实板卡——请以对待任何与引导程序通信的新工具同样的谨慎态度
 对待首次真实刷写尝试：手边备好 JTAG 作为后备手段。
 
-**诚实核查 - 今天真正能运行的部分：** `tests/` 下有 3 个 pytest 会收集的真实文件——`test_flash_protocol_dispatch.py`、`test_flash_verify_fail_reporting.py` 和 `test_flasher_protocol_clock.py`（合计 20 个通过的测试，`pytest tests/`），其中包括一个真实的 `MockCAN` 传输层（`flasher_transports.py`），它会回放一段完整的模拟 bootloader 序列(启动/擦除/接收、数据分页 + PAGE_ACK、HMAC 分片、以真实成功或具体的 `VERIFY_FAIL_REASON` 结束更新)。`tools/build_test.py` 现在会把这套测试作为 `build-test.sh`/`build-test.bat` 的一部分来运行——但这个仓库自己的 GitHub Actions CI（`.github/workflows/ci.yml`）仍然只是编译每一个 `.py` 文件并运行 `tools/ci_validate.py`，从不运行 `build_test.py` 本身(那个工作流是整个生态系统共享的基线，没有任何通用的 Python pytest 步骤)，所以今天 `tests/` 下的一个回归仍然不会导致 GitHub Actions 运行失败——只有本地的 `build-test.sh` 才会。仓库根目录下的两个 `verify_qt_*.py` 脚本（`verify_qt_device_config.py`、`verify_qt_swd_full_chip_flash.py`）是真实的、刻意放在 pytest 之外的端到端检查——它们需要一个真实的 Qt 事件循环来处理真实的跨线程信号传递，需要手动运行 `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`，并且两者都通过了；`verify_qt_swd_full_chip_flash.py` 使用 `dry_run=True` 来实际验证 `PyOCDCLI`/`CubeProgrammerCLI` 真实的命令构造，而绝不会真正调用 `subprocess.Popen`。这就是自动验证所能达到的诚实上限：CRC32/HMAC-SHA256 的数学运算、SocketCAN 帧打包、Qt Quick 设备配置写入，以及全芯片 SWD/JTAG 编程的命令构造都是真实的，并且针对已知正确的参考进行了验证，但——正如上面的状态说明已经指出的——在这个环境里，这些都从未针对真实硬件上的真实板卡运行过。`flasher_protocol.py`、`flasher_swd_tools.py`、`flasher_validation.py` 和 `flasher_config.py` 都是真实且相当可观的实现（合计数万行代码），它们是通过这两个验证脚本和人工使用来验证的，而不是通过等量的自动化单元测试。具体已经交付了什么，请参见 `CHANGELOG.md`。
+**诚实核查 - 今天真正能运行的部分：** `tests/` 下有 6 个 pytest 文件（43 个测试：41 个通过，没有 PySide6 时跳过 2 个）——针对真实 `MockCAN` 传输（`flasher_transports.py`）的 CAN-OTA 协议测试，它会回放完整的模拟引导程序序列（开始／擦除／接收、页数据 + PAGE_ACK、HMAC 分块、以真实成功或特定 `VERIFY_FAIL_REASON` 结束更新）；签名规则（无需任何密钥即发送已发布的签名、拒绝未签名镜像、清单 sha256 不符时在任何总线通信前拒绝）；镜像完整性检查；以及随附 `firmware/` 与其清单的核对。GitHub Actions（`.github/workflows/ci.yml`）在每次推送时运行这套测试，`tools/build_test.py` 也会在 `build-test.sh`/`.bat` 中运行。根目录下的两个 `verify_qt_*.py` 脚本是 pytest 之外的真实端到端检查（需要真实的 Qt 事件循环；用 `QT_QPA_PLATFORM=offscreen python verify_qt_*.py` 运行）；`verify_qt_swd_full_chip_flash.py` 只以 `dry_run=True` 构造 `PyOCDCLI`/`CubeProgrammerCLI` 命令。这些都没有在本环境中针对真实板卡运行过。已发布的内容请参见 `CHANGELOG.md`。
 
 ## 1. 🔌 让你的适配器与 CAN 通信
 
@@ -200,8 +200,8 @@ SocketCAN 没有这个特定的坑——访问一个类似 `can0` 的接口不�
 │   ├── URTC_LOGO_FLASHER.svg      <- 横幅源文件（矢量图）
 │   └── urtc_banner.png            <- 显示在窗口顶部，由上方的 .svg 渲染而成
 ├── firmware/
-│   ├── URTC_V1.1_F303CC.bin      <- 将新的 .bin 文件放在这里
-│   └── URTC_V1.1_F303CC_old.bin  <- 也可以保留旧版本
+│   ├── URTC_MAIN_FIRMWARE_v0.3.3.bin  <- 将新的 .bin 文件放在这里
+│   └── URTC_MAIN_FIRMWARE_v0.3.2.bin  <- 也可以保留旧版本
 ├── logs/                          <- 自动创建，每个会话一个文件
 ├── urtc_config.json               <- 可选，默认不包含（见下方“更改 HMAC 密钥”）
 ├── urtc_flasher.py                <- 入口点：CLI 参数、启动画面、主窗口设置
@@ -244,8 +244,8 @@ Python 都自带）加载，而非 Pillow，因此不会增加新的依赖。`bu
 
 | 文件 | 大小 | 状态 |
 |---|---|---|
-| URTC_V1.1_F303CC.bin | 30.9 KB | ✓ 看起来有效 |
-| URTC_SLAVE_APP.bin | 12.4 KB | ✓ 看起来有效 |
+| URTC_MAIN_FIRMWARE_v0.3.3.bin | 71.8 KB | ✓ 看起来有效 |
+| URTC_SLAVE_FIRMWARE_v0.1.9.bin | 33.9 KB | ✓ 看起来有效 |
 | notes.txt.bin | 0.1 KB | ✗ 第一个字看起来不像一个有效的堆栈指针 |
 
 - **恰好有一个文件通过检查** → 工具启动的那一刻就会为你选中它。文件夹中
@@ -265,18 +265,19 @@ Python 都自带）加载，而非 Pillow，因此不会增加新的依赖。`bu
   （未经身份验证，因此如果短时间内频繁使用会受限于 GitHub 自身的每小时
   60 次请求限制）——这里的任何内容都不需要 GitHub 账户或令牌。
 
-**可选的 `<filename>.manifest.json`，与固件文件放在一起**（例如
-`URTC_V1.1_F303CC.bin.manifest.json`），增加了一项额外的、非阻塞性的完整性
-检查：如果存在，其 `sha256` 字段会在刷写之前与实际文件进行比对，其
-`version`/`build_date` 也会一并记录在日志中以供参考。
+**与每个固件文件放在一起的 `<filename>.manifest.json` 和
+`<filename>.sha256`**——由 URTC 构建为每个镜像发布（从 GitHub 下载时会一并
+下载）。清单包含版本、`sha256`，对于应用镜像还包含引导程序期望的
+`hmac_sha256` 签名：
 
 ```json
-{"version": "1.1", "build_date": "2024-01-15", "sha256": "e5a4918c..."}
+{"component": "main_application", "version": "0.3.3", "sha256": "b48d4cd5...", "hmac_sha256": "b63a701e...", "signing_key_kind": "dev"}
 ```
 
-不匹配会被记录为一条明确的警告，而非硬性停止——这是一项便利性检查，用于
-提早捕获明显错误或损坏的文件，而不是替代引导程序自身在真实传输过程中的
-HMAC 验证，后者在任何情况下始终是权威检查。
+刷写前会立即校验这两个摘要，不一致时会在向总线发送任何数据之前**拒绝刷写**
+（文件错误、下载损坏或清单过期）。发送给引导程序的是已发布的签名，报告给它
+的是清单中的版本。没有清单的文件（自建镜像）只有在 `urtc_config.json` 中设置
+了签名密钥时才会刷写——参见下文更改 HMAC 密钥。
 
 以后添加新的构建版本：只需将其放入 `firmware/` 并点击**刷新**——无需重启。
 
@@ -646,11 +647,14 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 
 ## 🔑 更改 HMAC 密钥 / HardwareID
 
-共享的签名密钥存放在两个必须始终保持一致的位置：`bootloader_common.h`
-的 `HMAC_KEY` 数组，以及本工具 `flasher_config.py` 顶部附近的 `HMAC_KEY`
-常量。如果你更改了其中一个，请更改另一个并重新构建/重新刷写引导程序，
-然后再尝试用新密钥签名任何内容——一个用引导程序没有的密钥签名的镜像
-将永远安全地验证失败，主槽保持不变。
+本工具**不包含任何签名密钥**。URTC 构建为每个应用镜像签名，并把签名发布在
+镜像旁边的 `<image>.manifest.json`（`hmac_sha256`，另有 `<image>.sha256`）中；
+刷写工具发送该已发布的签名，并拒绝 sha256 与清单不符的镜像。从 GitHub 下载
+镜像时会同时下载这两个文件，`python tools/sync_firmware.py` 会根据 URTC 构建
+更新随附的 `firmware/` 文件夹（`--check` 用于校验）。只有在测试板上刷写没有
+清单的自建镜像时才需要密钥：在下方的 `urtc_config.json` 中设置
+`hmac_key_hex` / `slave_hmac_key_hex`——没有密钥时，此类镜像会被拒绝，而不是
+用引导程序不可能拥有的密钥签名。参见 URTC 的 `docs/FIRMWARE_SIGNING.TXT`。
 
 **或者在不改动脚本的情况下覆盖这一切：** 一个位于 `firmware/` 旁边的
 可选 `urtc_config.json` 可以设置签名密钥、HardwareID，以及内存映射值——
@@ -707,11 +711,12 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 │   ├── urtc_icon.ico              <- Windows 任务栏/窗口图标
 │   └── urtc_icon.png              <- Linux 任务栏/窗口图标
 ├── firmware/
-│   ├── URTC_MAIN_FIRMWARE_v0.2.5.bin     <- 当前的主板应用固件
-│   ├── URTC_MAIN_BOOTLOADER_v0.3.4.bin   <- 主板引导程序（仅限 SWD/JTAG，从 CAN-OTA
+│   ├── URTC_MAIN_FIRMWARE_v0.3.3.bin     <- 当前的主板应用固件
+│   ├── URTC_MAIN_BOOTLOADER_v0.3.8.bin   <- 主板引导程序（仅限 SWD/JTAG，从 CAN-OTA
 │   │                                         固件列表中过滤掉——见上方第 3 节）
-│   ├── URTC_SLAVE_FIRMWARE_v0.1.4.bin    <- 扩展从属应用程序（仅限高级扩展板）
-│   └── URTC_SLAVE_BOOTLOADER_v0.1.7.bin  <- 扩展从属引导程序
+│   ├── URTC_SLAVE_FIRMWARE_v0.1.9.bin    <- 扩展从属应用程序（仅限高级扩展板）
+│   ├── URTC_SLAVE_BOOTLOADER_v0.2.2.bin  <- 扩展从属引导程序
+│   └── *.bin.sha256, *.bin.manifest.json  <- 每个镜像已发布的摘要 + 清单（版本、sha256、签名）
 ├── images/
 │   ├── URTC_FLASHER_BANNER.svg    <- 显示在本 README 顶部的 Logo 横幅
 │   └── URTC_FLASHER_V1_1.png      <- 真实的窗口截图，显示于上方“照片”一节
@@ -743,9 +748,13 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 ├── verify_qt_device_config.py     <- 真实的、刻意放在 pytest 之外的端到端检查，验证 Qt Quick 配置写入（需要真实的 Qt 事件循环）
 ├── verify_qt_swd_full_chip_flash.py <- 真实的、刻意放在 pytest 之外的端到端检查，验证 Qt Quick 全芯片 SWD/JTAG 面板（仅 dry-run）
 ├── tests/
-│   ├── test_flasher_protocol_clock.py <- 4 个测试
+│   ├── conftest.py                 <- 为协议测试提供测试板签名密钥
+│   ├── test_firmware_signature.py  <- 7 个测试：已发布签名、拒绝未签名镜像、摘要、随附 firmware/
+│   ├── test_flash_protocol_dispatch.py <- 8 个测试，针对真实的模拟 MockCAN 引导程序
 │   ├── test_flash_verify_fail_reporting.py <- 8 个测试
-│   └── test_flash_protocol_dispatch.py <- 8 个测试，针对真实的模拟 MockCAN bootloader——由 build-test.sh/.bat 运行，不由 GitHub Actions CI 运行，见上文诚实核查
+│   ├── test_flasher_integrity.py   <- 14 个测试
+│   ├── test_flasher_protocol_clock.py <- 4 个测试
+│   └── test_qt_flash_preflight.py  <- 2 个测试（没有 PySide6 时跳过）- 全部由 GitHub Actions CI 运行
 ├── requirements.txt                <- pyserial>=3.5（Tkinter 测试器）+ PySide6>=6.8,<7（`--qtquick` 面板）
 ├── build_exe.bat                  <- Windows 独立构建
 ├── build_exe.sh                   <- Linux 独立构建
@@ -759,6 +768,7 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 ├── tools/
 │   ├── build_test.py                     <- 不递增版本号的编译检查 + Qt Quick 面板源码校验
 │   ├── ci_validate.py                    <- CI 使用的 manifest/CHANGELOG/docs 校验
+│   ├── sync_firmware.py                  <- 将 URTC 构建复制到 firmware/（校验摘要；--check 用于校验）
 │   └── render_hydra_umc_icon_frames.py   <- 从 SVG 重新生成 assets/hydra_umc_icon_frames/（仅限开发）
 ├── README.md                      <- 英文原版
 ├── README_zho.md                  <- 本文件

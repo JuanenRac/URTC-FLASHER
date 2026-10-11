@@ -23,7 +23,7 @@
 </p>
 
 
-**バージョン：** 0.2.2（本ツール自身のバージョン——ウィンドウのバナーと
+**バージョン：** 0.2.4（本ツール自身のバージョン——ウィンドウのバナーと
 タイトルバーに表示され、書き込み先の URTC ボードファームウェアのバージョン
 とは別に管理されます。X.Y.Z 方式に従い、パッチ番号は build_exe.bat/
 build_exe.sh による実際のビルドのたびに自動的に加算されます——バージョン
@@ -69,7 +69,7 @@ HMAC-SHA256 署名、ゴールデンイメージのバックアップスロッ�
 最初の実際のフラッシュ試行に臨んでください：フォールバックとして手元に
 JTAG を用意しておいてください。
 
-**正直な現状確認 - 実際に今動くもの:** `tests/` には pytest が収集する本物のファイルが3つある——`test_flash_protocol_dispatch.py`、`test_flash_verify_fail_reporting.py`、`test_flasher_protocol_clock.py`（合計20件のテストが通過、`pytest tests/`）——本物の `MockCAN` トランスポート（`flasher_transports.py`）も含まれており、これは完全なシミュレート済みブートローダーのシーケンス（起動/消去/受信、データページ + PAGE_ACK、HMAC チャンク、実際の成功または具体的な `VERIFY_FAIL_REASON` でのアップデート終了）を再生する。`tools/build_test.py` は今やこのスイートを `build-test.sh`/`build-test.bat` の一部として実行する——しかしこのリポジトリ自身の GitHub Actions CI（`.github/workflows/ci.yml`）は依然として各 `.py` ファイルをコンパイルして `tools/ci_validate.py` を実行するだけで、`build_test.py` 自体は一度も実行しない（そのワークフローはエコシステム全体で共有されるベースラインであり、Python 用の汎用的な pytest ステップは存在しない）ため、今日の時点でも `tests/` 配下のリグレッションは GitHub Actions の実行を失敗させることはない——ローカルの `build-test.sh` だけが失敗させる。リポジトリ直下にある2つの `verify_qt_*.py` スクリプト（`verify_qt_device_config.py`、`verify_qt_swd_full_chip_flash.py`）は、意図的に pytest の外に置かれた本物のエンドツーエンドチェックだ——本物のクロススレッドシグナル配信のために本物の Qt イベントループを必要とし、`QT_QPA_PLATFORM=offscreen python verify_qt_*.py` で手動実行され、どちらも通過している。`verify_qt_swd_full_chip_flash.py` は `dry_run=True` を使い、本物の `subprocess.Popen` 呼び出しには一切至らせずに、`PyOCDCLI`/`CubeProgrammerCLI` の実際のコマンド構築を検証する。これが自動的に検証されている範囲の正直な上限だ。CRC32/HMAC-SHA256 の計算、SocketCAN のフレームパッキング、Qt Quick のデバイス設定書き込み、そしてフルチップ SWD/JTAG プログラミングのコマンド構築は本物であり、既知の正しい参照と照合されているが——上記の状態の行がすでに述べている通り——これらはこの環境において実機ボード上の実際のハードウェアに対しては一度も実行されていない。`flasher_protocol.py`、`flasher_swd_tools.py`、`flasher_validation.py`、`flasher_config.py` は本物で相当な規模の実装であり（合計で数万行）、この2つの検証スクリプトと手動での使用によって検証されているのであって、それに見合う量の自動化された単体テストによってではない。これまでに実際に出荷されたものの詳細は `CHANGELOG.md` を参照。
+**正直な現状確認 - 実際に今動くもの:** `tests/` には 6 つの pytest ファイル（43 件のテスト：41 件成功、PySide6 がない場合 2 件スキップ）があります——完全なブートローダーシーケンス（開始／消去／受信、ページデータ + PAGE_ACK、HMAC チャンク、本当の成功または特定の `VERIFY_FAIL_REASON` による更新終了）を再現する実際の `MockCAN` トランスポート（`flasher_transports.py`）に対する CAN-OTA プロトコル、署名ルール（公開署名は鍵なしで送信、未署名イメージは拒否、マニフェストの sha256 不一致はバス通信前に拒否）、イメージ整合性チェック、同梱の `firmware/` とそのマニフェストの照合です。GitHub Actions（`.github/workflows/ci.yml`）が push のたびにこのスイートを実行し、`tools/build_test.py` も `build-test.sh`/`.bat` で実行します。ルートにある 2 つの `verify_qt_*.py` スクリプトは pytest の外にある本物のエンドツーエンドチェックです（本物の Qt イベントループが必要。`QT_QPA_PLATFORM=offscreen python verify_qt_*.py` で実行）。`verify_qt_swd_full_chip_flash.py` は `dry_run=True` で `PyOCDCLI`/`CubeProgrammerCLI` のコマンドを組み立てるだけです。この環境では実機ボードに対しては一切実行していません。何がリリースされたかは `CHANGELOG.md` を参照してください。
 
 ## 1. 🔌 アダプターを CAN 通信できるようにする
 
@@ -252,8 +252,8 @@ SocketCAN にはこの特定の落とし穴はありません——`can0` のよ
 │   ├── URTC_LOGO_FLASHER.svg      <- バナーのソース（ベクター）
 │   └── urtc_banner.png            <- ウィンドウ上部に表示、上記 .svg からレンダリング
 ├── firmware/
-│   ├── URTC_V1.1_F303CC.bin      <- 新しい .bin ファイルをここに置く
-│   └── URTC_V1.1_F303CC_old.bin  <- 古いバージョンを保持しておくこともできる
+│   ├── URTC_MAIN_FIRMWARE_v0.3.3.bin  <- 新しい .bin ファイルをここに置く
+│   └── URTC_MAIN_FIRMWARE_v0.3.2.bin  <- 古いバージョンを保持しておくこともできる
 ├── logs/                          <- 自動作成、セッションごとに 1 ファイル
 ├── urtc_config.json               <- 任意、デフォルトでは含まれない（下記「HMAC キーの変更」参照）
 ├── urtc_flasher.py                <- エントリポイント：CLI 引数、スプラッシュ画面、メインウィンドウ設定
@@ -302,8 +302,8 @@ SocketCAN にはこの特定の落とし穴はありません——`can0` のよ
 
 | ファイル | サイズ | 状態 |
 |---|---|---|
-| URTC_V1.1_F303CC.bin | 30.9 KB | ✓ 有効に見えます |
-| URTC_SLAVE_APP.bin | 12.4 KB | ✓ 有効に見えます |
+| URTC_MAIN_FIRMWARE_v0.3.3.bin | 71.8 KB | ✓ 有効に見えます |
+| URTC_SLAVE_FIRMWARE_v0.1.9.bin | 33.9 KB | ✓ 有効に見えます |
 | notes.txt.bin | 0.1 KB | ✗ 最初のワードが有効なスタックポインタに見えません |
 
 - **チェックに合格したファイルが正確に 1 つ** → ツールが起動した瞬間に、
@@ -332,20 +332,22 @@ SocketCAN にはこの特定の落とし穴はありません——`can0` のよ
   あたり 60 リクエストのレート制限に達する可能性があります）——ここでは
   GitHub アカウントもトークンも必要ありません。
 
-**ファームウェアファイルの隣に置く任意の `<filename>.manifest.json`**
-（例：`URTC_V1.1_F303CC.bin.manifest.json`）は、追加の、ブロッキング
-しない健全性チェックを加えます：存在する場合、その `sha256` フィールドが
-フラッシュ直前に実際のファイルと比較され、`version`/`build_date` は
-参考としてログに一緒に記録されます。
+**各ファームウェアファイルの隣に置かれる `<filename>.manifest.json` と
+`<filename>.sha256`**——URTC のビルドが各イメージについて公開します（GitHub
+からイメージと一緒にダウンロードされます）。マニフェストにはバージョン、
+`sha256`、アプリケーションイメージの場合はブートローダーが期待する
+`hmac_sha256` 署名が含まれます：
 
 ```json
-{"version": "1.1", "build_date": "2024-01-15", "sha256": "e5a4918c..."}
+{"component": "main_application", "version": "0.3.3", "sha256": "b48d4cd5...", "hmac_sha256": "b63a701e...", "signing_key_kind": "dev"}
 ```
 
-不一致は明確な警告としてログに記録されるだけで、強制停止にはなりません
-——これは、明らかに間違った、または破損したファイルを早期に捕らえる
-ための利便性チェックであり、実際の転送中のブートローダー自身の HMAC
-検証（いずれにせよ権威あるチェックであり続けます）の代替ではありません。
+両方のダイジェストは書き込み直前に確認され、不一致の場合はバス上に何も
+送信する前に**書き込みを拒否**します（誤ったファイル、破損したダウンロード、
+古いマニフェスト）。ブートローダーには公開された署名が送られ、マニフェストの
+バージョンが報告されます。マニフェストのないファイル（自作ビルド）は、
+`urtc_config.json` に署名鍵が設定されている場合のみ書き込まれます——下記の
+HMAC キーの変更を参照してください。
 
 後で新しいビルドを追加する：単に `firmware/` に投入して**更新**を
 クリックするだけです——再起動は不要です。
@@ -842,13 +844,17 @@ CAN フレームから直接読み取るのではなく、I2C ブリッジ経由
 
 ## 🔑 HMAC キー / HardwareID の変更
 
-共有署名キーは、常に一致していなければならない 2 か所に存在します：
-`bootloader_common.h` の `HMAC_KEY` 配列と、`flasher_config.py` の先頭
-付近にある本ツールの `HMAC_KEY` 定数です。片方を変更した場合は、もう
-片方も変更し、新しいキーで何かに署名しようとする前にブートローダーを
-再ビルド/再フラッシュしてください——ブートローダーが持っていないキーで
-署名されたイメージは、常に安全に検証に失敗し、メインスロットは触れ
-られないままです。
+このツールは**署名鍵を一切持ちません**。URTC のビルドが各アプリケーション
+イメージに署名し、その署名をイメージの隣の `<image>.manifest.json`
+（`hmac_sha256`、加えて `<image>.sha256`）に公開します。フラッシャーはその
+公開署名を送信し、sha256 がマニフェストと一致しないイメージは拒否します。
+GitHub からイメージをダウンロードすると両ファイルも一緒に取得され、
+`python tools/sync_firmware.py` が同梱の `firmware/` フォルダを URTC の
+ビルドから更新します（`--check` で検証）。鍵が必要なのは、マニフェストの
+ない自作イメージをベンチ用ボードに書き込む場合だけです。下記の
+`urtc_config.json` に `hmac_key_hex` / `slave_hmac_key_hex` を設定して
+ください。設定がない場合、そのイメージはブートローダーが持ち得ない鍵で署名
+されるのではなく拒否されます。URTC の `docs/FIRMWARE_SIGNING.TXT` を参照。
 
 **またはスクリプトに触れずにこれらを上書きする：** `firmware/` の隣に
 ある任意の `urtc_config.json` は、署名キー、HardwareID、そしてメモリ
@@ -912,12 +918,13 @@ JSON 数値（`50580689`）のどちらも受け付けます——ファイル�
 │   ├── urtc_icon.ico              <- Windows タスクバー/ウィンドウアイコン
 │   └── urtc_icon.png              <- Linux タスクバー/ウィンドウアイコン
 ├── firmware/
-│   ├── URTC_MAIN_FIRMWARE_v0.2.5.bin     <- 現在のメインボードアプリケーションファームウェア
-│   ├── URTC_MAIN_BOOTLOADER_v0.3.4.bin   <- メインボードブートローダー（SWD/JTAG のみ、
+│   ├── URTC_MAIN_FIRMWARE_v0.3.3.bin     <- 現在のメインボードアプリケーションファームウェア
+│   ├── URTC_MAIN_BOOTLOADER_v0.3.8.bin   <- メインボードブートローダー（SWD/JTAG のみ、
 │   │                                         CAN-OTA ファームウェアリストからフィルタリング
 │   │                                         除外——上記のセクション 3 参照）
-│   ├── URTC_SLAVE_FIRMWARE_v0.1.4.bin    <- 拡張スレーブアプリケーション（Advanced 拡張ボードのみ）
-│   └── URTC_SLAVE_BOOTLOADER_v0.1.7.bin  <- 拡張スレーブブートローダー
+│   ├── URTC_SLAVE_FIRMWARE_v0.1.9.bin    <- 拡張スレーブアプリケーション（Advanced 拡張ボードのみ）
+│   ├── URTC_SLAVE_BOOTLOADER_v0.2.2.bin  <- 拡張スレーブブートローダー
+│   └── *.bin.sha256, *.bin.manifest.json  <- 各イメージの公開ダイジェスト + マニフェスト（バージョン、sha256、署名）
 ├── images/
 │   ├── URTC_FLASHER_BANNER.svg    <- 本 README の先頭に表示される Logo バナー
 │   └── URTC_FLASHER_V1_1.png      <- 実際のウィンドウのスクリーンショット、上記の写真セクションに表示
@@ -950,9 +957,13 @@ JSON 数値（`50580689`）のどちらも受け付けます——ファイル�
 ├── verify_qt_device_config.py     <- Qt Quick の設定書き込みに対する、意図的に pytest の外に置かれた本物のエンドツーエンド検証（本物の Qt イベントループが必要）
 ├── verify_qt_swd_full_chip_flash.py <- Qt Quick のフルチップ SWD/JTAG パネルに対する、意図的に pytest の外に置かれた本物のエンドツーエンド検証（dry-run のみ）
 ├── tests/
-│   ├── test_flasher_protocol_clock.py <- 4件のテスト
+│   ├── conftest.py                 <- プロトコルテストにベンチ用署名鍵を与える
+│   ├── test_firmware_signature.py  <- 7件：公開署名、未署名イメージの拒否、ダイジェスト、同梱 firmware/
+│   ├── test_flash_protocol_dispatch.py <- 8件のテスト、本物のシミュレート MockCAN ブートローダー相手
 │   ├── test_flash_verify_fail_reporting.py <- 8件のテスト
-│   └── test_flash_protocol_dispatch.py <- 8件のテスト、本物のシミュレート済み MockCAN ブートローダーに対して——build-test.sh/.bat が実行、GitHub Actions CI では実行されない、上記の正直な現状確認を参照
+│   ├── test_flasher_integrity.py   <- 14件のテスト
+│   ├── test_flasher_protocol_clock.py <- 4件のテスト
+│   └── test_qt_flash_preflight.py  <- 2件（PySide6 がなければスキップ）- すべて GitHub Actions CI で実行
 ├── requirements.txt                <- pyserial>=3.5（Tkinter テスター）+ PySide6>=6.8,<7（`--qtquick` デッキ）
 ├── build_exe.bat                  <- Windows 独立ビルド
 ├── build_exe.sh                   <- Linux 独立ビルド
@@ -966,6 +977,7 @@ JSON 数値（`50580689`）のどちらも受け付けます——ファイル�
 ├── tools/
 │   ├── build_test.py                     <- バージョンを更新しないコンパイル確認 + Qt Quick デッキのソース検証
 │   ├── ci_validate.py                    <- CI が使用する manifest/CHANGELOG/docs の検証
+│   ├── sync_firmware.py                  <- URTC のビルドを firmware/ にコピー（ダイジェスト確認、--check で検証）
 │   └── render_hydra_umc_icon_frames.py   <- assets/hydra_umc_icon_frames/ を SVG から再生成（開発専用）
 ├── README.md                      <- 英語版
 ├── README_jpn.md                  <- 本ファイル

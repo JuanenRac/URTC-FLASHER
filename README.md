@@ -23,7 +23,7 @@
 </p>
 
 
-**Version:** 0.2.2 (this tool's own version - shown in the window banner and
+**Version:** 0.2.4 (this tool's own version - shown in the window banner and
 title bar, tracked separately from the URTC board firmware version it
 writes. Follows an X.Y.Z scheme where the patch number bumps automatically
 on every real build via build_exe.bat/build_exe.sh - see CHANGELOG.md for
@@ -64,7 +64,7 @@ either platform is a real board over real hardware — treat a first
 real-world flash attempt with the same caution you'd give any new tool
 talking to a bootloader: have JTAG on hand as a fallback.
 
-**Honesty check - what actually runs today:** `tests/` holds 3 real files pytest collects - `test_flash_protocol_dispatch.py`, `test_flash_verify_fail_reporting.py` and `test_flasher_protocol_clock.py` (20 passing tests combined, `pytest tests/`), including a real `MockCAN` transport (`flasher_transports.py`) that plays back a full simulated bootloader sequence (start/erase/receive, page data + PAGE_ACK, HMAC chunks, end-update with a real success or a specific `VERIFY_FAIL_REASON`). `tools/build_test.py` now runs this suite as part of `build-test.sh`/`build-test.bat` - but this repo's own GitHub Actions CI (`.github/workflows/ci.yml`) still only compiles every `.py` file and runs `tools/ci_validate.py`, never `build_test.py` itself (that workflow is the shared ecosystem-wide baseline, with no generic Python-pytest step), so a regression under `tests/` would still not fail a GitHub Actions run today - only a local `build-test.sh`. The two `verify_qt_*.py` scripts at the repo root (`verify_qt_device_config.py`, `verify_qt_swd_full_chip_flash.py`) are real, deliberately-outside-pytest end-to-end checks - they need a real Qt event loop for real cross-thread Signal delivery, run manually with `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, and both pass; `verify_qt_swd_full_chip_flash.py` exercises the real `PyOCDCLI`/`CubeProgrammerCLI` command construction with `dry_run=True`, never a real `subprocess.Popen` call. That's the honest ceiling of what's automatically verified: the CRC32/HMAC-SHA256 math, SocketCAN frame packing, the Qt Quick device-configuration writes and the full-chip SWD/JTAG command construction are real and checked against known-correct references, but - as the Status line above already says - none of it has been run against a real board over real hardware in this environment. `flasher_protocol.py`, `flasher_swd_tools.py`, `flasher_validation.py` and `flasher_config.py` are real, substantial implementations (tens of thousands of lines combined) that are exercised by the two verify scripts and by manual use, not by a matching volume of automated unit tests. See `CHANGELOG.md` for exactly what has shipped so far.
+**Honesty check - what actually runs today:** `tests/` holds 6 pytest files (43 tests: 41 pass, 2 skip without PySide6) - the CAN-OTA protocol against a real `MockCAN` transport (`flasher_transports.py`) that plays back a full simulated bootloader sequence (start/erase/receive, page data + PAGE_ACK, HMAC chunks, end-update with a real success or a specific `VERIFY_FAIL_REASON`), the signature rules (published signature sent without any key, unsigned image refused, manifest sha256 mismatch refused before any bus traffic), the image integrity checks and the bundled `firmware/` against its manifests. GitHub Actions (`.github/workflows/ci.yml`) runs this suite on every push, and `tools/build_test.py` runs it in `build-test.sh`/`.bat`. The two `verify_qt_*.py` scripts at the repo root are real end-to-end checks kept outside pytest (they need a real Qt event loop; run them with `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`); `verify_qt_swd_full_chip_flash.py` only builds the `PyOCDCLI`/`CubeProgrammerCLI` commands with `dry_run=True`. None of this has been run against a real board over real hardware in this environment. See `CHANGELOG.md` for exactly what has shipped so far.
 
 ## 1. 🔌 Get your adapter talking CAN
 
@@ -235,8 +235,8 @@ at this repository's own root:
 │   ├── URTC_LOGO_FLASHER.svg      <- banner source (vector)
 │   └── urtc_banner.png            <- shown at the top of the window, rendered from the .svg above
 ├── firmware/
-│   ├── URTC_V1.1_F303CC.bin      <- put new .bin files here
-│   └── URTC_V1.1_F303CC_old.bin  <- can keep older versions around too
+│   ├── URTC_MAIN_FIRMWARE_v0.3.3.bin  <- put new .bin files here
+│   └── URTC_MAIN_FIRMWARE_v0.3.2.bin  <- can keep older versions around too
 ├── logs/                          <- created automatically, one file per session
 ├── urtc_config.json               <- optional, not included by default (see "Changing the HMAC key" below)
 ├── urtc_flasher.py                <- entry point: CLI args, splash screen, main window setup
@@ -284,8 +284,8 @@ in the list with a clear ✓ or ✗ and the reason why:
 
 | File | Size | Status |
 |---|---|---|
-| URTC_V1.1_F303CC.bin | 30.9 KB | ✓ looks valid |
-| URTC_SLAVE_APP.bin | 12.4 KB | ✓ looks valid |
+| URTC_MAIN_FIRMWARE_v0.3.3.bin | 71.8 KB | ✓ looks valid |
+| URTC_SLAVE_FIRMWARE_v0.1.9.bin | 33.9 KB | ✓ looks valid |
 | notes.txt.bin | 0.1 KB | ✗ first word doesn't look like a valid stack pointer |
 
 - **Exactly one file passes the check** → it's selected for you the moment
@@ -312,20 +312,22 @@ in the list with a clear ✓ or ✗ and the reason why:
   60-requests/hour rate limit if you hit it a lot in a short window) -
   nothing here needs a GitHub account or a token.
 
-**Optional `<filename>.manifest.json`, next to a firmware file** (e.g.
-`URTC_V1.1_F303CC.bin.manifest.json`), adds an extra, non-blocking sanity
-check: if present, its `sha256` field is compared against the actual
-file right before flashing, with `version`/`build_date` logged alongside
-for reference.
+**`<filename>.manifest.json` and `<filename>.sha256`, next to each firmware
+file** - published by the URTC build for every image (and downloaded
+together with it from GitHub). The manifest carries the version, the
+`sha256` and, for application images, the `hmac_sha256` signature the
+bootloader expects:
 
 ```json
-{"version": "1.1", "build_date": "2024-01-15", "sha256": "e5a4918c..."}
+{"component": "main_application", "version": "0.3.3", "sha256": "b48d4cd5...", "hmac_sha256": "b63a701e...", "signing_key_kind": "dev"}
 ```
 
-A mismatch is logged as a clear warning, not a hard stop - this is a
-convenience check for catching an obviously wrong or corrupted file
-early, not a replacement for the bootloader's own HMAC verification
-during the real transfer, which remains the authoritative check either way.
+Both digests are checked right before flashing and a mismatch **refuses the
+flash** before anything is sent on the bus (wrong file, corrupted download
+or stale manifest). The published signature is what gets sent to the
+bootloader, and the manifest's version is what gets reported to it. A file
+without a manifest (your own build) is flashed only if a signing key is set
+in `urtc_config.json` - see "Changing the HMAC key" below.
 
 Adding a new build later: just drop it into `firmware/` and click
 **Refresh** - no restart needed.
@@ -861,11 +863,12 @@ from the SVG during development; it is not required to run the application.
 │   ├── urtc_icon.ico              <- Windows taskbar/window icon
 │   └── urtc_icon.png              <- Linux taskbar/window icon
 ├── firmware/
-│   ├── URTC_MAIN_FIRMWARE_v0.2.5.bin     <- current main-board application firmware
-│   ├── URTC_MAIN_BOOTLOADER_v0.3.4.bin   <- main-board bootloader (SWD/JTAG only, filtered out of
+│   ├── URTC_MAIN_FIRMWARE_v0.3.3.bin     <- current main-board application firmware
+│   ├── URTC_MAIN_BOOTLOADER_v0.3.8.bin   <- main-board bootloader (SWD/JTAG only, filtered out of
 │   │                                         the CAN-OTA firmware list - see section 3 above)
-│   ├── URTC_SLAVE_FIRMWARE_v0.1.4.bin    <- expansion slave application (advanced expansion boards only)
-│   └── URTC_SLAVE_BOOTLOADER_v0.1.7.bin  <- expansion slave bootloader
+│   ├── URTC_SLAVE_FIRMWARE_v0.1.9.bin    <- expansion slave application (advanced expansion boards only)
+│   ├── URTC_SLAVE_BOOTLOADER_v0.2.2.bin  <- expansion slave bootloader
+│   └── *.bin.sha256, *.bin.manifest.json  <- published digest + manifest (version, sha256, signature) of each image
 ├── images/
 │   ├── URTC_FLASHER_BANNER.svg    <- logo banner shown at the top of this README
 │   └── URTC_FLASHER_V1_1.png      <- real window screenshot, shown in the Photos section above
@@ -898,9 +901,13 @@ from the SVG during development; it is not required to run the application.
 ├── verify_qt_device_config.py     <- real, outside-pytest end-to-end check of the Qt Quick config writes (needs a real Qt event loop)
 ├── verify_qt_swd_full_chip_flash.py <- real, outside-pytest end-to-end check of the Qt Quick full-chip SWD/JTAG panel (dry-run only)
 ├── tests/
-│   ├── test_flasher_protocol_clock.py <- 4 tests
+│   ├── conftest.py                 <- gives the protocol tests a bench signing key
+│   ├── test_firmware_signature.py  <- 7 tests: published signature, unsigned image refused, preflight digests, bundled firmware/
+│   ├── test_flash_protocol_dispatch.py <- 8 tests, against a real simulated MockCAN bootloader
 │   ├── test_flash_verify_fail_reporting.py <- 8 tests
-│   └── test_flash_protocol_dispatch.py <- 8 tests, against a real simulated MockCAN bootloader - run by build-test.sh/.bat, not by GitHub Actions CI, see Honesty check above
+│   ├── test_flasher_integrity.py   <- 14 tests
+│   ├── test_flasher_protocol_clock.py <- 4 tests
+│   └── test_qt_flash_preflight.py  <- 2 tests (skipped without PySide6) - all run by GitHub Actions CI
 ├── requirements.txt                <- pyserial>=3.5 (Tkinter tester) + PySide6>=6.8,<7 (`--qtquick` deck)
 ├── build_exe.bat                  <- Windows standalone build
 ├── build_exe.sh                   <- Linux standalone build
@@ -914,6 +921,7 @@ from the SVG during development; it is not required to run the application.
 ├── tools/
 │   ├── build_test.py                     <- non-versioning compile + Qt Quick deck source check
 │   ├── ci_validate.py                    <- manifest/CHANGELOG/docs validation used by CI
+│   ├── sync_firmware.py                  <- copies URTC's build into firmware/ (digests checked; --check verifies)
 │   └── render_hydra_umc_icon_frames.py   <- regenerates assets/hydra_umc_icon_frames/ from the SVG (dev-only)
 ├── README.md                      <- this file
 ├── README_spa.md / README_ita.md / README_fra.md / README_deu.md / README_zho.md / README_jpn.md  <- translations

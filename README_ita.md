@@ -23,7 +23,7 @@
 </p>
 
 
-**Versione:** 0.2.2 (la versione di questo strumento - mostrata nel banner
+**Versione:** 0.2.4 (la versione di questo strumento - mostrata nel banner
 della finestra e nella barra del titolo, tracciata separatamente dalla
 versione del firmware della scheda URTC che scrive. Segue uno schema
 X.Y.Z in cui il numero di patch aumenta automaticamente a ogni build
@@ -69,7 +69,7 @@ tratta il primo vero tentativo di flash con la stessa cautela che
 daresti a qualsiasi nuovo strumento che parla con un bootloader: tieni a
 portata di mano il JTAG come ripiego.
 
-**Verifica di onestà - cosa funziona davvero oggi:** `tests/` contiene 3 file reali raccolti da pytest - `test_flash_protocol_dispatch.py`, `test_flash_verify_fail_reporting.py` e `test_flasher_protocol_clock.py` (20 test superati in totale, `pytest tests/`), incluso un vero trasporto `MockCAN` (`flasher_transports.py`) che riproduce una sequenza completa simulata del bootloader (avvio/cancellazione/ricezione, pagine dati + PAGE_ACK, blocchi HMAC, fine aggiornamento con un vero successo o un `VERIFY_FAIL_REASON` specifico). `tools/build_test.py` ora esegue questa suite come parte di `build-test.sh`/`build-test.bat` - ma la CI GitHub Actions di questo repository (`.github/workflows/ci.yml`) si limita ancora a compilare ogni file `.py` ed eseguire `tools/ci_validate.py`, mai `build_test.py` stesso (quel flusso è la base condivisa di tutto l'ecosistema, senza alcun passo generico pytest per Python), quindi oggi una regressione sotto `tests/` non farebbe comunque fallire un'esecuzione di GitHub Actions - solo un `build-test.sh` locale. I due script `verify_qt_*.py` nella radice del repository (`verify_qt_device_config.py`, `verify_qt_swd_full_chip_flash.py`) sono vere verifiche end-to-end, deliberatamente tenute fuori da pytest - hanno bisogno di un vero event loop Qt per la vera consegna di segnali cross-thread, vengono eseguiti manualmente con `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`, ed entrambi passano; `verify_qt_swd_full_chip_flash.py` esercita la vera costruzione dei comandi di `PyOCDCLI`/`CubeProgrammerCLI` con `dry_run=True`, mai una vera chiamata a `subprocess.Popen`. Questo è il tetto onesto di ciò che viene verificato automaticamente: la matematica CRC32/HMAC-SHA256, il packing delle trame SocketCAN, le scritture di configurazione del dispositivo Qt Quick e la costruzione dei comandi di programmazione completa SWD/JTAG sono reali e verificate contro riferimenti noti come corretti, ma - come già dice sopra la riga Stato - niente di tutto ciò è stato eseguito contro una scheda reale su hardware reale in questo ambiente. `flasher_protocol.py`, `flasher_swd_tools.py`, `flasher_validation.py` e `flasher_config.py` sono implementazioni reali e sostanziali (decine di migliaia di righe combinate) esercitate dai due script di verifica e dall'uso manuale, non da un volume equivalente di test automatici. Vedi `CHANGELOG.md` per sapere esattamente cosa è stato consegnato finora.
+**Verifica di onestà - cosa funziona davvero oggi:** `tests/` contiene 6 file pytest (43 test: 41 superati, 2 saltati senza PySide6) - il protocollo CAN-OTA contro un vero trasporto `MockCAN` (`flasher_transports.py`) che riproduce un'intera sequenza di bootloader simulato (avvio/cancellazione/ricezione, dati di pagina + PAGE_ACK, blocchi HMAC, fine aggiornamento con un vero successo o uno specifico `VERIFY_FAIL_REASON`), le regole di firma (firma pubblicata inviata senza alcuna chiave, immagine non firmata rifiutata, sha256 del manifest non corrispondente rifiutato prima di qualsiasi traffico sul bus), i controlli di integrità dell'immagine e la cartella `firmware/` inclusa rispetto ai suoi manifest. GitHub Actions (`.github/workflows/ci.yml`) esegue questa suite a ogni push, e `tools/build_test.py` la esegue in `build-test.sh`/`.bat`. I due script `verify_qt_*.py` nella radice sono veri controlli end-to-end fuori da pytest (richiedono un vero ciclo di eventi Qt; si eseguono con `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`); `verify_qt_swd_full_chip_flash.py` costruisce solo i comandi `PyOCDCLI`/`CubeProgrammerCLI` con `dry_run=True`. Niente di tutto ciò è stato eseguito su una scheda reale in questo ambiente. Vedi `CHANGELOG.md` per cosa è stato effettivamente rilasciato.
 
 ## 1. 🔌 Fai parlare CAN al tuo adattatore
 Quale di questi ti serve dipende dalla tua piattaforma e da quale
@@ -255,8 +255,8 @@ Questo strumento si aspetta una cartella `firmware/` proprio accanto a
 │   ├── URTC_LOGO_FLASHER.svg      <- sorgente del banner (vettoriale)
 │   └── urtc_banner.png            <- mostrato in cima alla finestra, renderizzato dal .svg sopra
 ├── firmware/
-│   ├── URTC_V1.1_F303CC.bin      <- metti qui i nuovi file .bin
-│   └── URTC_SLAVE_APP.bin        <- app del chip slave di espansione, se applicabile
+│   ├── URTC_MAIN_FIRMWARE_v0.3.3.bin  <- metti qui i nuovi file .bin
+│   └── URTC_SLAVE_FIRMWARE_v0.1.9.bin        <- app del chip slave di espansione, se applicabile
 ├── logs/                          <- creato automaticamente, un file per sessione
 ├── urtc_config.json               <- opzionale, non incluso di default (vedi "Cambiare la chiave HMAC" sotto)
 ├── urtc_flasher.py                <- punto di ingresso: argomenti CLI, splash screen, impostazione finestra principale
@@ -310,8 +310,8 @@ motivo:
 
 | File | Dimensione | Stato |
 |---|---|---|
-| URTC_V1.1_F303CC.bin | 30.9 KB | ✓ sembra valido |
-| URTC_SLAVE_APP.bin | 12.4 KB | ✓ sembra valido |
+| URTC_MAIN_FIRMWARE_v0.3.3.bin | 71.8 KB | ✓ sembra valido |
+| URTC_SLAVE_FIRMWARE_v0.1.9.bin | 33.9 KB | ✓ sembra valido |
 | notes.txt.bin | 0.1 KB | ✗ la prima parola non sembra un puntatore di stack valido |
 
 - **Esattamente un file passa il controllo** → viene selezionato per te
@@ -341,21 +341,23 @@ motivo:
   frequenza GitHub di 60 richieste/ora se la usi molto in poco tempo) -
   niente qui richiede un account GitHub o un token.
 
-**`<nomefile>.manifest.json` opzionale, accanto a un file firmware**
-(es. `URTC_V1.1_F303CC.bin.manifest.json`), aggiunge un controllo di
-sanità extra e non bloccante: se presente, il suo campo `sha256` viene
-confrontato con il file reale appena prima di flashare, con
-`version`/`build_date` registrati accanto come riferimento.
+**`<nomefile>.manifest.json` e `<nomefile>.sha256`, accanto a ogni file
+firmware** - pubblicati dalla build URTC per ogni immagine (e scaricati
+insieme a essa da GitHub). Il manifest contiene la versione, lo `sha256` e,
+per le immagini applicative, la firma `hmac_sha256` attesa dal
+bootloader:
 
 ```json
-{"version": "1.1", "build_date": "2024-01-15", "sha256": "e5a4918c..."}
+{"component": "main_application", "version": "0.3.3", "sha256": "b48d4cd5...", "hmac_sha256": "b63a701e...", "signing_key_kind": "dev"}
 ```
 
-Una discrepanza viene registrata come un avviso chiaro, non un blocco
-totale - questo è un controllo di comodità per rilevare precocemente un
-file ovviamente sbagliato o corrotto, non un sostituto della verifica
-HMAC del bootloader stesso durante il trasferimento reale, che rimane
-comunque il controllo autoritativo.
+Entrambe le impronte vengono verificate subito prima del flash e una
+differenza **rifiuta il flash** prima di inviare qualsiasi cosa sul bus
+(file sbagliato, download corrotto o manifest non aggiornato). Al
+bootloader viene inviata la firma pubblicata e comunicata la versione del
+manifest. Un file senza manifest (una build propria) viene flashato solo se
+in `urtc_config.json` è impostata una chiave di firma - vedi più sotto la
+modifica della chiave HMAC.
 
 Aggiungere una build nuova più tardi: basta metterla in `firmware/` e
 cliccare **Aggiorna** - nessun riavvio necessario.
@@ -872,13 +874,18 @@ pulsante Interroga Stato stesso di `URTC Tester`) se questo ti importa.
 
 ## 🔑 Cambiare la chiave HMAC / l'HardwareID
 
-La chiave di firma condivisa vive in 2 posti che devono sempre
-corrispondere: l'array `HMAC_KEY` di `bootloader_common.h`, e la costante
-`HMAC_KEY` di questo strumento vicino all'inizio di `flasher_config.py`.
-Se ne cambi una, cambia l'altra e ricompila/reflasha il bootloader prima
-di provare a firmare qualsiasi cosa con la nuova chiave - un'immagine
-firmata con una chiave che il bootloader non ha fallirà sempre la
-verifica, in sicurezza, lasciando lo slot principale intatto.
+Questo strumento **non contiene alcuna chiave di firma**. La build URTC
+firma ogni immagine applicativa e pubblica la firma accanto, in
+`<immagine>.manifest.json` (`hmac_sha256`, più `<immagine>.sha256`); il
+flasher invia quella firma pubblicata e rifiuta un'immagine il cui sha256
+non corrisponde al suo manifest. Scaricando un'immagine da GitHub vengono
+scaricati anche entrambi i file, e `python tools/sync_firmware.py` aggiorna
+la cartella `firmware/` inclusa dalla build URTC (`--check` la verifica).
+Solo un'immagine compilata in proprio senza manifest, su una scheda da
+banco, richiede una chiave: impostare `hmac_key_hex` / `slave_hmac_key_hex`
+in `urtc_config.json` (sotto) - senza, tale immagine viene rifiutata invece
+di essere firmata con una chiave che il bootloader non può avere. Vedi
+`docs/FIRMWARE_SIGNING.TXT` in URTC.
 
 **Oppure sostituisci qualsiasi cosa di questo senza toccare lo script:**
 un `urtc_config.json` opzionale accanto a `firmware/` può impostare la
@@ -946,11 +953,12 @@ l'applicazione.
 │   ├── urtc_icon.ico              <- icona barra applicazioni/finestra su Windows
 │   └── urtc_icon.png              <- icona barra applicazioni/finestra su Linux
 ├── firmware/
-│   ├── URTC_MAIN_FIRMWARE_v0.2.5.bin     <- firmware applicativo attuale della scheda principale
-│   ├── URTC_MAIN_BOOTLOADER_v0.3.4.bin   <- bootloader della scheda principale (solo SWD/JTAG, escluso dall'elenco
+│   ├── URTC_MAIN_FIRMWARE_v0.3.3.bin     <- firmware applicativo attuale della scheda principale
+│   ├── URTC_MAIN_BOOTLOADER_v0.3.8.bin   <- bootloader della scheda principale (solo SWD/JTAG, escluso dall'elenco
 │   │                                         firmware CAN-OTA - vedi sezione 3 sopra)
-│   ├── URTC_SLAVE_FIRMWARE_v0.1.4.bin    <- applicazione del chip slave di espansione (solo schede di espansione avanzate)
-│   └── URTC_SLAVE_BOOTLOADER_v0.1.7.bin  <- bootloader del chip slave di espansione
+│   ├── URTC_SLAVE_FIRMWARE_v0.1.9.bin    <- applicazione del chip slave di espansione (solo schede di espansione avanzate)
+│   ├── URTC_SLAVE_BOOTLOADER_v0.2.2.bin  <- bootloader del chip slave di espansione
+│   └── *.bin.sha256, *.bin.manifest.json  <- impronta pubblicata + manifest (versione, sha256, firma) di ogni immagine
 ├── images/
 │   ├── URTC_FLASHER_BANNER.svg    <- banner del logo mostrato in cima a questo README
 │   └── URTC_FLASHER_V1_1.png      <- screenshot reale della finestra, mostrato nella sezione Foto sopra
@@ -982,9 +990,13 @@ l'applicazione.
 ├── verify_qt_device_config.py     <- vera verifica end-to-end, deliberatamente fuori da pytest, delle scritture di configurazione Qt Quick (necessita un vero event loop Qt)
 ├── verify_qt_swd_full_chip_flash.py <- vera verifica end-to-end, deliberatamente fuori da pytest, del pannello Qt Quick di programmazione completa SWD/JTAG (solo dry-run)
 ├── tests/
-│   ├── test_flasher_protocol_clock.py <- 4 test
+│   ├── conftest.py                 <- fornisce ai test del protocollo una chiave di firma da banco
+│   ├── test_firmware_signature.py  <- 7 test: firma pubblicata, immagine non firmata rifiutata, impronte, firmware/
+│   ├── test_flash_protocol_dispatch.py <- 8 test, contro un vero bootloader MockCAN simulato
 │   ├── test_flash_verify_fail_reporting.py <- 8 test
-│   └── test_flash_protocol_dispatch.py <- 8 test, contro un vero bootloader MockCAN simulato - eseguito da build-test.sh/.bat, non dalla CI GitHub Actions, vedi Verifica di onestà sopra
+│   ├── test_flasher_integrity.py   <- 14 test
+│   ├── test_flasher_protocol_clock.py <- 4 test
+│   └── test_qt_flash_preflight.py  <- 2 test (saltati senza PySide6) - tutti eseguiti dalla CI GitHub Actions
 ├── requirements.txt                <- pyserial>=3.5 (tester Tkinter) + PySide6>=6.8,<7 (deck `--qtquick`)
 ├── build_exe.bat                  <- build standalone per Windows
 ├── build_exe.sh                   <- build standalone per Linux
@@ -998,6 +1010,7 @@ l'applicazione.
 ├── tools/
 │   ├── build_test.py                     <- controllo di compilazione senza incremento di versione + validazione delle sorgenti del deck Qt Quick
 │   ├── ci_validate.py                    <- validazione manifest/CHANGELOG/docs usata dalla CI
+│   ├── sync_firmware.py                  <- copia la build URTC in firmware/ (impronte verificate; --check verifica)
 │   └── render_hydra_umc_icon_frames.py   <- rigenera assets/hydra_umc_icon_frames/ dall'SVG (solo sviluppo)
 ├── README.md                      <- (versione in inglese)
 ├── README_ita.md                  <- questo file
