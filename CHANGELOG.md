@@ -275,7 +275,7 @@ build script) never changes the version - only a real build does.
 
 ## [0.1.4] - Every timeout uses the monotonic clock, not the civil one
 
-Found while auditing the code:
+Found on code review:
 `flasher_protocol.py`'s every deadline/duration computation (`query_version`,
 `_wait_for`, the page-transfer/readback loops, `query_slave_version`, the
 slave status/progress queries - 33 call sites total) used `time.time()`, the
