@@ -387,7 +387,38 @@ ApplicationWindow {
                 Text { text: flasherBackend.deviceSerialResult; visible: flasherBackend.deviceSerialResult !== ""; color: muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; font.pixelSize: 9 }
 
                 Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
-                Text { text: flasherBackend.uiText("QT_ACTIVITY_LOG"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
+                RowLayout {
+                    Layout.fillWidth: true
+                    Text { text: flasherBackend.uiText("QT_ACTIVITY_LOG"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13; Layout.fillWidth: true }
+                    Rectangle {
+                        id: copyIconButton
+                        property bool copied: false
+                        Layout.preferredWidth: 36
+                        Layout.preferredHeight: 30
+                        radius: 8
+                        color: copyIconMouse.containsMouse ? "#1b3c52" : "#102a3b"
+                        border.width: 1
+                        border.color: copyIconButton.copied ? "#5df0c4" : "#264966"
+                        Item {
+                            anchors.centerIn: parent
+                            width: 18; height: 18
+                            Rectangle { x: 6; y: 0; width: 11; height: 12; radius: 2; color: "transparent"; border.width: 1.6; border.color: copyIconButton.copied ? "#5df0c4" : "#9fd8e3" }
+                            Rectangle { x: 1; y: 5; width: 11; height: 12; radius: 2; color: copyIconMouse.containsMouse ? "#1b3c52" : "#102a3b"; border.width: 1.6; border.color: copyIconButton.copied ? "#5df0c4" : "#9fd8e3" }
+                        }
+                        TextEdit { id: copyHelper; visible: false }
+                        Timer { id: copiedTimer; interval: 1400; onTriggered: copyIconButton.copied = false }
+                        MouseArea {
+                            id: copyIconMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                copyHelper.text = flasherBackend.logs.join("\n"); copyHelper.selectAll(); copyHelper.copy(); copyHelper.deselect()
+                                copyIconButton.copied = true; copiedTimer.restart()
+                            }
+                        }
+                    }
+                }
                 ListView {
                     Layout.fillWidth: true
                     // Was Layout.fillHeight: true - meaningless now that

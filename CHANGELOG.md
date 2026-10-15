@@ -20,6 +20,10 @@ increments instead (e.g. `0.1.9` -> `0.2.0`), and the same carry applies
 from `MINOR` into `MAJOR`. Running the tool from source (not through a
 build script) never changes the version - only a real build does.
 
+## [0.2.5] - Copy-log icon button
+
+- **Copy-log button:** the activity log has a small copy icon (two sheets) that puts the whole log on the clipboard and flashes green when done.
+
 ## [0.2.4] - Bundled firmware 0.3.3, READMEs updated in all languages
 
 - `firmware/` re-synced with URTC's current build (main 0.3.3 / boot 0.3.8,
