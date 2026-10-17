@@ -120,15 +120,11 @@ VERIFY_FAIL_REASONS = {
 # below.
 THIS_HARDWARE_ID = 0x0303CC01  # STM32F303CCT6, URTC board revision 1
 SLAVE_HARDWARE_ID = 0x0303CB01  # STM32F303CBT6, expansion slave chip - see slave_common.h's own THIS_HARDWARE_ID, verified against the real source rather than assumed to differ only in the last hex digit
-FIRMWARE_VERSION_MAJOR = 1
-FIRMWARE_VERSION_MINOR = 0
+# There is deliberately NO constant for the board firmware's version: the version written into the end-update frame is the real one of the image being sent (its manifest, the
+# --version given, or the file name), never a default - an invented one made every later official image look older to the anti-rollback check.
 
-# This tool's OWN version (shown in the banner and window title) -
-# deliberately separate from FIRMWARE_VERSION_MAJOR/MINOR above, which is
-# the *board firmware's* version this tool writes into the end-update
-# frame. The two will often move together but aren't the same number by
-# definition - this one's about the flasher script itself.
-FLASHER_VERSION = "0.2.5"
+# This tool's OWN version (shown in the banner and window title) - about the flasher script itself.
+FLASHER_VERSION = "0.2.6"
 FLASHER_AUTHOR = "JuanenRac"
 
 # --- HMAC signing keys: none by default ---
@@ -163,7 +159,7 @@ SLCAN_BITRATES = [
 # documented JTAG bring-up procedure.
 BOOTLOADER_FLASH_ADDR = 0x08000000
 APP_FLASH_ADDR = 0x08008000
-BOOTLOADER_MAX_SIZE = 32 * 1024  # matches bootloader_common.h's own 32KB region, 0x08000000-0x08008000
+BOOTLOADER_MAX_SIZE = 30 * 1024  # the bootloader's own code: its metadata page lives at 0x08007800 (bootloader_common.h), inside the 32 KB region, so code may not pass 0x7800
 
 # Expansion slave chip's own SWD/JTAG addresses - genuinely different
 # memory map from the main board's own above (this chip is a
@@ -173,7 +169,7 @@ BOOTLOADER_MAX_SIZE = 32 * 1024  # matches bootloader_common.h's own 32KB region
 # the main board's own.
 SLAVE_BOOTLOADER_FLASH_ADDR = 0x08000000  # matches STM32F303CBTx_SLAVEBOOT.ld's own 18K region
 SLAVE_APP_FLASH_ADDR = 0x08005000  # matches STM32F303CBTx_SLAVEAPP.ld's own 54K main slot
-SLAVE_BOOTLOADER_MAX_SIZE = 18 * 1024  # matches STM32F303CBTx_SLAVEBOOT.ld's own 18K region, 0x08000000-0x08005000
+SLAVE_BOOTLOADER_MAX_SIZE = 18 * 1024  # STM32F303CBTx_SLAVEBOOT.ld's 18K region, 0x08000000-0x08004800; the slave's metadata page starts there and the application at 0x08005000
 # Verify this against `pyocd list --targets --name stm32f303` on the
 # machine actually running this - STM32 coverage in pyOCD is broad, but
 # this exact string wasn't confirmed against a live pyOCD install while
@@ -446,6 +442,10 @@ def _load_config_overrides(log=None):
     app_max_size = _int_field("app_max_size", app_max_size)
     bootloader_max_size = _int_field("bootloader_max_size", bootloader_max_size)
     flash_page_size = _int_field("flash_page_size", flash_page_size)
+    if flash_page_size != FLASH_PAGE_SIZE:
+        # the bootloader's page is the HAL's fixed 2048 bytes: another size only desynchronises the page acknowledgements
+        skipped.append(f"flash_page_size ({flash_page_size} is not the bootloader's {FLASH_PAGE_SIZE})")
+        flash_page_size = FLASH_PAGE_SIZE
     bootloader_addr = _int_field("bootloader_flash_addr", bootloader_addr)
     app_addr = _int_field("app_flash_addr", app_addr)
 

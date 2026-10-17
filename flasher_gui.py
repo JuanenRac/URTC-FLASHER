@@ -22,7 +22,7 @@ import flasher_config
 from flasher_config import (
     _, _CONFIG_LOADED, APP_FLASH_ADDR, APP_MAX_SIZE, AVAILABLE_LANGUAGES,
     BITRATE_500K_SLCAN_CODE, BOOTLOADER_FLASH_ADDR, BOOTLOADER_MAX_SIZE, CONFIG_FILE_PATH, DEFAULT_LANGUAGE,
-    EXPANSION_BOARD_TYPES, MLX_SENSOR_VARIANTS, FIRMWARE_FOLDER, FIRMWARE_VERSION_MAJOR, FIRMWARE_VERSION_MINOR,
+    EXPANSION_BOARD_TYPES, MLX_SENSOR_VARIANTS, FIRMWARE_FOLDER,
     FLASHER_VERSION,
     HYDRA_UMC_ICON_FRAMES_DIR, ICON_IMAGE_PATH, LOGS_FOLDER, PYOCD_TARGET_NAME, SLCAN_BITRATES,
     SLAVE_BOOTLOADER_FLASH_ADDR, SLAVE_APP_FLASH_ADDR, SLAVE_BOOTLOADER_MAX_SIZE,
@@ -838,7 +838,7 @@ class FlasherGUI:
 
         self.refresh_ports()
         self.scan_firmware_folder()
-        self.log(_("LOG_FLASHER_READY", hw_id=THIS_HARDWARE_ID, major=FIRMWARE_VERSION_MAJOR, minor=FIRMWARE_VERSION_MINOR))
+        self.log(_("LOG_FLASHER_READY", hw_id=THIS_HARDWARE_ID))
         if _CONFIG_LOADED:
             _load_config_overrides(self.log)  # re-run just to emit its own log line - values don't change
         if self.transport_var.get() == "serial":
@@ -1540,8 +1540,8 @@ class FlasherGUI:
                         value = frame[1][0]
                         break
                 if value is None or value > 6:
+                    # No answer is NOT "none installed": the combo keeps what it had, so that a later Save cannot write a made-up 0 over the real configuration.
                     self.log(_("LOG_EXPANSION_TYPE_NO_RESPONSE"))
-                    self.root.after(0, lambda: self.expansion_type_var.set(EXPANSION_BOARD_TYPES[0]))
                 else:
                     self.log(_("LOG_EXPANSION_TYPE_VALUE", type=EXPANSION_BOARD_TYPES[value]))
                     self.root.after(0, lambda: self.expansion_type_var.set(EXPANSION_BOARD_TYPES[value]))
@@ -1608,8 +1608,8 @@ class FlasherGUI:
                         value = frame[1][0]
                         break
                 if value is None or value > 3:
+                    # Same here: nothing answered, so nothing is changed in the combo.
                     self.log(_("LOG_MLX_VARIANT_NO_RESPONSE"))
-                    self.root.after(0, lambda: self.mlx_variant_var.set(MLX_SENSOR_VARIANTS[0]))
                 else:
                     self.log(_("LOG_MLX_VARIANT_VALUE", type=MLX_SENSOR_VARIANTS[value]))
                     self.root.after(0, lambda: self.mlx_variant_var.set(MLX_SENSOR_VARIANTS[value]))

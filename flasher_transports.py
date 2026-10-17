@@ -499,15 +499,14 @@ class MockCAN:
             # itself computes whenever flash_page_size is overridden, making
             # --transport mock testing pass or fail for the wrong reasons.
             page_size = FLASH_PAGE_SIZE
-            while self._update_bytes_received >= (self._next_page_index + 1) * page_size or (
-                self._update_bytes_received >= self._update_total_size
-                and self._update_bytes_received > self._next_page_index * page_size
-            ):
+            # Like the real bootloader: a page is acknowledged when its buffer is full; the last, partial page waits for END_UPDATE.
+            while self._update_bytes_received >= (self._next_page_index + 1) * page_size:
                 self._response_queue.append((CAN_ID_PAGE_ACK, struct.pack(">I", self._next_page_index)))
                 self._next_page_index += 1
-                if self._next_page_index * page_size >= self._update_total_size:
-                    break
         elif can_id == CAN_ID_END_UPDATE:
+            if self._update_bytes_received > self._next_page_index * FLASH_PAGE_SIZE:   # the partial page is written and acknowledged now
+                self._response_queue.append((CAN_ID_PAGE_ACK, struct.pack(">I", self._next_page_index)))
+                self._next_page_index += 1
             self._response_queue.append((CAN_ID_STATUS, bytes([0x06])))  # STATUS_VERIFYING
             if self.simulate_failure is not None:
                 self._response_queue.append((CAN_ID_STATUS, bytes([0x05, self.simulate_failure])))

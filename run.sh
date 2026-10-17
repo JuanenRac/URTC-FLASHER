@@ -41,5 +41,5 @@ elif [ -f .venv/Scripts/activate ]; then
     source .venv/Scripts/activate
 fi
 
-python urtc_flasher.py "$@"
+"${PYTHON:-$(command -v python3 || command -v python)}" urtc_flasher.py "$@"
 exit $?

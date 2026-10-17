@@ -9,6 +9,12 @@ import struct
 
 from flasher_config import APP_FLASH_ADDR, APP_MAX_SIZE, BOOTLOADER_FLASH_ADDR
 
+
+
+def _stack_pointer_in_ram(initial_sp):
+    """The bootloader accepts an initial stack pointer in the main SRAM (0x20000100-0x2000A000) or in the CCM RAM (0x10000100-0x10002000)."""
+    return 0x20000100 <= initial_sp <= 0x2000A000 or 0x10000100 <= initial_sp <= 0x10002000
+
 # =============================================================================
 # Bootloader protocol - implements the exact CAN sequence bootloader_protocol.c
 # expects, matching CANBUS.TXT's documented 0x7F0-0x7F7 protocol.
@@ -68,7 +74,7 @@ def validate_firmware_file(path, expected_base_addr=None, max_size=None):
     # leaves zero bytes of real headroom before the first PUSH underflows
     # into whatever precedes RAM in the address space. A small margin
     # catches this without rejecting a genuinely small-stack build.
-    if not (0x20000100 <= initial_sp <= 0x2000A000):
+    if not (_stack_pointer_in_ram(initial_sp)):
         return False, (
             f"first word (0x{initial_sp:08X}) doesn't look like a valid "
             f"initial stack pointer for this chip's RAM - probably not a "
@@ -204,7 +210,7 @@ def _validate_intel_hex(path, size, max_size, label, expected_base_addr=None):
     for vector_addr in candidates:
         sp_bytes = bytes(data_bytes[vector_addr + i] for i in range(4))
         initial_sp = struct.unpack("<I", sp_bytes)[0]
-        if 0x20000100 <= initial_sp <= 0x2000A000:
+        if _stack_pointer_in_ram(initial_sp):
             if expected_base_addr is not None and vector_addr != expected_base_addr:
                 # Found A valid-looking vector table, just not where this
                 # slot expects one - almost always means the wrong file for
@@ -336,7 +342,7 @@ def _validate_elf(path, size, max_size, label, expected_base_addr=None):
         if offset + 4 > len(data):
             continue
         initial_sp, = struct.unpack_from("<I", data, offset)
-        if 0x20000100 <= initial_sp <= 0x2000A000:
+        if _stack_pointer_in_ram(initial_sp):
             if expected_base_addr is not None and paddr != expected_base_addr:
                 return False, (
                     f"loadable segment found at 0x{paddr:08X}, not the expected "
@@ -401,7 +407,7 @@ def validate_swd_image_file(path, max_size, label, expected_base_addr=None):
     except OSError as e:
         return False, f"can't read file: {e}", size
     initial_sp, reset_handler = struct.unpack("<II", header[0:8])
-    if not (0x20000100 <= initial_sp <= 0x2000A000):
+    if not (_stack_pointer_in_ram(initial_sp)):
         return False, (
             f"first word (0x{initial_sp:08X}) doesn't look like a valid "
             f"initial stack pointer for this chip's RAM - probably not a "

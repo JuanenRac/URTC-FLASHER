@@ -105,7 +105,17 @@ def main() -> int:
             python = sys.executable
             environment = dict(os.environ)
             environment["PYTHONPATH"] = str(ROOT)
-            run(python, "-m", "pytest", str(tests_dir), env=environment)
+            # pytest is a development tool, not something a user of the flasher has installed: it is installed on the spot when it is missing, and when that is not possible
+            # (no network) the run says the tests were SKIPPED, which is not a failed validation - the updater must not refuse to install the flasher over it.
+            probe = subprocess.run([python, "-m", "pytest", "--version"], capture_output=True, text=True, env=environment)
+            if probe.returncode != 0:
+                print("PYTEST=MISSING installing pytest for the tests of this repository")
+                installed = subprocess.run([python, "-m", "pip", "install", "--quiet", "pytest>=8"], capture_output=True, text=True, env=environment)
+                if installed.returncode != 0:
+                    print("PYTEST_TESTS=SKIPPED pytest is not installed and could not be (" + (installed.stderr or installed.stdout).strip().splitlines()[-1:][0][:200] + ")")
+                    tests_dir = None
+            if tests_dir is not None:
+                run(python, "-m", "pytest", str(tests_dir), env=environment)
     elif stack == "node":
         npm = "npm.cmd" if os.name == "nt" else "npm"
         # Reuse an existing local dependency tree so a running editor/linter

@@ -69,7 +69,7 @@ def test_the_published_signature_is_sent_even_without_any_key(tmp_path, monkeypa
     published = bytes(range(100, 132))
     _publish(path, published)
     can = _RecordingCAN()
-    assert URTCFlasher(can, log=lambda m: None).flash(str(path)) is True
+    assert URTCFlasher(can, log=lambda m: None).flash(str(path), version=(0, 3)) is True
     assert _sent_signature(can, flasher_protocol.CAN_ID_HMAC_CHUNK) == published
 
 
@@ -79,7 +79,7 @@ def test_an_unsigned_image_without_a_key_is_refused_before_any_traffic(tmp_path,
     path = _image(tmp_path)
     flasher = URTCFlasher(_ExplodingCAN(), log=lambda m: None)
     with pytest.raises(FlashError, match="no published signature"):
-        flasher.flash(str(path))
+        flasher.flash(str(path), version=(0, 3))
     with pytest.raises(FlashError, match="no published signature"):
         flasher.flash_slave(str(path))
 
@@ -87,7 +87,7 @@ def test_an_unsigned_image_without_a_key_is_refused_before_any_traffic(tmp_path,
 def test_a_bench_key_signs_an_unsigned_image_locally(tmp_path):
     path = _image(tmp_path)
     can = _RecordingCAN()
-    assert URTCFlasher(can, log=lambda m: None).flash(str(path)) is True
+    assert URTCFlasher(can, log=lambda m: None).flash(str(path), version=(0, 3)) is True
     expected = hmac.new(flasher_protocol.HMAC_KEY, path.read_bytes(), hashlib.sha256).digest()
     assert _sent_signature(can, flasher_protocol.CAN_ID_HMAC_CHUNK) == expected
 
@@ -96,7 +96,7 @@ def test_a_malformed_published_signature_is_refused(tmp_path):
     path = _image(tmp_path)
     _publish(path, b"\x01\x02")
     with pytest.raises(FlashError, match="32 bytes"):
-        URTCFlasher(_ExplodingCAN(), log=lambda m: None).flash(str(path))
+        URTCFlasher(_ExplodingCAN(), log=lambda m: None).flash(str(path), version=(0, 3))
 
 
 def test_preflight_uses_the_manifest_digest_when_there_is_no_sha256_file(tmp_path):

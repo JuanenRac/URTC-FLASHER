@@ -20,6 +20,19 @@ increments instead (e.g. `0.1.9` -> `0.2.0`), and the same carry applies
 from `MINOR` into `MAJOR`. Running the tool from source (not through a
 build script) never changes the version - only a real build does.
 
+## [0.2.6] - The update of any image size works, a backup of any size is complete, and the version is never invented
+
+- **An update of an image whose size is not a whole number of 2048-byte pages now completes.** The bootloader writes and acknowledges a page when its buffer is full, and the last, partial page only when the end of the update (0x7F4) arrives; the flasher waited for that last acknowledgement before sending the end, so the official image of 73476 bytes could never be installed over CAN. The simulated bootloader now behaves like the real one, and the tests use sizes on both sides of a page.
+- **The CAN backup of the installed firmware is complete whatever its size:** the last data frame of a readback has fewer than 8 bytes when the size is not a multiple of 8, and it used to be dropped (the backup then failed after the page timeout).
+- **The version written into the board is never invented.** It is the manifest's, the one given with the new `--version MAJOR.MINOR`, or the one in the file name (`..._v0.3.3.bin`); without any of them nothing is sent and the tool says so. The made-up 1.0 made every later official image look older to the anti-rollback check and be rejected.
+- **The update starts as soon as the bootloader says it is listening** (its first heartbeat) instead of after a fixed 0.8 s, which could miss the 600 ms window it listens in; without a heartbeat the old wait is kept.
+- **An image for the other board is refused before a single frame is sent:** the manifest's `component` and `hardware_id` are compared with the target (the slave's image sent to the main board was transferred in full and refused only at the end, blaming the key).
+- **A slave whose application is still running is reported at once** instead of ending in a generic timeout.
+- **No answer is not "none installed":** when the board does not answer the question about the expansion board or the MLX sensor, the combo keeps its value, so a later Save cannot write a made-up 0 over the real configuration.
+- A stack pointer in the CCM RAM is accepted by the plausibility check, as the bootloader accepts it; the bootloader limit is 30 KB (its metadata page starts at 0x7800); a page size other than the bootloader's 2048 in `urtc_config.json` is ignored; the example configuration only asks for the language; the command line checks the published digests of the image like the windows do; the programmers' output is read as UTF-8 without console windows; `run.sh` finds `python3`.
+- The build test no longer fails on a machine without pytest (it installs it, or says the tests were skipped).
+- Texts: four new messages in the seven languages. Tests: 79 (before 41).
+
 ## [0.2.5] - Copy-log icon button
 
 - **Copy-log button:** the activity log has a small copy icon (two sheets) that puts the whole log on the clipboard and flashes green when done.

@@ -140,7 +140,8 @@ class _SubprocessProgrammerBase:
         try:
             proc = subprocess.Popen(
                 cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                text=True, bufsize=1,
+                text=True, bufsize=1, encoding="utf-8", errors="replace",
+                **({"creationflags": subprocess.CREATE_NO_WINDOW} if hasattr(subprocess, "CREATE_NO_WINDOW") else {}),
             )
         except OSError as e:
             raise SWDFlashError(f"couldn't run {self.NAME}: {e}")

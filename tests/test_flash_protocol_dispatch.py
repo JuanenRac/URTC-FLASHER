@@ -50,14 +50,14 @@ def test_flash_rejects_empty_firmware_file_before_sending_anything(tmp_path):
     firmware_path = _write_firmware(tmp_path, 0)
     flasher = URTCFlasher(_ExplodingCAN(), log=lambda msg: None)
     with pytest.raises(FlashError, match="empty"):
-        flasher.flash(firmware_path)
+        flasher.flash(firmware_path, version=(0, 3))
 
 
 def test_flash_rejects_oversized_firmware_file_before_sending_anything(tmp_path):
     firmware_path = _write_firmware(tmp_path, APP_MAX_SIZE + 1)
     flasher = URTCFlasher(_ExplodingCAN(), log=lambda msg: None)
     with pytest.raises(FlashError, match="exceeds"):
-        flasher.flash(firmware_path)
+        flasher.flash(firmware_path, version=(0, 3))
 
 
 def test_flash_accepts_a_file_exactly_at_the_max_size_boundary(tmp_path):
@@ -66,7 +66,7 @@ def test_flash_accepts_a_file_exactly_at_the_max_size_boundary(tmp_path):
     firmware_path = _write_firmware(tmp_path, APP_MAX_SIZE)
     can = MockCAN()
     flasher = URTCFlasher(can, log=lambda msg: None)
-    assert flasher.flash(firmware_path) is True
+    assert flasher.flash(firmware_path, version=(0, 3)) is True
 
 
 def test_flash_slave_rejects_empty_firmware_file_before_sending_anything(tmp_path):
@@ -107,7 +107,7 @@ def test_manifest_sha256_mismatch_refuses_to_flash_before_sending_anything(tmp_p
 
     flasher = URTCFlasher(_ExplodingCAN(), log=lambda msg: None)
     with pytest.raises(FlashError, match="MANIFEST MISMATCH"):
-        flasher.flash(firmware_path)
+        flasher.flash(firmware_path, version=(0, 3))
 
 
 def test_manifest_sha256_match_is_logged_as_confirmed(tmp_path):
@@ -122,5 +122,5 @@ def test_manifest_sha256_match_is_logged_as_confirmed(tmp_path):
     can = MockCAN()
     flasher = URTCFlasher(can, log=logged.append)
 
-    assert flasher.flash(firmware_path) is True
+    assert flasher.flash(firmware_path, version=(0, 3)) is True
     assert not any("MANIFEST MISMATCH" in line for line in logged)

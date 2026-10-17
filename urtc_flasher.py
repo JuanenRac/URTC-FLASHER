@@ -84,6 +84,7 @@ elif not HAVE_SERIAL:
     print("SocketCAN mode will still work. To also enable Serial/SLCAN:")
     print("    pip install pyserial")
 
+from flasher_integrity import preflight_image
 from flasher_config import _, _CONFIG_LOADED, FLASHER_VERSION, BANNER_IMAGE_PATH, _center_geometry, _load_config_overrides
 from flasher_transports import SLCAN, SLCANError, SocketCAN, SocketCANError, MockCAN
 from flasher_protocol import URTCFlasher, FlashError
@@ -123,6 +124,8 @@ def run_cli(argv):
                               "valid application currently present)")
     parser.add_argument("--force", action="store_true",
                          help="Flash even if the file fails the plausibility check")
+    parser.add_argument("--version", default=None, metavar="MAJOR.MINOR",
+                        help="Version of the firmware file, for an image that has no .manifest.json and no version in its name (never guessed)")
     parser.add_argument("--allow-downgrade", action="store_true",
                          help="Send CAN_ID_AUTHORIZE_DOWNGRADE (0x7FD) before ending the update, "
                               "bypassing the bootloader's own anti-rollback check for this attempt "
@@ -155,6 +158,13 @@ def run_cli(argv):
                   "(pass --force to override).")
         return 2
 
+    # a digest published next to the image (<image>.sha256, or in its manifest) must match it, as in the two windows
+    check = preflight_image(args.file)
+    if check.blocked:
+        _cli_log("ERROR: the image was refused: " + "; ".join(check.reasons))
+        return 2
+    _cli_log(("Image digest verified: " if check.verified else "Image digest (no published digest to compare): ") + check.sha256)
+
     transport = None
     try:
         if args.transport == "serial":
@@ -170,7 +180,7 @@ def run_cli(argv):
         flasher = URTCFlasher(transport, log=_cli_log, progress_cb=lambda pct: None)
         if not args.no_trigger:
             flasher.trigger_bootloader_entry()
-        flasher.flash(args.file, allow_downgrade=args.allow_downgrade)
+        flasher.flash(args.file, allow_downgrade=args.allow_downgrade, version=args.version)
         _cli_log("SUCCESS: firmware update complete.")
         return 0
     except KeyboardInterrupt:

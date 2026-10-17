@@ -47,7 +47,7 @@ def test_all_pages_accepted_then_a_real_verify_failure_never_reports_success(tmp
     flasher = URTCFlasher(can, log=lambda msg: None, progress_cb=reported_progress.append)
 
     with pytest.raises(FlashError) as exc_info:
-        flasher.flash(firmware_path)
+        flasher.flash(firmware_path, version=(0, 3))
 
     # The real, human-readable reason (not just the raw status byte) must
     # reach whoever called flash() - a caller-facing message that just
@@ -74,7 +74,7 @@ def test_a_real_successful_verification_does_reach_100_percent(tmp_path):
     reported_progress: list[int] = []
     flasher = URTCFlasher(can, log=lambda msg: None, progress_cb=reported_progress.append)
 
-    result = flasher.flash(firmware_path)
+    result = flasher.flash(firmware_path, version=(0, 3))
 
     assert result is True
     assert 100 in reported_progress
@@ -91,7 +91,7 @@ def test_every_real_documented_verify_fail_reason_is_reported_honestly(tmp_path,
     flasher = URTCFlasher(can, log=lambda msg: None)
 
     with pytest.raises(FlashError) as exc_info:
-        flasher.flash(firmware_path)
+        flasher.flash(firmware_path, version=(0, 3))
 
     assert VERIFY_FAIL_REASONS[reason_code] in str(exc_info.value)
 
@@ -109,4 +109,4 @@ def test_an_unknown_verify_fail_reason_byte_is_still_reported_not_swallowed(tmp_
     flasher = URTCFlasher(can, log=lambda msg: None)
 
     with pytest.raises(FlashError, match=r"0x99"):
-        flasher.flash(firmware_path)
+        flasher.flash(firmware_path, version=(0, 3))

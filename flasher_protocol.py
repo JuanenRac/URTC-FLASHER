@@ -23,6 +23,7 @@ import hashlib
 import hmac
 import json
 import os
+import re
 import struct
 import time
 import zlib
@@ -32,7 +33,7 @@ from flasher_config import (
     CAN_ID_END_UPDATE, CAN_ID_ENTER_BOOTLOADER, CAN_ID_ERASE_FRAM,
     CAN_ID_FRAM_STATE_RESP, CAN_ID_HEARTBEAT, CAN_ID_HMAC_CHUNK, CAN_ID_PAGE_ACK,
     CAN_ID_QUERY_VERSION, CAN_ID_START_UPDATE, CAN_ID_STATUS, CAN_ID_VERSION_RESPONSE,
-    ERASE_FRAM_MAGIC, FIRMWARE_VERSION_MAJOR, FIRMWARE_VERSION_MINOR, FLASH_PAGE_SIZE,
+    ERASE_FRAM_MAGIC, FLASH_PAGE_SIZE,
     HMAC_KEY, SLAVE_HMAC_KEY, STATUS_NAMES, THIS_HARDWARE_ID, VERIFY_FAIL_REASONS,
     CAN_ID_SLAVE_ENTER_BOOTLOADER, CAN_ID_SLAVE_START_UPDATE, CAN_ID_SLAVE_HMAC_CHUNK,
     CAN_ID_SLAVE_DATA, CAN_ID_SLAVE_END_UPDATE, CAN_ID_SLAVE_STATUS,
@@ -188,15 +189,74 @@ class URTCFlasher:
         except FlashError:
             self.log(_("LOG_FRAM_ERASE_NO_CONFIRM_CONTINUING"))
 
-    def trigger_bootloader_entry(self):
+    def trigger_bootloader_entry(self, timeout=3.0):
         """Sends 0x7F0 to a currently-running application to make it reset
         into the bootloader. Skip this if the board is already sitting in
         the bootloader (fresh JTAG flash, or no valid application present)."""
         self.log(_("LOG_SENDING_BOOTLOADER_TRIGGER"))
         self.can.send_frame(CAN_ID_ENTER_BOOTLOADER, bytes([0xB0, 0x07, 0x1D, 0x5A]))
-        time.sleep(0.8)  # give the app time to shut down actuators and reset
+        # The bootloader listens for START_UPDATE (0x7F1) only during a window of about 600 ms after it starts, and then jumps back to the application; how soon it starts depends on
+        # the size of the installed application (its CRC and HMAC are checked first). A fixed sleep either missed that window or was lucky, so the tool waits for the bootloader's own
+        # first heartbeat (0x7F6, status "listening"), sent as soon as the window opens, and the caller then sends START_UPDATE at once. If no heartbeat is heard (an older
+        # bootloader, a bus that drops frames) it falls back to the old behaviour: at least 0.8 s have gone by.
+        started = time.monotonic()
+        while time.monotonic() - started < max(timeout, 0.8):
+            if self.stop_flag():
+                raise FlashError("Cancelled by user")
+            frame = self.can.read_frame(timeout=0.02)
+            if frame is None:
+                time.sleep(0.005)
+                continue
+            can_id, data = frame
+            if can_id == CAN_ID_HEARTBEAT and len(data) >= 1 and data[0] == 0x01:
+                self.log(_("LOG_BOOTLOADER_LISTENING"))
+                return True
+        remaining = 0.8 - (time.monotonic() - started)
+        if remaining > 0:
+            time.sleep(remaining)
+        return False
 
-    def _check_manifest(self, firmware_path, actual_sha256):
+    @staticmethod
+    def _version_from_name(firmware_path):
+        match = re.search(r"[vV](\d+)\.(\d+)(?:\.\d+)*", os.path.basename(firmware_path))
+        return (int(match.group(1)), int(match.group(2))) if match else None
+
+    def _resolve_version(self, firmware_path, manifest_info, version):
+        for source in (manifest_info["version"], self._normalise_version(version), self._version_from_name(firmware_path)):
+            if source is not None:
+                return source
+        raise FlashError(_("ERR_FIRMWARE_VERSION_UNKNOWN"))
+
+    @staticmethod
+    def _normalise_version(version):
+        if version is None:
+            return None
+        if isinstance(version, str):
+            parts = version.strip().lstrip("vV").split(".")
+            version = (parts[0], parts[1]) if len(parts) >= 2 else (None, None)
+        try:
+            major, minor = int(version[0]), int(version[1])
+        except (TypeError, ValueError, IndexError):
+            raise FlashError(_("ERR_FIRMWARE_VERSION_UNKNOWN"))
+        if not (0 <= major <= 255 and 0 <= minor <= 255):
+            raise FlashError(_("ERR_FIRMWARE_VERSION_UNKNOWN"))
+        return (major, minor)
+
+    def _check_manifest_target(self, manifest, target):
+        wanted_component, wanted_hardware = ("slave_application", SLAVE_HARDWARE_ID) if target == "slave" else ("main_application", THIS_HARDWARE_ID)
+        component = manifest.get("component")
+        if component in ("main_application", "slave_application") and component != wanted_component:
+            raise FlashError(_("ERR_MANIFEST_WRONG_TARGET", got=component, want=wanted_component))
+        declared = manifest.get("hardware_id")
+        if declared not in (None, ""):
+            try:
+                declared_id = int(str(declared), 0)
+            except ValueError:
+                declared_id = None
+            if declared_id is not None and declared_id != wanted_hardware:
+                raise FlashError(_("ERR_MANIFEST_WRONG_TARGET", got=f"0x{declared_id:08X}", want=f"0x{wanted_hardware:08X}"))
+
+    def _check_manifest(self, firmware_path, actual_sha256, target="master"):
         # Reads <firmware>.manifest.json, published by the URTC build next to
         # every image (see URTC docs/FIRMWARE_SIGNING.TXT). Returns a dict:
         #   "version": the declared (major, minor) - flash() reports it to the
@@ -219,6 +279,10 @@ class URTCFlasher:
         if not isinstance(manifest, dict):
             self.log(_("LOG_MANIFEST_UNREADABLE", e="not a JSON object"))
             return info
+
+        # The manifest says which board the image is for. An image of the other board (the slave's, sent to the main board or the other way round) used to be transferred in full and
+        # rejected only at the end by the HMAC check, with a misleading reason; it is refused here, before anything is sent.
+        self._check_manifest_target(manifest, target)
 
         # str() before .lower(): a present-but-wrong-type value (null, a bare
         # number) must not raise AttributeError here.
@@ -274,7 +338,7 @@ class URTCFlasher:
             f"\"{'hmac_key_hex' if board == 'master' else 'slave_hmac_key_hex'}\" in urtc_config.json."
         )
 
-    def flash(self, firmware_path, allow_downgrade=False):
+    def flash(self, firmware_path, allow_downgrade=False, version=None):
         self._last_heartbeat_pct = None  # a stale value from a prior flash()
         # call in this same session would otherwise always satisfy the
         # page-ACK retry's ">=" check below, regardless of this update's
@@ -303,18 +367,9 @@ class URTCFlasher:
         self.log(_("LOG_FIRMWARE_HMAC", hmac=signature.hex()))
         self.log(_("LOG_FIRMWARE_HARDWAREID", hw_id=THIS_HARDWARE_ID))
 
-        manifest_version = manifest_info["version"]
-        report_major, report_minor = manifest_version if manifest_version else (FIRMWARE_VERSION_MAJOR, FIRMWARE_VERSION_MINOR)
-        if manifest_version is None:
-            # No manifest, or no parseable version field in it - falling
-            # back to this tool's own configured version is only actually
-            # correct when the selected file happens to match it. Usually
-            # true (the common case is flashing the current build), but
-            # worth a visible note specifically when downgrading, since
-            # that's exactly the case where "assume it's the current
-            # version" is most likely to be wrong.
-            if allow_downgrade:
-                self.log(_("LOG_NO_MANIFEST_VERSION_FOR_DOWNGRADE", major=report_major, minor=report_minor))
+        # The version the bootloader records (and compares for the anti-rollback of the NEXT update) is the real version of this image: the manifest's, the one the caller gave, or the
+        # one in the file name (URTC_MAIN_FIRMWARE_v0.3.3.bin). It is never invented: reporting a made-up 1.0 made every later official image look older and be rejected.
+        report_major, report_minor = self._resolve_version(firmware_path, manifest_info, version)
 
         # --- 0x7F1: start update (size + HardwareID) ---
         self.log(_("LOG_SENDING_START_UPDATE"))
@@ -384,40 +439,48 @@ class URTCFlasher:
             # imply - if they're consistent, that's real evidence the data
             # itself got through and only the ACK was lost on the way
             # back, rather than just waiting blind and hoping.
-            expected_pct_after_this_page = int((page_end / size) * 100)
-            ack = None
-            last_err = None
-            for attempt in range(3):
-                if attempt > 0:
-                    total_retries += 1
-                    backoff = 0.3 * (2 ** (attempt - 1))  # 0.3s, then 0.6s
-                    self.log(_("LOG_NO_ACK_RETRY", page=page_index, attempt=attempt+1))
-                    time.sleep(backoff)
-                try:
-                    ack = self._wait_for(CAN_ID_PAGE_ACK, timeout=3.0)
-                    last_err = None
-                    break
-                except FlashError as e:
-                    last_err = e
-                    if self._last_heartbeat_pct is not None and self._last_heartbeat_pct >= expected_pct_after_this_page:
-                        self.log(_("LOG_HEARTBEAT_CONSISTENT_WITH_PAGE", pct=self._last_heartbeat_pct))
-            if last_err is not None:
-                raise last_err
-            if len(ack) < 4:
-                raise FlashError(
-                    f"Page ACK for page {page_index} was only {len(ack)} bytes "
-                    f"(expected at least 4) - likely bus noise corrupting the frame"
-                )
-            # Only the first 4 bytes carry the page index - a longer ack
-            # (DLC padding from the CAN controller, not necessarily an
-            # error) shouldn't crash struct.unpack, which requires exactly
-            # 4 bytes.
-            acked_page = struct.unpack(">I", ack[:4])[0]
-            if acked_page != page_index:
-                raise FlashError(
-                    f"Page ACK mismatch: expected page {page_index}, "
-                    f"bootloader acked page {acked_page}"
-                )
+            # The bootloader writes (and acknowledges) a page when its 2048-byte buffer is FULL; the last page of an image that is not a whole
+            # number of pages is written and acknowledged only when END_UPDATE (0x7F4) arrives. Waiting for that acknowledgement here would wait for a
+            # message the bootloader sends only after one this tool sends only afterwards: so it is not waited for, and it is read after END_UPDATE.
+            last_partial_page = page_end == size and (size % FLASH_PAGE_SIZE) != 0
+            if last_partial_page:
+                self.log(_("LOG_LAST_PARTIAL_PAGE_ACK_AFTER_END", page=page_index))
+                acked_page = page_index
+            else:
+                expected_pct_after_this_page = int((page_end / size) * 100)
+                ack = None
+                last_err = None
+                for attempt in range(3):
+                    if attempt > 0:
+                        total_retries += 1
+                        backoff = 0.3 * (2 ** (attempt - 1))  # 0.3s, then 0.6s
+                        self.log(_("LOG_NO_ACK_RETRY", page=page_index, attempt=attempt+1))
+                        time.sleep(backoff)
+                    try:
+                        ack = self._wait_for(CAN_ID_PAGE_ACK, timeout=3.0)
+                        last_err = None
+                        break
+                    except FlashError as e:
+                        last_err = e
+                        if self._last_heartbeat_pct is not None and self._last_heartbeat_pct >= expected_pct_after_this_page:
+                            self.log(_("LOG_HEARTBEAT_CONSISTENT_WITH_PAGE", pct=self._last_heartbeat_pct))
+                if last_err is not None:
+                    raise last_err
+                if len(ack) < 4:
+                    raise FlashError(
+                        f"Page ACK for page {page_index} was only {len(ack)} bytes "
+                        f"(expected at least 4) - likely bus noise corrupting the frame"
+                    )
+                # Only the first 4 bytes carry the page index - a longer ack
+                # (DLC padding from the CAN controller, not necessarily an
+                # error) shouldn't crash struct.unpack, which requires exactly
+                # 4 bytes.
+                acked_page = struct.unpack(">I", ack[:4])[0]
+                if acked_page != page_index:
+                    raise FlashError(
+                        f"Page ACK mismatch: expected page {page_index}, "
+                        f"bootloader acked page {acked_page}"
+                    )
             page_elapsed = time.monotonic() - page_start
             page_kbps = (len(page_data) / 1024) / page_elapsed if page_elapsed > 0 else 0.0
             offset = page_end
@@ -593,14 +656,11 @@ class URTCFlasher:
                 if frame is None:
                     continue
                 can_id, data = frame
-                if can_id == CAN_ID_READBACK and len(data) == 8:
-                    buf.extend(data)
-            # Acking unconditionally requests the next page even though buf
-            # may have grown slightly past page_target (the board's own
-            # final 8-byte frame in a page is only ever exactly sized to
-            # what's left in that page, so this only happens if a stray
-            # frame from elsewhere slipped through the same ID/DLC filter -
-            # vanishingly unlikely, and self-corrects next page regardless).
+                # The bootloader sends the LAST data frame of an image whose size is not a multiple of 8 with fewer bytes (DLC < 8): every frame of 1 to 8 bytes
+                # is data here (the 4-byte size header was already read above), cut at the end of the page.
+                if can_id == CAN_ID_READBACK and 1 <= len(data) <= 8:
+                    buf.extend(data[: page_target - len(buf)])
+            # The page is complete (the last frame of the image may be shorter than 8 bytes); the next one is requested.
             self.can.send_frame(CAN_ID_READBACK_PAGE_ACK, struct.pack(">I", page_index))
             page_index += 1
             pct = int((min(len(buf), total_size) / total_size) * 100)
@@ -690,7 +750,7 @@ class URTCFlasher:
         actual_sha256 = hashlib.sha256(firmware).hexdigest()
         # Published by the URTC build with the slave board's own key
         # (different from the master's - see slaveboot_common.h).
-        manifest_info = self._check_manifest(firmware_path, actual_sha256)
+        manifest_info = self._check_manifest(firmware_path, actual_sha256, target="slave")
         signature = self._signature_for(firmware, manifest_info, SLAVE_HMAC_KEY, "slave")
 
         self.log(_("LOG_FIRMWARE_PATH", path=firmware_path))
@@ -698,6 +758,12 @@ class URTCFlasher:
         self.log(_("LOG_FIRMWARE_CRC32", crc32=crc32))
         self.log(_("LOG_FIRMWARE_HMAC", hmac=signature.hex()))
         self.log(_("LOG_SLAVE_FIRMWARE_HARDWAREID", hw_id=SLAVE_HARDWARE_ID))
+
+        # The slave only takes START_UPDATE while its bootloader runs. An application that is still running ignores 0x211 (its register 0x01 is read-only), and the update then ends
+        # in a generic timeout; saying it at once is more useful. (No answer at all is not taken as a refusal: the check is only for what is clearly the application.)
+        state = self.query_slave_version()
+        if state is not None and state.get("responder") == "application":
+            raise FlashError(_("ERR_SLAVE_NOT_IN_BOOTLOADER"))
 
         # --- 0x211: start update (size + slave's own HardwareID) ---
         self.log(_("LOG_SENDING_SLAVE_START_UPDATE"))
