@@ -22,6 +22,7 @@ build script) never changes the version - only a real build does.
 
 ## [0.2.6] - The update of any image size works, a backup of any size is complete, and the version is never invented
 
+- **Portuguese (Portugal) is a language of the interface** (`language/portuguese.lng`, in the language menu), and the Readme menu opens `README_por.md`; the README exists in Portuguese too.
 - **An update of an image whose size is not a whole number of 2048-byte pages now completes.** The bootloader writes and acknowledges a page when its buffer is full, and the last, partial page only when the end of the update (0x7F4) arrives; the flasher waited for that last acknowledgement before sending the end, so the official image of 73476 bytes could never be installed over CAN. The simulated bootloader now behaves like the real one, and the tests use sizes on both sides of a page.
 - **The CAN backup of the installed firmware is complete whatever its size:** the last data frame of a readback has fewer than 8 bytes when the size is not a multiple of 8, and it used to be dropped (the backup then failed after the page timeout).
 - **The version written into the board is never invented.** It is the manifest's, the one given with the new `--version MAJOR.MINOR`, or the one in the file name (`..._v0.3.3.bin`); without any of them nothing is sent and the tool says so. The made-up 1.0 made every later official image look older to the anti-rollback check and be rejected.

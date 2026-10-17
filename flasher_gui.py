@@ -988,7 +988,7 @@ class FlasherGUI:
         # yet - so this works today (everything falls back to English) and
         # picks up translated READMEs automatically once they're added,
         # with no code change needed here when that happens.
-        lang_suffix = {"spanish": "_spa", "italian": "_ita", "french": "_fra", "german": "_deu"}.get(
+        lang_suffix = {"spanish": "_spa", "italian": "_ita", "french": "_fra", "german": "_deu", "portuguese": "_por"}.get(
             flasher_config._current_language, ""
         )
         # flasher_config.base_dir, not a fresh __file__-based calculation -
