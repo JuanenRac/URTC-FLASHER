@@ -20,6 +20,21 @@ increments instead (e.g. `0.1.9` -> `0.2.0`), and the same carry applies
 from `MINOR` into `MAJOR`. Running the tool from source (not through a
 build script) never changes the version - only a real build does.
 
+## [0.2.8] - Thread-safe window, fully translated messages, and updates that say what they replace
+
+- **Worker threads never touch Tkinter.** Results, log lines and dialogs are posted to a queue that the main thread drains from a timer, and every option a worker needs (target, trigger, F-RAM erase, downgrade, bitrate, SWD tool, probe) is read on the main thread and handed over. Closing the window while a worker is still logging no longer raises or hangs; late messages are dropped.
+- **Messages are translated.** The 21 error messages of the update protocol, the connection and status texts, the file-dialog titles and types, the version line and the Qt Quick log lines (shown in the chosen language, and limited to the newest 500) come from the language files in all 8 languages (97 new texts). The manifest is read as UTF-8.
+- **Before an update the tool says what it replaces:** it asks the board what is installed and logs installed vX.Y -> new vA.B, warns when the new version is older (the bootloader refuses that unless the downgrade is allowed) and suggests a backup first. The Tk window, the Qt Quick deck and the command line all do it.
+- **Signing hints:** an image signed with the public development key shows a red warning under the file name, and with require_production_signature set to true in urtc_config.json such images are refused before any frame is sent.
+- **A board in its bootloader with no firmware** gets the newest official main-board image of firmware/ preselected, to check and flash.
+- **Update reports:** after every successful update logs/urtc_update_report_*.json records tool version, operator, image name, size, SHA-256 and signing kind, and the versions before and after, with its own digest so an edit is noticeable.
+- **Session logs:** only the newest 30 are kept, and a per-user folder is used when the folder next to the program cannot be written.
+- **Optional python-can transport** for the command line (--transport python-can, --port interface:channel) for PCAN, Kvaser, gs_usb and the other interfaces python-can supports.
+- **The simulated bootloader answers a readback** (pages of 8-byte frames, a shorter last frame) and reports a configurable installed version, so the backup and version paths are tested against it.
+- **Documentation made accurate:** the README and the project notes list exactly what the Qt Quick deck does and does not do compared with the Tkinter window; the language list (8 files), the override paragraph (the slave signing key can be overridden), the reset-handler addresses of the shipped images, the 0x210-0x219 range, the limits of the CAN backup and of the simulation are corrected, and the command-line reference was regenerated from real runs of the shipped 0.3.3 and 0.3.8 images.
+- **Code hygiene and CI:** unused imports removed, exceptions chained, ruff runs in CI, the Qt tests and the two Qt end-to-end checks run offscreen in CI, the tests also run on Windows, and pytest.ini limits collection to tests/.
+- Tests: 171 (before 104).
+
 ## [0.2.7] - Bitrate auto-detect no longer transmits, downloads are verified, and the build scripts are consistent
 
 **Bitrate auto-detect only listens.** It opens the SLCAN adapter in listen-only mode (`L`) at each standard bitrate and stops at the first one where it hears a valid frame, so it can no longer cause bit and form errors on a running bus; on a silent bus it reports that nothing was heard and the bitrate is chosen by hand. The interface texts and the README say so in all 8 languages.

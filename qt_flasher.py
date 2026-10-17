@@ -7,7 +7,8 @@
 
 This is not a second flashing implementation.  It uses the existing SLCAN,
 SocketCAN, firmware validation and URTCFlasher protocol classes.  Tkinter
-remains the default until the SWD/JTAG and configuration pages reach parity.
+remains the default interface; the README lists exactly what the Qt Quick
+deck does and does not do compared with it.
 """
 from __future__ import annotations
 
@@ -35,7 +36,7 @@ from flasher_config import (
     FLASHER_VERSION, ICON_IMAGE_PATH, MLX_SENSOR_VARIANTS,
     PYOCD_TARGET_NAME, SLAVE_APP_FLASH_ADDR, SLAVE_APP_MAX_SIZE,
     SLAVE_BOOTLOADER_FLASH_ADDR, SLAVE_BOOTLOADER_MAX_SIZE,
-    SLAVE_PYOCD_TARGET_NAME, SLAVE_TOTAL_FLASH_SIZE, TOOL_NAMES, _,
+    SLAVE_PYOCD_TARGET_NAME, SLAVE_TOTAL_FLASH_SIZE, TOOL_NAMES, _, translate_log_line,
 )
 from flasher_integrity import preflight_image
 from flasher_protocol import FlashError, URTCFlasher
@@ -52,6 +53,8 @@ except ImportError:
 
 class FlasherQtBridge(QObject):
     """QML-facing state model over the production CAN-OTA backend."""
+
+    MAX_LOG_LINES = 500  # the deck shows the last 12; older lines are dropped, not kept for ever
 
     changed = Signal()
     logChanged = Signal()
@@ -229,7 +232,7 @@ class FlasherQtBridge(QObject):
 
     @Property(str, notify=changed)
     def status(self) -> str:
-        return self._status
+        return translate_log_line(self._status)
 
     @Property("QStringList", notify=logChanged)
     def logs(self) -> list[str]:
@@ -430,7 +433,9 @@ class FlasherQtBridge(QObject):
 
     @Slot(str)
     def _append_log(self, message: str) -> None:
-        self._logs.append(message)
+        self._logs.append(translate_log_line(message))
+        if len(self._logs) > self.MAX_LOG_LINES:
+            del self._logs[: len(self._logs) - self.MAX_LOG_LINES]
         self.logChanged.emit()
 
     def _set_state(self, *, status: str | None = None, busy: bool | None = None) -> None:
@@ -1069,6 +1074,7 @@ class FlasherQtBridge(QObject):
                 stop_flag=lambda: self._cancel_requested,
                 speed_cb=self._flashSpeed.emit,
             )
+            flasher.report_version_change(firmware_path)
             flasher.trigger_bootloader_entry()
             flasher.flash(firmware_path)
             self._flashResult.emit("FLASH_COMPLETE")

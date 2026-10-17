@@ -129,6 +129,20 @@ def read_manifest_sha256(path: str) -> str | None:
     return value if _SHA256_RE.match(value) else None
 
 
+def manifest_signing_kind(path: str) -> str | None:
+    """`signing_key_kind` declared in `<image>.manifest.json` ("dev", "production", ...),
+    lower-cased, or None when there is no readable manifest or no such field."""
+    try:
+        with open(path + ".manifest.json", "r", encoding="utf-8") as stream:
+            manifest = json.load(stream)
+    except (OSError, UnicodeDecodeError, ValueError):
+        return None
+    if not isinstance(manifest, dict):
+        return None
+    kind = str(manifest.get("signing_key_kind", "") or "").strip().lower()
+    return kind or None
+
+
 def preflight_image(path: str) -> Preflight:
     """Every published digest (`<image>.sha256` and the manifest's sha256)
     must match the image, and must agree with each other."""

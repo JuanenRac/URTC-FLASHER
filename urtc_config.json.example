@@ -1,4 +1,4 @@
 {
-  "_comment": "Copy this file to urtc_config.json. Only 'language' is needed. Add 'hmac_key_hex' / 'slave_hmac_key_hex' (64 hexadecimal digits) ONLY to flash an image you built yourself with that key; the other fields are compiled-in values and should be left out.",
+  "_comment": "Copy this file to urtc_config.json. Only 'language' is needed. Add 'hmac_key_hex' / 'slave_hmac_key_hex' (64 hexadecimal digits) ONLY to flash an image you built yourself with that key; the other fields are compiled-in values and should be left out. Set 'require_production_signature' to true to refuse images signed with the public development key (the bundled official images are).",
   "language": "english"
 }

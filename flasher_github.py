@@ -92,22 +92,22 @@ def list_firmware_files(log=None):
     except urllib.error.HTTPError as e:
         if e.code == 403:
             if _is_rate_limited(e):
-                raise GitHubDownloadError(_("ERR_GITHUB_RATE_LIMITED"))
-            raise GitHubDownloadError(_("ERR_GITHUB_FORBIDDEN"))
+                raise GitHubDownloadError(_("ERR_GITHUB_RATE_LIMITED")) from e
+            raise GitHubDownloadError(_("ERR_GITHUB_FORBIDDEN")) from e
         if e.code == 429:
-            raise GitHubDownloadError(_("ERR_GITHUB_RATE_LIMITED"))
+            raise GitHubDownloadError(_("ERR_GITHUB_RATE_LIMITED")) from e
         if e.code == 404:
-            raise GitHubDownloadError(_("ERR_GITHUB_NOT_FOUND"))
-        raise GitHubDownloadError(_("ERR_GITHUB_HTTP_ERROR", code=e.code))
+            raise GitHubDownloadError(_("ERR_GITHUB_NOT_FOUND")) from e
+        raise GitHubDownloadError(_("ERR_GITHUB_HTTP_ERROR", code=e.code)) from e
     except urllib.error.URLError as e:
-        raise GitHubDownloadError(_("ERR_GITHUB_NETWORK", reason=e.reason))
+        raise GitHubDownloadError(_("ERR_GITHUB_NETWORK", reason=e.reason)) from e
     except TimeoutError:
-        raise GitHubDownloadError(_("ERR_GITHUB_TIMEOUT"))
+        raise GitHubDownloadError(_("ERR_GITHUB_TIMEOUT")) from None
 
     try:
         entries = json.loads(raw)
     except json.JSONDecodeError:
-        raise GitHubDownloadError(_("ERR_GITHUB_BAD_RESPONSE"))
+        raise GitHubDownloadError(_("ERR_GITHUB_BAD_RESPONSE")) from None
 
     if not isinstance(entries, list):
         # A single-file path (not a folder) returns a dict, not a list -
@@ -199,13 +199,13 @@ def download_file(download_url, dest_path, log=None, progress_cb=None, expected_
     except GitHubDownloadError:
         raise
     except urllib.error.HTTPError as e:
-        raise GitHubDownloadError(_("ERR_GITHUB_HTTP_ERROR", code=e.code))
+        raise GitHubDownloadError(_("ERR_GITHUB_HTTP_ERROR", code=e.code)) from e
     except urllib.error.URLError as e:
-        raise GitHubDownloadError(_("ERR_GITHUB_NETWORK", reason=e.reason))
+        raise GitHubDownloadError(_("ERR_GITHUB_NETWORK", reason=e.reason)) from e
     except TimeoutError:
-        raise GitHubDownloadError(_("ERR_GITHUB_TIMEOUT"))
+        raise GitHubDownloadError(_("ERR_GITHUB_TIMEOUT")) from None
     except OSError as e:
-        raise GitHubDownloadError(_("ERR_GITHUB_WRITE_FAILED", reason=e))
+        raise GitHubDownloadError(_("ERR_GITHUB_WRITE_FAILED", reason=e)) from e
     finally:
         # A connection dropped mid-transfer (network error, timeout, or the
         # request failing before any bytes ever arrived) raises out of the

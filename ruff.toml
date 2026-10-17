@@ -1,0 +1,9 @@
+# Static checks run by CI: unused names, bare re-raises inside except, syntax errors.
+exclude = [".venv", "venv", "build", "dist", "__pycache__"]
+
+[lint]
+select = ["F", "B904", "E9"]
+
+[lint.per-file-ignores]
+# vendored from the shared tooling; not edited here
+"tools/ci_validate.py" = ["F401"]

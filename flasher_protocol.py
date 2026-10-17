@@ -33,7 +33,7 @@ from flasher_config import (
     CAN_ID_END_UPDATE, CAN_ID_ENTER_BOOTLOADER, CAN_ID_ERASE_FRAM,
     CAN_ID_FRAM_STATE_RESP, CAN_ID_HEARTBEAT, CAN_ID_HMAC_CHUNK, CAN_ID_PAGE_ACK,
     CAN_ID_QUERY_VERSION, CAN_ID_START_UPDATE, CAN_ID_STATUS, CAN_ID_VERSION_RESPONSE,
-    ERASE_FRAM_MAGIC, FLASH_PAGE_SIZE,
+    ERASE_FRAM_MAGIC, FLASH_PAGE_SIZE, REQUIRE_PRODUCTION_SIGNATURE,
     HMAC_KEY, SLAVE_HMAC_KEY, STATUS_NAMES, THIS_HARDWARE_ID, VERIFY_FAIL_REASONS,
     CAN_ID_SLAVE_ENTER_BOOTLOADER, CAN_ID_SLAVE_START_UPDATE, CAN_ID_SLAVE_HMAC_CHUNK,
     CAN_ID_SLAVE_DATA, CAN_ID_SLAVE_END_UPDATE, CAN_ID_SLAVE_STATUS,
@@ -135,7 +135,7 @@ class URTCFlasher:
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
             if self.stop_flag():
-                raise FlashError("Cancelled by user")
+                raise FlashError(_("ERR_CANCELLED_BY_USER"))
             frame = self.can.read_frame(timeout=0.1)
             if frame is None:
                 continue
@@ -163,14 +163,14 @@ class URTCFlasher:
                 # raise a generic "Timed out" message would hide that
                 # known cause instead of surfacing it immediately.
                 if data[0] == 0x05:
-                    reason = VERIFY_FAIL_REASONS.get(data[1], "unknown reason") if len(data) == 2 else "unknown reason"
-                    raise FlashError(f"Bootloader reported verification failure: {reason}")
+                    reason = VERIFY_FAIL_REASONS.get(data[1], _("ERR_UNKNOWN_REASON")) if len(data) == 2 else _("ERR_UNKNOWN_REASON")
+                    raise FlashError(_("ERR_BOOTLOADER_VERIFY_FAILURE", reason=reason))
                 if data[0] == 0xFF:
-                    raise FlashError("Bootloader reported a generic error status")
+                    raise FlashError(_("ERR_BOOTLOADER_GENERIC_ERROR"))
                 continue  # a status frame that didn't match - keep waiting, don't fall through to the generic check below
             if can_id == expected_id:
                 return data
-        raise FlashError(f"Timed out waiting for CAN ID 0x{expected_id:03X}")
+        raise FlashError(_("ERR_TIMEOUT_WAITING_CAN_ID", can_id=f"{expected_id:03X}"))
 
     def erase_fram(self):
         """Sends 0x192 (magic-payload erase) to a currently-running
@@ -202,7 +202,7 @@ class URTCFlasher:
         started = time.monotonic()
         while time.monotonic() - started < max(timeout, 0.8):
             if self.stop_flag():
-                raise FlashError("Cancelled by user")
+                raise FlashError(_("ERR_CANCELLED_BY_USER"))
             frame = self.can.read_frame(timeout=0.02)
             if frame is None:
                 time.sleep(0.005)
@@ -215,6 +215,54 @@ class URTCFlasher:
         if remaining > 0:
             time.sleep(remaining)
         return False
+
+    def new_image_version(self, firmware_path, version=None):
+        """The (major, minor) the image would install, from its manifest, the
+        given version or its file name - or None. Never raises."""
+        try:
+            with open(firmware_path + ".manifest.json", "r", encoding="utf-8") as f:
+                manifest = json.load(f)
+            parts = str(manifest.get("version", "")).split(".") if isinstance(manifest, dict) else []
+            if len(parts) >= 2 and parts[0].isdigit() and parts[1].isdigit():
+                return (int(parts[0]), int(parts[1]))
+        except (OSError, ValueError):
+            pass
+        try:
+            given = self._normalise_version(version)
+        except FlashError:
+            given = None
+        return given or self._version_from_name(firmware_path)
+
+    def report_version_change(self, firmware_path, target="master", version=None, timeout=1.5):
+        """Before an update: asks the board what is installed, logs
+        "installed X -> new Y" and warns when Y is older than X (the
+        bootloader refuses that unless a downgrade is authorised, and a
+        backup of the installed firmware is the safe thing to take first).
+        Returns {"installed", "new", "downgrade"}; a missing piece is None and
+        nothing here ever stops the update."""
+        installed = None
+        try:
+            if target == "slave":
+                info = self.query_slave_version(timeout=timeout)
+                if info is not None and info["responder"] == "application":
+                    installed = (info["app_version_major"], info["app_version_minor"])
+            else:
+                info = self.query_version(timeout=timeout)
+                if info is not None and not (info["responder"] == "bootloader" and info["hardware_id"] == 0):
+                    installed = (info["version_major"], info["version_minor"])
+        except Exception:
+            installed = None
+        new = self.new_image_version(firmware_path, version)
+        downgrade = installed is not None and new is not None and new < installed
+        if installed is None or new is None:
+            self.log(_("LOG_VERSION_CHANGE_UNKNOWN",
+                       installed="{}.{}".format(*installed) if installed else "?",
+                       new="{}.{}".format(*new) if new else "?"))
+        else:
+            self.log(_("LOG_VERSION_CHANGE", installed="{}.{}".format(*installed), new="{}.{}".format(*new)))
+        if downgrade:
+            self.log(_("LOG_VERSION_DOWNGRADE_WARNING"))
+        return {"installed": installed, "new": new, "downgrade": downgrade}
 
     @staticmethod
     def _version_from_name(firmware_path):
@@ -237,7 +285,7 @@ class URTCFlasher:
         try:
             major, minor = int(version[0]), int(version[1])
         except (TypeError, ValueError, IndexError):
-            raise FlashError(_("ERR_FIRMWARE_VERSION_UNKNOWN"))
+            raise FlashError(_("ERR_FIRMWARE_VERSION_UNKNOWN")) from None
         if not (0 <= major <= 255 and 0 <= minor <= 255):
             raise FlashError(_("ERR_FIRMWARE_VERSION_UNKNOWN"))
         return (major, minor)
@@ -271,7 +319,7 @@ class URTCFlasher:
         if not os.path.isfile(manifest_path):
             return info
         try:
-            with open(manifest_path, "r") as f:
+            with open(manifest_path, "r", encoding="utf-8") as f:
                 manifest = json.load(f)
         except (OSError, json.JSONDecodeError) as e:
             self.log(_("LOG_MANIFEST_UNREADABLE", e=e))
@@ -300,11 +348,13 @@ class URTCFlasher:
         elif expected_sha256 == actual_sha256.lower():
             self.log(_("LOG_MANIFEST_SHA256_MATCHES"))
         else:
-            raise FlashError(
-                f"MANIFEST MISMATCH - {os.path.basename(manifest_path)} declares "
-                f"sha256={expected_sha256}, this file's actual sha256={actual_sha256}. "
-                f"Wrong file, a corrupted download, or a stale manifest - refusing to flash."
-            )
+            raise FlashError(_(
+                "ERR_MANIFEST_MISMATCH", name=os.path.basename(manifest_path),
+                expected=expected_sha256, actual=actual_sha256,
+            ))
+
+        if REQUIRE_PRODUCTION_SIGNATURE and str(manifest.get("signing_key_kind", "") or "").strip().lower() == "dev":
+            raise FlashError(_("ERR_PRODUCTION_ONLY_DEV_KEY"))
 
         hmac_hex = str(manifest.get("hmac_sha256", "") or "").strip().lower().replace("0x", "")
         if hmac_hex:
@@ -313,13 +363,12 @@ class URTCFlasher:
             except ValueError:
                 sig = b""
             if len(sig) != 32:
-                raise FlashError(f"{os.path.basename(manifest_path)}: hmac_sha256 is not 32 bytes of hex")
+                raise FlashError(_("ERR_HMAC_NOT_32_BYTES", name=os.path.basename(manifest_path)))
             info["hmac"] = sig
             kind = manifest.get("signing_key_kind", "?")
-            self.log(f"Using the signature published in the manifest (key: {kind}).")
+            self.log(_("LOG_USING_PUBLISHED_SIGNATURE", kind=kind))
             if kind == "dev":
-                self.log("NOTE: signed with the PUBLIC development key - only boards whose "
-                         "bootloader was built with that same key accept it.")
+                self.log(_("LOG_DEV_KEY_NOTE"))
         return info
 
     def _signature_for(self, firmware, manifest_info, key, board):
@@ -329,14 +378,12 @@ class URTCFlasher:
         if manifest_info["hmac"] is not None:
             return manifest_info["hmac"]
         if key:
-            self.log(f"No published signature - signing locally with the {board} key from urtc_config.json.")
+            self.log(_("LOG_SIGNING_LOCALLY", board=board))
             return hmac.new(key, firmware, hashlib.sha256).digest()
-        raise FlashError(
-            f"This image has no published signature (hmac_sha256 in <file>.manifest.json) "
-            f"and no {board} signing key is configured. Use an image from the URTC build "
-            f"(it ships its .manifest.json), or for a self-built image on a bench board set "
-            f"\"{'hmac_key_hex' if board == 'master' else 'slave_hmac_key_hex'}\" in urtc_config.json."
-        )
+        raise FlashError(_(
+            "ERR_NO_SIGNATURE_NO_KEY", board=board,
+            option="hmac_key_hex" if board == "master" else "slave_hmac_key_hex",
+        ))
 
     def flash(self, firmware_path, allow_downgrade=False, version=None):
         self._last_heartbeat_pct = None  # a stale value from a prior flash()
@@ -348,13 +395,9 @@ class URTCFlasher:
 
         size = len(firmware)
         if size == 0:
-            raise FlashError("Firmware file is empty")
+            raise FlashError(_("ERR_FIRMWARE_EMPTY"))
         if size > APP_MAX_SIZE:
-            raise FlashError(
-                f"Firmware is {size} bytes, exceeds the {APP_MAX_SIZE}-byte "
-                f"main slot - refusing to send an update the bootloader "
-                f"would reject anyway"
-            )
+            raise FlashError(_("ERR_FIRMWARE_TOO_BIG_MAIN", size=size, max=APP_MAX_SIZE))
 
         crc32 = zlib.crc32(firmware) & 0xFFFFFFFF
         actual_sha256 = hashlib.sha256(firmware).hexdigest()
@@ -393,7 +436,7 @@ class URTCFlasher:
         total_retries = 0
         while offset < size:
             if self.stop_flag():
-                raise FlashError("Cancelled by user")
+                raise FlashError(_("ERR_CANCELLED_BY_USER"))
             page_start = time.monotonic()
             page_end = min(offset + FLASH_PAGE_SIZE, size)
             page_data = firmware[offset:page_end]
@@ -467,20 +510,14 @@ class URTCFlasher:
                 if last_err is not None:
                     raise last_err
                 if len(ack) < 4:
-                    raise FlashError(
-                        f"Page ACK for page {page_index} was only {len(ack)} bytes "
-                        f"(expected at least 4) - likely bus noise corrupting the frame"
-                    )
+                    raise FlashError(_("ERR_PAGE_ACK_SHORT", page=page_index, got=len(ack)))
                 # Only the first 4 bytes carry the page index - a longer ack
                 # (DLC padding from the CAN controller, not necessarily an
                 # error) shouldn't crash struct.unpack, which requires exactly
                 # 4 bytes.
                 acked_page = struct.unpack(">I", ack[:4])[0]
                 if acked_page != page_index:
-                    raise FlashError(
-                        f"Page ACK mismatch: expected page {page_index}, "
-                        f"bootloader acked page {acked_page}"
-                    )
+                    raise FlashError(_("ERR_PAGE_ACK_MISMATCH", expected=page_index, got=acked_page))
             page_elapsed = time.monotonic() - page_start
             page_kbps = (len(page_data) / 1024) / page_elapsed if page_elapsed > 0 else 0.0
             offset = page_end
@@ -529,7 +566,7 @@ class URTCFlasher:
         deadline = time.monotonic() + 60.0
         while time.monotonic() < deadline:
             if self.stop_flag():
-                raise FlashError("Cancelled by user")
+                raise FlashError(_("ERR_CANCELLED_BY_USER"))
             frame = self.can.read_frame(timeout=0.2)
             if frame is None:
                 continue
@@ -554,10 +591,10 @@ class URTCFlasher:
                     self.log(_("LOG_UPDATE_VERIFIED_OK"))
                     return True
                 elif status == 0x05 and len(data) == 2:
-                    reason = VERIFY_FAIL_REASONS.get(data[1], f"unknown reason 0x{data[1]:02X}")
-                    raise FlashError(f"Bootloader reported failure: {name} - {reason}")
+                    reason = VERIFY_FAIL_REASONS.get(data[1], _("ERR_UNKNOWN_REASON_CODE", code=f"{data[1]:02X}"))
+                    raise FlashError(_("ERR_BOOTLOADER_FAILURE_REASON", name=name, reason=reason))
                 elif status in (0x05, 0xFF):
-                    raise FlashError(f"Bootloader reported failure: {name}")
+                    raise FlashError(_("ERR_BOOTLOADER_FAILURE", name=name))
         # The confirmation frame itself (0x04) can be lost to the reset
         # transient even when the update genuinely succeeded - the board
         # already reset into new firmware, but that specific CAN frame
@@ -574,7 +611,7 @@ class URTCFlasher:
             self.progress_cb(100)
             self.log(_("LOG_BOARD_RESPONDING_AS_APP"))
             return True
-        raise FlashError("Timed out waiting for final verification result")
+        raise FlashError(_("ERR_TIMEOUT_FINAL_VERIFICATION"))
 
     def read_back_flash(self, output_path, timeout=180.0):
         """Reads the main board's own currently-installed firmware back
@@ -585,21 +622,25 @@ class URTCFlasher:
         the only way to get the CURRENT bytes back later if the file
         that produced them isn't kept around. Bootloader-only (the board
         must already be sitting in the bootloader, same as flash() itself
-        expects once triggered) - requires a bootloader that implements
-        0x7FE; an older one simply never answers, surfaced here as a
-        timeout rather than a silent empty file.
+        expects once triggered; with a valid application the bootloader
+        leaves for it about 600 ms after reset unless an update starts) -
+        requires a bootloader that implements 0x7FE; an older one simply
+        never answers, surfaced here as a timeout rather than a silent
+        empty file.
         """
         self.log(_("LOG_SENDING_READBACK_START"))
         self.can.send_frame(CAN_ID_READBACK, b"")
 
         # First reply is always DLC=4 (total size, 0 if nothing valid is
-        # installed) - distinguished from the DLC=8 data replies that
-        # follow purely by DLC, see CANBUS.TXT's own 0x7FE note.
+        # installed) - distinguished from the data replies that follow
+        # purely by DLC, see CANBUS.TXT's own 0x7FE note. Data frames carry
+        # 8 bytes, except the last one of the image when its size is not a
+        # multiple of 8 (1 to 7 bytes).
         deadline = time.monotonic() + 5.0
         total_size = None
         while time.monotonic() < deadline:
             if self.stop_flag():
-                raise FlashError("Cancelled by user")
+                raise FlashError(_("ERR_CANCELLED_BY_USER"))
             frame = self.can.read_frame(timeout=0.2)
             if frame is None:
                 continue
@@ -649,7 +690,7 @@ class URTCFlasher:
             page_deadline = time.monotonic() + 5.0
             while len(buf) < page_target:
                 if self.stop_flag():
-                    raise FlashError("Cancelled by user")
+                    raise FlashError(_("ERR_CANCELLED_BY_USER"))
                 if time.monotonic() > page_deadline:
                     raise FlashError(_("LOG_READBACK_PAGE_TIMEOUT", page=page_index))
                 frame = self.can.read_frame(timeout=0.2)
@@ -678,7 +719,7 @@ class URTCFlasher:
 
     # -------------------------------------------------------------------
     # Expansion slave chip OTA - relayed through the main board's own
-    # I2C bridge (CANBUS.TXT's own 0x210-0x218) rather than a direct CAN
+    # I2C bridge (CANBUS.TXT's own 0x210-0x219) rather than a direct CAN
     # peripheral on the slave chip, which has none. Same overall shape
     # as flash() above (enter bootloader, start, HMAC, data, end,
     # verify), but no page-ACK equivalent exists on this path - each
@@ -738,13 +779,9 @@ class URTCFlasher:
 
         size = len(firmware)
         if size == 0:
-            raise FlashError("Firmware file is empty")
+            raise FlashError(_("ERR_FIRMWARE_EMPTY"))
         if size > SLAVE_APP_MAX_SIZE:
-            raise FlashError(
-                f"Firmware is {size} bytes, exceeds the expansion slave's own "
-                f"{SLAVE_APP_MAX_SIZE}-byte main slot - refusing to send an "
-                f"update its own bootloader would reject anyway"
-            )
+            raise FlashError(_("ERR_FIRMWARE_TOO_BIG_SLAVE", size=size, max=SLAVE_APP_MAX_SIZE))
 
         crc32 = zlib.crc32(firmware) & 0xFFFFFFFF
         actual_sha256 = hashlib.sha256(firmware).hexdigest()
@@ -803,7 +840,7 @@ class URTCFlasher:
         STALL_THRESHOLD = 3
         while offset < size:
             if self.stop_flag():
-                raise FlashError("Cancelled by user")
+                raise FlashError(_("ERR_CANCELLED_BY_USER"))
             chunk = firmware[offset:offset+8]
             self.can.send_frame(CAN_ID_SLAVE_DATA, chunk)
             offset += len(chunk)
@@ -832,15 +869,9 @@ class URTCFlasher:
                 else:
                     consecutive_no_response += 1
                     if consecutive_no_response >= STALL_THRESHOLD:
-                        raise FlashError(
-                            f"Expansion slave's I2C bridge stopped responding "
-                            f"({consecutive_no_response} consecutive 0x216 progress "
-                            f"queries with no answer) after sending {offset} of "
-                            f"{size} bytes - aborting rather than continuing to "
-                            f"send the rest of the image into a stalled/disconnected "
-                            f"bridge. Check the slave chip is present and the I2C "
-                            f"link is intact, then retry."
-                        )
+                        raise FlashError(_(
+                            "ERR_SLAVE_BRIDGE_STALLED", count=consecutive_no_response, offset=offset, size=size,
+                        ))
 
         transfer_elapsed = time.monotonic() - transfer_start
         overall_kbps = (size / 1024) / transfer_elapsed if transfer_elapsed > 0 else 0.0
@@ -857,7 +888,7 @@ class URTCFlasher:
         slave_major, slave_minor = 0, 0
         if os.path.isfile(manifest_path):
             try:
-                with open(manifest_path, "r") as f:
+                with open(manifest_path, "r", encoding="utf-8") as f:
                     manifest = json.load(f)
                 version_str = str(manifest.get("version", "0.0"))
                 parts = version_str.split(".")
@@ -878,7 +909,7 @@ class URTCFlasher:
         deadline = time.monotonic() + 60.0
         while time.monotonic() < deadline:
             if self.stop_flag():
-                raise FlashError("Cancelled by user")
+                raise FlashError(_("ERR_CANCELLED_BY_USER"))
             status = self._query_slave_status(timeout=1.0)
             if status is None:
                 time.sleep(0.3)
@@ -901,7 +932,7 @@ class URTCFlasher:
             if progress is not None and progress != 0xFF:
                 self.progress_cb(70 + int(progress * 0.3))
             time.sleep(0.3)
-        raise FlashError("Timed out waiting for the expansion slave's own final verification result")
+        raise FlashError(_("ERR_TIMEOUT_SLAVE_FINAL_VERIFICATION"))
 
     def _query_slave_status(self, timeout=1.0):
         self.can.send_frame(CAN_ID_SLAVE_STATUS, b"")
@@ -947,7 +978,7 @@ class URTCFlasher:
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
             if self.stop_flag():
-                raise FlashError("Cancelled by user")
+                raise FlashError(_("ERR_CANCELLED_BY_USER"))
             status = self._query_slave_status(timeout=0.5)
             if status == expected_value:
                 return
@@ -967,7 +998,7 @@ class URTCFlasher:
                     raise FlashError(_("LOG_SLAVE_VERIFY_FAILED_REASON", reason=reason))
                 raise FlashError(_("LOG_SLAVE_VERIFY_FAILED"))
             time.sleep(0.2)
-        raise FlashError(f"Timed out waiting for the expansion slave to report status 0x{expected_value:02X}")
+        raise FlashError(_("ERR_TIMEOUT_SLAVE_STATUS", status=f"{expected_value:02X}"))
 
 
 

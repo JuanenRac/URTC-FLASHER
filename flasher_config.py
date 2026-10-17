@@ -24,7 +24,7 @@ CAN_ID_HMAC_CHUNK       = 0x7F7
 # board's own 0x7F0-0x7F7 above, but reached via the I2C link bridge
 # this board already bit-bangs to the slave, not a direct CAN peripheral
 # on the slave chip itself (it has none) - see CANBUS.TXT's own
-# 0x210-0x218 section for the full protocol. No page-ACK equivalent
+# 0x210-0x219 section for the full protocol. No page-ACK equivalent
 # exists here (0x213's own I2C write either completes or fails
 # synchronously within that same transaction, no separate confirmation
 # needed the way a real CAN write-and-forget does) - see
@@ -124,7 +124,7 @@ SLAVE_HARDWARE_ID = 0x0303CB01  # STM32F303CBT6, expansion slave chip - see slav
 # --version given, or the file name), never a default - an invented one made every later official image look older to the anti-rollback check.
 
 # This tool's OWN version (shown in the banner and window title) - about the flasher script itself.
-FLASHER_VERSION = "0.2.7"
+FLASHER_VERSION = "0.2.8"
 FLASHER_AUTHOR = "JuanenRac"
 
 # --- HMAC signing keys: none by default ---
@@ -307,6 +307,31 @@ def _(key, **kwargs):
     return text
 
 
+# Log lines of the Qt Quick deck start with an upper-case word (PORT_SCAN, FLASH_FAILED ...);
+# the word is looked up as QTLOG_<WORD> in the language file and shown in the chosen language.
+# For these words the label is a whole sentence and the English detail that follows is dropped.
+_LOG_LABEL_ONLY = frozenset({
+    "FIRMWARE_SCAN_BLOCKED", "SWD_PROBE_SCAN_SKIPPED", "SWD_PROBE_SCAN_STARTED", "SWD_FLASH_BLOCKED",
+    "SWD_OPTION_BYTE_CHECK_BLOCKED", "BOARD_SNAPSHOT_BLOCKED", "BOARD_SNAPSHOT_STARTED",
+    "EXPANSION_TYPE_SAVE_BLOCKED", "MLX_VARIANT_SAVE_BLOCKED", "FREE_TOOL_SAVE_BLOCKED",
+    "DEVICE_SERIAL_SAVE_BLOCKED", "ERROR",
+})
+
+
+def translate_log_line(message):
+    """Shows a Qt Quick log line in the interface language. A line that does not start
+    with a known word is returned unchanged."""
+    token, _sep, rest = str(message).partition(" ")
+    if token and token.replace("_", "").isalnum() and token.upper() == token:
+        key = "QTLOG_" + token
+        label = _translations.get(key)
+        if label:
+            if rest and token not in _LOG_LABEL_ONLY:
+                return f"{label}: {rest}"
+            return label
+    return str(message)
+
+
 def _load_config_overrides(log=None):
     """Optional urtc_config.json next to firmware/ can override HMAC_KEY,
     SLAVE_HMAC_KEY, THIS_HARDWARE_ID, and the memory-map constants (slot
@@ -468,6 +493,11 @@ def _load_config_overrides(log=None):
 # output - the values themselves don't change on the second call.
 THIS_HARDWARE_ID, HMAC_KEY, SLAVE_HMAC_KEY, APP_MAX_SIZE, BOOTLOADER_MAX_SIZE, FLASH_PAGE_SIZE, \
     BOOTLOADER_FLASH_ADDR, APP_FLASH_ADDR, _CONFIG_LOADED = _load_config_overrides()
+
+# "Production only" mode: when urtc_config.json has "require_production_signature": true, an
+# image whose manifest says it is signed with the PUBLIC development key is refused. The
+# official images in firmware/ are signed that way, so the default is off.
+REQUIRE_PRODUCTION_SIGNATURE = _config.get("require_production_signature") is True
 
 # The banner image is a bundled asset, not a user-supplied file - a
 # genuinely different location than FIRMWARE_FOLDER above when frozen.

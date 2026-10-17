@@ -23,3 +23,7 @@ PySide6>=6.8,<7
 # Neither is required for CAN-based updates (sections 1-3) or for running
 # this script at all - the SWD section just disables itself if it finds
 # neither tool on the system.
+
+# Optional, for --transport python-can (command line): pip install python-can
+# (PCAN, Kvaser, gs_usb/candleLight and the other interfaces it supports; no
+# SLCAN reflash of the adapter needed). Not required for anything else.

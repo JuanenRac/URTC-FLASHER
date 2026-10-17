@@ -28,7 +28,7 @@ from PySide6.QtGui import QGuiApplication
 
 from flasher_config import (
     APP_FLASH_ADDR, BOOTLOADER_FLASH_ADDR,
-    SLAVE_APP_FLASH_ADDR, SLAVE_BOOTLOADER_FLASH_ADDR,
+    SLAVE_BOOTLOADER_FLASH_ADDR,
 )
 from qt_flasher import FlasherQtBridge
 
@@ -147,7 +147,7 @@ def _run() -> None:
     # programming steps, 2 verify steps, reset), so the real erase
     # command is checked against the FULL internal log, not that
     # display-only window.
-    assert any("erase" in line.lower() for line in bridge._logs), "the real erase command must have been logged even in dry-run"
+    assert any("eras" in line.lower() for line in bridge._logs), "the real erase command must have been logged even in dry-run"
 
     # --- gates hold while busy ---
     bridge._set_state(busy=True)

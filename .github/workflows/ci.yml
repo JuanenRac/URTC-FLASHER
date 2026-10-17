@@ -14,6 +14,22 @@ permissions:
   contents: read
 
 jobs:
+  windows:
+    name: Tests on Windows (paths, line endings)
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Run the test suite
+        run: |
+          python -m pip install pyserial pytest PySide6
+          python -m pytest -q tests
+        env:
+          QT_QPA_PLATFORM: offscreen
   baseline:
     name: Validate project baseline
     runs-on: ubuntu-latest
@@ -26,6 +42,10 @@ jobs:
           python-version: "3.12"
       - name: Validate manifest, version, documentation and secret policy
         run: python tools/ci_validate.py
+      - name: Static checks (unused names, exception chaining, syntax)
+        run: |
+          python -m pip install ruff
+          ruff check .
       - name: Compile Python sources without running versioning build scripts
         run: |
           python - <<'PY'
@@ -42,6 +62,14 @@ jobs:
         run: |
           python -m pip install pyserial pytest
           python -m pytest -q tests
+      - name: Run the Qt Quick tests and the end-to-end Qt checks (offscreen)
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          python -m pip install PySide6
+          python -m pytest -q tests
+          python verify_qt_device_config.py
+          python verify_qt_swd_full_chip_flash.py
       - name: Validate v1 SDK contract fixtures
         if: ${{ hashFiles('clients/python/tests/test_validation.py') != '' }}
         env:

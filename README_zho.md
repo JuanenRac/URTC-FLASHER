@@ -24,7 +24,7 @@
 </p>
 
 
-**版本：** 0.2.7（本工具自身的版本——显示在窗口横幅和标题栏中，与它所写入的
+**版本：** 0.2.8（本工具自身的版本——显示在窗口横幅和标题栏中，与它所写入的
 URTC 板卡固件版本分开跟踪。遵循 X.Y.Z 方案，其中补丁号在每次通过
 build_exe.bat/build_exe.sh 进行的真实构建时自动递增——版本历史见
 CHANGELOG.md，确切的进位规则见 bump_version.py）
@@ -57,7 +57,7 @@ CAN 自我标识），以便你在决定要刷写什么之前，先看看当前�
 针对真实硬件的真实板卡——请以对待任何与引导程序通信的新工具同样的谨慎态度
 对待首次真实刷写尝试：手边备好 JTAG 作为后备手段。
 
-**诚实核查 - 今天真正能运行的部分：** `tests/` 下有 6 个 pytest 文件（43 个测试：41 个通过，没有 PySide6 时跳过 2 个）——针对真实 `MockCAN` 传输（`flasher_transports.py`）的 CAN-OTA 协议测试，它会回放完整的模拟引导程序序列（开始／擦除／接收、页数据 + PAGE_ACK、HMAC 分块、以真实成功或特定 `VERIFY_FAIL_REASON` 结束更新）；签名规则（无需任何密钥即发送已发布的签名、拒绝未签名镜像、清单 sha256 不符时在任何总线通信前拒绝）；镜像完整性检查；以及随附 `firmware/` 与其清单的核对。GitHub Actions（`.github/workflows/ci.yml`）在每次推送时运行这套测试，`tools/build_test.py` 也会在 `build-test.sh`/`.bat` 中运行。根目录下的两个 `verify_qt_*.py` 脚本是 pytest 之外的真实端到端检查（需要真实的 Qt 事件循环；用 `QT_QPA_PLATFORM=offscreen python verify_qt_*.py` 运行）；`verify_qt_swd_full_chip_flash.py` 只以 `dry_run=True` 构造 `PyOCDCLI`/`CubeProgrammerCLI` 命令。这些都没有在本环境中针对真实板卡运行过。已发布的内容请参见 `CHANGELOG.md`。
+**诚实核查 - 今天真正能运行的部分：** `tests/` 下有 25 个 pytest 文件（171 个测试：全部通过，其中 4 个在没有 PySide6 时跳过）——针对真实 `MockCAN` 传输（`flasher_transports.py`）的 CAN-OTA 协议测试，它会回放完整的模拟引导程序序列（开始／擦除／接收、页数据 + PAGE_ACK、HMAC 分块、以真实成功或特定 `VERIFY_FAIL_REASON` 结束更新）；签名规则（无需任何密钥即发送已发布的签名、拒绝未签名镜像、清单 sha256 不符时在任何总线通信前拒绝）；镜像完整性检查；以及随附 `firmware/` 与其清单的核对。GitHub Actions（`.github/workflows/ci.yml`）在每次推送时运行这套测试，`tools/build_test.py` 也会在 `build-test.sh`/`.bat` 中运行。根目录下的两个 `verify_qt_*.py` 脚本是 pytest 之外的真实端到端检查（需要真实的 Qt 事件循环；用 `QT_QPA_PLATFORM=offscreen python verify_qt_*.py` 运行）；`verify_qt_swd_full_chip_flash.py` 只以 `dry_run=True` 构造 `PyOCDCLI`/`CubeProgrammerCLI` 命令。这些都没有在本环境中针对真实板卡运行过。已发布的内容请参见 `CHANGELOG.md`。 模拟的引导程序（`MockCAN`）只是根据协议说明编写的模型：它能重现页确认、不完整的最后一页和回读帧，但它不是真正的引导程序，所以测试全部通过并不能代替在真实板卡上的试验（官方 73476 字节镜像曾无法安装、备份的最后一帧曾被丢弃，而测试却是通过的，正是因为模拟比真正的引导程序更宽松）。
 
 ## 1. 🔌 让你的适配器与 CAN 通信
 
@@ -124,14 +124,11 @@ python3 urtc_flasher.py
 
 ### 可视化控制台
 
-共享的 **Qt Quick** 命令控制台可用于完整的真实工作流，而不仅仅是 CAN-OTA：
+共享的 **Qt Quick** 命令控制台是建立在同一套生产用传输、验证和签名刷写代码之上的第二个前端：
 ~~~
 python urtc_flasher.py --qtquick
 ~~~
-它使用与既有界面相同的生产传输、验证和签名刷写代码——CAN-OTA、只读 SWD/JTAG
-探测、Board Snapshot、4 项设备配置写入，以及完整的 SWD/JTAG 编程（擦除/写入、
-演练模式、擦除前备份、RDP 检查）在这里都是真实的，不是其中的一部分。默认界面
-仍为 Tkinter，但已经没有任何功能是 Tkinter 独有的了。
+它提供主板的 CAN-OTA 更新（始终先发送进入引导程序的触发）、只读 SWD/JTAG 探测、Board Snapshot、4 项设备配置写入，以及完整的 SWD/JTAG 芯片编程（擦除/写入、演练模式、擦除前备份、RDP 检查）。它**并不**具备 Tkinter 窗口的全部功能：没有扩展从属目标、没有“板卡已在引导程序中”选项、没有 F-RAM 擦除选项、没有降级授权、没有 CAN 固件备份、没有 GitHub 下载、没有比特率选择或自动检测（Serial/SLCAN 以 500 kbit/s 打开），也没有专门的总线活动检查。这些功能请使用默认的 Tkinter 界面。
 
 成熟的 CAN-OTA 与 SWD/JTAG 流程保持不变，现在使用深海军蓝/青色控制界面：
 产品标题、高对比度连接卡、清晰的固件表格、深色验证日志以及可见的进度通道。
@@ -141,7 +138,7 @@ python urtc_flasher.py --qtquick
 
 - **文件** —— 保存日志（将屏幕上的日志保存为纯文本；如需一个更完整的、
   包含系统诊断信息和当前选定固件文件的打包，请改用下方的“诊断”），以及退出。
-- **语言** —— 在 7 种可用语言之间切换（翻译的工作方式见下方”语言”）。
+- **语言** —— 在 8 种可用语言之间切换（翻译的工作方式见下方”语言”）。
 - **帮助** —— Readme（在一个只读查看器窗口中打开本文件；一旦当前语言存在
   已翻译的版本，会自动使用该版本）、URTC GitHub（在浏览器中打开项目的仓库）、
   许可证（本工具的 GPL-3.0 许可证，读取自仓库自身的 `LICENSE` 文件），以及
@@ -157,7 +154,7 @@ python urtc_flasher.py --qtquick
 `urtc_config.json`（与技术性硬件覆盖设置所使用的是同一个文件——语言偏好
 只是存放在这些设置旁边），在下次启动时应用。翻译文件以纯文本形式存放在
 `language/` 下（`english.lng`、`spanish.lng`、`italian.lng`、`french.lng`、
-`german.lng`），采用简单的 `KEY=Value` 键值对，一行一个——以 `#` 开头的行
+`german.lng`, `japanese.lng`, `chinese.lng`, `portuguese.lng`），采用简单的 `KEY=Value` 键值对，一行一个——以 `#` 开头的行
 和空行会被忽略，值内部的字面 `\n` 会变成真正的换行符（用于少数几个多行
 对话框消息）。如果某个翻译需要修正，可以直接编辑，也可以将其作为新增另一种
 语言的起点（添加 `language/<name>.lng`，在 `flasher_config.py` 顶部附近的
@@ -213,6 +210,9 @@ SocketCAN 没有这个特定的坑——访问一个类似 `can0` 的接口不�
 ├── flasher_protocol.py            <- CAN OTA 状态机本身
 ├── flasher_github.py               <- 从本项目自身的 GitHub 仓库下载固件
 ├── flasher_gui.py                 <- 主窗口（FlasherGUI）及其菜单栏
+├── flasher_uithread.py            <- 工作线程向 Tk 主线程的交接
+├── flasher_records.py             <- 会话日志（位置、保留）与更新报告
+├── pytest.ini / ruff.toml          <- pytest 和 ruff（静态检查）的设置
 ├── requirements.txt
 ├── build_exe.bat                  <- Windows 独立构建
 ├── build_exe.sh                   <- Linux 独立构建
@@ -342,7 +342,7 @@ MLX9064x 系列热传感器（或完全没有）中实际装配的是哪一种�
 2. **选择刷写目标**：“本板卡（主）”或“扩展从属”——默认为主板，这是更常见
    的情况。从属选项只能到达 Advanced 扩展板变体（TMC2209+STM32F303CBT6
    或 TMC5160A+STM32F303CBT6）上的任何东西——该更新是通过主板自身的 I2C
-   桥中继到从属芯片的（`CANBUS.TXT` 自身的 `0x210`-`0x218`），而非一条
+   桥中继到从属芯片的（`CANBUS.TXT` 自身的 `0x210`-`0x219`），而非一条
    独立的物理连接。当选择“从属”时，“刷写前擦除 F-RAM”（下方第 4 步）
    会自动禁用自身——从属芯片没有自己的 F-RAM 可以擦除。
 3. **选择固件**：从检测到的列表中选择，或点击浏览——检测和验证的确切
@@ -369,7 +369,9 @@ MLX9064x 系列热传感器（或完全没有）中实际装配的是哪一种�
 取回今天确切字节内容的唯一方法。仅限主板，且仅在板卡确实处于引导程序中
 时才能使用——需要一个实现了 `0x7FE`/`0x7FF` 的引导程序（见
 `docs/CANBUS.TXT`）；一个较旧的引导程序只会从不应答，表现为一次明确的
-超时，而非一个静默的空文件。
+超时，而非一个静默的空文件。 实际上，这意味着该备份适用于没有有效应用程序、或更新进行到一半被中断的板卡：板卡有有效应用程序时，除非收到开始更新帧（`0x7F1`），引导程序会在复位约 600 ms 后跳转到应用程序，而本工具没有让引导程序持续等待的按钮（那需要修改引导程序）。对于正常运行的板卡，请改用 SWD/JTAG（第 6 节）备份闪存。
+
+**版本与签名提示**：传输之前，工具会询问板卡当前安装了什么，并记录“已安装 vX.Y -> 新版本 vA.B”；如果新版本更旧，会警告除非允许降级，否则引导程序将拒绝，并建议先做备份。如果某个镜像的清单表明它使用公开的开发密钥签名（随附的官方镜像就是如此），文件名下方会显示红色警告；在 `urtc_config.json` 中设置 `"require_production_signature": true` 即可完全拒绝此类镜像。当板卡从没有有效固件的引导程序中应答时，会自动选中 `firmware/` 中找到的最新官方主板镜像，供你检查后烧录。每次更新成功后会写入一份小报告（`logs/urtc_update_report_*.json`：工具版本、操作员、镜像名称、大小与 SHA-256、更新前后的版本）；报告带有自己的 SHA-256，因此被修改时能够察觉，但它不是签名。
 
 **刻意安装一个更旧的版本**：引导程序通常会拒绝一个签名有效、但声明的版本
 比当前已安装版本更旧的镜像（验证失败原因“rollback rejected”）——这可以
@@ -467,7 +469,7 @@ python3 urtc_flasher.py --cli --port /dev/ttyACM0 --file firmware.bin
 ```
 
 ```
-usage: urtc_flasher.py --cli [-h] [--transport {serial,socketcan}] --port PORT
+usage: urtc_flasher.py --cli [-h] [--transport {serial,socketcan,python-can,mock}] --port PORT
                              --file FILE [--no-trigger] [--force]
 ```
 
@@ -476,6 +478,8 @@ usage: urtc_flasher.py --cli [-h] [--transport {serial,socketcan}] --port PORT
 更新路径（第 1-3 节）——SWD/JTAG 完整芯片路径目前刻意仅限 GUI 使用，
 考虑到如果一次脚本化运行在无人监视的情况下弄错了文件/目标组合，风险会
 大得多。
+
+**`--transport python-can`** 使用可选的 `python-can` 包（`pip install python-can`），支持 PCAN、Kvaser、gs_usb/candleLight 及其支持的其他接口，因此无需把适配器重刷为 SLCAN：此时 `--port` 为 `<接口>:<通道>`（例如 `pcan:PCAN_USBBUS1`），总线以 500 kbit/s 打开。它仅在命令行中可用。
 
 **`--transport mock`** 针对一个模拟的、内存中的引导程序运行整个更新序列，
 而非真实板卡——不涉及适配器、端口，或任何物理设备：
@@ -504,7 +508,7 @@ python3 urtc_flasher.py --cli --transport mock --file firmware.bin --no-trigger
 每个会话还会向 `logs/`（`urtc_flasher_YYYYMMDD_HHMMSS.log`）写入一个带
 时间戳的日志文件，独立于屏幕上的日志——如果现场出了问题，便于将完整的
 追踪记录交给编写固件的人。这个文件夹会自动创建，删除也是安全的；没有任何
-东西会读回旧日志。
+东西会读回旧日志。 只会保留最新的 30 个会话日志；如果无法写入程序旁边的文件夹（只读安装），则改用每用户文件夹（Windows 上为 `%LOCALAPPDATA%\URTC-Flasher\logs`，其他系统为 `~/.local/state/urtc-flasher/logs`）。
 
 ## 9. 📊 诊断——总线活动、比特率和调试包
 
@@ -575,7 +579,7 @@ REC 保持平稳，通常指向本板卡自身的发送未被确认——总线�
 是：一个已链接镜像的**复位处理程序**是一个在链接时烘焙进去的真实的、
 绝对的地址，它永远只会指向它实际所链接的那个区域内部。已针对本项目自身
 真实编译的 `BOOTLOADER.bin`/`APP.bin` 进行了验证：它们的复位处理程序分别
-为 `0x080030F1` 和 `0x0800C725`，各自正确地位于其自身槽的地址范围内、
+为 `0x08000785` 和 `0x0800C0CD`，各自正确地位于其自身槽的地址范围内、
 并在另一个槽的范围之外——因此将任意一个放入错误的槽都会被捕获并阻止，
 而非被静默接受。相同的逻辑也适用于 `.hex`/`.elf`，只是改为针对它们自身
 嵌入的加载地址进行检查。
@@ -678,7 +682,7 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 }
 ```
 每个字段都是可选的——只覆盖实际需要更改的内容。缺失的字段会回退到本工具
-自身内置的默认值。**这个覆盖机制仅适用于主板自身的常量**——扩展从属芯片
+自身内置的默认值。**内存映射和 HardwareID 的覆盖仅适用于主板自身的常量**（唯一的例外是扩展从属芯片的签名密钥 `slave_hmac_key_hex`，它也可以在这里设置）——扩展从属芯片
 自身的等效常量（`SLAVE_BOOTLOADER_FLASH_ADDR`、`SLAVE_APP_FLASH_ADDR`、
 `SLAVE_HARDWARE_ID` 等）固定在 `flasher_config.py` 自身中，因为该硬件
 自身的真实值已经根据其自身的链接脚本得到确认，而不像主板自身的默认值
@@ -732,7 +736,8 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 │   ├── french.lng
 │   ├── german.lng
 │   ├── japanese.lng
-│   └── chinese.lng
+│   ├── chinese.lng
+│   └── portuguese.lng
 ├── logs/                           <- 自动创建，每个会话一个文件
 ├── urtc_config.json.example        <- 可选的 urtc_config.json 覆盖文件的模板
 │                                       （见上方“更改 HMAC 密钥 / HardwareID”）——
@@ -750,6 +755,8 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 ├── flasher_protocol.py            <- CAN OTA 状态机本身
 ├── flasher_github.py              <- 从 URTC 自身的 GitHub 仓库下载固件
 ├── flasher_gui.py                 <- 主窗口（FlasherGUI）及其菜单栏
+├── flasher_uithread.py            <- 工作线程向 Tk 主线程的交接
+├── flasher_records.py             <- 会话日志（位置、保留）与更新报告
 ├── verify_qt_device_config.py     <- 真实的、刻意放在 pytest 之外的端到端检查，验证 Qt Quick 配置写入（需要真实的 Qt 事件循环）
 ├── verify_qt_swd_full_chip_flash.py <- 真实的、刻意放在 pytest 之外的端到端检查，验证 Qt Quick 全芯片 SWD/JTAG 面板（仅 dry-run）
 ├── tests/
@@ -759,7 +766,25 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 │   ├── test_flash_verify_fail_reporting.py <- 8 个测试
 │   ├── test_flasher_integrity.py   <- 14 个测试
 │   ├── test_flasher_protocol_clock.py <- 4 个测试
-│   └── test_qt_flash_preflight.py  <- 2 个测试（没有 PySide6 时跳过）- 全部由 GitHub Actions CI 运行
+│   ├── test_qt_flash_preflight.py  <- 2 个测试（没有 PySide6 时跳过）- 全部由 GitHub Actions CI 运行
+│   ├── test_bitrate_listen_only.py
+│   ├── test_bootloader_entry.py
+│   ├── test_github_download.py
+│   ├── test_gui_threading.py
+│   ├── test_language_files.py
+│   ├── test_manifest_target.py
+│   ├── test_mock_readback.py
+│   ├── test_ota_partial_page.py
+│   ├── test_python_can_transport.py
+│   ├── test_qt_bridge_log.py
+│   ├── test_qt_log_translation.py
+│   ├── test_readback_odd_size.py
+│   ├── test_records.py
+│   ├── test_signing_policy.py
+│   ├── test_slave_entry_check.py
+│   ├── test_ui_mailbox.py
+│   ├── test_validation_ccm_stack.py
+│   └── test_version_report.py
 ├── requirements.txt                <- pyserial>=3.5（Tkinter 测试器）+ PySide6>=6.8,<7（`--qtquick` 面板）
 ├── build_exe.bat                  <- Windows 独立构建
 ├── build_exe.sh                   <- Linux 独立构建
@@ -776,7 +801,7 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 │   └── render_hydra_umc_icon_frames.py   <- 从 SVG 重新生成 assets/hydra_umc_icon_frames/（仅限开发）
 ├── README.md                      <- 英文原版
 ├── README_zho.md                  <- 本文件
-├── README_spa.md / README_ita.md / README_fra.md / README_deu.md / README_jpn.md  <- 其他翻译
+├── README_spa.md / README_ita.md / README_fra.md / README_deu.md / README_jpn.md / README_por.md  <- 其他翻译
 ├── LICENSE
 ├── .gitattributes
 └── .gitignore

@@ -21,22 +21,25 @@ from tkinter import filedialog, messagebox, ttk
 import flasher_config
 from flasher_config import (
     _, _CONFIG_LOADED, APP_FLASH_ADDR, APP_MAX_SIZE, AVAILABLE_LANGUAGES,
-    BITRATE_500K_SLCAN_CODE, BOOTLOADER_FLASH_ADDR, BOOTLOADER_MAX_SIZE, CONFIG_FILE_PATH, DEFAULT_LANGUAGE,
-    EXPANSION_BOARD_TYPES, MLX_SENSOR_VARIANTS, FIRMWARE_FOLDER,
+    BITRATE_500K_SLCAN_CODE, BOOTLOADER_FLASH_ADDR, BOOTLOADER_MAX_SIZE, CONFIG_FILE_PATH, EXPANSION_BOARD_TYPES, MLX_SENSOR_VARIANTS, FIRMWARE_FOLDER,
     FLASHER_VERSION,
     HYDRA_UMC_ICON_FRAMES_DIR, ICON_IMAGE_PATH, LOGS_FOLDER, PYOCD_TARGET_NAME, SLCAN_BITRATES,
     SLAVE_BOOTLOADER_FLASH_ADDR, SLAVE_APP_FLASH_ADDR, SLAVE_BOOTLOADER_MAX_SIZE,
     SLAVE_APP_MAX_SIZE, SLAVE_PYOCD_TARGET_NAME, SLAVE_TOTAL_FLASH_SIZE,
-    STATUS_NAMES, THIS_HARDWARE_ID, TOOL_NAMES, CAN_ID_SET_FREE_TOOL, CAN_ID_FREE_TOOL_CONFIG_RESP,
+    THIS_HARDWARE_ID, SLAVE_HARDWARE_ID, TOOL_NAMES, CAN_ID_SET_FREE_TOOL, CAN_ID_FREE_TOOL_CONFIG_RESP,
     CAN_ID_SET_DEVICE_SERIAL, CAN_ID_PERIPHERAL_INFO_RESP,
     CAN_ID_SET_EXPANSION_TYPE, CAN_ID_EXPANSION_TYPE_RESP,
     CAN_ID_SET_MLX_VARIANT, CAN_ID_MLX_VARIANT_RESP,
     CAN_ID_QUERY_ERROR_COUNTERS, CAN_ID_ERROR_COUNTERS_RESPONSE,
-    _center_geometry, _load_config_overrides, save_config,
+    _center_geometry, _load_config_overrides, save_config, REQUIRE_PRODUCTION_SIGNATURE,
 )
-from flasher_transports import SLCAN, SLCANError, SocketCAN, detect_bitrate_listen_only, list_socketcan_interfaces
+from flasher_uithread import UiMailbox
+from flasher_transports import SLCAN, SocketCAN, detect_bitrate_listen_only, list_socketcan_interfaces
 from flasher_protocol import URTCFlasher, FlashError
-from flasher_integrity import preflight_image
+from flasher_integrity import preflight_image, manifest_signing_kind
+from flasher_records import (
+    build_update_report, find_recovery_image, prune_session_logs, writable_logs_folder, write_update_report,
+)
 from flasher_github import list_firmware_files, download_file, GitHubDownloadError, is_sidecar, sidecars_for
 from flasher_swd_tools import SWDFlashError, PyOCDCLI, CubeProgrammerCLI
 from flasher_validation import validate_firmware_file, validate_swd_image_file
@@ -241,6 +244,11 @@ class FlasherGUI:
 
     def __init__(self, root):
         self.root = root
+        # Worker threads never touch Tk: they hand work to the main thread
+        # through this mailbox (see flasher_uithread.py).
+        self._ui = UiMailbox(root, on_error=self._ui_call_failed)
+        self._post = self._ui.post
+        self._ui.start()
         root.title(f"URTC Flasher v{FLASHER_VERSION}")
         self._configure_command_deck_theme()
         self._build_menu_bar()
@@ -256,10 +264,14 @@ class FlasherGUI:
         # (read-only filesystem, etc.) is non-fatal - the on-screen log
         # still works exactly as before either way.
         self._file_logger = None
+        self._logs_folder = None
         try:
-            os.makedirs(LOGS_FOLDER, exist_ok=True)
+            self._logs_folder = writable_logs_folder(LOGS_FOLDER)
+            if self._logs_folder is None:
+                raise OSError("no writable logs folder")
+            prune_session_logs(self._logs_folder)
             log_path = os.path.join(
-                LOGS_FOLDER, f"urtc_flasher_{time.strftime('%Y%m%d_%H%M%S')}.log"
+                self._logs_folder, f"urtc_flasher_{time.strftime('%Y%m%d_%H%M%S')}.log"
             )
             self._file_logger = logging.getLogger(f"urtc_flasher_{id(self)}")
             self._file_logger.setLevel(logging.INFO)
@@ -331,7 +343,7 @@ class FlasherGUI:
             self.transport_radio_socketcan.pack(side="left")
             row += 1
 
-        self.port_label = ttk.Label(conn_frame, text=_("LBL_COM_PORT") if self.transport_var.get() == "serial" else "CAN interface:")
+        self.port_label = ttk.Label(conn_frame, text=_("LBL_COM_PORT") if self.transport_var.get() == "serial" else _("LBL_CAN_INTERFACE"))
         self.port_label.grid(row=row, column=0, sticky="w", **pad)
         self.port_var = tk.StringVar()
         self.port_combo = ttk.Combobox(conn_frame, textvariable=self.port_var, width=20, state="readonly")
@@ -516,6 +528,9 @@ class FlasherGUI:
 
         self.fw_label = ttk.Label(fw_frame, text=_("STATUS_NO_FILE_SELECTED"), foreground="gray", wraplength=350)
         self.fw_label.grid(row=3, column=0, columnspan=3, sticky="w", padx=8, pady=(0, 4))
+        # Visible warning when the selected image is signed with the public development key
+        self.fw_signing_label = ttk.Label(fw_frame, text="", foreground="red", wraplength=350, justify="left")
+        self.fw_signing_label.grid(row=4, column=0, columnspan=3, sticky="w", padx=8, pady=(0, 4))
 
         # --- Action frame (left column, bottom) - only the compact controls
         # (checkboxes/radios/button, none of which wrap) are paired 2-per-row;
@@ -536,7 +551,7 @@ class FlasherGUI:
         # Which chip this flash actually targets - the main board's own
         # STM32F303CC (direct CAN), or the expansion slave's own
         # STM32F303CBT6 (relayed through the main board's own I2C
-        # bridge, CANBUS.TXT's own 0x210-0x218) - only meaningful, and
+        # bridge, CANBUS.TXT's own 0x210-0x219) - only meaningful, and
         # only actually reaches anything, when an Advanced expansion
         # board is populated (see EXPANSION.TXT). Defaults to the main
         # board, the far more common case.
@@ -852,10 +867,10 @@ class FlasherGUI:
 
     def export_debug_bundle(self):
         save_path = filedialog.asksaveasfilename(
-            title="Save Debug Bundle",
+            title=_("TITLE_SAVE_DEBUG_BUNDLE"),
             defaultextension=".zip",
             initialfile=f"urtc_flasher_debug_{time.strftime('%Y%m%d_%H%M%S')}.zip",
-            filetypes=[("ZIP archive", "*.zip")],
+            filetypes=[(_("FT_ZIP_ARCHIVE"), "*.zip")],
         )
         if not save_path:
             return
@@ -1076,6 +1091,16 @@ class FlasherGUI:
             background=self.PANEL_ALT, foreground=self.TEXT,
         ).pack(side="right", padx=10, pady=6)
 
+    def _ui_call_failed(self, text):
+        # A call posted by a worker failed on the main thread (typically a
+        # widget that was closed meanwhile). Keep it out of the way of the
+        # user but in the session log.
+        if getattr(self, "_file_logger", None):
+            try:
+                self._file_logger.info(text)
+            except OSError:
+                pass
+
     def on_close(self):
         # A confirmation here matters more than it might for an ordinary
         # window: a CAN OTA update interrupted mid-flash is still safe
@@ -1093,6 +1118,8 @@ class FlasherGUI:
                 _("MSG_FLASH_IN_PROGRESS_CLOSE_CONFIRM"),
             ):
                 return
+        self._ui.close()
+        self._stop_requested = True
         if self.transport is not None:
             try:
                 self.transport.close()
@@ -1111,15 +1138,15 @@ class FlasherGUI:
             self.log_text.insert("end", msg + "\n")
             self.log_text.see("end")
             self.log_text.config(state="disabled")
-        self.root.after(0, _append)
+        self._post(_append)
 
     def on_transport_change(self):
-        self.port_label.config(text=_("LBL_COM_PORT") if self.transport_var.get() == "serial" else "CAN interface:")
+        self.port_label.config(text=_("LBL_COM_PORT") if self.transport_var.get() == "serial" else _("LBL_CAN_INTERFACE"))
         self.port_var.set("")
         is_serial = self.transport_var.get() == "serial"
         self.bitrate_combo.config(state="readonly" if is_serial else "disabled")
         self.autobaud_btn.config(state="normal" if is_serial else "disabled")
-        self.bitrate_status.config(text="" if is_serial else "SocketCAN's bitrate is set at the OS level (ip link), not here")
+        self.bitrate_status.config(text="" if is_serial else _("STATUS_SOCKETCAN_BITRATE_OS"))
         self.refresh_ports()
 
     def refresh_ports(self):
@@ -1142,7 +1169,8 @@ class FlasherGUI:
             is_serial = self.transport_var.get() == "serial"
             self.conn_status.config(text=_("STATUS_CONNECTING"), foreground="gray")
             self.connect_btn.config(state="disabled")
-            threading.Thread(target=self._connect_worker, args=(port, is_serial), daemon=True).start()
+            bitrate_label = self.bitrate_var.get()  # read here: workers never touch Tk variables
+            threading.Thread(target=self._connect_worker, args=(port, is_serial, bitrate_label), daemon=True).start()
         else:
             try:
                 self.transport.close()
@@ -1154,10 +1182,9 @@ class FlasherGUI:
             self.current_version_label.config(text=_("STATUS_CONNECT_TO_CHECK"), foreground="gray")
             self.log(_("LOG_DISCONNECTED"))
 
-    def _connect_worker(self, port, is_serial):
+    def _connect_worker(self, port, is_serial, bitrate_label=None):
         try:
             if is_serial:
-                bitrate_label = self.bitrate_var.get()
                 bitrate_code = next((code for label, code in SLCAN_BITRATES if label == bitrate_label),
                                      BITRATE_500K_SLCAN_CODE)
                 transport = SLCAN(port, log=self.log)
@@ -1166,16 +1193,16 @@ class FlasherGUI:
                 transport = SocketCAN(port, log=self.log)
                 transport.open_channel()
             self.transport = transport
-            self.root.after(0, lambda: self._on_connected(port, is_serial))
+            self._post(lambda: self._on_connected(port, is_serial, bitrate_label))
         except Exception as e:
             error_msg = str(e)  # captured now - 'e' itself is deleted the moment this except block exits, but the lambda below runs later, via root.after()
-            self.root.after(0, lambda: self._on_connect_failed(error_msg, is_serial))
+            self._post(lambda: self._on_connect_failed(error_msg, is_serial))
 
-    def _on_connected(self, port, is_serial):
-        self.conn_status.config(text=f"Connected ({port})", foreground="green")
+    def _on_connected(self, port, is_serial, bitrate_label=None):
+        self.conn_status.config(text=_("STATUS_CONNECTED_PORT", port=port), foreground="green")
         self.connect_btn.config(text=_("BTN_DISCONNECT"), state="normal")
         self.log(_("LOG_CONNECTED_TO_PORT", port=port)
-                  + (_("LOG_AT_BITRATE_SUFFIX", bitrate=self.bitrate_var.get()) if is_serial else "."))
+                  + (_("LOG_AT_BITRATE_SUFFIX", bitrate=bitrate_label or self.bitrate_var.get()) if is_serial else "."))
         self.query_current_version()
 
     def _on_connect_failed(self, msg, is_serial):
@@ -1254,9 +1281,35 @@ class FlasherGUI:
             self.fw_tree.selection_set(item_id)
             self.firmware_path = path
             self.fw_label.config(text=path, foreground="black")
+            self._update_signing_warning()
             self.log(_("LOG_AUTO_SELECTED_FIRMWARE", name=name))
         elif len(valid_entries) > 1:
             self.log(_("LOG_MULTIPLE_VALID_FILES"))
+
+    def _update_signing_warning(self):
+        """Shows, in red under the file name, that the selected image is signed with the
+        PUBLIC development key (anyone can sign images that development bootloaders accept)."""
+        kind = manifest_signing_kind(self.firmware_path) if self.firmware_path else None
+        if kind == "dev":
+            key = "LBL_DEV_KEY_REFUSED" if REQUIRE_PRODUCTION_SIGNATURE else "LBL_DEV_KEY_WARNING"
+            self.fw_signing_label.config(text=_(key))
+        else:
+            self.fw_signing_label.config(text="")
+
+    def _offer_recovery_image(self):
+        """The board is in its bootloader with no valid firmware: select the newest official
+        main-board image in firmware/ (when none is selected yet) so the user only has to check
+        it and press Flash."""
+        if self.firmware_path or self.flash_target_var.get() == "slave":
+            return
+        best = find_recovery_image(FIRMWARE_FOLDER, THIS_HARDWARE_ID)
+        if best is None:
+            self.log(_("LOG_RECOVERY_NO_IMAGE"))
+            return
+        self.firmware_path = best
+        self.fw_label.config(text=best, foreground="black")
+        self._update_signing_warning()
+        self.log(_("LOG_RECOVERY_IMAGE_SELECTED", name=os.path.basename(best)))
 
     def select_detected_firmware(self, event=None):
         selection = self.fw_tree.selection()
@@ -1273,13 +1326,14 @@ class FlasherGUI:
                 return
         self.firmware_path = path
         self.fw_label.config(text=path, foreground="black" if is_valid else "red")
+        self._update_signing_warning()
 
     def browse_firmware(self):
         initial_dir = FIRMWARE_FOLDER if os.path.isdir(FIRMWARE_FOLDER) else None
         path = filedialog.askopenfilename(
-            title="Select URTC firmware",
+            title=_("TITLE_SELECT_URTC_FIRMWARE"),
             initialdir=initial_dir,
-            filetypes=[("Firmware binary", "*.bin"), ("All files", "*.*")],
+            filetypes=[(_("FT_FIRMWARE_BINARY"), "*.bin"), (_("FT_ALL_FILES"), "*.*")],
         )
         if not path:
             return
@@ -1295,6 +1349,7 @@ class FlasherGUI:
                 return
         self.firmware_path = path
         self.fw_label.config(text=path, foreground="black" if is_valid else "red")
+        self._update_signing_warning()
         self.fw_tree.selection_remove(self.fw_tree.selection())  # no detected-list item matches a manual browse
 
     def open_github_download_dialog(self):
@@ -1333,11 +1388,11 @@ class FlasherGUI:
                 # Captured now - 'e' itself is deleted the moment this except
                 # block exits, but the lambda below runs later, via root.after().
                 error_msg = str(e)
-                self.root.after(0, lambda: status_var.set(error_msg))
+                self._post(lambda: status_var.set(error_msg))
                 return
             except Exception as e:
                 error_msg = _("ERR_GITHUB_UNEXPECTED", e=e)
-                self.root.after(0, lambda: status_var.set(error_msg))
+                self._post(lambda: status_var.set(error_msg))
                 return
 
             def _populate():
@@ -1351,7 +1406,7 @@ class FlasherGUI:
                     iid = tree.insert("", "end", values=(entry["name"], f"{size_kb:.1f} KB"))
                     entries_by_iid[iid] = entry
                 status_var.set(_("LBL_GITHUB_LOADED_COUNT", count=len(images)))
-            self.root.after(0, _populate)
+            self._post(_populate)
 
         def _on_select(_event=None):
             download_btn.config(state="normal" if tree.selection() else "disabled")
@@ -1382,24 +1437,24 @@ class FlasherGUI:
                 try:
                     download_file(
                         entry["download_url"], dest_path, log=self.log, expected_size=entry.get("size"),
-                        progress_cb=lambda pct: self.root.after(0, lambda: progress.configure(value=pct)),
+                        progress_cb=lambda pct: self._post(lambda: progress.configure(value=pct)),
                     )
                     # The published sha256 and manifest (with the signature
                     # the bootloader expects) travel with the image - without
                     # them it could not be verified or flashed.
                     for sidecar in sidecars_for(all_entries, entry["name"]):
                         download_file(sidecar["download_url"], os.path.join(FIRMWARE_FOLDER, sidecar["name"]), log=self.log, expected_size=sidecar.get("size"))
-                    self.root.after(0, lambda: status_var.set(_("LBL_GITHUB_DOWNLOAD_DONE", name=entry["name"])))
-                    self.root.after(0, self.scan_firmware_folder)
+                    self._post(lambda: status_var.set(_("LBL_GITHUB_DOWNLOAD_DONE", name=entry["name"])))
+                    self._post(self.scan_firmware_folder)
                 except GitHubDownloadError as e:
                     # Same capture-before-schedule fix as _load_list() above.
                     error_msg = str(e)
-                    self.root.after(0, lambda: status_var.set(error_msg))
+                    self._post(lambda: status_var.set(error_msg))
                 except Exception as e:
                     error_msg = _("ERR_GITHUB_UNEXPECTED", e=e)
-                    self.root.after(0, lambda: status_var.set(error_msg))
+                    self._post(lambda: status_var.set(error_msg))
                 finally:
-                    self.root.after(0, lambda: download_btn.config(state="normal"))
+                    self._post(lambda: download_btn.config(state="normal"))
 
             threading.Thread(target=_download_worker, daemon=True).start()
 
@@ -1435,7 +1490,7 @@ class FlasherGUI:
         except Exception as e:
             self.log(_("LOG_BUS_ACTIVITY_CHECK_ERROR", e=e))
         after = SocketCAN.read_interface_stats(self.transport.interface) if is_socketcan else None
-        self.root.after(0, lambda: self._show_bus_activity_result(frame_count, before, after))
+        self._post(lambda: self._show_bus_activity_result(frame_count, before, after))
 
     def _show_bus_activity_result(self, frame_count, before, after):
         self._set_ui_busy_state(False)
@@ -1492,7 +1547,7 @@ class FlasherGUI:
                         break
                 if tec is None:
                     self.log(_("LOG_ERROR_COUNTERS_NO_RESPONSE"))
-                    self.root.after(0, lambda: self.error_counters_label.config(
+                    self._post(lambda: self.error_counters_label.config(
                         text=_("STATUS_NO_RESPONSE_LONG"), foreground="red"))
                 else:
                     text = _("LBL_TEC_REC_VALUES", tec=tec, rec=rec)
@@ -1501,11 +1556,11 @@ class FlasherGUI:
                     # same thresholds the CAN protocol's own fault-
                     # confinement state machine uses (RM0316).
                     color = "red" if (tec >= 128 or rec >= 128) else ("orange" if (tec > 0 or rec > 0) else "green")
-                    self.root.after(0, lambda: self.error_counters_label.config(text=text, foreground=color))
+                    self._post(lambda: self.error_counters_label.config(text=text, foreground=color))
             except Exception as e:
                 self.log(_("LOG_ERROR_COUNTERS_QUERY_FAILED", e=e))
             finally:
-                self.root.after(0, lambda: self._set_ui_busy_state(False))
+                self._post(lambda: self._set_ui_busy_state(False))
 
         threading.Thread(target=_worker, daemon=True).start()
 
@@ -1520,9 +1575,9 @@ class FlasherGUI:
             try:
                 flasher = URTCFlasher(self.transport, log=self.log)
                 result = flasher.query_version()
-                self.root.after(0, lambda: self._show_version_result(result))
+                self._post(lambda: self._show_version_result(result))
             finally:
-                self.root.after(0, lambda: self._set_ui_busy_state(False))
+                self._post(lambda: self._set_ui_busy_state(False))
 
         threading.Thread(target=_worker, daemon=True).start()
 
@@ -1547,11 +1602,11 @@ class FlasherGUI:
                     self.log(_("LOG_EXPANSION_TYPE_NO_RESPONSE"))
                 else:
                     self.log(_("LOG_EXPANSION_TYPE_VALUE", type=EXPANSION_BOARD_TYPES[value]))
-                    self.root.after(0, lambda: self.expansion_type_var.set(EXPANSION_BOARD_TYPES[value]))
+                    self._post(lambda: self.expansion_type_var.set(EXPANSION_BOARD_TYPES[value]))
             except Exception as e:
                 self.log(_("LOG_EXPANSION_TYPE_QUERY_FAILED", e=e))
             finally:
-                self.root.after(0, lambda: self._set_ui_busy_state(False))
+                self._post(lambda: self._set_ui_busy_state(False))
 
         threading.Thread(target=_worker, daemon=True).start()
 
@@ -1586,7 +1641,7 @@ class FlasherGUI:
             except Exception as e:
                 self.log(_("LOG_EXPANSION_TYPE_SAVE_FAILED", e=e))
             finally:
-                self.root.after(0, lambda: self._set_ui_busy_state(False))
+                self._post(lambda: self._set_ui_busy_state(False))
 
         threading.Thread(target=_worker, daemon=True).start()
 
@@ -1615,11 +1670,11 @@ class FlasherGUI:
                     self.log(_("LOG_MLX_VARIANT_NO_RESPONSE"))
                 else:
                     self.log(_("LOG_MLX_VARIANT_VALUE", type=MLX_SENSOR_VARIANTS[value]))
-                    self.root.after(0, lambda: self.mlx_variant_var.set(MLX_SENSOR_VARIANTS[value]))
+                    self._post(lambda: self.mlx_variant_var.set(MLX_SENSOR_VARIANTS[value]))
             except Exception as e:
                 self.log(_("LOG_MLX_VARIANT_QUERY_FAILED", e=e))
             finally:
-                self.root.after(0, lambda: self._set_ui_busy_state(False))
+                self._post(lambda: self._set_ui_busy_state(False))
 
         threading.Thread(target=_worker, daemon=True).start()
 
@@ -1654,7 +1709,7 @@ class FlasherGUI:
             except Exception as e:
                 self.log(_("LOG_MLX_VARIANT_SAVE_FAILED", e=e))
             finally:
-                self.root.after(0, lambda: self._set_ui_busy_state(False))
+                self._post(lambda: self._set_ui_busy_state(False))
 
         threading.Thread(target=_worker, daemon=True).start()
 
@@ -1694,8 +1749,8 @@ class FlasherGUI:
                 self.log(_("LOG_FREE_TOOL_SAVE_FAILED", e=e))
                 result = _("LOG_FREE_TOOL_SAVE_FAILED", e=e)
             finally:
-                self.root.after(0, lambda: self.free_tool_result_var.set(result))
-                self.root.after(0, lambda: self._set_ui_busy_state(False))
+                self._post(lambda: self.free_tool_result_var.set(result))
+                self._post(lambda: self._set_ui_busy_state(False))
 
         threading.Thread(target=_worker, daemon=True).start()
 
@@ -1728,13 +1783,13 @@ class FlasherGUI:
                         "LBL_PERIPHERAL_TYPE_UNKNOWN", value=peripheral_type)
                     result = f"{type_desc}\n{_('LBL_DEVICE_SERIAL', serial=serial)}"
                     self.log(_("LOG_PERIPHERAL_INFO", type=type_desc, serial=serial))
-                    self.root.after(0, lambda: self.device_serial_var.set(str(serial)))
+                    self._post(lambda: self.device_serial_var.set(str(serial)))
             except Exception as e:
                 self.log(_("LOG_PERIPHERAL_QUERY_FAILED", e=e))
                 result = _("LOG_PERIPHERAL_QUERY_FAILED", e=e)
             finally:
-                self.root.after(0, lambda: self.peripheral_info_result_var.set(result))
-                self.root.after(0, lambda: self._set_ui_busy_state(False))
+                self._post(lambda: self.peripheral_info_result_var.set(result))
+                self._post(lambda: self._set_ui_busy_state(False))
 
         threading.Thread(target=_worker, daemon=True).start()
 
@@ -1779,8 +1834,8 @@ class FlasherGUI:
                 self.log(_("LOG_DEVICE_SERIAL_SAVE_FAILED", e=e))
                 result = _("LOG_DEVICE_SERIAL_SAVE_FAILED", e=e)
             finally:
-                self.root.after(0, lambda: self.peripheral_info_result_var.set(result))
-                self.root.after(0, lambda: self._set_ui_busy_state(False))
+                self._post(lambda: self.peripheral_info_result_var.set(result))
+                self._post(lambda: self._set_ui_busy_state(False))
 
         threading.Thread(target=_worker, daemon=True).start()
 
@@ -1830,7 +1885,7 @@ class FlasherGUI:
                     on_try=lambda label: self.log(_("LOG_AUTODETECT_TRYING", label=label)),
                 )
             finally:
-                self.root.after(0, lambda: self._auto_detect_done(found_label))
+                self._post(lambda: self._auto_detect_done(found_label))
 
         threading.Thread(target=_worker, daemon=True).start()
 
@@ -1838,7 +1893,7 @@ class FlasherGUI:
         self._set_ui_busy_state(False)
         if found_label:
             self.bitrate_var.set(found_label)
-            self.bitrate_status.config(text=f"Found: {found_label}", foreground="green")
+            self.bitrate_status.config(text=_("STATUS_FOUND_BITRATE", label=found_label), foreground="green")
             self.log(_("LOG_AUTODETECT_RESPONDED", label=found_label))
         else:
             self.bitrate_status.config(text=_("STATUS_NO_RESPONSE_ANY_BITRATE"), foreground="red")
@@ -1851,16 +1906,18 @@ class FlasherGUI:
                 foreground="red",
             )
             return
-        hw_match = "" if result["hardware_id"] == THIS_HARDWARE_ID else "  \u26a0 HardwareID mismatch!"
+        hw_match = "" if result["hardware_id"] == THIS_HARDWARE_ID else "  \u26a0 " + _("LBL_HARDWARE_ID_MISMATCH")
         boot_ver = result.get("bootloader_version")
-        boot_ver_text = f", bootloader v{boot_ver[0]}.{boot_ver[1]}.{boot_ver[2]}" if boot_ver else ""
+        boot_ver_text = _("LBL_BOOTLOADER_VERSION_SUFFIX", version=f"{boot_ver[0]}.{boot_ver[1]}.{boot_ver[2]}") if boot_ver else ""
         if result["responder"] == "bootloader" and result["hardware_id"] == 0:
-            text = f"Bootloader running, no valid firmware currently installed{boot_ver_text}"
+            text = _("LBL_BOOTLOADER_NO_FIRMWARE", boot=boot_ver_text)
             color = "orange"
+            self._offer_recovery_image()
         else:
-            text = (
-                f"v{result['version_major']}.{result['version_minor']} "
-                f"({result['responder']}, HardwareID 0x{result['hardware_id']:08X}){hw_match}{boot_ver_text}"
+            responder = _("LBL_RESPONDER_BOOTLOADER") if result["responder"] == "bootloader" else _("LBL_RESPONDER_APPLICATION")
+            text = _(
+                "LBL_VERSION_LINE", major=result["version_major"], minor=result["version_minor"],
+                responder=responder, hw=f"{result['hardware_id']:08X}", mismatch=hw_match, boot=boot_ver_text,
             )
             color = "green" if not hw_match else "red"
         self.current_version_label.config(text=text, foreground=color)
@@ -1939,6 +1996,7 @@ class FlasherGUI:
         # a now-mismatched path silently in place.
         self.firmware_path = None
         self.fw_label.config(text=_("STATUS_NO_FILE_SELECTED"), foreground="gray")
+        self._update_signing_warning()
         self.scan_firmware_folder()
 
     def start_readback(self):
@@ -1952,7 +2010,7 @@ class FlasherGUI:
             title=_("TITLE_SAVE_READBACK"),
             defaultextension=".bin",
             initialfile=f"urtc_readback_{time.strftime('%Y%m%d_%H%M%S')}.bin",
-            filetypes=[("Firmware binary", "*.bin")],
+            filetypes=[(_("FT_FIRMWARE_BINARY"), "*.bin")],
         )
         if not save_path:
             return
@@ -1969,25 +2027,25 @@ class FlasherGUI:
                 flasher = URTCFlasher(
                     self.transport,
                     log=self.log,
-                    progress_cb=lambda pct: self.root.after(0, lambda: self.progress.configure(value=pct)),
+                    progress_cb=lambda pct: self._post(lambda: self.progress.configure(value=pct)),
                     stop_flag=lambda: self._stop_requested,
-                    speed_cb=lambda kbps: self.root.after(0, lambda: self._on_transfer_speed(kbps)),
+                    speed_cb=lambda kbps: self._post(lambda: self._on_transfer_speed(kbps)),
                 )
                 size = flasher.read_back_flash(save_path)
-                self.root.after(0, lambda: messagebox.showinfo(
+                self._post(lambda: messagebox.showinfo(
                     _("TITLE_SUCCESS"), _("MSG_READBACK_COMPLETE", size=size, path=save_path)))
             except FlashError as e:
                 self.log(_("LOG_FAILED", e=e))
                 msg = str(e)
-                self.root.after(0, lambda: messagebox.showerror(_("TITLE_FLASH_FAILED"), msg))
+                self._post(lambda: messagebox.showerror(_("TITLE_FLASH_FAILED"), msg))
             except Exception as e:
                 self.log(_("LOG_UNEXPECTED_ERROR", e=e))
                 msg = str(e)
-                self.root.after(0, lambda: messagebox.showerror(_("TITLE_UNEXPECTED_ERROR"), msg))
+                self._post(lambda: messagebox.showerror(_("TITLE_UNEXPECTED_ERROR"), msg))
             finally:
-                self.root.after(0, lambda: self._set_ui_busy_state(False))
-                self.root.after(0, lambda: self.cancel_btn.config(state="disabled"))
-                self.root.after(0, self._stop_transfer_liveness_watch)
+                self._post(lambda: self._set_ui_busy_state(False))
+                self._post(lambda: self.cancel_btn.config(state="disabled"))
+                self._post(self._stop_transfer_liveness_watch)
 
         self._flash_thread = threading.Thread(target=_worker, daemon=True)
         self._flash_thread.start()
@@ -2034,7 +2092,15 @@ class FlasherGUI:
         self.transfer_status_var.set("")
         self._start_transfer_liveness_watch()
 
-        self._flash_thread = threading.Thread(target=self._flash_worker, daemon=True)
+        # Every option is read here, on the main thread, and handed over.
+        options = {
+            "target": self.flash_target_var.get(),
+            "trigger": bool(self.trigger_var.get()),
+            "erase_fram": bool(self.erase_fram_var.get()),
+            "allow_downgrade": bool(self.allow_downgrade_var.get()),
+            "path": self.firmware_path,
+        }
+        self._flash_thread = threading.Thread(target=self._flash_worker, args=(options,), daemon=True)
         self._flash_thread.start()
 
     def cancel_flash(self):
@@ -2070,11 +2136,12 @@ class FlasherGUI:
             self._transfer_liveness_after_id = None
         self._last_transfer_update = None
 
-    def _flash_worker(self):
+    def _flash_worker(self, options):
+        firmware_path = options["path"]
         try:
             # A digest published next to the image (<image>.sha256) must match
             # it; without one the digest is only logged so it can be recorded.
-            check = preflight_image(self.firmware_path)
+            check = preflight_image(firmware_path)
             if check.blocked:
                 self.log(_("LOG_IMAGE_REFUSED", reasons="; ".join(check.reasons)))
                 raise FlashError("; ".join(check.reasons))
@@ -2082,41 +2149,59 @@ class FlasherGUI:
             flasher = URTCFlasher(
                 self.transport,
                 log=self.log,
-                progress_cb=lambda pct: self.root.after(0, lambda: self.progress.configure(value=pct)),
+                progress_cb=lambda pct: self._post(lambda: self.progress.configure(value=pct)),
                 stop_flag=lambda: self._stop_requested,
-                speed_cb=lambda kbps: self.root.after(0, lambda: self._on_transfer_speed(kbps)),
+                speed_cb=lambda kbps: self._post(lambda: self._on_transfer_speed(kbps)),
             )
-            if self.flash_target_var.get() == "slave":
-                if self.trigger_var.get():
+            versions = flasher.report_version_change(firmware_path, options["target"])
+            if options["target"] == "slave":
+                if options["trigger"]:
                     flasher.trigger_slave_bootloader_entry()
-                flasher.flash_slave(self.firmware_path)
+                flasher.flash_slave(firmware_path)
             else:
-                if self.erase_fram_var.get():
-                    if not self.trigger_var.get():
+                if options["erase_fram"]:
+                    if not options["trigger"]:
                         self.log(_("LOG_SKIPPING_FRAM_ERASE"))
                     else:
                         flasher.erase_fram()
-                if self.trigger_var.get():
+                if options["trigger"]:
                     flasher.trigger_bootloader_entry()
-                flasher.flash(self.firmware_path, allow_downgrade=self.allow_downgrade_var.get())
-            self.root.after(0, lambda: messagebox.showinfo(_("TITLE_SUCCESS"), _("MSG_FIRMWARE_UPDATE_COMPLETE")))
+                flasher.flash(firmware_path, allow_downgrade=options["allow_downgrade"])
+            self._write_update_report(options, check, versions)
+            self._post(lambda: messagebox.showinfo(_("TITLE_SUCCESS"), _("MSG_FIRMWARE_UPDATE_COMPLETE")))
         except FlashError as e:
             self.log(_("LOG_FAILED", e=e))
             msg = str(e)
-            self.root.after(0, lambda: messagebox.showerror(_("TITLE_FLASH_FAILED"), msg))
+            self._post(lambda: messagebox.showerror(_("TITLE_FLASH_FAILED"), msg))
         except Exception as e:
             self.log(_("LOG_UNEXPECTED_ERROR", e=e))
             msg = str(e)
-            self.root.after(0, lambda: messagebox.showerror(_("TITLE_UNEXPECTED_ERROR"), msg))
+            self._post(lambda: messagebox.showerror(_("TITLE_UNEXPECTED_ERROR"), msg))
         finally:
-            self.root.after(0, lambda: self._set_ui_busy_state(False))
-            self.root.after(0, lambda: self.cancel_btn.config(state="disabled"))
-            self.root.after(0, self._stop_transfer_liveness_watch)
+            self._post(lambda: self._set_ui_busy_state(False))
+            self._post(lambda: self.cancel_btn.config(state="disabled"))
+            self._post(self._stop_transfer_liveness_watch)
+
+    def _write_update_report(self, options, check, versions):
+        """Records a finished update (worker thread; touches no widget)."""
+        if not self._logs_folder:
+            return
+        try:
+            report = build_update_report(
+                tool_version=FLASHER_VERSION, image_path=options["path"], image_sha256=check.sha256,
+                image_size=os.path.getsize(options["path"]), target=options["target"],
+                installed=versions["installed"], new=versions["new"],
+                hardware_id=SLAVE_HARDWARE_ID if options["target"] == "slave" else THIS_HARDWARE_ID,
+                signing_key_kind=manifest_signing_kind(options["path"]), result="success",
+            )
+            self.log(_("LOG_UPDATE_REPORT_WRITTEN", path=write_update_report(report, self._logs_folder)))
+        except OSError as exc:
+            self.log(_("LOG_UPDATE_REPORT_FAILED", e=exc))
 
     def browse_swd_bootloader(self):
         path = filedialog.askopenfilename(
-            title="Select bootloader image",
-            filetypes=[("Bootloader image", "*.bin *.hex *.elf *.axf"), ("All files", "*.*")],
+            title=_("TITLE_SELECT_BOOTLOADER_IMAGE"),
+            filetypes=[(_("FT_BOOTLOADER_IMAGE"), "*.bin *.hex *.elf *.axf"), (_("FT_ALL_FILES"), "*.*")],
         )
         if not path:
             return
@@ -2138,8 +2223,8 @@ class FlasherGUI:
 
     def browse_swd_app(self):
         path = filedialog.askopenfilename(
-            title="Select application image",
-            filetypes=[("Application image", "*.bin *.hex *.elf *.axf"), ("All files", "*.*")],
+            title=_("TITLE_SELECT_APPLICATION_IMAGE"),
+            filetypes=[(_("FT_APPLICATION_IMAGE"), "*.bin *.hex *.elf *.axf"), (_("FT_ALL_FILES"), "*.*")],
         )
         if not path:
             return
@@ -2160,24 +2245,23 @@ class FlasherGUI:
     def refresh_swd_probes(self):
         if not (self._pyocd_ok or self._cube_ok):
             return
-        self.swd_probe_combo.set("(checking...)")
+        self.swd_probe_combo.set(_("STATUS_CHECKING_PROBES"))
         self.swd_probe_refresh_btn.config(state="disabled")
-        threading.Thread(target=self._refresh_swd_probes_worker, daemon=True).start()
+        threading.Thread(target=self._refresh_swd_probes_worker, args=(self.swd_tool_var.get(),), daemon=True).start()
 
-    def _refresh_swd_probes_worker(self):
-        tool = self.swd_tool_var.get()
+    def _refresh_swd_probes_worker(self, tool):
         try:
             if tool == "pyocd" and self._pyocd_ok:
                 prog = PyOCDCLI(log=lambda m: None)
             elif tool == "cube" and self._cube_ok:
                 prog = CubeProgrammerCLI(log=lambda m: None)
             else:
-                self.root.after(0, lambda: self._show_swd_probes([]))
+                self._post(lambda: self._show_swd_probes([]))
                 return
             probes = prog.list_probes()
         except Exception:
             probes = []
-        self.root.after(0, lambda: self._show_swd_probes(probes))
+        self._post(lambda: self._show_swd_probes(probes))
 
     def _show_swd_probes(self, probes):
         self.swd_probe_refresh_btn.config(state="normal")
@@ -2193,7 +2277,7 @@ class FlasherGUI:
         if len(labels) == 1:
             self.swd_probe_combo.set(labels[0])
         elif len(labels) == 0:
-            self.swd_probe_combo.set("(none found)")
+            self.swd_probe_combo.set(_("STATUS_NO_PROBES_FOUND"))
         else:
             self.swd_probe_combo.set("")  # force an explicit choice when there's more than one
 
@@ -2218,23 +2302,23 @@ class FlasherGUI:
             )
             return
         self._set_ui_busy_state(True)
-        threading.Thread(target=self._check_option_bytes_worker, daemon=True).start()
+        threading.Thread(target=self._check_option_bytes_worker, args=(self._selected_swd_probe_uid(),), daemon=True).start()
 
-    def _check_option_bytes_worker(self):
+    def _check_option_bytes_worker(self, probe_uid):
         try:
             prog = CubeProgrammerCLI(log=self.log)
-            level, output = prog.read_option_bytes(serial=self._selected_swd_probe_uid(), dry_run=False)
-            self.root.after(0, lambda: self._show_option_bytes_result(level))
+            level, output = prog.read_option_bytes(serial=probe_uid, dry_run=False)
+            self._post(lambda: self._show_option_bytes_result(level))
         except SWDFlashError as e:
             self.log(_("LOG_FAILED", e=e))
             msg = str(e)
-            self.root.after(0, lambda: messagebox.showerror(_("TITLE_OPTION_BYTE_CHECK_FAILED"), msg))
+            self._post(lambda: messagebox.showerror(_("TITLE_OPTION_BYTE_CHECK_FAILED"), msg))
         except Exception as e:
             self.log(_("LOG_UNEXPECTED_ERROR", e=e))
             msg = str(e)
-            self.root.after(0, lambda: messagebox.showerror(_("TITLE_UNEXPECTED_ERROR"), msg))
+            self._post(lambda: messagebox.showerror(_("TITLE_UNEXPECTED_ERROR"), msg))
         finally:
-            self.root.after(0, lambda: self._set_ui_busy_state(False))
+            self._post(lambda: self._set_ui_busy_state(False))
 
     def _show_option_bytes_result(self, level):
         if level == "2":
@@ -2302,15 +2386,15 @@ class FlasherGUI:
         dry_run = self.swd_dry_run_var.get()
         tool_name = "pyOCD" if self.swd_tool_var.get() == "pyocd" else "STM32CubeProgrammer"
         probe_uid = self._selected_swd_probe_uid()
-        probe_line = f"Probe: {self.swd_probe_var.get()}\n" if probe_uid else ""
+        probe_line = _("LBL_PROBE_NAME", probe=self.swd_probe_var.get()) + "\n" if probe_uid else ""
 
         backup_path = None
         if self.swd_backup_var.get() and not dry_run:
             default_name = f"urtc_flash_backup_{time.strftime('%Y%m%d_%H%M%S')}.bin"
             backup_path = filedialog.asksaveasfilename(
                 defaultextension=".bin", initialfile=default_name,
-                filetypes=[("Binary files", "*.bin")],
-                title="Save flash backup as...",
+                filetypes=[(_("FT_BINARY_FILES"), "*.bin")],
+                title=_("QT_SWD_BACKUP_DIALOG_TITLE"),
             )
             if not backup_path:
                 return  # user cancelled the save dialog - don't proceed without the backup they asked for
@@ -2358,18 +2442,18 @@ class FlasherGUI:
                 programmer.full_chip_flash(bootloader_path, app_path, dry_run=dry_run, serial=probe_uid,
                                             backup_path=backup_path, **target_kwargs)
             if dry_run:
-                self.root.after(0, lambda: messagebox.showinfo(
+                self._post(lambda: messagebox.showinfo(
                     _("TITLE_DRY_RUN_COMPLETE"), _("MSG_DRY_RUN_COMPLETE")))
             else:
-                self.root.after(0, lambda: messagebox.showinfo(
+                self._post(lambda: messagebox.showinfo(
                     _("TITLE_SUCCESS"), _("MSG_FULL_CHIP_COMPLETE")))
         except SWDFlashError as e:
             self.log(_("LOG_FAILED", e=e))
             msg = str(e)
-            self.root.after(0, lambda: messagebox.showerror(_("TITLE_SWD_FLASH_FAILED"), msg))
+            self._post(lambda: messagebox.showerror(_("TITLE_SWD_FLASH_FAILED"), msg))
         except Exception as e:
             self.log(_("LOG_UNEXPECTED_ERROR", e=e))
             msg = str(e)
-            self.root.after(0, lambda: messagebox.showerror(_("TITLE_UNEXPECTED_ERROR"), msg))
+            self._post(lambda: messagebox.showerror(_("TITLE_UNEXPECTED_ERROR"), msg))
         finally:
-            self.root.after(0, lambda: self._set_ui_busy_state(False))
+            self._post(lambda: self._set_ui_busy_state(False))

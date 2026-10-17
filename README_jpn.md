@@ -24,7 +24,7 @@
 </p>
 
 
-**バージョン：** 0.2.7（本ツール自身のバージョン——ウィンドウのバナーと
+**バージョン：** 0.2.8（本ツール自身のバージョン——ウィンドウのバナーと
 タイトルバーに表示され、書き込み先の URTC ボードファームウェアのバージョン
 とは別に管理されます。X.Y.Z 方式に従い、パッチ番号は build_exe.bat/
 build_exe.sh による実際のビルドのたびに自動的に加算されます——バージョン
@@ -70,7 +70,7 @@ HMAC-SHA256 署名、ゴールデンイメージのバックアップスロッ�
 最初の実際のフラッシュ試行に臨んでください：フォールバックとして手元に
 JTAG を用意しておいてください。
 
-**正直な現状確認 - 実際に今動くもの:** `tests/` には 6 つの pytest ファイル（43 件のテスト：41 件成功、PySide6 がない場合 2 件スキップ）があります——完全なブートローダーシーケンス（開始／消去／受信、ページデータ + PAGE_ACK、HMAC チャンク、本当の成功または特定の `VERIFY_FAIL_REASON` による更新終了）を再現する実際の `MockCAN` トランスポート（`flasher_transports.py`）に対する CAN-OTA プロトコル、署名ルール（公開署名は鍵なしで送信、未署名イメージは拒否、マニフェストの sha256 不一致はバス通信前に拒否）、イメージ整合性チェック、同梱の `firmware/` とそのマニフェストの照合です。GitHub Actions（`.github/workflows/ci.yml`）が push のたびにこのスイートを実行し、`tools/build_test.py` も `build-test.sh`/`.bat` で実行します。ルートにある 2 つの `verify_qt_*.py` スクリプトは pytest の外にある本物のエンドツーエンドチェックです（本物の Qt イベントループが必要。`QT_QPA_PLATFORM=offscreen python verify_qt_*.py` で実行）。`verify_qt_swd_full_chip_flash.py` は `dry_run=True` で `PyOCDCLI`/`CubeProgrammerCLI` のコマンドを組み立てるだけです。この環境では実機ボードに対しては一切実行していません。何がリリースされたかは `CHANGELOG.md` を参照してください。
+**正直な現状確認 - 実際に今動くもの:** `tests/` には 25 個の pytest ファイル（171 件のテスト：すべて成功、うち 4 件は PySide6 がない場合スキップ）があります——完全なブートローダーシーケンス（開始／消去／受信、ページデータ + PAGE_ACK、HMAC チャンク、本当の成功または特定の `VERIFY_FAIL_REASON` による更新終了）を再現する実際の `MockCAN` トランスポート（`flasher_transports.py`）に対する CAN-OTA プロトコル、署名ルール（公開署名は鍵なしで送信、未署名イメージは拒否、マニフェストの sha256 不一致はバス通信前に拒否）、イメージ整合性チェック、同梱の `firmware/` とそのマニフェストの照合です。GitHub Actions（`.github/workflows/ci.yml`）が push のたびにこのスイートを実行し、`tools/build_test.py` も `build-test.sh`/`.bat` で実行します。ルートにある 2 つの `verify_qt_*.py` スクリプトは pytest の外にある本物のエンドツーエンドチェックです（本物の Qt イベントループが必要。`QT_QPA_PLATFORM=offscreen python verify_qt_*.py` で実行）。`verify_qt_swd_full_chip_flash.py` は `dry_run=True` で `PyOCDCLI`/`CubeProgrammerCLI` のコマンドを組み立てるだけです。この環境では実機ボードに対しては一切実行していません。何がリリースされたかは `CHANGELOG.md` を参照してください。 シミュレートされたブートローダー（`MockCAN`）はプロトコルの記述から作ったモデルにすぎません。ページ ACK、部分的な最後のページ、読み戻しフレームは再現しますが、本物のブートローダーではないため、テストがすべて成功しても実機での試験の代わりにはなりません（公式の 73476 バイトのイメージがインストールできず、バックアップの最後のフレームが失われていたのに、シミュレーションが本物のブートローダーより寛容だったためにテストは成功していました）。
 
 ## 1. 🔌 アダプターを CAN 通信できるようにする
 
@@ -153,17 +153,11 @@ PNG フレームにより、追加の GUI 実行時依存関係なしで Tkinter
 
 ### ビジュアル・コマンドデッキ
 
-共有 **Qt Quick** コマンドデッキは、CAN-OTA だけでなく実機の全ワークフローで
-利用できます。
+共有の **Qt Quick** コマンドデッキは、同じ本番用の通信・検証・署名付き書き込みコードの上に載った第二のフロントエンドです：
 ~~~
 python urtc_flasher.py --qtquick
 ~~~
-既存のインターフェースと同じ本番用トランスポート、検証、署名付きフラッシュ
-コードを使用します —— CAN-OTA、読み取り専用の SWD/JTAG 検出、Board
-Snapshot、4 つのデバイス設定書き込み、そしてフルチップ SWD/JTAG プログラミング
-(消去/書き込み、ドライラン、消去前バックアップ、RDP チェック)まで、ここでは
-すべて本物であり、一部だけではありません。既定のインターフェースは Tkinter の
-ままですが、Tkinter だけの機能はもう存在しません。
+提供されるのは、メインボードの CAN-OTA 更新（ブートローダー進入トリガーは常に最初に送信されます）、読み取り専用の SWD/JTAG 検出、Board Snapshot、4 つのデバイス設定書き込み、そして SWD/JTAG によるチップ全体のプログラミング（消去/書き込み、ドライラン、消去前のバックアップ、RDP チェック）です。Tkinter ウィンドウにある機能が**すべて**あるわけではありません：拡張スレーブのターゲット、「ボードはすでにブートローダー内」オプション、F-RAM 消去オプション、ダウングレードの許可、CAN によるファームウェアバックアップ、GitHub からのダウンロード、ビットレートの選択や自動検出（Serial/SLCAN は 500 kbit/s で開きます）、専用のバス動作チェックはありません。これらには既定の Tkinter インターフェースを使用してください。
 
 確立済みの CAN-OTA および SWD/JTAG ワークフローは維持したまま、ダークネイビー/
 シアンの操作面に刷新しました。製品ヘッダー、高コントラストの接続カード、読みやすい
@@ -176,7 +170,7 @@ Snapshot、4 つのデバイス設定書き込み、そしてフルチップ SWD
   システム診断情報と現在選択されているファームウェアファイルを含む、
   より完全なバンドルについては、代わりに下記の「診断」を参照）、そして
   終了。
-- **言語** —— 7 つの利用可能な言語を切り替えます（翻訳の仕組みについては
+- **言語** —— 8 つの利用可能な言語を切り替えます（翻訳の仕組みについては
   下の「言語」を参照）。
 - **ヘルプ** —— Readme（本ファイルを読み取り専用のビューアーウィンドウで
   開きます；現在の言語向けの翻訳版が存在すれば自動的にそれを使用します）、
@@ -198,7 +192,7 @@ Snapshot、4 つのデバイス設定書き込み、そしてフルチップ SWD
 ファイルです——言語設定はそれらと一緒に置かれているだけです）、次回起動
 時に適用されます。翻訳は `language/` 下のプレーンテキストファイル
 （`english.lng`、`spanish.lng`、`italian.lng`、`french.lng`、
-`german.lng`）として、シンプルな `KEY=Value` ペア、1 行に 1 つの形式で
+`german.lng`, `japanese.lng`, `chinese.lng`, `portuguese.lng`）として、シンプルな `KEY=Value` ペア、1 行に 1 つの形式で
 存在します——`#` で始まる行と空行は無視され、値の中のリテラルな `\n`
 は実際の改行になります（数個の複数行ダイアログメッセージで使用されて
 います）。翻訳の修正が必要な場合は直接編集できますし、他の言語を追加
@@ -265,6 +259,9 @@ SocketCAN にはこの特定の落とし穴はありません——`can0` のよ
 ├── flasher_protocol.py            <- CAN OTA ステートマシン本体
 ├── flasher_github.py               <- 本プロジェクト自身の GitHub リポジトリからファームウェアをダウンロード
 ├── flasher_gui.py                 <- メインウィンドウ（FlasherGUI）とそのメニューバー
+├── flasher_uithread.py            <- ワーカースレッドから Tk メインスレッドへの受け渡し
+├── flasher_records.py             <- セッションログ（保存場所・保持）と更新レポート
+├── pytest.ini / ruff.toml          <- pytest と ruff（静的チェック）の設定
 ├── requirements.txt
 ├── build_exe.bat                  <- Windows 独立ビルド
 ├── build_exe.sh                   <- Linux 独立ビルド
@@ -436,7 +433,7 @@ MLX9064x 系サーマルセンサー（またはまったくなし）のうち�
    スレーブオプションは、Advanced 拡張ボードバリアント
    （TMC2209+STM32F303CBT6 または TMC5160A+STM32F303CBT6）上の何かに
    しか到達しません——その更新は、別個の物理接続ではなく、メインボード
-   自身の I2C ブリッジ（`CANBUS.TXT` 自身の `0x210`-`0x218`）を通じて
+   自身の I2C ブリッジ（`CANBUS.TXT` 自身の `0x210`-`0x219`）を通じて
    中継されます。「フラッシュ前に F-RAM を消去」（下記のステップ 4）は、
    スレーブが選択されると自動的に無効になります——スレーブチップには
    消去すべき独自の F-RAM がありません。
@@ -474,7 +471,9 @@ MLX9064x 系サーマルセンサー（またはまったくなし）のうち�
 価値があります。メインボードのみ対応、かつボードが実際にブートローダー
 内にあるときのみ——`0x7FE`/`0x7FF` を実装したブートローダーが必要です
 （`docs/CANBUS.TXT` 参照）；古いものは単に応答せず、静かに空のファイル
-になるのではなく、明確なタイムアウトとして表れます。
+になるのではなく、明確なタイムアウトとして表れます。 実際には、このバックアップは有効なアプリケーションがないボード、または更新の途中で止まったボードで機能します。有効なアプリケーションがある場合、更新開始フレーム（`0x7F1`）が届かない限りブートローダーはリセットの約 600 ms 後にそちらへジャンプし、このツールにはブートローダーを待機させ続けるボタンがありません（ブートローダーの変更が必要になります）。通常どおり動作しているボードでは、代わりに SWD/JTAG（セクション 6）でフラッシュをバックアップしてください。
+
+**バージョンと署名のヒント**：転送の前にツールはボードにインストール済みの内容を問い合わせ、「インストール済み vX.Y -> 新規 vA.B」とログに記録します。新しいバージョンのほうが古い場合は、ダウングレードを許可しない限りブートローダーが拒否することを警告し、先にバックアップを取るよう提案します。マニフェストが「公開の開発用鍵で署名済み」と示すイメージ（同梱の公式イメージがそうです）には、ファイル名の下に赤い警告が表示されます。`urtc_config.json` に `"require_production_signature": true` を設定すると、そのようなイメージを完全に拒否します。ボードが有効なファームウェアのないブートローダーから応答した場合は、`firmware/` にある最新の公式メインボード用イメージが選択され、確認して書き込むことができます。更新が成功するたびに小さなレポート（`logs/urtc_update_report_*.json`：ツールのバージョン、オペレーター、イメージ名・サイズ・SHA-256、更新前後のバージョン）が書き込まれます。レポートは自身の SHA-256 を持つため編集に気付けますが、署名ではありません。
 
 **意図的に古いバージョンをインストールする**：ブートローダーは通常、
 すでにインストールされているものより古いバージョンを宣言する、有効に
@@ -600,7 +599,7 @@ python3 urtc_flasher.py --cli --port /dev/ttyACM0 --file firmware.bin
 ```
 
 ```
-usage: urtc_flasher.py --cli [-h] [--transport {serial,socketcan}] --port PORT
+usage: urtc_flasher.py --cli [-h] [--transport {serial,socketcan,python-can,mock}] --port PORT
                              --file FILE [--no-trigger] [--force]
 ```
 
@@ -611,6 +610,8 @@ usage: urtc_flasher.py --cli [-h] [--transport {serial,socketcan}] --port PORT
 誰も見ていない状態でスクリプト化された実行が誤ったファイル/ターゲットの
 組み合わせを間違えた場合にどれだけ多くのものが危険にさらされるかを考慮
 し、現時点では意図的に GUI 専用です。
+
+**`--transport python-can`** は、オプションの `python-can` パッケージ（`pip install python-can`）を使って PCAN、Kvaser、gs_usb/candleLight などの対応インターフェースを扱うため、アダプターを SLCAN に書き換える必要がありません。`--port` は `<インターフェース>:<チャンネル>`（例：`pcan:PCAN_USBBUS1`）となり、バスは 500 kbit/s で開かれます。コマンドラインでのみ利用できます。
 
 **`--transport mock`** は、実際のボードではなく、シミュレートされた
 メモリ内ブートローダーに対して更新シーケンス全体を実行します——アダプター
@@ -647,7 +648,7 @@ CAN 更新中に、あるページの ACK が通常の 3 秒のウィンドウ�
 （`urtc_flasher_YYYYMMDD_HHMMSS.log`）へタイムスタンプ付きのログ
 ファイルを書き込みます——現場で何か問題が発生した場合、ファームウェアを
 書いた人へ完全なトレースを渡すのに便利です。このフォルダは自動的に
-作成され、削除しても安全です；古いログを読み戻すものは何もありません。
+作成され、削除しても安全です；古いログを読み戻すものは何もありません。 保持されるのは最新の 30 件のセッションログだけです。プログラムの隣のフォルダーに書き込めない場合（読み取り専用のインストール）は、代わりにユーザーごとのフォルダーが使われます（Windows では `%LOCALAPPDATA%\URTC-Flasher\logs`、それ以外では `~/.local/state/urtc-flasher/logs`）。
 
 ## 9. 📊 診断——バスアクティビティ、ビットレート、デバッグバンドル
 
@@ -748,7 +749,7 @@ CAN ファームウェアファイルを `.zip` として保存します——�
 アドレスであり、それが実際にリンクされた領域の内側だけを常に指す
 ということです。本プロジェクト自身の実際にコンパイルされた
 `BOOTLOADER.bin`/`APP.bin` に対して検証済みです：それらのリセット
-ハンドラーはそれぞれ `0x080030F1` と `0x0800C725` であり、それぞれ
+ハンドラーはそれぞれ `0x08000785` と `0x0800C0CD` であり、それぞれ
 自身のスロットのアドレス範囲内に正しく収まり、もう一方の範囲外にあり
 ます——そのため、どちらかを間違ったスロットに入れると、静かに受け入れ
 られるのではなく、捕捉されブロックされます。`.hex`/`.elf` にも同じ
@@ -881,8 +882,7 @@ GitHub からイメージをダウンロードすると両ファイルも一緒�
 ```
 すべてのフィールドは任意です——実際に変更するものだけを上書きしてくだ
 さい。欠落しているフィールドは、本ツール自身の組み込みデフォルトに
-フォールバックします。**このオーバーライドの仕組みは、メインボード自身
-の定数にのみ適用されます**——拡張スレーブチップ自身の相当するもの
+フォールバックします。**メモリマップと HardwareID のオーバーライドは、メインボード自身の定数にのみ適用されます**（唯一の例外は拡張スレーブの署名鍵 `slave_hmac_key_hex` で、これもここで設定できます）——拡張スレーブチップ自身の相当するもの
 （`SLAVE_BOOTLOADER_FLASH_ADDR`、`SLAVE_APP_FLASH_ADDR`、
 `SLAVE_HARDWARE_ID` など）は `flasher_config.py` 自体に固定されています。
 そのハードウェア自身の実際の値は、メインボード自身のデフォルトのように
@@ -941,7 +941,8 @@ JSON 数値（`50580689`）のどちらも受け付けます——ファイル�
 │   ├── french.lng
 │   ├── german.lng
 │   ├── japanese.lng
-│   └── chinese.lng
+│   ├── chinese.lng
+│   └── portuguese.lng
 ├── logs/                           <- 自動作成、セッションごとに 1 ファイル
 ├── urtc_config.json.example        <- 任意の urtc_config.json オーバーライドファイルの
 │                                       テンプレート（上記「HMAC キー / HardwareID の変更」
@@ -960,6 +961,8 @@ JSON 数値（`50580689`）のどちらも受け付けます——ファイル�
 ├── flasher_protocol.py            <- CAN OTA ステートマシン本体
 ├── flasher_github.py              <- URTC 自身の GitHub リポジトリからファームウェアをダウンロード
 ├── flasher_gui.py                 <- メインウィンドウ（FlasherGUI）とそのメニューバー
+├── flasher_uithread.py            <- ワーカースレッドから Tk メインスレッドへの受け渡し
+├── flasher_records.py             <- セッションログ（保存場所・保持）と更新レポート
 ├── verify_qt_device_config.py     <- Qt Quick の設定書き込みに対する、意図的に pytest の外に置かれた本物のエンドツーエンド検証（本物の Qt イベントループが必要）
 ├── verify_qt_swd_full_chip_flash.py <- Qt Quick のフルチップ SWD/JTAG パネルに対する、意図的に pytest の外に置かれた本物のエンドツーエンド検証（dry-run のみ）
 ├── tests/
@@ -969,7 +972,25 @@ JSON 数値（`50580689`）のどちらも受け付けます——ファイル�
 │   ├── test_flash_verify_fail_reporting.py <- 8件のテスト
 │   ├── test_flasher_integrity.py   <- 14件のテスト
 │   ├── test_flasher_protocol_clock.py <- 4件のテスト
-│   └── test_qt_flash_preflight.py  <- 2件（PySide6 がなければスキップ）- すべて GitHub Actions CI で実行
+│   ├── test_qt_flash_preflight.py  <- 2件（PySide6 がなければスキップ）- すべて GitHub Actions CI で実行
+│   ├── test_bitrate_listen_only.py
+│   ├── test_bootloader_entry.py
+│   ├── test_github_download.py
+│   ├── test_gui_threading.py
+│   ├── test_language_files.py
+│   ├── test_manifest_target.py
+│   ├── test_mock_readback.py
+│   ├── test_ota_partial_page.py
+│   ├── test_python_can_transport.py
+│   ├── test_qt_bridge_log.py
+│   ├── test_qt_log_translation.py
+│   ├── test_readback_odd_size.py
+│   ├── test_records.py
+│   ├── test_signing_policy.py
+│   ├── test_slave_entry_check.py
+│   ├── test_ui_mailbox.py
+│   ├── test_validation_ccm_stack.py
+│   └── test_version_report.py
 ├── requirements.txt                <- pyserial>=3.5（Tkinter テスター）+ PySide6>=6.8,<7（`--qtquick` デッキ）
 ├── build_exe.bat                  <- Windows 独立ビルド
 ├── build_exe.sh                   <- Linux 独立ビルド
@@ -985,7 +1006,7 @@ JSON 数値（`50580689`）のどちらも受け付けます——ファイル�
 │   ├── sync_firmware.py                  <- URTC のビルドを firmware/ にコピー（ダイジェスト確認、--check で検証）
 │   └── render_hydra_umc_icon_frames.py   <- assets/hydra_umc_icon_frames/ を SVG から再生成（開発専用）
 ├── README.md                      <- 英語版
-├── README_jpn.md                  <- 本ファイル
+├── README_jpn.md / README_por.md                  <- 本ファイル
 ├── README_spa.md / README_ita.md / README_fra.md / README_deu.md / README_zho.md  <- 他の翻訳
 ├── LICENSE
 ├── .gitattributes

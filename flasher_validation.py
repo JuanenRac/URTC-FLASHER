@@ -7,7 +7,7 @@
 import os
 import struct
 
-from flasher_config import APP_FLASH_ADDR, APP_MAX_SIZE, BOOTLOADER_FLASH_ADDR
+from flasher_config import APP_FLASH_ADDR, APP_MAX_SIZE
 
 
 
@@ -91,8 +91,8 @@ def validate_firmware_file(path, expected_base_addr=None, max_size=None):
     # application slot. The reset handler is a real, absolute code address
     # baked in at link time, and always points inside the image's OWN
     # slot - verified against this project's actual compiled
-    # BOOTLOADER.bin/APP.bin, whose reset handlers land at 0x080030F1 and
-    # 0x0800C725 respectively, each correctly inside its own range and
+    # BOOTLOADER.bin/APP.bin, whose reset handlers land at 0x08000785 and
+    # 0x0800C0CD respectively, each correctly inside its own range and
     # outside the other's.
     if not (expected_base_addr <= reset_handler < expected_base_addr + max_size):
         return False, (
@@ -419,7 +419,7 @@ def validate_swd_image_file(path, max_size, label, expected_base_addr=None):
     # absolute code address baked in at link time, so it always points
     # somewhere inside the image's OWN slot - verified against this
     # project's actual compiled BOOTLOADER.bin/APP.bin, whose reset
-    # handlers land at 0x080030F1 and 0x0800C725 respectively, each
+    # handlers land at 0x08000785 and 0x0800C0CD respectively, each
     # correctly inside its own range and outside the other's. A bootloader
     # image selected for the application slot (or vice versa) still has a
     # plausible stack pointer - RAM is RAM either way - but its reset

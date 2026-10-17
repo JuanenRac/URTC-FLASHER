@@ -24,7 +24,7 @@
 </p>
 
 
-**Versione:** 0.2.7 (la versione di questo strumento - mostrata nel banner
+**Versione:** 0.2.8 (la versione di questo strumento - mostrata nel banner
 della finestra e nella barra del titolo, tracciata separatamente dalla
 versione del firmware della scheda URTC che scrive. Segue uno schema
 X.Y.Z in cui il numero di patch aumenta automaticamente a ogni build
@@ -70,7 +70,7 @@ tratta il primo vero tentativo di flash con la stessa cautela che
 daresti a qualsiasi nuovo strumento che parla con un bootloader: tieni a
 portata di mano il JTAG come ripiego.
 
-**Verifica di onestà - cosa funziona davvero oggi:** `tests/` contiene 6 file pytest (43 test: 41 superati, 2 saltati senza PySide6) - il protocollo CAN-OTA contro un vero trasporto `MockCAN` (`flasher_transports.py`) che riproduce un'intera sequenza di bootloader simulato (avvio/cancellazione/ricezione, dati di pagina + PAGE_ACK, blocchi HMAC, fine aggiornamento con un vero successo o uno specifico `VERIFY_FAIL_REASON`), le regole di firma (firma pubblicata inviata senza alcuna chiave, immagine non firmata rifiutata, sha256 del manifest non corrispondente rifiutato prima di qualsiasi traffico sul bus), i controlli di integrità dell'immagine e la cartella `firmware/` inclusa rispetto ai suoi manifest. GitHub Actions (`.github/workflows/ci.yml`) esegue questa suite a ogni push, e `tools/build_test.py` la esegue in `build-test.sh`/`.bat`. I due script `verify_qt_*.py` nella radice sono veri controlli end-to-end fuori da pytest (richiedono un vero ciclo di eventi Qt; si eseguono con `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`); `verify_qt_swd_full_chip_flash.py` costruisce solo i comandi `PyOCDCLI`/`CubeProgrammerCLI` con `dry_run=True`. Niente di tutto ciò è stato eseguito su una scheda reale in questo ambiente. Vedi `CHANGELOG.md` per cosa è stato effettivamente rilasciato.
+**Verifica di onestà - cosa funziona davvero oggi:** `tests/` contiene 25 file pytest (171 test: tutti superati; 4 di essi saltati senza PySide6) - il protocollo CAN-OTA contro un vero trasporto `MockCAN` (`flasher_transports.py`) che riproduce un'intera sequenza di bootloader simulato (avvio/cancellazione/ricezione, dati di pagina + PAGE_ACK, blocchi HMAC, fine aggiornamento con un vero successo o uno specifico `VERIFY_FAIL_REASON`), le regole di firma (firma pubblicata inviata senza alcuna chiave, immagine non firmata rifiutata, sha256 del manifest non corrispondente rifiutato prima di qualsiasi traffico sul bus), i controlli di integrità dell'immagine e la cartella `firmware/` inclusa rispetto ai suoi manifest. GitHub Actions (`.github/workflows/ci.yml`) esegue questa suite a ogni push, e `tools/build_test.py` la esegue in `build-test.sh`/`.bat`. I due script `verify_qt_*.py` nella radice sono veri controlli end-to-end fuori da pytest (richiedono un vero ciclo di eventi Qt; si eseguono con `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`); `verify_qt_swd_full_chip_flash.py` costruisce solo i comandi `PyOCDCLI`/`CubeProgrammerCLI` con `dry_run=True`. Niente di tutto ciò è stato eseguito su una scheda reale in questo ambiente. Vedi `CHANGELOG.md` per cosa è stato effettivamente rilasciato. Il bootloader simulato (`MockCAN`) è solo un modello scritto dalla descrizione del protocollo: riproduce gli ACK di pagina, l'ultima pagina parziale e i frame di lettura, ma non è il vero bootloader, quindi una serie di test verdi non sostituisce una prova su una scheda reale (l'immagine ufficiale da 73476 byte non si poteva installare e l'ultimo frame di un backup andava perso mentre i test passavano, proprio perché la simulazione era più indulgente del vero bootloader).
 
 ## 1. 🔌 Fai parlare CAN al tuo adattatore
 Quale di questi ti serve dipende dalla tua piattaforma e da quale
@@ -152,18 +152,11 @@ URTC della finestra/barra delle applicazioni rimane volutamente statica.
 
 ### Console visiva di controllo
 
-La console di comando condivisa **Qt Quick** è disponibile per l'intero
-flusso reale, non solo CAN-OTA:
+Il pannello di controllo condiviso **Qt Quick** è una seconda interfaccia sullo stesso codice di produzione per trasporto, validazione e scrittura firmata:
 ~~~
 python urtc_flasher.py --qtquick
 ~~~
-Usa gli stessi trasporti di produzione, la stessa validazione e lo stesso
-codice di flash firmato dell'interfaccia consolidata - CAN-OTA, discovery
-SWD/JTAG in sola lettura, Board Snapshot, le 4 scritture di configurazione
-del dispositivo e la programmazione completa SWD/JTAG (erase/write, dry
-run, backup prima della cancellazione, verifica RDP) sono tutte reali qui,
-non un sottoinsieme. L'interfaccia predefinita resta Tkinter, ma nulla è
-più esclusivo di Tkinter.
+Offre l'aggiornamento CAN-OTA della scheda principale (il trigger di ingresso nel bootloader viene sempre inviato per primo), la scoperta SWD/JTAG in sola lettura, Board Snapshot, le 4 scritture di configurazione del dispositivo e la programmazione completa del chip via SWD/JTAG (cancellazione/scrittura, prova a vuoto, backup prima della cancellazione, controllo RDP). **Non** ha tutto ciò che ha la finestra Tkinter: nessun bersaglio slave di espansione, nessuna opzione "la scheda è già nel bootloader", nessuna opzione di cancellazione della F-RAM, nessuna autorizzazione al downgrade, nessun backup del firmware via CAN, nessun download da GitHub, nessuna scelta o rilevamento del bitrate (Serial/SLCAN si apre a 500 kbit/s) e nessun controllo dedicato dell'attività del bus. Per questo usa l'interfaccia Tkinter predefinita.
 
 Il flusso consolidato CAN-OTA e SWD/JTAG è mantenuto su una superficie di
 controllo blu notte/ciano: intestazione di prodotto, scheda di connessione ad
@@ -177,7 +170,7 @@ il protocollo del bootloader né il comportamento di sicurezza hardware.
   per un pacchetto più completo che include diagnostica di sistema e il
   file firmware attualmente selezionato, vedi "Diagnostica" più sotto),
   ed Esci.
-- **Lingua** - passa tra le 7 lingue disponibili (vedi "Lingua" più
+- **Lingua** - passa tra le 8 lingue disponibili (vedi "Lingua" più
   sotto per come funzionano le traduzioni).
 - **Aiuto** - Readme (apre questo file in una finestra visualizzatore di
   sola lettura; recupera automaticamente una versione tradotta appena
@@ -202,7 +195,7 @@ override tecnici dell'hardware — la preferenza della lingua vive
 semplicemente accanto a quelli), applicato al prossimo avvio. Le
 traduzioni vivono in file di testo semplice sotto `language/`
 (`english.lng`, `spanish.lng`, `italian.lng`, `french.lng`,
-`german.lng`) come semplici coppie `CHIAVE=Valore`, una per riga - le
+`german.lng`, `japanese.lng`, `chinese.lng`, `portuguese.lng`) come semplici coppie `CHIAVE=Valore`, una per riga - le
 righe che iniziano con `#` e le righe vuote vengono ignorate, e un `\n`
 letterale dentro un valore diventa un vero a capo (usato dalla manciata
 di messaggi di dialogo multi-riga). Modificabile direttamente se una
@@ -268,6 +261,9 @@ Questo strumento si aspetta una cartella `firmware/` proprio accanto a
 ├── flasher_protocol.py            <- la macchina a stati CAN OTA stessa, sia per la scheda principale che (inoltrato tramite il proprio bridge I2C) per lo slave di espansione
 ├── flasher_github.py               <- scarica firmware dal repository GitHub proprio di questo progetto
 ├── flasher_gui.py                 <- la finestra principale (FlasherGUI) e la sua barra dei menu
+├── flasher_uithread.py            <- passaggio dai thread di lavoro al thread principale di Tk
+├── flasher_records.py             <- log di sessione (posizione, conservazione) e rapporti di aggiornamento
+├── pytest.ini / ruff.toml          <- impostazioni di pytest e ruff (controlli statici)
 ├── requirements.txt
 ├── build_exe.bat                  <- build standalone per Windows
 ├── build_exe.sh                   <- build standalone per Linux
@@ -448,7 +444,7 @@ cui il tipo di scheda di espansione stesso già richiede.
    una variante di scheda di espansione Advanced (TMC2209+STM32F303CBT6
    o TMC5160A+STM32F303CBT6) - l'aggiornamento viene inoltrato tramite
    il bridge I2C proprio della scheda principale verso il chip slave (i
-   propri `0x210`-`0x218` di `CANBUS.TXT`), non una connessione fisica
+   propri `0x210`-`0x219` di `CANBUS.TXT`), non una connessione fisica
    separata. "Cancella F-RAM prima di flashare" (passo 4 sotto) si
    disabilita automaticamente selezionando Slave - il chip slave non ha
    F-RAM propria da cancellare.
@@ -487,7 +483,9 @@ non hai più il file che li ha generati. Solo scheda principale, e solo
 mentre la scheda è effettivamente nel bootloader - richiede un
 bootloader che implementi `0x7FE`/`0x7FF` (vedi `docs/CANBUS.TXT`); uno
 datato semplicemente non risponde mai, mostrato come un chiaro timeout
-invece di un file silenziosamente vuoto.
+invece di un file silenziosamente vuoto. In pratica la copia funziona su una scheda senza applicazione valida o rimasta a metà di un aggiornamento: con un'applicazione valida il bootloader vi salta circa 600 ms dopo il reset, a meno che arrivi un frame di avvio aggiornamento (`0x7F1`), e questo strumento non ha alcun pulsante che tenga il bootloader in attesa (servirebbe una modifica del bootloader). Per una scheda che funziona normalmente, fai il backup della flash via SWD/JTAG (sezione 6).
+
+**Indicazioni su versione e firma**: prima del trasferimento lo strumento chiede alla scheda cosa è installato e registra "installata vX.Y -> nuova vA.B"; se la nuova versione è più vecchia, avverte che il bootloader la rifiuterà se il downgrade non è consentito e suggerisce di fare prima un backup. Un'immagine il cui manifest dichiara di essere firmata con la chiave di sviluppo PUBBLICA (lo sono le immagini ufficiali incluse) mostra un avviso rosso sotto il nome del file; imposta `"require_production_signature": true` in `urtc_config.json` per rifiutare del tutto tali immagini. Quando la scheda risponde dal bootloader senza firmware valido, viene selezionata l'immagine ufficiale più recente della scheda principale trovata in `firmware/`, perché tu la controlli e la scriva. Dopo ogni aggiornamento riuscito viene scritto un piccolo rapporto (`logs/urtc_update_report_*.json`: versione dello strumento, operatore, nome, dimensione e SHA-256 dell'immagine, versioni prima e dopo); porta il proprio SHA-256 così una modifica si nota, ma non è una firma.
 
 **Installare deliberatamente una versione precedente**: il bootloader
 normalmente rifiuta un'immagine validamente firmata se dichiara una
@@ -621,7 +619,7 @@ python3 urtc_flasher.py --cli --port /dev/ttyACM0 --file firmware.bin
 ```
 
 ```
-usage: urtc_flasher.py --cli [-h] [--transport {serial,socketcan}] --port PORT
+usage: urtc_flasher.py --cli [-h] [--transport {serial,socketcan,python-can,mock}] --port PORT
                              --file FILE [--no-trigger] [--force]
 ```
 
@@ -632,6 +630,8 @@ solo il percorso di aggiornamento CAN OTA (sezioni 1-3) - il percorso
 completo SWD/JTAG del chip è deliberatamente solo-GUI per ora, data
 quanto più è in gioco se un'esecuzione scriptata ottiene una
 combinazione file/target sbagliata senza che nessuno stia osservando.
+
+**`--transport python-can`** usa il pacchetto opzionale `python-can` (`pip install python-can`) per PCAN, Kvaser, gs_usb/candleLight e le altre interfacce supportate, così l'adattatore non va riscritto con SLCAN: `--port` è allora `<interfaccia>:<canale>` (ad esempio `pcan:PCAN_USBBUS1`) e il bus si apre a 500 kbit/s. È disponibile solo da riga di comando.
 
 **`--transport mock`** esegue l'intera sequenza di aggiornamento contro
 un bootloader simulato, in memoria, invece di una scheda reale - nessun
@@ -673,7 +673,7 @@ Ogni sessione scrive anche un file di log con marca temporale in
 indipendente dal registro a schermo - utile per consegnare una traccia
 completa a chi ha scritto il firmware se qualcosa va storto sul campo.
 Questa cartella viene creata automaticamente ed è sicura da eliminare;
-nulla rilegge vecchi log.
+nulla rilegge vecchi log. Vengono conservati solo i 30 log di sessione più recenti; se la cartella accanto al programma non è scrivibile (installazione in sola lettura), si usa una cartella per utente (`%LOCALAPPDATA%\URTC-Flasher\logs` su Windows, `~/.local/state/urtc-flasher/logs` altrove).
 
 ## 9. 📊 Diagnostica — attività bus, bitrate, e pacchetti di debug
 **Selettore bitrate + auto-rilevamento** (solo Seriale/SLCAN): il bus di
@@ -775,7 +775,7 @@ distinguerle se una finisce nello slot dell'altra. Ciò che può: il
 reale fissato al momento del linking, e punta solo dentro la regione
 per cui è stata effettivamente linkata. Verificato contro il
 `BOOTLOADER.bin`/`APP.bin` compilato reale di questo progetto stesso: i
-loro gestori di reset sono `0x080030F1` e `0x0800C725` rispettivamente,
+loro gestori di reset sono `0x08000785` e `0x0800C0CD` rispettivamente,
 ciascuno correttamente dentro l'intervallo di indirizzi del proprio slot
 e fuori da quello dell'altro - quindi mettere uno dei due nello slot
 sbagliato viene rilevato e bloccato, non accettato in silenzio. La
@@ -917,8 +917,7 @@ Ogni campo è opzionale - sostituisci solo ciò che effettivamente sta
 cambiando. Un file mancante ricade in silenzio sui default compilati; un
 file presente ma rotto registra un avviso e ricade anch'esso su quei
 valori, invece di far crashare lo strumento per un errore di battitura.
-**Questo meccanismo di sostituzione si applica solo alle costanti
-proprie della scheda principale** - gli equivalenti propri del chip
+**Le sostituzioni della mappa di memoria e dell'HardwareID si applicano solo alle costanti proprie della scheda principale** (l'unica eccezione è `slave_hmac_key_hex`, la chiave di firma dello slave di espansione, che si può impostare anche qui) - gli equivalenti propri del chip
 slave di espansione (`SLAVE_BOOTLOADER_FLASH_ADDR`,
 `SLAVE_APP_FLASH_ADDR`, `SLAVE_HARDWARE_ID`, ecc.) sono fissi nel
 proprio `flasher_config.py`, poiché i valori reali di quell'hardware
@@ -977,7 +976,8 @@ l'applicazione.
 │   ├── french.lng
 │   ├── german.lng
 │   ├── japanese.lng
-│   └── chinese.lng
+│   ├── chinese.lng
+│   └── portuguese.lng
 ├── logs/                           <- creata automaticamente, un file per sessione
 ├── urtc_config.json.example        <- modello per il file opzionale di override urtc_config.json
 │                                       (vedi "Cambiare la chiave HMAC / l'HardwareID" sopra) - copialo
@@ -995,6 +995,8 @@ l'applicazione.
 ├── flasher_protocol.py            <- la macchina a stati CAN OTA vera e propria
 ├── flasher_github.py              <- scarica firmware dal repository GitHub di URTC
 ├── flasher_gui.py                 <- la finestra principale (FlasherGUI) e la sua barra dei menu
+├── flasher_uithread.py            <- passaggio dai thread di lavoro al thread principale di Tk
+├── flasher_records.py             <- log di sessione (posizione, conservazione) e rapporti di aggiornamento
 ├── verify_qt_device_config.py     <- vera verifica end-to-end, deliberatamente fuori da pytest, delle scritture di configurazione Qt Quick (necessita un vero event loop Qt)
 ├── verify_qt_swd_full_chip_flash.py <- vera verifica end-to-end, deliberatamente fuori da pytest, del pannello Qt Quick di programmazione completa SWD/JTAG (solo dry-run)
 ├── tests/
@@ -1004,7 +1006,25 @@ l'applicazione.
 │   ├── test_flash_verify_fail_reporting.py <- 8 test
 │   ├── test_flasher_integrity.py   <- 14 test
 │   ├── test_flasher_protocol_clock.py <- 4 test
-│   └── test_qt_flash_preflight.py  <- 2 test (saltati senza PySide6) - tutti eseguiti dalla CI GitHub Actions
+│   ├── test_qt_flash_preflight.py  <- 2 test (saltati senza PySide6) - tutti eseguiti dalla CI GitHub Actions
+│   ├── test_bitrate_listen_only.py
+│   ├── test_bootloader_entry.py
+│   ├── test_github_download.py
+│   ├── test_gui_threading.py
+│   ├── test_language_files.py
+│   ├── test_manifest_target.py
+│   ├── test_mock_readback.py
+│   ├── test_ota_partial_page.py
+│   ├── test_python_can_transport.py
+│   ├── test_qt_bridge_log.py
+│   ├── test_qt_log_translation.py
+│   ├── test_readback_odd_size.py
+│   ├── test_records.py
+│   ├── test_signing_policy.py
+│   ├── test_slave_entry_check.py
+│   ├── test_ui_mailbox.py
+│   ├── test_validation_ccm_stack.py
+│   └── test_version_report.py
 ├── requirements.txt                <- pyserial>=3.5 (tester Tkinter) + PySide6>=6.8,<7 (deck `--qtquick`)
 ├── build_exe.bat                  <- build standalone per Windows
 ├── build_exe.sh                   <- build standalone per Linux
@@ -1021,7 +1041,7 @@ l'applicazione.
 │   └── render_hydra_umc_icon_frames.py   <- rigenera assets/hydra_umc_icon_frames/ dall'SVG (solo sviluppo)
 ├── README.md                      <- (versione in inglese)
 ├── README_ita.md                  <- questo file
-├── README_spa.md / README_fra.md / README_deu.md / README_zho.md / README_jpn.md  <- altre traduzioni
+├── README_spa.md / README_fra.md / README_deu.md / README_zho.md / README_jpn.md / README_por.md  <- altre traduzioni
 ├── LICENSE
 ├── .gitattributes
 └── .gitignore

@@ -11,10 +11,8 @@ import re
 import shutil
 import subprocess
 import threading
-import time
 
-from flasher_config import _, APP_FLASH_ADDR, BOOTLOADER_FLASH_ADDR, PYOCD_TARGET_NAME, \
-    SLAVE_BOOTLOADER_FLASH_ADDR, SLAVE_APP_FLASH_ADDR, SLAVE_PYOCD_TARGET_NAME, SLAVE_TOTAL_FLASH_SIZE
+from flasher_config import _, APP_FLASH_ADDR, BOOTLOADER_FLASH_ADDR, PYOCD_TARGET_NAME
 
 # =============================================================================
 # SWD/JTAG full-chip programming - a DIFFERENT kind of operation from the CAN
@@ -144,7 +142,7 @@ class _SubprocessProgrammerBase:
                 **({"creationflags": subprocess.CREATE_NO_WINDOW} if hasattr(subprocess, "CREATE_NO_WINDOW") else {}),
             )
         except OSError as e:
-            raise SWDFlashError(f"couldn't run {self.NAME}: {e}")
+            raise SWDFlashError(f"couldn't run {self.NAME}: {e}") from e
 
         timed_out = threading.Event()
         timer = threading.Timer(timeout, lambda: (timed_out.set(), proc.kill()))

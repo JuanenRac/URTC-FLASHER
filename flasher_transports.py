@@ -19,7 +19,7 @@ from flasher_config import (
     _, CAN_ID_QUERY_VERSION, CAN_ID_VERSION_RESPONSE, CAN_ID_BOOTLOADER_VERSION_RESPONSE,
     CAN_ID_START_UPDATE, CAN_ID_HMAC_CHUNK, CAN_ID_DATA, CAN_ID_PAGE_ACK,
     CAN_ID_END_UPDATE, CAN_ID_STATUS, THIS_HARDWARE_ID,
-    BITRATE_500K_SLCAN_CODE, FLASH_PAGE_SIZE,
+    BITRATE_500K_SLCAN_CODE, FLASH_PAGE_SIZE, CAN_ID_READBACK, CAN_ID_READBACK_PAGE_ACK,
 )
 
 # =============================================================================
@@ -326,7 +326,7 @@ class SocketCAN:
                 f"(SocketCAN access typically doesn't need special group "
                 f"membership the way a serial port does, but bringing the "
                 f"interface up in the first place usually needs sudo)."
-            )
+            ) from e
         self.sock.settimeout(0.05)
         self._last_timeout = 0.05
 
@@ -374,7 +374,7 @@ class SocketCAN:
             except OSError as e:
                 last_err = e
                 if e.errno != errno.ENOBUFS:
-                    raise SocketCANError(f"send failed on '{self.interface}': {e}")
+                    raise SocketCANError(f"send failed on '{self.interface}': {e}") from e
         raise SocketCANError(
             f"send failed on '{self.interface}': kernel TX queue stayed full "
             f"(ENOBUFS) after 5 retries - {last_err}. The bus is likely "
@@ -441,6 +441,72 @@ class SocketCAN:
         return (can_id, data[:min(dlc, 8)])
 
 
+class PythonCANError(Exception):
+    pass
+
+
+class PythonCAN:
+    """Optional transport over the python-can package (PCAN, Kvaser, gs_usb/candleLight
+    through libusb, SocketCAN and the other interfaces python-can supports), so an adapter
+    does not have to be reflashed to SLCAN. Same interface as SLCAN/SocketCAN.
+
+    `spec` is "<interface>:<channel>", for example "pcan:PCAN_USBBUS1", "kvaser:0",
+    "gs_usb:0" or "socketcan:can0". The package is imported only when the transport is
+    opened, so this tool still starts without it. URTC's bus runs at a fixed 500 kbit/s.
+    """
+
+    def __init__(self, spec, log=None, bitrate=500_000):
+        self.log = log or (lambda msg: None)
+        self.spec = spec
+        self.bitrate = bitrate
+        self._bus = None
+
+    def open_channel(self, bitrate_code=None, listen_only=False):
+        try:
+            import can
+        except ImportError as exc:
+            raise PythonCANError("python-can is not installed (pip install python-can)") from exc
+        interface, sep, channel = self.spec.partition(":")
+        if not interface or not sep or not channel:
+            raise PythonCANError(f"expected <interface>:<channel> (for example pcan:PCAN_USBBUS1), got {self.spec!r}")
+        try:
+            self._bus = can.Bus(
+                interface=interface, channel=int(channel) if channel.isdigit() else channel,
+                bitrate=self.bitrate,
+            )
+        except Exception as exc:
+            raise PythonCANError(f"cannot open {self.spec}: {exc}") from exc
+
+    def close_channel(self):
+        if self._bus is not None:
+            try:
+                self._bus.shutdown()
+            finally:
+                self._bus = None
+
+    def close(self):
+        self.close_channel()
+
+    def send_frame(self, can_id, data):
+        if self._bus is None:
+            raise PythonCANError("the channel is not open")
+        if not (0 <= can_id <= 0x7FF):
+            raise PythonCANError(f"ID 0x{can_id:X} is outside the standard 11-bit range (0-0x7FF)")
+        import can
+        try:
+            self._bus.send(can.Message(arbitration_id=can_id, data=bytes(data), is_extended_id=False))
+        except Exception as exc:
+            raise PythonCANError(f"send failed: {exc}") from exc
+
+    def read_frame(self, timeout=0.05):
+        if self._bus is None:
+            raise PythonCANError("the channel is not open")
+        message = self._bus.recv(timeout)
+        if message is None or message.is_extended_id or message.is_remote_frame or message.is_error_frame:
+            return None
+        return (message.arbitration_id, bytes(message.data))
+
+
 class MockCAN:
     """A simulated transport, implementing the same interface as SLCAN and
     SocketCAN (open_channel/close_channel/close/send_frame/read_frame),
@@ -457,9 +523,15 @@ class MockCAN:
     misconfigured to trigger a real one.
     """
 
-    def __init__(self, simulate_failure=None, log=None):
+    def __init__(self, simulate_failure=None, log=None, installed_version=(0, 2), installed_image=b""):
         self.log = log or (lambda msg: None)
         self.simulate_failure = simulate_failure
+        # What the simulated board reports as installed (0x7F9) and what a readback (0x7FE)
+        # returns: the size first (4 bytes; 0 = nothing installed), then pages of frames of 8
+        # bytes, the last one as short as the size requires, the next page after each ACK.
+        self.installed_version = installed_version
+        self.installed_image = bytes(installed_image)
+        self._readback_sent = 0
         self._response_queue = []  # list of (can_id, data) tuples awaiting read_frame()
         self._update_total_size = 0
         self._update_bytes_received = 0
@@ -483,9 +555,16 @@ class MockCAN:
             # bootloader-specific 0x7FA right alongside it.
             self._response_queue.append((
                 CAN_ID_VERSION_RESPONSE,
-                bytes([0x01]) + struct.pack(">I", THIS_HARDWARE_ID) + struct.pack(">H", 1) + bytes([0]),
+                bytes([0x01]) + struct.pack(">I", THIS_HARDWARE_ID)
+                + struct.pack(">H", self.installed_version[0]) + bytes([self.installed_version[1]]),
             ))
             self._response_queue.append((CAN_ID_BOOTLOADER_VERSION_RESPONSE, bytes([1, 0, 1])))
+        elif can_id == CAN_ID_READBACK:
+            self._readback_sent = 0
+            self._response_queue.append((CAN_ID_READBACK, struct.pack(">I", len(self.installed_image))))
+            self._queue_readback_page()
+        elif can_id == CAN_ID_READBACK_PAGE_ACK:
+            self._queue_readback_page()
         elif can_id == CAN_ID_START_UPDATE:
             self._update_total_size = struct.unpack(">I", data[0:4])[0]
             self._update_bytes_received = 0
@@ -515,6 +594,12 @@ class MockCAN:
                 self._response_queue.append((CAN_ID_STATUS, bytes([0x05, self.simulate_failure])))
             else:
                 self._response_queue.append((CAN_ID_STATUS, bytes([0x04])))  # verify OK
+
+    def _queue_readback_page(self):
+        page = self.installed_image[self._readback_sent:self._readback_sent + FLASH_PAGE_SIZE]
+        for i in range(0, len(page), 8):
+            self._response_queue.append((CAN_ID_READBACK, page[i:i + 8]))
+        self._readback_sent += len(page)
 
     def read_frame(self, timeout=0.05):
         if self._response_queue:

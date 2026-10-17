@@ -38,7 +38,6 @@ flasher_validation.py (firmware file validation), flasher_protocol.py
 """
 
 import sys
-import os
 import argparse
 
 # tkinter (and, with it, flasher_gui.py, which imports tkinter itself) is
@@ -55,7 +54,7 @@ if "--cli" not in sys.argv and "--qtquick" not in sys.argv:
 
 try:
     import serial
-    import serial.tools.list_ports
+    import serial.tools.list_ports  # noqa: F401 - checks that the port listing is available too
     HAVE_SERIAL = True
 except ImportError:
     HAVE_SERIAL = False
@@ -85,8 +84,8 @@ elif not HAVE_SERIAL:
     print("    pip install pyserial")
 
 from flasher_integrity import preflight_image
-from flasher_config import _, _CONFIG_LOADED, FLASHER_VERSION, BANNER_IMAGE_PATH, _center_geometry, _load_config_overrides
-from flasher_transports import SLCAN, SLCANError, SocketCAN, SocketCANError, MockCAN
+from flasher_config import _CONFIG_LOADED, BANNER_IMAGE_PATH, _center_geometry, _load_config_overrides
+from flasher_transports import SLCAN, SLCANError, SocketCAN, SocketCANError, PythonCAN, PythonCANError, MockCAN
 from flasher_protocol import URTCFlasher, FlashError
 from flasher_validation import validate_firmware_file
 
@@ -109,13 +108,15 @@ def run_cli(argv):
         prog="urtc_flasher.py --cli",
         description="Headless URTC CAN OTA firmware update (no GUI).",
     )
-    parser.add_argument("--transport", choices=["serial", "socketcan", "mock"], default="serial",
+    parser.add_argument("--transport", choices=["serial", "socketcan", "python-can", "mock"], default="serial",
                          help="Serial/SLCAN (default, all platforms), SocketCAN (Linux only), "
+                              "python-can (PCAN, Kvaser, gs_usb ...; needs the python-can package), "
                               "or mock (simulated in-memory bootloader, for testing this tool's "
                               "own logic - not for use against a real board)")
     parser.add_argument("--port",
                          help="Serial port (e.g. COM3 or /dev/ttyACM0) for --transport serial, "
-                              "or interface name (e.g. can0) for --transport socketcan. "
+                              "interface name (e.g. can0) for --transport socketcan, "
+                              "or <interface>:<channel> (e.g. pcan:PCAN_USBBUS1) for --transport python-can. "
                               "Not needed for --transport mock.")
     parser.add_argument("--file", required=True, help="Firmware .bin file to flash")
     parser.add_argument("--no-trigger", action="store_true",
@@ -138,7 +139,7 @@ def run_cli(argv):
     args = parser.parse_args(argv)
 
     if args.transport != "mock" and not args.port:
-        _cli_log("ERROR: --port is required for --transport serial/socketcan.")
+        _cli_log("ERROR: --port is required for --transport serial/socketcan/python-can.")
         return 2
 
     if _CONFIG_LOADED:
@@ -171,6 +172,8 @@ def run_cli(argv):
             transport = SLCAN(args.port, log=_cli_log)
         elif args.transport == "socketcan":
             transport = SocketCAN(args.port, log=_cli_log)
+        elif args.transport == "python-can":
+            transport = PythonCAN(args.port, log=_cli_log)
         else:
             transport = MockCAN(simulate_failure=args.mock_fail, log=_cli_log)
             _cli_log("Using the mock transport - nothing here is touching real hardware.")
@@ -179,6 +182,7 @@ def run_cli(argv):
 
         flasher = URTCFlasher(transport, log=_cli_log, progress_cb=lambda pct: None)
         if not args.no_trigger:
+            flasher.report_version_change(args.file, "master", args.version)
             flasher.trigger_bootloader_entry()
         flasher.flash(args.file, allow_downgrade=args.allow_downgrade, version=args.version)
         _cli_log("SUCCESS: firmware update complete.")
@@ -186,7 +190,7 @@ def run_cli(argv):
     except KeyboardInterrupt:
         _cli_log("Cancelled.")
         return 130
-    except (FlashError, SLCANError, SocketCANError) as e:
+    except (FlashError, SLCANError, SocketCANError, PythonCANError) as e:
         _cli_log(f"FAILED: {e}")
         return 1
     except Exception as e:
@@ -303,7 +307,7 @@ def main():
     # down from 914x1235 when everything was stacked vertically. A
     # small margin above those worst-case measurements.
     root.geometry(_center_geometry(root, 1235, 1040))
-    app = FlasherGUI(root)
+    root.flasher_window = FlasherGUI(root)  # keeps the window object referenced for the lifetime of the main loop
 
     def _reveal_main():
         root.deiconify()
