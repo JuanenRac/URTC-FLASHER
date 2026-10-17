@@ -35,12 +35,12 @@ from flasher_config import (
 )
 from flasher_uithread import UiMailbox
 from flasher_transports import SLCAN, SocketCAN, detect_bitrate_listen_only, list_socketcan_interfaces
-from flasher_protocol import URTCFlasher, FlashError
+from flasher_protocol import URTCFlasher, FlashError, minor_with_patch
 from flasher_integrity import preflight_image, manifest_signing_kind
 from flasher_records import (
     build_update_report, find_recovery_image, prune_session_logs, writable_logs_folder, write_update_report,
 )
-from flasher_github import list_firmware_files, download_file, GitHubDownloadError, is_sidecar, sidecars_for
+from flasher_github import fetch_release, download_file, GitHubDownloadError, is_sidecar, sidecars_for
 from flasher_swd_tools import SWDFlashError, PyOCDCLI, CubeProgrammerCLI
 from flasher_validation import validate_firmware_file, validate_swd_image_file
 from hydra_umc_animation import AnimatedHydraUMCMark
@@ -1359,6 +1359,16 @@ class FlasherGUI:
         win.resizable(True, True)
         win.geometry(_center_geometry(win, 560, 360))
 
+        # The firmware is published as assets of a GitHub release: the latest one unless a tag is typed.
+        tag_row = ttk.Frame(win)
+        tag_row.pack(fill="x", padx=8, pady=(8, 0))
+        ttk.Label(tag_row, text=_("LBL_GITHUB_RELEASE_TAG")).pack(side="left")
+        tag_var = tk.StringVar(value="")
+        tag_entry = ttk.Entry(tag_row, textvariable=tag_var, width=14)
+        tag_entry.pack(side="left", padx=(6, 6))
+        load_btn = self._new_deck_button(tag_row, text=_("BTN_GITHUB_LOAD"), command=None)
+        load_btn.pack(side="left")
+
         status_var = tk.StringVar(value=_("LBL_GITHUB_LOADING"))
         ttk.Label(win, textvariable=status_var, foreground="gray").pack(anchor="w", padx=8, pady=(8, 4))
 
@@ -1382,8 +1392,9 @@ class FlasherGUI:
         all_entries = []
 
         def _load_list():
+            requested_tag = tag_var.get().strip() or None
             try:
-                entries = list_firmware_files(log=self.log)
+                release_tag, entries = fetch_release(requested_tag, log=self.log)
             except GitHubDownloadError as e:
                 # Captured now - 'e' itself is deleted the moment this except
                 # block exits, but the lambda below runs later, via root.after().
@@ -1397,6 +1408,8 @@ class FlasherGUI:
 
             def _populate():
                 all_entries[:] = entries
+                entries_by_iid.clear()
+                tree.delete(*tree.get_children())
                 images = [entry for entry in entries if not is_sidecar(entry["name"])]
                 if not images:
                     status_var.set(_("LBL_GITHUB_EMPTY"))
@@ -1405,8 +1418,12 @@ class FlasherGUI:
                     size_kb = entry["size"] / 1024
                     iid = tree.insert("", "end", values=(entry["name"], f"{size_kb:.1f} KB"))
                     entries_by_iid[iid] = entry
-                status_var.set(_("LBL_GITHUB_LOADED_COUNT", count=len(images)))
+                status_var.set(_("LBL_GITHUB_LOADED_RELEASE", count=len(images), tag=release_tag or "?"))
             self._post(_populate)
+
+        def _reload():
+            status_var.set(_("LBL_GITHUB_LOADING"))
+            threading.Thread(target=_load_list, daemon=True).start()
 
         def _on_select(_event=None):
             download_btn.config(state="normal" if tree.selection() else "disabled")
@@ -1459,6 +1476,8 @@ class FlasherGUI:
             threading.Thread(target=_download_worker, daemon=True).start()
 
         download_btn.config(command=_do_download)
+        load_btn.config(command=_reload)
+        tag_entry.bind("<Return>", lambda _event: _reload())
         threading.Thread(target=_load_list, daemon=True).start()
 
     def check_bus_activity(self):
@@ -1916,7 +1935,7 @@ class FlasherGUI:
         else:
             responder = _("LBL_RESPONDER_BOOTLOADER") if result["responder"] == "bootloader" else _("LBL_RESPONDER_APPLICATION")
             text = _(
-                "LBL_VERSION_LINE", major=result["version_major"], minor=result["version_minor"],
+                "LBL_VERSION_LINE", major=result["version_major"], minor=minor_with_patch(result),
                 responder=responder, hw=f"{result['hardware_id']:08X}", mismatch=hw_match, boot=boot_ver_text,
             )
             color = "green" if not hw_match else "red"

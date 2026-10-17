@@ -41,10 +41,18 @@ from flasher_config import (
     CAN_ID_SLAVE_VERIFY_FAIL_REASON, CAN_ID_AUTHORIZE_DOWNGRADE,
     CAN_ID_READBACK, CAN_ID_READBACK_PAGE_ACK,
     SLAVE_HARDWARE_ID, SLAVE_APP_MAX_SIZE,
+    CAN_ID_VERSION_PATCH_RESPONSE, PATCH_UNKNOWN, PATCH_FLAG,
 )
 
 class FlashError(Exception):
     pass
+
+
+def minor_with_patch(info):
+    """"minor" or "minor.patch" of a query_version() result, to show after the
+    major in major.minor.patch; the patch only when the board sent it."""
+    patch = info.get("version_patch")
+    return str(info["version_minor"]) if patch is None else "{}.{}".format(info["version_minor"], patch)
 
 
 class URTCFlasher:
@@ -64,10 +72,15 @@ class URTCFlasher:
         self.speed_cb = speed_cb or (lambda kbps: None)
         self._last_heartbeat_pct = None  # tracked across _wait_for calls for the page-ACK retry's active confirmation check
 
-    def query_version(self, timeout=1.5):
+    def query_version(self, timeout=1.5, patch_grace=0.3):
         """Asks whatever's currently running (application or bootloader)
         to identify itself. Returns a dict with keys: responder ('application'
-        or 'bootloader'), hardware_id, version_major, version_minor, and
+        or 'bootloader'), hardware_id, version_major, version_minor,
+        version_patch (the installed application's patch number, or None when
+        the board does not say), patch_aware (True when the board sent the
+        optional 0x7E9 frame, False for a board that predates it),
+        accepts_patch_in_end_update (True when the answering bootloader reads
+        the patch from the minor field of the end-of-update frame) and
         bootloader_version (a (major, minor, patch) tuple, or None) - or
         None if nothing answered within the timeout (board unresponsive,
         wrong bitrate, not connected, etc.).
@@ -77,51 +90,80 @@ class URTCFlasher:
         separate 0x7FA frame the bootloader sends right alongside 0x7F9,
         which the running application never sends (it has no way to know
         a currently-flashed bootloader's version other than this). A short
-        grace window after 0x7F9 arrives catches 0x7FA even though the two
-        aren't guaranteed to land within the same read_frame() call.
+        grace window after 0x7F9 arrives catches 0x7FA (and, for a board
+        that has it, 0x7E9) even though the frames aren't guaranteed to land
+        within the same read_frame() call. A board without 0x7E9 simply
+        leaves the patch unknown after patch_grace seconds.
         """
         self.can.send_frame(CAN_ID_QUERY_VERSION, b"\x00")
         deadline = time.monotonic() + timeout
         result = None
-        grace_deadline = None
+        got_7f9_at = None
         # 0.8s, not the original 0.3s: on a busy/industrial bus, 0x7FA can
         # legitimately land noticeably later than 0x7F9 (both frames still
         # have to make it through arbitration against other real traffic),
         # and 0.3s left too little margin for that.
         GRACE_WINDOW = 0.8
         pending_bootloader_version = None  # in case 0x7FA arrives before 0x7F9
-        while time.monotonic() < deadline or (grace_deadline is not None and time.monotonic() < grace_deadline):
-            if result is not None and grace_deadline is not None and time.monotonic() >= grace_deadline:
-                return result  # got 0x7F9, grace window for 0x7FA expired with nothing more
+        pending_patch = None  # in case 0x7E9 arrives before 0x7F9: (patch byte, flags)
+        while True:
+            now = time.monotonic()
+            if result is not None:
+                have_boot = result["responder"] != "bootloader" or result["bootloader_version"] is not None
+                if have_boot and result["patch_aware"]:
+                    return result
+                window = GRACE_WINDOW if not have_boot else patch_grace
+                if now >= got_7f9_at + max(window, patch_grace):
+                    return result
+            elif now >= deadline:
+                return None
             frame = self.can.read_frame(timeout=0.1)
             if frame is None:
                 continue
             can_id, data = frame
             if can_id == CAN_ID_VERSION_RESPONSE and len(data) == 8 and result is None:
                 responder = "application" if data[0] == 0x00 else "bootloader"
-                hw_id = struct.unpack(">I", data[1:5])[0]
-                ver_major = struct.unpack(">H", data[5:7])[0]
-                ver_minor = data[7]
                 result = {
                     "responder": responder,
-                    "hardware_id": hw_id,
-                    "version_major": ver_major,
-                    "version_minor": ver_minor,
+                    "hardware_id": struct.unpack(">I", data[1:5])[0],
+                    "version_major": struct.unpack(">H", data[5:7])[0],
+                    "version_minor": data[7],
+                    "version_patch": None,
+                    "patch_aware": False,
+                    "accepts_patch_in_end_update": False,
                     "bootloader_version": pending_bootloader_version,
                 }
-                if responder != "bootloader":
-                    return result  # application never sends 0x7FA - no point waiting for it
-                if pending_bootloader_version is not None:
-                    return result  # 0x7FA already arrived first - no need for the grace window
-                grace_deadline = time.monotonic() + GRACE_WINDOW
+                got_7f9_at = time.monotonic()
+                if pending_patch is not None:
+                    self._apply_patch_frame(result, pending_patch)
             elif can_id == CAN_ID_BOOTLOADER_VERSION_RESPONSE and len(data) == 3:
                 if result is not None:
                     result["bootloader_version"] = (data[0], data[1], data[2])
-                    return result
-                # 0x7F9 hasn't arrived yet - hold onto this until it does,
-                # rather than discarding it just because of arrival order.
-                pending_bootloader_version = (data[0], data[1], data[2])
-        return result
+                else:
+                    # 0x7F9 hasn't arrived yet - hold onto this until it does,
+                    # rather than discarding it just because of arrival order.
+                    pending_bootloader_version = (data[0], data[1], data[2])
+            elif can_id == CAN_ID_VERSION_PATCH_RESPONSE and len(data) >= 3:  # longer frames: extra bytes are ignored
+                if result is not None:
+                    self._apply_patch_frame(result, (data[1], data[2]))
+                else:
+                    pending_patch = (data[1], data[2])
+
+    @staticmethod
+    def _apply_patch_frame(result, patch_frame):
+        patch_byte, flags = patch_frame
+        result["patch_aware"] = True
+        result["version_patch"] = None if patch_byte == PATCH_UNKNOWN else patch_byte
+        result["accepts_patch_in_end_update"] = bool(flags & 1)
+
+    @staticmethod
+    def _end_update_minor_field(minor, patch, accepts_patch):
+        """The 16-bit minor field of 0x7F4 / 0x214: the plain minor, or
+        0x80 | PATCH in its high byte towards a bootloader that said it reads
+        it. Anything else stays the legacy payload."""
+        if accepts_patch and patch is not None and 0 <= patch <= 0x7F:
+            return ((PATCH_FLAG | patch) << 8) | (minor & 0xFF)
+        return minor
 
     def _wait_for(self, expected_id, timeout=2.0, expected_status_value=None):
         """Wait for a specific CAN ID, logging heartbeats/status seen along
@@ -233,36 +275,80 @@ class URTCFlasher:
             given = None
         return given or self._version_from_name(firmware_path)
 
+    def new_image_patch(self, firmware_path, version=None):
+        """The patch number (0-127) the image carries - the third part of the
+        manifest's version, of the given version or of the file name
+        (URTC_MAIN_FIRMWARE_v0.3.5.bin) - or None when it has none. Never raises."""
+        candidates = []
+        try:
+            with open(firmware_path + ".manifest.json", "r", encoding="utf-8") as f:
+                manifest = json.load(f)
+            if isinstance(manifest, dict):
+                candidates.append(str(manifest.get("version", "")))
+        except (OSError, ValueError):
+            pass
+        if isinstance(version, str):
+            candidates.append(version.strip().lstrip("vV"))
+        match = re.search(r"[vV](\d+\.\d+\.\d+)", os.path.basename(firmware_path))
+        if match:
+            candidates.append(match.group(1))
+        for text in candidates:
+            parts = text.split(".")
+            if len(parts) >= 3 and parts[0].isdigit() and parts[1].isdigit() and parts[2].isdigit():
+                return int(parts[2]) if int(parts[2]) <= 0x7F else None
+            if len(parts) >= 2 and parts[0].isdigit() and parts[1].isdigit():
+                return None  # a well-formed version without a patch: do not look further
+        return None
+
     def report_version_change(self, firmware_path, target="master", version=None, timeout=1.5):
         """Before an update: asks the board what is installed, logs
         "installed X -> new Y" and warns when Y is older than X (the
         bootloader refuses that unless a downgrade is authorised, and a
         backup of the installed firmware is the safe thing to take first).
-        Returns {"installed", "new", "downgrade"}; a missing piece is None and
-        nothing here ever stops the update."""
+        Versions are shown as major.minor.patch when the side has a patch;
+        the patch only takes part in the comparison when both sides carry
+        one. Returns {"installed", "new", "downgrade", "installed_patch",
+        "new_patch"}; a missing piece is None and nothing here ever stops the
+        update."""
         installed = None
+        installed_patch = None
         try:
             if target == "slave":
                 info = self.query_slave_version(timeout=timeout)
                 if info is not None and info["responder"] == "application":
                     installed = (info["app_version_major"], info["app_version_minor"])
+                    installed_patch = info.get("app_version_patch")
             else:
                 info = self.query_version(timeout=timeout)
                 if info is not None and not (info["responder"] == "bootloader" and info["hardware_id"] == 0):
                     installed = (info["version_major"], info["version_minor"])
+                    installed_patch = info.get("version_patch")
         except Exception:
             installed = None
+            installed_patch = None
         new = self.new_image_version(firmware_path, version)
+        new_patch = self.new_image_patch(firmware_path, version) if new is not None else None
         downgrade = installed is not None and new is not None and new < installed
+        if (installed is not None and new is not None and new == installed
+                and installed_patch is not None and new_patch is not None and new_patch < installed_patch):
+            downgrade = True
+        installed_text = self._version_text(installed, installed_patch)
+        new_text = self._version_text(new, new_patch)
         if installed is None or new is None:
-            self.log(_("LOG_VERSION_CHANGE_UNKNOWN",
-                       installed="{}.{}".format(*installed) if installed else "?",
-                       new="{}.{}".format(*new) if new else "?"))
+            self.log(_("LOG_VERSION_CHANGE_UNKNOWN", installed=installed_text or "?", new=new_text or "?"))
         else:
-            self.log(_("LOG_VERSION_CHANGE", installed="{}.{}".format(*installed), new="{}.{}".format(*new)))
+            self.log(_("LOG_VERSION_CHANGE", installed=installed_text, new=new_text))
         if downgrade:
             self.log(_("LOG_VERSION_DOWNGRADE_WARNING"))
-        return {"installed": installed, "new": new, "downgrade": downgrade}
+        return {"installed": installed, "new": new, "downgrade": downgrade,
+                "installed_patch": installed_patch, "new_patch": new_patch}
+
+    @staticmethod
+    def _version_text(version, patch=None):
+        """"major.minor" or "major.minor.patch"; None when there is no version."""
+        if version is None:
+            return None
+        return "{}.{}".format(*version) + ("" if patch is None else ".{}".format(patch))
 
     @staticmethod
     def _version_from_name(firmware_path):
@@ -555,8 +641,20 @@ class URTCFlasher:
         # currently-configured FIRMWARE_VERSION_MAJOR/MINOR, since those 2
         # can genuinely differ - most likely exactly when allow_downgrade
         # is set. ---
+        # The patch number rides in the high byte of the minor field, but only towards a bootloader that said (flag of 0x7E9, in its OWN answer) that it reads it; an image
+        # without a patch, a board that does not answer or one that predates the extension gets the legacy payload.
+        patch = self.new_image_patch(firmware_path, version)
+        minor_field = report_minor
+        if patch is not None:
+            try:
+                board = self.query_version(timeout=0.8)
+            except Exception:
+                board = None
+            if board is not None and board["responder"] == "bootloader" and board["accepts_patch_in_end_update"]:
+                minor_field = self._end_update_minor_field(report_minor, patch, True)
+                self.log(_("LOG_END_UPDATE_WITH_PATCH", patch=patch))
         self.log(_("LOG_SENDING_END_UPDATE"))
-        payload = struct.pack(">IHH", crc32, report_major, report_minor)
+        payload = struct.pack(">IHH", crc32, report_major, minor_field)
         self.can.send_frame(CAN_ID_END_UPDATE, payload)
 
         # The bootloader now verifies, then copies backup->main - this can
@@ -761,13 +859,24 @@ class URTCFlasher:
         hw_id = struct.unpack(">I", part1[1:5])[0]
         app_major = struct.unpack(">H", part1[5:7])[0]
         app_minor = (part1[7] << 8) | part2[0]
-        return {
+        info = {
             "responder": "bootloader" if part1[0] == 0x01 else "application",
             "hardware_id": hw_id,
             "app_version_major": app_major,
             "app_version_minor": app_minor,
             "bootloader_version": part2[1],
+            "app_version_patch": None,
+            "bootloader_minor": None,
+            "bootloader_patch": None,
+            "accepts_patch_in_end_update": False,
         }
+        if len(part2) >= 5:
+            # The 5-byte form of 0x218 carries the patch numbers and also says that this slave bootloader reads the patch from the minor field of 0x214.
+            info["app_version_patch"] = None if part2[2] == PATCH_UNKNOWN else part2[2]
+            info["bootloader_minor"] = part2[3]
+            info["bootloader_patch"] = part2[4]
+            info["accepts_patch_in_end_update"] = True
+        return info
 
     def flash_slave(self, firmware_path):
         """Same overall flow as flash() above, targeting the expansion
@@ -896,8 +1005,13 @@ class URTCFlasher:
                 slave_minor = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 0
             except (OSError, ValueError, json.JSONDecodeError):
                 pass
+        slave_minor_field = slave_minor
+        slave_patch = self.new_image_patch(firmware_path)
+        if slave_patch is not None and state is not None and state.get("accepts_patch_in_end_update"):
+            slave_minor_field = self._end_update_minor_field(slave_minor, slave_patch, True)
+            self.log(_("LOG_END_UPDATE_WITH_PATCH", patch=slave_patch))
         self.log(_("LOG_SENDING_END_UPDATE"))
-        payload = struct.pack(">IHH", crc32, slave_major, slave_minor)
+        payload = struct.pack(">IHH", crc32, slave_major, slave_minor_field)
         self.can.send_frame(CAN_ID_SLAVE_END_UPDATE, payload)
 
         # --- Watch 0x216 (progress) and 0x215 (status) until the copy

@@ -24,7 +24,7 @@
 </p>
 
 
-**Version:** 0.2.8 (this tool's own version - shown in the window banner and
+**Version:** 0.2.9 (this tool's own version - shown in the window banner and
 title bar, tracked separately from the URTC board firmware version it
 writes. Follows an X.Y.Z scheme where the patch number bumps automatically
 on every real build via build_exe.bat/build_exe.sh - see CHANGELOG.md for
@@ -65,7 +65,7 @@ either platform is a real board over real hardware — treat a first
 real-world flash attempt with the same caution you'd give any new tool
 talking to a bootloader: have JTAG on hand as a fallback.
 
-**Honesty check - what actually runs today:** `tests/` holds 25 pytest files (171 tests: all pass; 4 of them skip without PySide6) - the CAN-OTA protocol against a real `MockCAN` transport (`flasher_transports.py`) that plays back a full simulated bootloader sequence (start/erase/receive, page data + PAGE_ACK, HMAC chunks, end-update with a real success or a specific `VERIFY_FAIL_REASON`), the signature rules (published signature sent without any key, unsigned image refused, manifest sha256 mismatch refused before any bus traffic), the image integrity checks and the bundled `firmware/` against its manifests. GitHub Actions (`.github/workflows/ci.yml`) runs this suite on every push, and `tools/build_test.py` runs it in `build-test.sh`/`.bat`. The two `verify_qt_*.py` scripts at the repo root are real end-to-end checks kept outside pytest (they need a real Qt event loop; run them with `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`); `verify_qt_swd_full_chip_flash.py` only builds the `PyOCDCLI`/`CubeProgrammerCLI` commands with `dry_run=True`. None of this has been run against a real board over real hardware in this environment. See `CHANGELOG.md` for exactly what has shipped so far. The simulated bootloader (`MockCAN`) is only a model written from the protocol description: it reproduces the page acknowledgements, the partial last page and the readback frames, but it is not the real bootloader, so a green test run does not replace a trial on a real board (the official 73476-byte image could not be installed, and the last frame of a backup was dropped, while the tests passed, precisely because the simulation was more forgiving than the real bootloader).
+**Honesty check - what actually runs today:** `tests/` holds 27 pytest files (214 tests: all pass; 4 of them skip without PySide6) - the CAN-OTA protocol against a real `MockCAN` transport (`flasher_transports.py`) that plays back a full simulated bootloader sequence (start/erase/receive, page data + PAGE_ACK, HMAC chunks, end-update with a real success or a specific `VERIFY_FAIL_REASON`), the signature rules (published signature sent without any key, unsigned image refused, manifest sha256 mismatch refused before any bus traffic), the image integrity checks and the bundled `firmware/` against its manifests. GitHub Actions (`.github/workflows/ci.yml`) runs this suite on every push, and `tools/build_test.py` runs it in `build-test.sh`/`.bat`. The two `verify_qt_*.py` scripts at the repo root are real end-to-end checks kept outside pytest (they need a real Qt event loop; run them with `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`); `verify_qt_swd_full_chip_flash.py` only builds the `PyOCDCLI`/`CubeProgrammerCLI` commands with `dry_run=True`. None of this has been run against a real board over real hardware in this environment. See `CHANGELOG.md` for exactly what has shipped so far. The simulated bootloader (`MockCAN`) is only a model written from the protocol description: it reproduces the page acknowledgements, the partial last page and the readback frames, but it is not the real bootloader, so a green test run does not replace a trial on a real board (the official 73476-byte image could not be installed, and the last frame of a backup was dropped, while the tests passed, precisely because the simulation was more forgiving than the real bootloader).
 
 ## 1. 🔌 Get your adapter talking CAN
 
@@ -240,7 +240,7 @@ at this repository's own root:
 ├── flasher_swd_tools.py           <- STM32CubeProgrammer / pyOCD wrappers
 ├── flasher_validation.py          <- firmware file validation (.bin/.hex/.elf)
 ├── flasher_protocol.py            <- the CAN OTA state machine itself
-├── flasher_github.py               <- downloads firmware from this project's own GitHub repo
+├── flasher_github.py               <- lists and downloads the assets of a URTC GitHub release
 ├── flasher_gui.py                 <- the main window (FlasherGUI) and its menu bar
 ├── flasher_uithread.py            <- hand-off from worker threads to the Tk main thread
 ├── flasher_records.py             <- session logs (location, retention) and update reports
@@ -301,14 +301,21 @@ in the list with a clear ✓ or ✗ and the reason why:
   the **Browse .bin...** button, which works regardless of where the file
   actually lives (and runs the same validation check either way).
 - **Want the latest build without hunting for it yourself** → **Download
-  from GitHub...** fetches the current file listing straight from this
-  project's own `firmware/` folder
-  (`github.com/JuanenRac/URTC/tree/main/firmware`) and lets you pick one
-  to download directly into your own local `firmware/` folder - it then
-  shows up in the list above like any other file, no restart needed. Uses
+  from GitHub...** lists the files attached to the latest GitHub release of
+  the URTC repository (`github.com/JuanenRac/URTC/releases` - the firmware
+  binaries are published as release assets, they are not kept in git) and
+  lets you pick one to download directly into your own local `firmware/`
+  folder - it then shows up in the list above like any other file, no
+  restart needed. Type a release tag (for example `v0.3.5`) in the box at
+  the top of the window and press **Load** to list another release instead
+  of the latest. The image's `.sha256` and `.manifest.json` are downloaded
+  together with it. Files are only accepted from GitHub's own hosts
+  (`github.com` and the asset storage hosts it redirects to), and a file
+  whose size differs from what the release announces is discarded. Uses
   GitHub's own public API (unauthenticated, so subject to GitHub's own
-  60-requests/hour rate limit if you hit it a lot in a short window) -
-  nothing here needs a GitHub account or a token.
+  60-requests/hour rate limit if you hit it a lot in a short window; a
+  `GITHUB_TOKEN` environment variable raises it) - nothing here needs a
+  GitHub account.
 
 **`<filename>.manifest.json` and `<filename>.sha256`, next to each firmware
 file** - published by the URTC build for every image (and downloaded
@@ -352,6 +359,21 @@ never sends this - it has no way to know a currently-flashed bootloader's
 version other than asking the bootloader itself, so this only shows up
 when the board is actually sitting there (right after `0x7F0`, or on a
 fresh boot before it's jumped to the application).
+
+**The patch number.** A board with firmware 0.3.5 or later also sends the
+patch number of the installed application (frame `0x7E9`, right after
+`0x7F9`), so the window and the log show the full `major.minor.patch` (for
+example `v0.3.5`) instead of `major.minor`; the patch of an image is the
+third part of the version in its manifest. Before an update the log shows
+`installed -> new` in that form, and the patch only takes part in the
+"older than installed" warning when both sides carry one. A board that
+predates the patch answers without it and is shown exactly as before. When
+the bootloader announces (flag in the same frame) that it reads the patch,
+the end-of-update frame carries it in the high byte of the minor field; any
+other bootloader, and any image without a patch, get the unchanged
+two-number frame. The expansion slave's version answer (`0x218`) has the
+same optional extension. This follows the protocol description and is
+tested against the simulator only; it has not been tried on a real board.
 
 What you'll see:
 
@@ -804,7 +826,7 @@ image and publishes the signature next to it, in `<image>.manifest.json`
 signature and refuses an image whose sha256 does not match its manifest.
 Downloading an image from GitHub also downloads both files, and
 `python tools/sync_firmware.py` refreshes the bundled `firmware/` folder
-from the URTC build (`--check` verifies it). Only a self-built image with
+from the URTC build (`--check` verifies it). By default it takes the set from the assets of the latest URTC release (`--release TAG` picks another one); a local folder, such as a local URTC build, can be given as an argument instead. Only a self-built image with
 no manifest, on a bench board, needs a key: set `hmac_key_hex` /
 `slave_hmac_key_hex` in `urtc_config.json` below - without one such an image
 is refused instead of being signed with a key the bootloader cannot have.
@@ -904,7 +926,7 @@ from the SVG during development; it is not required to run the application.
 ├── flasher_swd_tools.py           <- STM32CubeProgrammer / pyOCD wrappers
 ├── flasher_validation.py          <- firmware file validation (.bin/.hex/.elf)
 ├── flasher_protocol.py            <- the CAN OTA state machine itself
-├── flasher_github.py              <- downloads firmware from URTC's own GitHub repo
+├── flasher_github.py              <- lists and downloads the assets of a URTC GitHub release
 ├── flasher_gui.py                 <- the main window (FlasherGUI) and its menu bar
 ├── flasher_uithread.py            <- hand-off from worker threads to the Tk main thread
 ├── flasher_records.py             <- session logs (location, retention) and update reports
@@ -926,6 +948,7 @@ from the SVG during development; it is not required to run the application.
 │   ├── test_manifest_target.py
 │   ├── test_mock_readback.py
 │   ├── test_ota_partial_page.py
+│   ├── test_patch_number.py
 │   ├── test_python_can_transport.py
 │   ├── test_qt_bridge_log.py
 │   ├── test_qt_log_translation.py
@@ -933,6 +956,7 @@ from the SVG during development; it is not required to run the application.
 │   ├── test_records.py
 │   ├── test_signing_policy.py
 │   ├── test_slave_entry_check.py
+│   ├── test_sync_firmware.py
 │   ├── test_ui_mailbox.py
 │   ├── test_validation_ccm_stack.py
 │   └── test_version_report.py
@@ -948,7 +972,7 @@ from the SVG during development; it is not required to run the application.
 ├── tools/
 │   ├── build_test.py                     <- non-versioning compile + Qt Quick deck source check
 │   ├── ci_validate.py                    <- manifest/CHANGELOG/docs validation used by CI
-│   ├── sync_firmware.py                  <- copies URTC's build into firmware/ (digests checked; --check verifies)
+│   ├── sync_firmware.py                  <- refreshes firmware/ from the assets of a URTC release or a local folder (digests checked; --check verifies)
 │   └── render_hydra_umc_icon_frames.py   <- regenerates assets/hydra_umc_icon_frames/ from the SVG (dev-only)
 ├── README.md                      <- this file
 ├── README_spa.md / README_ita.md / README_fra.md / README_deu.md / README_zho.md / README_jpn.md / README_por.md  <- translations

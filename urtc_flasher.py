@@ -125,8 +125,8 @@ def run_cli(argv):
                               "valid application currently present)")
     parser.add_argument("--force", action="store_true",
                          help="Flash even if the file fails the plausibility check")
-    parser.add_argument("--version", default=None, metavar="MAJOR.MINOR",
-                        help="Version of the firmware file, for an image that has no .manifest.json and no version in its name (never guessed)")
+    parser.add_argument("--version", default=None, metavar="MAJOR.MINOR[.PATCH]",
+                        help="Version of the firmware file, for an image that has no .manifest.json and no version in its name (never guessed); the optional patch is sent only to a bootloader that reads it")
     parser.add_argument("--allow-downgrade", action="store_true",
                          help="Send CAN_ID_AUTHORIZE_DOWNGRADE (0x7FD) before ending the update, "
                               "bypassing the bootloader's own anti-rollback check for this attempt "

@@ -24,7 +24,7 @@
 </p>
 
 
-**版本：** 0.2.8（本工具自身的版本——显示在窗口横幅和标题栏中，与它所写入的
+**版本：** 0.2.9（本工具自身的版本——显示在窗口横幅和标题栏中，与它所写入的
 URTC 板卡固件版本分开跟踪。遵循 X.Y.Z 方案，其中补丁号在每次通过
 build_exe.bat/build_exe.sh 进行的真实构建时自动递增——版本历史见
 CHANGELOG.md，确切的进位规则见 bump_version.py）
@@ -57,7 +57,7 @@ CAN 自我标识），以便你在决定要刷写什么之前，先看看当前�
 针对真实硬件的真实板卡——请以对待任何与引导程序通信的新工具同样的谨慎态度
 对待首次真实刷写尝试：手边备好 JTAG 作为后备手段。
 
-**诚实核查 - 今天真正能运行的部分：** `tests/` 下有 25 个 pytest 文件（171 个测试：全部通过，其中 4 个在没有 PySide6 时跳过）——针对真实 `MockCAN` 传输（`flasher_transports.py`）的 CAN-OTA 协议测试，它会回放完整的模拟引导程序序列（开始／擦除／接收、页数据 + PAGE_ACK、HMAC 分块、以真实成功或特定 `VERIFY_FAIL_REASON` 结束更新）；签名规则（无需任何密钥即发送已发布的签名、拒绝未签名镜像、清单 sha256 不符时在任何总线通信前拒绝）；镜像完整性检查；以及随附 `firmware/` 与其清单的核对。GitHub Actions（`.github/workflows/ci.yml`）在每次推送时运行这套测试，`tools/build_test.py` 也会在 `build-test.sh`/`.bat` 中运行。根目录下的两个 `verify_qt_*.py` 脚本是 pytest 之外的真实端到端检查（需要真实的 Qt 事件循环；用 `QT_QPA_PLATFORM=offscreen python verify_qt_*.py` 运行）；`verify_qt_swd_full_chip_flash.py` 只以 `dry_run=True` 构造 `PyOCDCLI`/`CubeProgrammerCLI` 命令。这些都没有在本环境中针对真实板卡运行过。已发布的内容请参见 `CHANGELOG.md`。 模拟的引导程序（`MockCAN`）只是根据协议说明编写的模型：它能重现页确认、不完整的最后一页和回读帧，但它不是真正的引导程序，所以测试全部通过并不能代替在真实板卡上的试验（官方 73476 字节镜像曾无法安装、备份的最后一帧曾被丢弃，而测试却是通过的，正是因为模拟比真正的引导程序更宽松）。
+**诚实核查 - 今天真正能运行的部分：** `tests/` 下有 27 个 pytest 文件（214 个测试：全部通过，其中 4 个在没有 PySide6 时跳过）——针对真实 `MockCAN` 传输（`flasher_transports.py`）的 CAN-OTA 协议测试，它会回放完整的模拟引导程序序列（开始／擦除／接收、页数据 + PAGE_ACK、HMAC 分块、以真实成功或特定 `VERIFY_FAIL_REASON` 结束更新）；签名规则（无需任何密钥即发送已发布的签名、拒绝未签名镜像、清单 sha256 不符时在任何总线通信前拒绝）；镜像完整性检查；以及随附 `firmware/` 与其清单的核对。GitHub Actions（`.github/workflows/ci.yml`）在每次推送时运行这套测试，`tools/build_test.py` 也会在 `build-test.sh`/`.bat` 中运行。根目录下的两个 `verify_qt_*.py` 脚本是 pytest 之外的真实端到端检查（需要真实的 Qt 事件循环；用 `QT_QPA_PLATFORM=offscreen python verify_qt_*.py` 运行）；`verify_qt_swd_full_chip_flash.py` 只以 `dry_run=True` 构造 `PyOCDCLI`/`CubeProgrammerCLI` 命令。这些都没有在本环境中针对真实板卡运行过。已发布的内容请参见 `CHANGELOG.md`。 模拟的引导程序（`MockCAN`）只是根据协议说明编写的模型：它能重现页确认、不完整的最后一页和回读帧，但它不是真正的引导程序，所以测试全部通过并不能代替在真实板卡上的试验（官方 73476 字节镜像曾无法安装、备份的最后一帧曾被丢弃，而测试却是通过的，正是因为模拟比真正的引导程序更宽松）。
 
 ## 1. 🔌 让你的适配器与 CAN 通信
 
@@ -208,7 +208,7 @@ SocketCAN 没有这个特定的坑——访问一个类似 `can0` 的接口不�
 ├── flasher_swd_tools.py           <- STM32CubeProgrammer / pyOCD 包装器
 ├── flasher_validation.py          <- 固件文件验证（.bin/.hex/.elf）
 ├── flasher_protocol.py            <- CAN OTA 状态机本身
-├── flasher_github.py               <- 从本项目自身的 GitHub 仓库下载固件
+├── flasher_github.py               <- 列出并下载 URTC GitHub 发布版本的资源（assets）
 ├── flasher_gui.py                 <- 主窗口（FlasherGUI）及其菜单栏
 ├── flasher_uithread.py            <- 工作线程向 Tk 主线程的交接
 ├── flasher_records.py             <- 会话日志（位置、保留）与更新报告
@@ -258,13 +258,19 @@ Python 都自带）加载，而非 Pillow，因此不会增加新的依赖。`bu
   文件），这正是引导程序自身在真实传输过程中的 CRC32/HMAC 检查所要做的事。
 - **什么都没找到，或你想要一个完全来自其他地方的文件** → 使用**浏览 .bin...**
   按钮，无论该文件实际存放在哪里都可以使用（并且同样会运行相同的验证检查）。
-- **想要最新构建版本又不想自己去找** → **从 GitHub 下载...** 会直接从本
-  项目自身的 `firmware/` 文件夹
-  （`github.com/JuanenRac/URTC/tree/main/firmware`）获取当前的文件列表，
-  让你选择一个直接下载到你自己本地的 `firmware/` 文件夹中——它随后会像
-  任何其他文件一样出现在上方列表中，无需重启。使用 GitHub 自身的公共 API
-  （未经身份验证，因此如果短时间内频繁使用会受限于 GitHub 自身的每小时
-  60 次请求限制）——这里的任何内容都不需要 GitHub 账户或令牌。
+- **想要最新构建版本又不想自己去找** → **从 GitHub 下载...** 会列出
+  URTC 仓库最新 GitHub 发布版本（release）所附带的文件
+  （`github.com/JuanenRac/URTC/releases`——固件二进制文件作为发布版本的
+  资源（assets）发布，不再保存在 git 中），让你选择一个直接下载到你自己
+  本地的 `firmware/` 文件夹中——它随后会像任何其他文件一样出现在上方列表
+  中，无需重启。在窗口顶部的输入框中填写发布标签（例如 `v0.3.5`）并点击
+  **加载**，即可列出最新版本以外的其他发布版本。镜像的 `.sha256` 和
+  `.manifest.json` 会随它一同下载。只接受来自 GitHub 自身主机的文件
+  （`github.com` 以及它重定向到的资源存储主机），大小与发布版本所声明的
+  不一致的文件会被丢弃。使用 GitHub 自身的公共 API（未经身份验证，因此
+  如果短时间内频繁使用会受限于 GitHub 每小时 60 次请求的限制；设置环境
+  变量 `GITHUB_TOKEN` 可以提高该限制）——这里的任何内容都不需要 GitHub
+  账户。
 
 **与每个固件文件放在一起的 `<filename>.manifest.json` 和
 `<filename>.sha256`**——由 URTC 构建为每个镜像发布（从 GitHub 下载时会一并
@@ -301,6 +307,17 @@ Python 都自带）加载，而非 Pillow，因此不会增加新的依赖。`bu
 应用程序从不发送此内容——除了询问引导程序本身，它没有办法知道当前已刷写的
 引导程序的版本，因此这只会在板卡确实处于引导程序中时出现（紧跟在 `0x7F0`
 之后，或在新的启动中它跳转到应用程序之前）。
+
+**补丁号。** 固件为 0.3.5 或更新版本的板卡还会发送已安装应用程序的补丁号
+（帧 `0x7E9`，紧跟在 `0x7F9` 之后），因此窗口和日志会显示完整的
+`主版本.次版本.补丁`（例如 `v0.3.5`），而不只是 `主版本.次版本`；镜像的补丁号
+是其清单中版本的第三部分。更新前，日志会以这种形式显示"已安装 -> 新版本"，
+只有当双方都带有补丁号时，补丁号才会参与"比已安装版本更旧"的警告。早于补丁号
+功能的板卡不带补丁号应答，显示方式与以前完全相同。当引导程序（在同一帧的标志位
+中）声明它会读取补丁号时，更新结束帧会把补丁号放在次版本字段的高字节中；任何
+其他引导程序以及任何不带补丁号的镜像，收到的仍是原来的两个数字的帧。扩展从机
+的版本应答（`0x218`）有同样的可选扩展。这是按协议说明实现的，仅在模拟器上
+测试过，没有在真实板卡上尝试过。
 
 你会看到以下内容：
 
@@ -660,7 +677,7 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 镜像旁边的 `<image>.manifest.json`（`hmac_sha256`，另有 `<image>.sha256`）中；
 刷写工具发送该已发布的签名，并拒绝 sha256 与清单不符的镜像。从 GitHub 下载
 镜像时会同时下载这两个文件，`python tools/sync_firmware.py` 会根据 URTC 构建
-更新随附的 `firmware/` 文件夹（`--check` 用于校验）。只有在测试板上刷写没有
+更新随附的 `firmware/` 文件夹（`--check` 用于校验）。默认从 URTC 最新发布版本的资源（assets）中获取这一组文件（`--release TAG` 可选择其他版本）；也可以改为传入本地文件夹作为参数，例如本地的 URTC 构建。只有在测试板上刷写没有
 清单的自建镜像时才需要密钥：在下方的 `urtc_config.json` 中设置
 `hmac_key_hex` / `slave_hmac_key_hex`——没有密钥时，此类镜像会被拒绝，而不是
 用引导程序不可能拥有的密钥签名。参见 URTC 的 `docs/FIRMWARE_SIGNING.TXT`。
@@ -753,7 +770,7 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 ├── flasher_swd_tools.py           <- STM32CubeProgrammer / pyOCD 包装器
 ├── flasher_validation.py          <- 固件文件验证（.bin/.hex/.elf）
 ├── flasher_protocol.py            <- CAN OTA 状态机本身
-├── flasher_github.py              <- 从 URTC 自身的 GitHub 仓库下载固件
+├── flasher_github.py              <- 列出并下载 URTC GitHub 发布版本的资源（assets）
 ├── flasher_gui.py                 <- 主窗口（FlasherGUI）及其菜单栏
 ├── flasher_uithread.py            <- 工作线程向 Tk 主线程的交接
 ├── flasher_records.py             <- 会话日志（位置、保留）与更新报告
@@ -775,6 +792,7 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 │   ├── test_manifest_target.py
 │   ├── test_mock_readback.py
 │   ├── test_ota_partial_page.py
+│   ├── test_patch_number.py
 │   ├── test_python_can_transport.py
 │   ├── test_qt_bridge_log.py
 │   ├── test_qt_log_translation.py
@@ -782,6 +800,7 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 │   ├── test_records.py
 │   ├── test_signing_policy.py
 │   ├── test_slave_entry_check.py
+│   ├── test_sync_firmware.py
 │   ├── test_ui_mailbox.py
 │   ├── test_validation_ccm_stack.py
 │   └── test_version_report.py
@@ -797,7 +816,7 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 ├── tools/
 │   ├── build_test.py                     <- 不递增版本号的编译检查 + Qt Quick 面板源码校验
 │   ├── ci_validate.py                    <- CI 使用的 manifest/CHANGELOG/docs 校验
-│   ├── sync_firmware.py                  <- 将 URTC 构建复制到 firmware/（校验摘要；--check 用于校验）
+│   ├── sync_firmware.py                  <- 从 URTC 发布版本的资源或本地文件夹更新 firmware/（校验摘要；--check 用于校验）
 │   └── render_hydra_umc_icon_frames.py   <- 从 SVG 重新生成 assets/hydra_umc_icon_frames/（仅限开发）
 ├── README.md                      <- 英文原版
 ├── README_zho.md                  <- 本文件

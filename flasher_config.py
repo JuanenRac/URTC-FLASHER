@@ -83,6 +83,9 @@ MLX_SENSOR_VARIANTS = [
 ]
 ERASE_FRAM_MAGIC = bytes([0xE3, 0xA5, 0xE0, 0xFF])
 CAN_ID_BOOTLOADER_VERSION_RESPONSE = 0x7FA  # sent only by the bootloader, alongside 0x7F9, when it's the one answering
+CAN_ID_VERSION_PATCH_RESPONSE = 0x7E9  # DLC=3 (optional): answering side, installed application PATCH (0xFF = unknown), flags (bit 0 = the bootloader reads the patch from the minor field of 0x7F4 / 0x214); sent right after 0x7F9 by boards that know their patch, never by older ones
+PATCH_UNKNOWN = 0xFF
+PATCH_FLAG = 0x80  # high byte of the 16-bit minor field of 0x7F4 / 0x214: 0x80 | PATCH (0-127), only towards a bootloader that announced support
 CAN_ID_QUERY_ERROR_COUNTERS = 0x7FB  # answered by whichever of the application or bootloader is currently running, same dual-answerable convention as CAN_ID_QUERY_VERSION
 CAN_ID_ERROR_COUNTERS_RESPONSE = 0x7FC  # DLC=2: TEC (Transmit Error Counter), REC (Receive Error Counter) - read directly from the CAN peripheral's own ESR register on the board's side
 CAN_ID_AUTHORIZE_DOWNGRADE = 0x7FD  # DLC=4, magic payload 0xD0,0x9E,0x12,0xAD - authorizes the CURRENT update attempt only to bypass the bootloader's own anti-rollback check; must be sent after 0x7F1 and before 0x7F4 for the same attempt, see CANBUS.TXT
@@ -124,7 +127,7 @@ SLAVE_HARDWARE_ID = 0x0303CB01  # STM32F303CBT6, expansion slave chip - see slav
 # --version given, or the file name), never a default - an invented one made every later official image look older to the anti-rollback check.
 
 # This tool's OWN version (shown in the banner and window title) - about the flasher script itself.
-FLASHER_VERSION = "0.2.8"
+FLASHER_VERSION = "0.2.9"
 FLASHER_AUTHOR = "JuanenRac"
 
 # --- HMAC signing keys: none by default ---

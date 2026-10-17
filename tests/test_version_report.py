@@ -28,7 +28,8 @@ def _image(tmp_path, name="URTC_MAIN_FIRMWARE_v0.3.3.bin", version="0.3.3"):
 def test_an_upgrade_is_reported_without_a_warning(tmp_path):
     lines = []
     result = URTCFlasher(MockCAN(installed_version=(0, 2)), log=lines.append).report_version_change(_image(tmp_path))
-    assert result == {"installed": (0, 2), "new": (0, 3), "downgrade": False}
+    assert (result["installed"], result["new"], result["downgrade"]) == ((0, 2), (0, 3), False)
+    assert result["installed_patch"] is None  # a board that predates the patch frame
     assert any("0.2" in line and "0.3" in line for line in lines)
     assert not any("OLDER" in line for line in lines)
 
@@ -55,7 +56,7 @@ def test_a_board_that_does_not_answer_is_reported_as_unknown_and_nothing_stops(t
 
     lines = []
     result = URTCFlasher(_Dead(), log=lines.append).report_version_change(_image(tmp_path), timeout=0.2)
-    assert result == {"installed": None, "new": (0, 3), "downgrade": False}
+    assert (result["installed"], result["new"], result["downgrade"]) == (None, (0, 3), False)
     assert any("?" in line for line in lines)
 
 

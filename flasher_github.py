@@ -1,8 +1,13 @@
 # =============================================================================
-# URTC Flasher - Download firmware directly from the project's own GitHub
-# repository (github.com/JuanenRac/URTC, firmware/ folder).
+# URTC Flasher - Download firmware from the assets of a GitHub release of the
+# project's own repository (github.com/JuanenRac/URTC).
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 # GPL-3.0 - see LICENSE
+#
+# The URTC firmware binaries are not versioned in git: each release carries
+# them as assets (the images, their .sha256 and .manifest.json files and
+# firmware_manifest.json). This module lists the assets of the latest release
+# (or of a chosen tag) through GitHub's Releases API and downloads them.
 #
 # Uses only Python's own standard library (urllib, json) - deliberately no
 # `requests` or other third-party HTTP dependency, since this is a
@@ -10,33 +15,37 @@
 # person has to `pip install` (or one more thing PyInstaller has to bundle)
 # before this tool runs at all.
 #
-# IMPORTANT CAVEAT, stated plainly rather than buried: the exact JSON shape
-# GitHub's own Contents API returns was NOT verified against a live call to
-# this project's own real repository while writing this - every attempt
-# from this development environment hit GitHub's own unauthenticated rate
-# limit (60 requests/hour, shared across whatever pool of outbound IPs this
-# sandbox sits behind, already exhausted by other traffic on every retry).
-# What's implemented here follows GitHub's own publicly documented Contents
-# API response shape (a stable, widely-used public API, unlikely to have
-# quietly changed shape) - but "documented" isn't the same confidence level
-# as "confirmed against a real response from this project's own repo," and
-# that gap is real. Test this against the actual repository once it's
-# reachable, before trusting it blindly.
+# What a download is trusted for: the listing is data from the network, so a
+# file is only fetched from GitHub's own hosts (github.com for the asset
+# address, and the asset storage hosts it redirects to), over https, and what
+# arrives is compared with the size the release announces. The signature and
+# digests that matter for flashing travel in the manifests and are checked
+# again before anything is sent to a board.
 # =============================================================================
 import json
 import os
+import re
 import urllib.error
 import urllib.parse
 import urllib.request
 
 from flasher_config import _
 
-GITHUB_API_BASE = "https://api.github.com/repos/JuanenRac/URTC/contents/firmware"
-GITHUB_REPO_URL = "https://github.com/JuanenRac/URTC"
-# The only host a listed file may be downloaded from: the listing is data
-# from the network, so its download_url is not trusted to point anywhere else.
-ALLOWED_DOWNLOAD_HOSTS = ("raw.githubusercontent.com",)
+GITHUB_REPO = "JuanenRac/URTC"
+GITHUB_API_BASE = "https://api.github.com/repos/" + GITHUB_REPO + "/releases"
+GITHUB_REPO_URL = "https://github.com/" + GITHUB_REPO
+# The only hosts a listed file may be downloaded from. An asset address is on
+# github.com and answers with a redirect to GitHub's asset storage
+# (objects.githubusercontent.com, and release-assets.githubusercontent.com for
+# newer uploads); the check runs before the request and again on the address
+# the response really came from.
+ALLOWED_DOWNLOAD_HOSTS = (
+    "github.com",
+    "objects.githubusercontent.com",
+    "release-assets.githubusercontent.com",
+)
 USER_AGENT = "URTC-Flasher"  # GitHub's own API rejects requests with no User-Agent header at all
+_TAG_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 
 
 class GitHubDownloadError(Exception):
@@ -60,19 +69,30 @@ def _is_rate_limited(error):
     return headers.get("X-RateLimit-Remaining") == "0" or headers.get("Retry-After") is not None
 
 
-def list_firmware_files(log=None):
-    """Fetches the file listing from this project's own GitHub repository
-    (firmware/ folder), via GitHub's Contents API
-    (GET /repos/{owner}/{repo}/contents/{path}). Returns a list of dicts,
-    each with at least "name", "size", and "download_url" - the 3 fields
-    this module's own download_file() actually needs, deliberately not the
-    full raw API response (which also carries "sha", "url", "git_url",
-    "html_url", "type", "_links" - all real per GitHub's own documented
-    shape, none of them used here). Raises GitHubDownloadError with a
-    human-readable reason on any failure (network unreachable, rate
-    limited, repository/folder not found, unexpected response shape) -
-    the caller's job is to show that reason to the person, not to guess
-    at it.
+def _release_url(tag):
+    if tag is None or not str(tag).strip():
+        return GITHUB_API_BASE + "/latest"
+    tag = str(tag).strip()
+    if tag[0].isdigit():
+        tag = "v" + tag  # "0.3.5" and "v0.3.5" name the same release
+    if not _TAG_PATTERN.match(tag):
+        raise GitHubDownloadError(_("ERR_GITHUB_BAD_TAG", tag=tag))
+    return GITHUB_API_BASE + "/tags/" + urllib.parse.quote(tag)
+
+
+def fetch_release(tag=None, log=None, only_firmware=True):
+    """Lists the assets of a release of this project's own repository through
+    GitHub's Releases API (GET /repos/{owner}/{repo}/releases/latest, or
+    /releases/tags/{tag} for a chosen one). Returns (tag_name, entries), each
+    entry a dict with the 3 fields download_file() needs: "name", "size" and
+    "download_url" (the asset's browser_download_url, on github.com). With
+    only_firmware (the default) the list is reduced to the images and the
+    files that travel with them (.bin, .sha256, .manifest.json); with False
+    it holds every uploaded asset (the sync tool also wants
+    firmware_manifest.json). Raises GitHubDownloadError with a human-readable
+    reason on any failure (network unreachable, rate limited, release not
+    found, unexpected response shape) - the caller's job is to show that
+    reason to the person, not to guess at it.
     """
     headers = {
         "Accept": "application/vnd.github+json",
@@ -83,7 +103,7 @@ def list_firmware_files(log=None):
     token = os.environ.get("GITHUB_TOKEN", "").strip()
     if token:
         headers["Authorization"] = "Bearer " + token
-    req = urllib.request.Request(GITHUB_API_BASE, headers=headers)
+    req = urllib.request.Request(_release_url(tag), headers=headers)
     if log:
         log(_("LOG_GITHUB_FETCHING_LIST"))
     try:
@@ -105,60 +125,60 @@ def list_firmware_files(log=None):
         raise GitHubDownloadError(_("ERR_GITHUB_TIMEOUT")) from None
 
     try:
-        entries = json.loads(raw)
+        release = json.loads(raw)
     except json.JSONDecodeError:
         raise GitHubDownloadError(_("ERR_GITHUB_BAD_RESPONSE")) from None
 
-    if not isinstance(entries, list):
-        # A single-file path (not a folder) returns a dict, not a list -
-        # per GitHub's own documented Contents API behavior. This
-        # module's own GITHUB_API_BASE is a folder path, so a dict here
-        # means something unexpected happened upstream (the folder was
-        # replaced with a file of the same name, or the API's own
-        # response shape genuinely changed) - surfaced as an error
-        # rather than this function silently returning something the
-        # caller can't iterate over the way it expects.
+    if not isinstance(release, dict) or not isinstance(release.get("assets"), list):
         raise GitHubDownloadError(_("ERR_GITHUB_UNEXPECTED_SHAPE"))
+    tag_name = str(release.get("tag_name") or "")
 
     results = []
-    for entry in entries:
-        if not isinstance(entry, dict):
+    for asset in release["assets"]:
+        if not isinstance(asset, dict):
             continue
-        # "type": "file" per GitHub's own documented values ("file",
-        # "dir", "symlink", "submodule") - skip anything that isn't a
-        # plain file (a subfolder under firmware/, if one ever exists,
-        # shouldn't show up as something this tool tries to download and
-        # save as a firmware image).
-        if entry.get("type") != "file":
-            continue
-        name = entry.get("name")
-        download_url = entry.get("download_url")
+        name = asset.get("name")
+        download_url = asset.get("browser_download_url")
         if not name or not download_url:
             continue
-        # Only firmware images and the files that travel with them: the
-        # folder also holds manifests, ELF and HEX files that are not images.
-        if not (name.endswith(".bin") or name.endswith(SIDECAR_SUFFIXES)):
+        # An asset still being uploaded is not a complete file.
+        if asset.get("state", "uploaded") != "uploaded":
+            continue
+        # A file name from the network becomes a path on this machine: only a plain name.
+        if os.path.basename(name) != name or name in (".", ".."):
+            continue
+        if only_firmware and not (name.endswith(".bin") or name.endswith(SIDECAR_SUFFIXES)):
             continue
         results.append({
             "name": name,
-            "size": entry.get("size", 0),
+            "size": asset.get("size", 0),
             "download_url": download_url,
         })
 
     if log:
+        log(_("LOG_GITHUB_RELEASE_TAG", tag=tag_name or "?"))
         log(_("LOG_GITHUB_LIST_COUNT", count=len(results)))
-    return results
+    return tag_name, results
+
+
+def list_firmware_files(log=None, tag=None):
+    """The firmware files (images and their sidecars) of the latest release,
+    or of `tag`: the list half of fetch_release()."""
+    return fetch_release(tag, log=log)[1]
 
 
 def download_file(download_url, dest_path, log=None, progress_cb=None, expected_size=None):
     """Downloads a single file from download_url (as returned by
-    list_firmware_files above) to dest_path, streamed in chunks rather
+    fetch_release above) to dest_path, streamed in chunks rather
     than loaded whole into memory - a firmware binary is only ever a few
     hundred KB, but there's no reason to assume that stays true forever,
     and streaming costs nothing extra here. Returns the number of bytes
     written. Raises GitHubDownloadError on any failure, same reasoning as
-    list_firmware_files above."""
+    fetch_release above."""
     _check_download_host(download_url)
+    parsed = urllib.parse.urlparse(download_url)
+    if (parsed.hostname or "").lower() == "github.com" and not parsed.path.startswith("/" + GITHUB_REPO + "/releases/download/"):
+        raise GitHubDownloadError(_("ERR_GITHUB_BAD_HOST", host=download_url))  # an asset of this project's releases only, not any other path on github.com
     req = urllib.request.Request(download_url, headers={"User-Agent": USER_AGENT})
     if log:
         log(_("LOG_GITHUB_DOWNLOADING", name=os.path.basename(dest_path)))

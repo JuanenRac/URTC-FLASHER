@@ -39,7 +39,7 @@ from flasher_config import (
     SLAVE_PYOCD_TARGET_NAME, SLAVE_TOTAL_FLASH_SIZE, TOOL_NAMES, _, translate_log_line,
 )
 from flasher_integrity import preflight_image
-from flasher_protocol import FlashError, URTCFlasher
+from flasher_protocol import FlashError, URTCFlasher, minor_with_patch
 from flasher_swd_tools import CubeProgrammerCLI, PyOCDCLI, SWDFlashError
 from flasher_transports import SLCAN, SocketCAN, list_socketcan_interfaces
 from flasher_validation import validate_firmware_file, validate_swd_image_file
@@ -809,7 +809,7 @@ class FlasherQtBridge(QObject):
                         "label": "Version",
                         "value": (
                             f"{version['responder']} v{version['version_major']}."
-                            f"{version['version_minor']} / HW 0x{version['hardware_id']:08X}{suffix}"
+                            f"{minor_with_patch(version)} / HW 0x{version['hardware_id']:08X}{suffix}"
                         ),
                         "ok": True,
                     }

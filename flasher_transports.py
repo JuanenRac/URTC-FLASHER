@@ -20,6 +20,7 @@ from flasher_config import (
     CAN_ID_START_UPDATE, CAN_ID_HMAC_CHUNK, CAN_ID_DATA, CAN_ID_PAGE_ACK,
     CAN_ID_END_UPDATE, CAN_ID_STATUS, THIS_HARDWARE_ID,
     BITRATE_500K_SLCAN_CODE, FLASH_PAGE_SIZE, CAN_ID_READBACK, CAN_ID_READBACK_PAGE_ACK,
+    CAN_ID_VERSION_PATCH_RESPONSE, CAN_ID_SLAVE_VERSION_RESP_1, CAN_ID_SLAVE_VERSION_RESP_2, CAN_ID_SLAVE_END_UPDATE, PATCH_UNKNOWN,
 )
 
 # =============================================================================
@@ -521,9 +522,20 @@ class MockCAN:
     CANBUS.TXT) instead of completing successfully - useful for testing
     the failure-handling path without needing a board that's actually
     misconfigured to trigger a real one.
+
+    A board that predates the PATCH extension is the default: it answers 0x7F8
+    with 0x7F9 and 0x7FA only. installed_patch (0-127, or PATCH_UNKNOWN for
+    "the board does not know it") makes the simulated board also send 0x7E9
+    after 0x7F9, and accepts_patch sets the flag that says its bootloader reads
+    the patch from the end-of-update frame. slave_version, a dict with
+    "version" (major, minor), optional "patch", "bootloader" (major) and
+    "patch_extension", makes it answer the slave version query (0x217 / 0x218);
+    without it the slave stays silent. The last end-of-update payloads received
+    are kept in end_update_payload / slave_end_update_payload.
     """
 
-    def __init__(self, simulate_failure=None, log=None, installed_version=(0, 2), installed_image=b""):
+    def __init__(self, simulate_failure=None, log=None, installed_version=(0, 2), installed_image=b"",
+                 installed_patch=None, accepts_patch=False, slave_version=None):
         self.log = log or (lambda msg: None)
         self.simulate_failure = simulate_failure
         # What the simulated board reports as installed (0x7F9) and what a readback (0x7FE)
@@ -531,6 +543,11 @@ class MockCAN:
         # bytes, the last one as short as the size requires, the next page after each ACK.
         self.installed_version = installed_version
         self.installed_image = bytes(installed_image)
+        self.installed_patch = installed_patch
+        self.accepts_patch = accepts_patch
+        self.slave_version = slave_version
+        self.end_update_payload = None
+        self.slave_end_update_payload = None
         self._readback_sent = 0
         self._response_queue = []  # list of (can_id, data) tuples awaiting read_frame()
         self._update_total_size = 0
@@ -559,6 +576,25 @@ class MockCAN:
                 + struct.pack(">H", self.installed_version[0]) + bytes([self.installed_version[1]]),
             ))
             self._response_queue.append((CAN_ID_BOOTLOADER_VERSION_RESPONSE, bytes([1, 0, 1])))
+            if self.installed_patch is not None:
+                self._response_queue.append((
+                    CAN_ID_VERSION_PATCH_RESPONSE,
+                    bytes([0x01, self.installed_patch, 0x01 if self.accepts_patch else 0x00]),
+                ))
+        elif can_id == CAN_ID_SLAVE_VERSION_RESP_1 and self.slave_version is not None:
+            info = self.slave_version
+            major, minor = info.get("version", (0, 1))
+            self._response_queue.append((
+                CAN_ID_SLAVE_VERSION_RESP_1,
+                bytes([0x01]) + struct.pack(">I", 0x0303CC02) + struct.pack(">H", major) + bytes([(minor >> 8) & 0xFF]),
+            ))
+            tail = bytes([minor & 0xFF, info.get("bootloader", 0)])
+            if info.get("patch_extension"):
+                patch = info.get("patch")
+                tail += bytes([PATCH_UNKNOWN if patch is None else patch, 0, 0])
+            self._response_queue.append((CAN_ID_SLAVE_VERSION_RESP_2, tail))
+        elif can_id == CAN_ID_SLAVE_END_UPDATE:  # slave end of update: kept for the tests, the slave flow itself is not simulated
+            self.slave_end_update_payload = bytes(data)
         elif can_id == CAN_ID_READBACK:
             self._readback_sent = 0
             self._response_queue.append((CAN_ID_READBACK, struct.pack(">I", len(self.installed_image))))
@@ -586,6 +622,7 @@ class MockCAN:
                 self._response_queue.append((CAN_ID_PAGE_ACK, struct.pack(">I", self._next_page_index)))
                 self._next_page_index += 1
         elif can_id == CAN_ID_END_UPDATE:
+            self.end_update_payload = bytes(data)
             if self._update_bytes_received > self._next_page_index * FLASH_PAGE_SIZE:   # the partial page is written and acknowledged now
                 self._response_queue.append((CAN_ID_PAGE_ACK, struct.pack(">I", self._next_page_index)))
                 self._next_page_index += 1

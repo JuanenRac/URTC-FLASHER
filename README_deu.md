@@ -24,7 +24,7 @@
 </p>
 
 
-**Version:** 0.2.8 (die Version dieses Tools selbst - angezeigt im
+**Version:** 0.2.9 (die Version dieses Tools selbst - angezeigt im
 Fenster-Banner und in der Titelleiste, getrennt verfolgt von der
 Firmware-Version der URTC-Platine, die es schreibt. Folgt einem
 X.Y.Z-Schema, bei dem die Patch-Nummer bei jedem echten Build über
@@ -71,7 +71,7 @@ echten Flash-Versuch mit derselben Vorsicht, die Sie jedem neuen Tool
 entgegenbringen würden, das mit einem Bootloader spricht: halten Sie
 JTAG als Rückfalloption bereit.
 
-**Ehrlichkeitscheck - was heute wirklich läuft:** `tests/` enthält 25 pytest-Dateien (171 Tests: alle bestehen; 4 davon werden ohne PySide6 übersprungen) - das CAN-OTA-Protokoll gegen einen echten `MockCAN`-Transport (`flasher_transports.py`), der eine vollständige simulierte Bootloader-Sequenz abspielt (Start/Löschen/Empfang, Seitendaten + PAGE_ACK, HMAC-Blöcke, Update-Ende mit echtem Erfolg oder einem bestimmten `VERIFY_FAIL_REASON`), die Signaturregeln (veröffentlichte Signatur ohne Schlüssel gesendet, unsigniertes Image abgelehnt, nicht passender Manifest-sha256 vor jedem Busverkehr abgelehnt), die Image-Integritätsprüfungen und den mitgelieferten Ordner `firmware/` gegen seine Manifeste. GitHub Actions (`.github/workflows/ci.yml`) führt diese Suite bei jedem Push aus, und `tools/build_test.py` führt sie in `build-test.sh`/`.bat` aus. Die beiden Skripte `verify_qt_*.py` im Wurzelverzeichnis sind echte End-to-End-Prüfungen außerhalb von pytest (sie brauchen eine echte Qt-Ereignisschleife; Aufruf mit `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`); `verify_qt_swd_full_chip_flash.py` baut die Befehle für `PyOCDCLI`/`CubeProgrammerCLI` nur mit `dry_run=True`. Nichts davon wurde in dieser Umgebung gegen eine echte Platine ausgeführt. Siehe `CHANGELOG.md` für den genauen Stand. Der simulierte Bootloader (`MockCAN`) ist nur ein aus der Protokollbeschreibung gebautes Modell: Er bildet die Seiten-ACKs, die teilweise letzte Seite und die Readback-Frames nach, ist aber nicht der echte Bootloader, daher ersetzt ein grüner Testlauf keinen Versuch an einer echten Platine (das offizielle Image mit 73476 Byte ließ sich nicht installieren und der letzte Frame einer Sicherung ging verloren, während die Tests bestanden, gerade weil die Simulation nachsichtiger war als der echte Bootloader).
+**Ehrlichkeitscheck - was heute wirklich läuft:** `tests/` enthält 27 pytest-Dateien (214 Tests: alle bestehen; 4 davon werden ohne PySide6 übersprungen) - das CAN-OTA-Protokoll gegen einen echten `MockCAN`-Transport (`flasher_transports.py`), der eine vollständige simulierte Bootloader-Sequenz abspielt (Start/Löschen/Empfang, Seitendaten + PAGE_ACK, HMAC-Blöcke, Update-Ende mit echtem Erfolg oder einem bestimmten `VERIFY_FAIL_REASON`), die Signaturregeln (veröffentlichte Signatur ohne Schlüssel gesendet, unsigniertes Image abgelehnt, nicht passender Manifest-sha256 vor jedem Busverkehr abgelehnt), die Image-Integritätsprüfungen und den mitgelieferten Ordner `firmware/` gegen seine Manifeste. GitHub Actions (`.github/workflows/ci.yml`) führt diese Suite bei jedem Push aus, und `tools/build_test.py` führt sie in `build-test.sh`/`.bat` aus. Die beiden Skripte `verify_qt_*.py` im Wurzelverzeichnis sind echte End-to-End-Prüfungen außerhalb von pytest (sie brauchen eine echte Qt-Ereignisschleife; Aufruf mit `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`); `verify_qt_swd_full_chip_flash.py` baut die Befehle für `PyOCDCLI`/`CubeProgrammerCLI` nur mit `dry_run=True`. Nichts davon wurde in dieser Umgebung gegen eine echte Platine ausgeführt. Siehe `CHANGELOG.md` für den genauen Stand. Der simulierte Bootloader (`MockCAN`) ist nur ein aus der Protokollbeschreibung gebautes Modell: Er bildet die Seiten-ACKs, die teilweise letzte Seite und die Readback-Frames nach, ist aber nicht der echte Bootloader, daher ersetzt ein grüner Testlauf keinen Versuch an einer echten Platine (das offizielle Image mit 73476 Byte ließ sich nicht installieren und der letzte Frame einer Sicherung ging verloren, während die Tests bestanden, gerade weil die Simulation nachsichtiger war als der echte Bootloader).
 
 ## 1. 🔌 Bringen Sie Ihren Adapter zum CAN-Sprechen
 Was Sie davon brauchen, hängt von Ihrer Plattform und dem verwendeten
@@ -267,7 +267,7 @@ Dieses Tool erwartet einen `firmware/`-Ordner direkt neben
 ├── flasher_swd_tools.py           <- STM32CubeProgrammer / pyOCD Wrapper
 ├── flasher_validation.py          <- Firmware-Dateivalidierung (.bin/.hex/.elf)
 ├── flasher_protocol.py            <- die CAN-OTA-Zustandsmaschine selbst, sowohl für die Hauptplatine als auch (über deren eigene I2C-Bridge weitergeleitet) den Erweiterungs-Slave
-├── flasher_github.py               <- lädt Firmware aus dem eigenen GitHub-Repository dieses Projekts herunter
+├── flasher_github.py               <- listet die Assets eines URTC-GitHub-Releases auf und lädt sie herunter
 ├── flasher_gui.py                 <- das Hauptfenster (FlasherGUI) und seine Menuleiste
 ├── flasher_uithread.py            <- Übergabe von Arbeitsthreads an den Tk-Hauptthread
 ├── flasher_records.py             <- Sitzungsprotokolle (Ort, Aufbewahrung) und Update-Berichte
@@ -340,16 +340,24 @@ Grund:
   davon funktioniert, wo die Datei tatsächlich liegt (und in beiden
   Fällen dieselbe Validierungsprüfung ausführt).
 - **Sie wollen den neuesten Build, ohne ihn selbst suchen zu müssen** →
-  **Von GitHub herunterladen...** ruft die aktuelle Dateiliste direkt
-  aus dem eigenen `firmware/`-Ordner dieses Projekts ab
-  (`github.com/JuanenRac/URTC/tree/main/firmware`) und lässt Sie eine
-  Datei zum direkten Herunterladen in Ihren eigenen lokalen
+  **Von GitHub herunterladen...** listet die Dateien auf, die am neuesten
+  GitHub-Release des URTC-Repositorys hängen
+  (`github.com/JuanenRac/URTC/releases`; die Firmware-Binärdateien werden
+  als Release-Assets veröffentlicht und nicht in git gehalten), und lässt
+  Sie eine Datei zum direkten Herunterladen in Ihren eigenen lokalen
   `firmware/`-Ordner auswählen - sie erscheint dann in der obigen Liste
-  wie jede andere Datei, kein Neustart nötig. Verwendet die eigene
-  öffentliche API von GitHub (nicht authentifiziert, daher dem eigenen
-  Ratenlimit von GitHub von 60 Anfragen/Stunde unterworfen, falls Sie
-  es viel in kurzer Zeit nutzen) - nichts hier benötigt ein
-  GitHub-Konto oder ein Token.
+  wie jede andere Datei, kein Neustart nötig. Geben Sie ein Release-Tag
+  (zum Beispiel `v0.3.5`) in das Feld oben im Fenster ein und drücken Sie
+  **Laden**, um statt des neuesten ein anderes Release aufzulisten. Die
+  `.sha256`- und `.manifest.json`-Datei des Images werden zusammen mit
+  ihm heruntergeladen. Dateien werden nur von GitHubs eigenen Hosts
+  akzeptiert (`github.com` und die Asset-Speicher-Hosts, auf die
+  weitergeleitet wird), und eine Datei, deren Größe von der des Releases
+  abweicht, wird verworfen. Verwendet die eigene öffentliche API von
+  GitHub (nicht authentifiziert, daher dem Ratenlimit von 60
+  Anfragen/Stunde unterworfen, falls Sie es viel in kurzer Zeit nutzen;
+  eine Umgebungsvariable `GITHUB_TOKEN` hebt es an) - nichts hier
+  benötigt ein GitHub-Konto.
 
 **`<dateiname>.manifest.json` und `<dateiname>.sha256`, neben jeder
 Firmware-Datei** - vom URTC-Build für jedes Image veröffentlicht (und von
@@ -397,6 +405,23 @@ Möglichkeit, die Version eines aktuell geflashten Bootloaders zu
 kennen, außer den Bootloader selbst zu fragen, sodass dies nur
 auftaucht, wenn die Platine tatsächlich dort sitzt (direkt nach `0x7F0`,
 oder bei einem frischen Start, bevor sie zur Anwendung springt).
+
+**Die Patch-Nummer.** Eine Platine mit Firmware 0.3.5 oder neuer sendet
+zusätzlich die Patch-Nummer der installierten Anwendung (Frame `0x7E9`,
+direkt nach `0x7F9`), sodass das Fenster und das Protokoll die vollständige
+Version `Major.Minor.Patch` (zum Beispiel `v0.3.5`) statt `Major.Minor`
+anzeigen; der Patch eines Images ist der dritte Teil der Version in seinem
+Manifest. Vor einem Update zeigt das Protokoll `installiert -> neu` in
+dieser Form, und der Patch fließt nur dann in die Warnung "älter als
+installiert" ein, wenn beide Seiten einen haben. Eine Platine, die älter
+als der Patch ist, antwortet ohne ihn und wird genau wie bisher angezeigt.
+Meldet der Bootloader (Flag im selben Frame), dass er den Patch liest,
+trägt der Frame zum Ende des Updates ihn im oberen Byte des Minor-Felds;
+jeder andere Bootloader und jedes Image ohne Patch erhalten den
+unveränderten Frame mit zwei Zahlen. Die Versionsantwort des
+Erweiterungs-Slaves (`0x218`) hat dieselbe optionale Erweiterung. Das
+folgt der Protokollbeschreibung und ist nur gegen den Simulator getestet;
+auf einer echten Platine wurde es nicht ausprobiert.
 
 Was Sie sehen werden:
 
@@ -928,7 +953,7 @@ sendet diese veröffentlichte Signatur und lehnt ein Image ab, dessen sha256
 nicht zu seinem Manifest passt. Beim Herunterladen eines Images von GitHub
 werden beide Dateien mitgeladen, und `python tools/sync_firmware.py`
 aktualisiert den mitgelieferten Ordner `firmware/` aus dem URTC-Build
-(`--check` prüft ihn). Nur ein selbst gebautes Image ohne Manifest auf einer
+(`--check` prüft ihn). Standardmäßig nimmt es den Satz aus den Assets des neuesten URTC-Releases (`--release TAG` wählt ein anderes); stattdessen kann ein lokaler Ordner, etwa ein lokaler URTC-Build, als Argument übergeben werden. Nur ein selbst gebautes Image ohne Manifest auf einer
 Testplatine braucht einen Schlüssel: `hmac_key_hex` / `slave_hmac_key_hex`
 in `urtc_config.json` (unten) setzen - ohne ihn wird ein solches Image
 abgelehnt, statt mit einem Schlüssel signiert zu werden, den der Bootloader
@@ -1033,7 +1058,7 @@ nicht erforderlich.
 ├── flasher_swd_tools.py           <- STM32CubeProgrammer-/pyOCD-Wrapper
 ├── flasher_validation.py          <- Firmware-Dateivalidierung (.bin/.hex/.elf)
 ├── flasher_protocol.py            <- die eigentliche CAN-OTA-Zustandsmaschine
-├── flasher_github.py              <- lädt Firmware aus dem eigenen GitHub-Repository von URTC herunter
+├── flasher_github.py              <- listet die Assets eines URTC-GitHub-Releases auf und lädt sie herunter
 ├── flasher_gui.py                 <- das Hauptfenster (FlasherGUI) und seine Menüleiste
 ├── flasher_uithread.py            <- Übergabe von Arbeitsthreads an den Tk-Hauptthread
 ├── flasher_records.py             <- Sitzungsprotokolle (Ort, Aufbewahrung) und Update-Berichte
@@ -1055,6 +1080,7 @@ nicht erforderlich.
 │   ├── test_manifest_target.py
 │   ├── test_mock_readback.py
 │   ├── test_ota_partial_page.py
+│   ├── test_patch_number.py
 │   ├── test_python_can_transport.py
 │   ├── test_qt_bridge_log.py
 │   ├── test_qt_log_translation.py
@@ -1062,6 +1088,7 @@ nicht erforderlich.
 │   ├── test_records.py
 │   ├── test_signing_policy.py
 │   ├── test_slave_entry_check.py
+│   ├── test_sync_firmware.py
 │   ├── test_ui_mailbox.py
 │   ├── test_validation_ccm_stack.py
 │   └── test_version_report.py
@@ -1077,7 +1104,7 @@ nicht erforderlich.
 ├── tools/
 │   ├── build_test.py                     <- Kompilierprüfung ohne Versionserhöhung + Validierung der Qt-Quick-Deck-Quellen
 │   ├── ci_validate.py                    <- Manifest-/CHANGELOG-/Doku-Validierung, von der CI genutzt
-│   ├── sync_firmware.py                  <- kopiert den URTC-Build nach firmware/ (Prüfsummen geprüft; --check prüft)
+│   ├── sync_firmware.py                  <- aktualisiert firmware/ aus den Assets eines URTC-Releases oder einem lokalen Ordner (Prüfsummen geprüft; --check prüft)
 │   └── render_hydra_umc_icon_frames.py   <- Regeneriert assets/hydra_umc_icon_frames/ aus dem SVG (nur Entwicklung)
 ├── README.md                      <- (englische Version)
 ├── README_deu.md                  <- diese Datei

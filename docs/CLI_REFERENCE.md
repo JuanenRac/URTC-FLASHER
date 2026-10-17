@@ -39,7 +39,7 @@ $ python urtc_flasher.py --cli -h
 usage: urtc_flasher.py --cli [-h]
                              [--transport {serial,socketcan,python-can,mock}]
                              [--port PORT] --file FILE [--no-trigger]
-                             [--force] [--version MAJOR.MINOR]
+                             [--force] [--version MAJOR.MINOR[.PATCH]]
                              [--allow-downgrade] [--mock-fail REASON]
 
 Headless URTC CAN OTA firmware update (no GUI).
@@ -62,10 +62,11 @@ options:
                         the board is already sitting in the bootloader (fresh
                         JTAG flash, or no valid application currently present)
   --force               Flash even if the file fails the plausibility check
-  --version MAJOR.MINOR
+  --version MAJOR.MINOR[.PATCH]
                         Version of the firmware file, for an image that has no
                         .manifest.json and no version in its name (never
-                        guessed)
+                        guessed); the optional patch is sent only to a
+                        bootloader that reads it
   --allow-downgrade     Send CAN_ID_AUTHORIZE_DOWNGRADE (0x7FD) before ending
                         the update, bypassing the bootloader's own anti-
                         rollback check for this attempt only - use to
@@ -106,7 +107,7 @@ Firmware: firmware/URTC_MAIN_FIRMWARE_v0.3.3.bin (73476 bytes) - looks valid
 Image digest verified: 52a0fcd33ef5eb227beda253240663ba87a5167533bce691a1bd6aa76f8eb69e
 Using the mock transport - nothing here is touching real hardware.
 Connected via mock.
-Installed v0.2 -> new v0.3.
+Installed v0.2 -> new v0.3.3.
 Sending bootloader-entry trigger (0x7F0)...
   Manifest: version=0.3.3, build_date=2026-10-11T11:36:36Z
   Manifest SHA-256 matches this file.
@@ -138,8 +139,8 @@ $ echo $?
 ```
 
 (The 36 page lines are shown collapsed to the first and the last one; every one was real in the
-actual run. The mock board reports an installed version of 0.2, so the log shows `Installed v0.2 ->
-new v0.3`; against a real board the installed version is the one the board answers. If a
+actual run. The mock board reports an installed version of 0.2 and no patch number (like a board that predates it), so the log shows `Installed v0.2 ->
+new v0.3.3` (the image's own version, patch included); against a real board the installed version is the one the board answers, as major.minor.patch when it sends its patch (frame 0x7E9). The patch is only compared when both sides carry one, and it goes into the end-of-update frame only towards a bootloader that announced it reads it. If a
 `urtc_config.json` is present, the CLI also logs which of its fields override the built-in values, as
 its first line.)
 
@@ -245,7 +246,7 @@ $ python urtc_flasher.py --cli --transport mock
 usage: urtc_flasher.py --cli [-h]
                              [--transport {serial,socketcan,python-can,mock}]
                              [--port PORT] --file FILE [--no-trigger]
-                             [--force] [--version MAJOR.MINOR]
+                             [--force] [--version MAJOR.MINOR[.PATCH]]
                              [--allow-downgrade] [--mock-fail REASON]
 urtc_flasher.py --cli: error: the following arguments are required: --file
 $ echo $?
