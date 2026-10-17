@@ -24,7 +24,7 @@
 </p>
 
 
-**Version :** 0.2.6 (la version de cet outil - affichée dans la bannière
+**Version :** 0.2.7 (la version de cet outil - affichée dans la bannière
 de la fenêtre et la barre de titre, suivie séparément de la version du
 firmware de la carte URTC qu'il écrit. Suit un schéma X.Y.Z où le numéro
 de patch augmente automatiquement à chaque build réel via
@@ -670,20 +670,21 @@ le chemin d'échec de la même manière.
 
 ## 8. 🔄 Fiabilité pendant une mise à jour CAN, et journaux de session
 Si l'ACK d'une page n'arrive pas dans la fenêtre normale de 3s pendant
-une mise à jour CAN, l'outil retente l'*attente* (pas un renvoi des
+une mise à jour CAN, l'outil attend de nouveau (il ne renvoie pas les
 données de la page) jusqu'à deux fois de plus avec un court délai
-croissant avant d'abandonner, se remettant d'un ACK retardé ou perdu sur
-un bus bruyant sans que les données sous-jacentes soient perdues. Il ne
+croissant avant d'abandonner. Cela n'aide que pour un ACK simplement en
+retard : le bootloader envoie chaque ACK de page une seule fois et ne le
+répète jamais, donc un ACK réellement perdu ne peut pas être récupéré et
+la mise à jour est abandonnée avec une erreur (la carte reste dans son
+bootloader et la mise à jour peut simplement être relancée). L'outil ne
 renvoie délibérément pas les données de page sur un timeout - si les
-données originales sont réellement bien arrivées et que seul l'ACK a
-été perdu, renvoyer ferait lire au bootloader ces octets comme le début
-de la *prochaine* page, désynchronisant le transfert. Chaque nouvelle
-tentative vérifie aussi le battement de cœur propre du bootloader
-(envoyé environ une fois par seconde) contre ce qu'impliquerait avoir
-reçu la page actuelle en entier - quand ils sont cohérents, le journal
-le dit, ce qui est une preuve réelle que les données sont passées et
-que seul l'ACK a été perdu, pas juste une attente plus longue et un
-espoir.
+données étaient bien arrivées, renvoyer ferait lire au bootloader ces
+octets comme le début de la *prochaine* page, désynchronisant le
+transfert. Pendant l'attente, la pulsation propre du bootloader (envoyée
+environ une fois par seconde) est comparée à la progression qu'impliquerait
+la page et le journal signale quand elles concordent ; la pulsation est un
+pourcentage entier, donc ce n'est qu'un indice, pas une preuve que la page
+est arrivée, et elle ne change jamais le résultat.
 
 Chaque session écrit aussi un fichier journal horodaté dans
 `logs/` (`urtc_flasher_YYYYMMDD_HHMMSS.log`),
@@ -696,12 +697,17 @@ supprimer ; rien ne relit d'anciens journaux.
 **Sélecteur de débit binaire + détection automatique** (Série/SLCAN
 uniquement) : le bus d'URTC est fixé à 500 kbit/s, qui reste la valeur
 par défaut - ceci est pour un adaptateur mal configuré ou pour déboguer
-une carte non standard. **Détection automatique** essaie chaque débit
-binaire SLCAN standard à tour de rôle contre une requête de version et
-s'arrête au premier qui obtient une vraie réponse ; pas encore connecté
-quand vous cliquez dessus. Le débit binaire de SocketCAN est défini au
-niveau du système d'exploitation (`ip link`), donc ce contrôle est
-désactivé pour ce transport - il n'y a rien ici à essayer.
+une carte non standard. **Détection automatique** se contente d'*écouter* :
+elle ouvre l'adaptateur en mode écoute seule SLCAN (`L`) à chaque débit
+standard à tour de rôle et s'arrête au premier où elle entend une trame
+CAN valide, donc elle ne transmet jamais et ne peut pas perturber un bus
+en marche. Elle nécessite donc que d'autres nœuds émettent et que
+l'adaptateur prenne en charge le mode écoute seule ; sur un bus silencieux
+(ou avec un adaptateur sans ce mode) elle ne trouve rien et vous choisissez
+le débit à la main. Pas encore connecté quand vous cliquez dessus. Le débit
+binaire de SocketCAN est défini au niveau du système d'exploitation
+(`ip link`), donc ce contrôle est désactivé pour ce transport - il n'y a
+rien ici à essayer.
 
 **Activité du bus** ("Vérifier (2s)", à côté d'Interroger) : compte les
 vraies trames de protocole réellement vues pendant une fenêtre fixe de
@@ -1034,7 +1040,6 @@ pour exécuter l'application.
 ├── build-test.sh                  <- le même, pour Linux
 ├── bump_version.py                <- incrément de version type compteur kilométrique, exécuté par les scripts de build
 ├── bump_manifest_version.py       <- synchronise la version de urtc.project.json avec la version native (--sync)
-├── URTC_Flasher.spec              <- spec PyInstaller utilisée par les deux scripts de build ci-dessus
 ├── docs/
 │   └── CLI_REFERENCE.md           <- référence des options de ligne de commande
 ├── tools/

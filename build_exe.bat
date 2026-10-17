@@ -27,6 +27,7 @@ echo ***************************************************************************
 echo.
 REM HYDRA_UMC_SCRIPT_STANDARD_BANNER_END
 setlocal EnableDelayedExpansion
+echo [1/6] Installing Python dependencies...
 python -m pip install --upgrade pip >nul
 python -m pip install -r requirements.txt
 python -m pip install pyinstaller
@@ -39,7 +40,7 @@ REM see bump_version.py's own docstring for the base-10 carry rule
 REM (1.1.9 -> 1.2.0). Runs before PyInstaller so the bumped value is what
 REM actually gets compiled into this .exe, not the pre-bump value.
 REM HYDRA_UMC_SCRIPT_STANDARD_VERSION_STEP
-echo [1/6] Incrementing project version and synchronising its manifest...
+echo       Incrementing project version and synchronising its manifest...
 python bump_version.py
 if errorlevel 1 ( echo NATIVE VERSION BUMP FAILED. & pause & exit /b 1 )
 REM HYDRA_UMC_SCRIPT_STANDARD_VERSION_CAPTURE_BEFORE

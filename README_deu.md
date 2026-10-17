@@ -24,7 +24,7 @@
 </p>
 
 
-**Version:** 0.2.6 (die Version dieses Tools selbst - angezeigt im
+**Version:** 0.2.7 (die Version dieses Tools selbst - angezeigt im
 Fenster-Banner und in der Titelleiste, getrennt verfolgt von der
 Firmware-Version der URTC-Platine, die es schreibt. Folgt einem
 X.Y.Z-Schema, bei dem die Patch-Nummer bei jedem echten Build über
@@ -677,21 +677,22 @@ Weise zu testen.
 
 ## 8. 🔄 Zuverlässigkeit während eines CAN-Updates, und Sitzungsprotokolle
 Wenn das ACK einer Seite nicht innerhalb des normalen 3s-Fensters
-während eines CAN-Updates ankommt, wiederholt das Tool das *Warten*
-(nicht ein erneutes Senden der Seitendaten) bis zu zweimal mehr mit
-einer kurzen zunehmenden Verzögerung, bevor es aufgibt, und erholt sich
-so von einem verzögerten oder verlorenen ACK auf einem verrauschten
-Bus, ohne dass die zugrunde liegenden Daten verloren gehen. Es sendet
-absichtlich keine Seitendaten bei einem Timeout erneut - wenn die
-ursprünglichen Daten tatsächlich gut angekommen sind und nur das ACK
-verloren ging, würde ein erneutes Senden den Bootloader diese Bytes als
-Anfang der *nächsten* Seite lesen lassen und die Übertragung
-desynchronisieren. Jeder erneute Versuch prüft auch den eigenen
-Heartbeat des Bootloaders (ungefähr einmal pro Sekunde gesendet) gegen
-das, was der vollständige Empfang der aktuellen Seite implizieren
-würde - wenn sie übereinstimmen, sagt das Protokoll dies, was ein
-echter Beweis dafür ist, dass die Daten durchgekommen sind und nur das
-ACK verloren ging, nicht nur ein längeres Warten und eine Hoffnung.
+während eines CAN-Updates ankommt, wartet das Tool erneut (es sendet die
+Seitendaten nicht noch einmal) bis zu zweimal mehr mit einer kurzen
+zunehmenden Verzögerung, bevor es aufgibt. Das hilft nur bei einem ACK,
+das lediglich verspätet ist: Der Bootloader sendet jedes Seiten-ACK genau
+einmal und wiederholt es nie, ein wirklich verlorenes ACK lässt sich also
+nicht wiederherstellen, und das Update wird mit einem Fehler abgebrochen
+(die Platine bleibt in ihrem Bootloader, und das Update kann einfach neu
+gestartet werden). Das Tool sendet absichtlich keine Seitendaten bei einem
+Timeout erneut - wären die Daten gut angekommen, würde ein erneutes Senden
+den Bootloader diese Bytes als Anfang der *nächsten* Seite lesen lassen
+und die Übertragung desynchronisieren. Während des Wartens wird der eigene
+Heartbeat des Bootloaders (ungefähr einmal pro Sekunde gesendet) mit dem
+Fortschritt verglichen, den die Seite ergeben würde, und das Protokoll
+vermerkt, wenn beide übereinstimmen; der Heartbeat ist ein ganzer
+Prozentwert, also nur ein Hinweis und kein Beweis, dass die Seite
+angekommen ist, und er ändert nie das Ergebnis.
 
 Jede Sitzung schreibt auch eine zeitgestempelte Protokolldatei nach
 `logs/` (`urtc_flasher_YYYYMMDD_HHMMSS.log`),
@@ -704,12 +705,17 @@ und ist sicher zu löschen; nichts liest alte Protokolle zurück.
 **Bitrate-Auswahl + Auto-Erkennung** (nur Seriell/SLCAN): der Bus von
 URTC ist fest auf 500 kbit/s, was der Standard bleibt - dies ist für
 einen falsch konfigurierten Adapter oder zur Fehlersuche bei einer
-nicht standardmäßigen Platine gedacht. **Auto-Erkennung** probiert jede
-Standard-SLCAN-Bitrate der Reihe nach gegen eine Versionsabfrage und
-stoppt bei der ersten, die eine echte Antwort erhält; noch nicht
-verbunden, wenn Sie darauf klicken. Die Bitrate von SocketCAN wird auf
-Betriebssystemebene festgelegt (`ip link`), daher ist dieses Steuerelement
-für diesen Transport deaktiviert - es gibt hier nichts zu versuchen.
+nicht standardmäßigen Platine gedacht. **Auto-Erkennung** hört nur *zu*:
+Sie öffnet den Adapter im SLCAN-Nur-Hören-Modus (`L`) nacheinander bei
+jeder Standard-Bitrate und stoppt bei der ersten, bei der sie einen
+gültigen CAN-Frame hört; sie sendet also nie und kann einen laufenden Bus
+nicht stören. Deshalb müssen andere Knoten senden und der Adapter muss den
+Nur-Hören-Modus unterstützen; bei ruhigem Bus (oder mit einem Adapter ohne
+diesen Modus) findet sie nichts, und Sie wählen die Bitrate von Hand. Noch
+nicht verbunden, wenn Sie darauf klicken. Die Bitrate von SocketCAN wird
+auf Betriebssystemebene festgelegt (`ip link`), daher ist dieses
+Steuerelement für diesen Transport deaktiviert - es gibt hier nichts zu
+versuchen.
 
 **Busaktivität** ("Prüfen (2s)", neben Abfragen): zählt echte
 Protokoll-Frames, die tatsächlich während eines festen 2-Sekunden-Fensters
@@ -1046,7 +1052,6 @@ nicht erforderlich.
 ├── build-test.sh                  <- Dasselbe, für Linux
 ├── bump_version.py                <- Versionserhöhung im Kilometerzähler-Stil, von den Build-Skripten ausgeführt
 ├── bump_manifest_version.py       <- Synchronisiert die Version von urtc.project.json mit der nativen (--sync)
-├── URTC_Flasher.spec              <- PyInstaller-Spec, die von beiden Build-Skripten oben verwendet wird
 ├── docs/
 │   └── CLI_REFERENCE.md           <- Referenz der Kommandozeilen-Flags
 ├── tools/

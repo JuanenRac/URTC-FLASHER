@@ -34,7 +34,7 @@ from flasher_config import (
     CAN_ID_QUERY_ERROR_COUNTERS, CAN_ID_ERROR_COUNTERS_RESPONSE,
     _center_geometry, _load_config_overrides, save_config,
 )
-from flasher_transports import SLCAN, SLCANError, SocketCAN, list_socketcan_interfaces
+from flasher_transports import SLCAN, SLCANError, SocketCAN, detect_bitrate_listen_only, list_socketcan_interfaces
 from flasher_protocol import URTCFlasher, FlashError
 from flasher_integrity import preflight_image
 from flasher_github import list_firmware_files, download_file, GitHubDownloadError, is_sidecar, sidecars_for
@@ -1365,8 +1365,11 @@ class FlasherGUI:
             entry = entries_by_iid.get(selection[0])
             if entry is None:
                 return
-            if not os.path.isdir(FIRMWARE_FOLDER):
+            try:
                 os.makedirs(FIRMWARE_FOLDER, exist_ok=True)
+            except OSError as e:
+                status_var.set(_("ERR_GITHUB_WRITE_FAILED", reason=e))
+                return
             dest_path = os.path.join(FIRMWARE_FOLDER, entry["name"])
             if os.path.isfile(dest_path) and not messagebox.askyesno(
                 _("TITLE_FILE_EXISTS"), _("MSG_GITHUB_FILE_EXISTS_OVERWRITE", name=entry["name"]),
@@ -1378,14 +1381,14 @@ class FlasherGUI:
             def _download_worker():
                 try:
                     download_file(
-                        entry["download_url"], dest_path, log=self.log,
+                        entry["download_url"], dest_path, log=self.log, expected_size=entry.get("size"),
                         progress_cb=lambda pct: self.root.after(0, lambda: progress.configure(value=pct)),
                     )
                     # The published sha256 and manifest (with the signature
                     # the bootloader expects) travel with the image - without
                     # them it could not be verified or flashed.
                     for sidecar in sidecars_for(all_entries, entry["name"]):
-                        download_file(sidecar["download_url"], os.path.join(FIRMWARE_FOLDER, sidecar["name"]), log=self.log)
+                        download_file(sidecar["download_url"], os.path.join(FIRMWARE_FOLDER, sidecar["name"]), log=self.log, expected_size=sidecar.get("size"))
                     self.root.after(0, lambda: status_var.set(_("LBL_GITHUB_DOWNLOAD_DONE", name=entry["name"])))
                     self.root.after(0, self.scan_firmware_folder)
                 except GitHubDownloadError as e:
@@ -1807,26 +1810,25 @@ class FlasherGUI:
                 # first, then its two most common neighbors.
                 try_order = ["500 kbit/s", "250 kbit/s", "125 kbit/s", "1 Mbit/s",
                              "100 kbit/s", "50 kbit/s", "20 kbit/s", "10 kbit/s", "800 kbit/s"]
-                for label in try_order:
-                    code = next(c for l, c in SLCAN_BITRATES if l == label)
-                    self.log(_("LOG_AUTODETECT_TRYING", label=label))
-                    trial = None
+                by_label = dict(SLCAN_BITRATES)
+
+                def _open_listen_only(code):
+                    trial = SLCAN(port, log=lambda m: None)
                     try:
-                        trial = SLCAN(port, log=lambda m: None)  # quiet - avoid spamming the log with 9 failed attempts
-                        trial.open_channel(code)
-                        flasher = URTCFlasher(trial, log=lambda m: None)
-                        result = flasher.query_version(timeout=0.8)
-                        if result is not None:
-                            found_label = label
-                            break
-                    except (SLCANError, OSError):
-                        pass
-                    finally:
-                        if trial is not None:
-                            try:
-                                trial.close()
-                            except Exception:
-                                pass
+                        trial.open_channel(code, listen_only=True)
+                    except Exception:
+                        trial.close()
+                        raise
+                    return trial
+
+                # Listen-only: nothing is transmitted at any bitrate tried, so
+                # a bus that is running at its own bitrate is never disturbed.
+                found_label = detect_bitrate_listen_only(
+                    _open_listen_only,
+                    [(label, by_label[label]) for label in try_order],
+                    listen_seconds=1.0,
+                    on_try=lambda label: self.log(_("LOG_AUTODETECT_TRYING", label=label)),
+                )
             finally:
                 self.root.after(0, lambda: self._auto_detect_done(found_label))
 

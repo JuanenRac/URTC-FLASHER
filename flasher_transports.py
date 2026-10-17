@@ -65,7 +65,10 @@ class SLCAN:
     def _send_raw(self, cmd):
         self.ser.write((cmd + "\r").encode("ascii"))
 
-    def open_channel(self, bitrate_code=BITRATE_500K_SLCAN_CODE):
+    def open_channel(self, bitrate_code=BITRATE_500K_SLCAN_CODE, listen_only=False):
+        # listen_only opens the channel with the SLCAN "L" command instead of
+        # "O": the adapter receives but never transmits, not even the
+        # acknowledge bit, so it cannot disturb a running bus.
         # Close first in case it was already open from a previous session
         # that didn't shut down cleanly - SLCAN adapters reject "O" (open)
         # if already open, which would otherwise abort every connection
@@ -75,7 +78,7 @@ class SLCAN:
         self.ser.reset_input_buffer()
         self._send_raw("S" + bitrate_code)
         time.sleep(0.05)
-        self._send_raw("O")
+        self._send_raw("L" if listen_only else "O")
         time.sleep(0.1)
         self.ser.reset_input_buffer()
 
@@ -327,7 +330,7 @@ class SocketCAN:
         self.sock.settimeout(0.05)
         self._last_timeout = 0.05
 
-    def open_channel(self, bitrate_code=None):
+    def open_channel(self, bitrate_code=None, listen_only=False):
         # Deliberately a no-op - see the SOCKETCAN NOTE above. The bitrate
         # is already fixed by whoever ran `ip link set ... bitrate ...`
         # before this constructor was ever called; there's no per-connection
@@ -462,7 +465,7 @@ class MockCAN:
         self._update_bytes_received = 0
         self._next_page_index = 0
 
-    def open_channel(self, bitrate_code=None):
+    def open_channel(self, bitrate_code=None, listen_only=False):
         pass  # nothing to actually open
 
     def close_channel(self):
@@ -519,3 +522,34 @@ class MockCAN:
             return self._response_queue.pop(0)
         return None
 
+
+def detect_bitrate_listen_only(open_trial, bitrates, listen_seconds=1.0, on_try=None):
+    """Finds the bus bitrate WITHOUT transmitting anything.
+
+    Transmitting at a wrong bitrate makes every correctly configured node
+    on a running bus see bit/form errors, so each candidate is only
+    listened to: open_trial(code) must return a transport opened in
+    listen-only mode (an SLCAN adapter after the "L" command), and a
+    bitrate counts as found when at least one well-formed frame arrives
+    within listen_seconds. bitrates is a list of (label, code) in the order
+    to try. Returns the label, or None when the bus is silent at every
+    bitrate (nothing to hear, so nothing can be concluded - the caller
+    should ask for the bitrate to be chosen by hand rather than guess).
+    """
+    for label, code in bitrates:
+        if on_try:
+            on_try(label)
+        trial = None
+        try:
+            trial = open_trial(code)
+            if trial.read_frame(timeout=listen_seconds) is not None:
+                return label
+        except (SLCANError, OSError):
+            pass
+        finally:
+            if trial is not None:
+                try:
+                    trial.close()
+                except Exception:
+                    pass
+    return None

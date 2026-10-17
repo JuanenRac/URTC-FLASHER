@@ -26,17 +26,38 @@
 import json
 import os
 import urllib.error
+import urllib.parse
 import urllib.request
 
 from flasher_config import _
 
 GITHUB_API_BASE = "https://api.github.com/repos/JuanenRac/URTC/contents/firmware"
 GITHUB_REPO_URL = "https://github.com/JuanenRac/URTC"
+# The only host a listed file may be downloaded from: the listing is data
+# from the network, so its download_url is not trusted to point anywhere else.
+ALLOWED_DOWNLOAD_HOSTS = ("raw.githubusercontent.com",)
 USER_AGENT = "URTC-Flasher"  # GitHub's own API rejects requests with no User-Agent header at all
 
 
 class GitHubDownloadError(Exception):
     pass
+
+
+def _check_download_host(url):
+    parsed = urllib.parse.urlparse(url)
+    host = (parsed.hostname or "").lower()
+    if parsed.scheme != "https" or host not in ALLOWED_DOWNLOAD_HOSTS:
+        raise GitHubDownloadError(_("ERR_GITHUB_BAD_HOST", host=host or url))
+
+
+def _is_rate_limited(error):
+    """A 403 from the API is a rate limit only when GitHub says so (no
+    requests left in the window, or a Retry-After); any other 403 is a
+    refusal for a different reason and must not be reported as one."""
+    headers = error.headers
+    if headers is None:
+        return False
+    return headers.get("X-RateLimit-Remaining") == "0" or headers.get("Retry-After") is not None
 
 
 def list_firmware_files(log=None):
@@ -53,10 +74,16 @@ def list_firmware_files(log=None):
     the caller's job is to show that reason to the person, not to guess
     at it.
     """
-    req = urllib.request.Request(GITHUB_API_BASE, headers={
+    headers = {
         "Accept": "application/vnd.github+json",
         "User-Agent": USER_AGENT,
-    })
+    }
+    # Optional: an authenticated request has a far higher rate limit. The
+    # token is only ever sent to the API itself, never to the file host.
+    token = os.environ.get("GITHUB_TOKEN", "").strip()
+    if token:
+        headers["Authorization"] = "Bearer " + token
+    req = urllib.request.Request(GITHUB_API_BASE, headers=headers)
     if log:
         log(_("LOG_GITHUB_FETCHING_LIST"))
     try:
@@ -64,6 +91,10 @@ def list_firmware_files(log=None):
             raw = response.read()
     except urllib.error.HTTPError as e:
         if e.code == 403:
+            if _is_rate_limited(e):
+                raise GitHubDownloadError(_("ERR_GITHUB_RATE_LIMITED"))
+            raise GitHubDownloadError(_("ERR_GITHUB_FORBIDDEN"))
+        if e.code == 429:
             raise GitHubDownloadError(_("ERR_GITHUB_RATE_LIMITED"))
         if e.code == 404:
             raise GitHubDownloadError(_("ERR_GITHUB_NOT_FOUND"))
@@ -104,6 +135,10 @@ def list_firmware_files(log=None):
         download_url = entry.get("download_url")
         if not name or not download_url:
             continue
+        # Only firmware images and the files that travel with them: the
+        # folder also holds manifests, ELF and HEX files that are not images.
+        if not (name.endswith(".bin") or name.endswith(SIDECAR_SUFFIXES)):
+            continue
         results.append({
             "name": name,
             "size": entry.get("size", 0),
@@ -115,7 +150,7 @@ def list_firmware_files(log=None):
     return results
 
 
-def download_file(download_url, dest_path, log=None, progress_cb=None):
+def download_file(download_url, dest_path, log=None, progress_cb=None, expected_size=None):
     """Downloads a single file from download_url (as returned by
     list_firmware_files above) to dest_path, streamed in chunks rather
     than loaded whole into memory - a firmware binary is only ever a few
@@ -123,13 +158,18 @@ def download_file(download_url, dest_path, log=None, progress_cb=None):
     and streaming costs nothing extra here. Returns the number of bytes
     written. Raises GitHubDownloadError on any failure, same reasoning as
     list_firmware_files above."""
+    _check_download_host(download_url)
     req = urllib.request.Request(download_url, headers={"User-Agent": USER_AGENT})
     if log:
         log(_("LOG_GITHUB_DOWNLOADING", name=os.path.basename(dest_path)))
     written = 0  # set before the try so the finally block below can safely reference it even if urlopen() itself fails before any bytes are written
     try:
         with urllib.request.urlopen(req, timeout=30) as response:
-            total_size = int(response.headers.get("Content-Length", 0))
+            _check_download_host(response.geturl())  # after any redirect
+            try:
+                total_size = int(response.headers.get("Content-Length", 0))
+            except (TypeError, ValueError):
+                total_size = 0
             written = 0
             # Write to a temp path first, rename into place only once
             # the full download succeeds - a connection dropped mid-
@@ -147,7 +187,17 @@ def download_file(download_url, dest_path, log=None, progress_cb=None):
                     written += len(chunk)
                     if progress_cb and total_size > 0:
                         progress_cb(int((written / total_size) * 100))
+            # A truncated or padded body is not a firmware image: compare
+            # with what the server announced and with the listing's size.
+            for expected in (total_size, expected_size):
+                if expected and written != expected:
+                    raise GitHubDownloadError(_(
+                        "ERR_GITHUB_SIZE_MISMATCH",
+                        name=os.path.basename(dest_path), got=written, expected=expected,
+                    ))
             os.replace(tmp_path, dest_path)
+    except GitHubDownloadError:
+        raise
     except urllib.error.HTTPError as e:
         raise GitHubDownloadError(_("ERR_GITHUB_HTTP_ERROR", code=e.code))
     except urllib.error.URLError as e:

@@ -24,7 +24,7 @@
 </p>
 
 
-**Versão:** 0.2.6 (a versão desta própria ferramenta - mostrada no banner da
+**Versão:** 0.2.7 (a versão desta própria ferramenta - mostrada no banner da
 janela e na barra de título, acompanhada separadamente da versão do firmware
 da placa URTC que escreve. Segue um esquema X.Y.Z em que o número de patch
 sobe automaticamente em cada build real através de build_exe.bat/build_exe.sh
@@ -621,17 +621,20 @@ sucesso, para testar o caminho de falha da mesma forma.
 ## 8. 🔄 Fiabilidade durante uma atualização CAN, e registos de sessão
 
 Se o ACK de uma página não chegar dentro da janela normal de 3s durante uma
-atualização CAN, a ferramenta repete a *espera* (não um reenvio dos dados da
-página) até mais duas vezes com um curto backoff antes de desistir,
-recuperando de um ACK que foi atrasado ou perdido num barramento ruidoso sem
-que os dados subjacentes se percam. Deliberadamente não reenvia os dados da
-página num timeout - se os dados originais chegaram bem e apenas o ACK se
-perdeu, o reenvio faria o bootloader ler esses bytes como o início da página
-*seguinte*, dessincronizando a transferência. Cada repetição verifica também o
-heartbeat do próprio bootloader (enviado aproximadamente uma vez por segundo)
-contra o que a receção completa da página atual implicaria - quando são
-consistentes, o registo di-lo, o que é prova real de que os dados chegaram e
-apenas o ACK se perdeu, e não apenas uma espera mais longa e uma esperança.
+atualização CAN, a ferramenta volta a esperar (não reenvia os dados da
+página) até mais duas vezes com um curto backoff antes de desistir. Isto só
+ajuda com um ACK que apenas se atrasou: o bootloader envia cada ACK de
+página uma única vez e nunca o repete, pelo que um ACK realmente perdido não
+pode ser recuperado e a atualização é abortada com um erro (a placa fica no
+seu bootloader e a atualização pode simplesmente ser iniciada de novo). A
+ferramenta deliberadamente não reenvia os dados da página num timeout - se os
+dados tivessem chegado bem, o reenvio faria o bootloader ler esses bytes como
+o início da página *seguinte*, dessincronizando a transferência. Enquanto
+espera, o heartbeat do próprio bootloader (enviado aproximadamente uma vez
+por segundo) é comparado com o progresso que a página implicaria e o registo
+indica quando coincidem; o heartbeat é uma percentagem inteira, pelo que é
+apenas uma pista, não uma prova de que a página chegou, e nunca altera o
+resultado.
 
 Cada sessão escreve também um ficheiro de registo com data e hora em `logs/`
 (`urtc_flasher_YYYYMMDD_HHMMSS.log`), independente do registo do ecrã - útil
@@ -644,11 +647,15 @@ registos antigos de volta.
 **Seletor de bitrate + auto-deteção** (apenas Serial/SLCAN): o barramento do
 URTC é fixo a 500 kbit/s, que continua a ser o valor por defeito - isto serve
 para um adaptador mal configurado ou para diagnosticar uma placa não standard.
-**Auto-detect** experimenta cada bitrate SLCAN standard por vez contra uma
-consulta de versão e pára no primeiro que obtiver uma resposta real; ainda sem
-ligação quando clica nele. O bitrate do SocketCAN é definido ao nível do SO
-(`ip link`), pelo que este controlo está desativado para esse transporte - não
-há nada aqui para ele experimentar.
+**Auto-detect** apenas *escuta*: abre o adaptador no modo de apenas escuta do
+SLCAN (`L`) em cada bitrate standard por vez e pára no primeiro em que ouve
+uma trama CAN válida, pelo que nunca transmite e não pode perturbar um
+barramento em funcionamento. Por isso precisa que outros nós estejam a enviar
+e que o adaptador suporte o modo de apenas escuta; num barramento em silêncio
+(ou com um adaptador sem esse modo) não encontra nada e escolhe-se o bitrate
+manualmente. Ainda sem ligação quando clica nele. O bitrate do SocketCAN é
+definido ao nível do SO (`ip link`), pelo que este controlo está desativado
+para esse transporte - não há nada aqui para ele experimentar.
 
 **Atividade do barramento** ("Check (2s)", ao lado de Query): conta as tramas
 de protocolo reais efetivamente vistas durante uma janela fixa de 2 segundos
@@ -959,7 +966,6 @@ aplicação.
 ├── build-test.sh                  <- same, for Linux
 ├── bump_version.py                <- odometer-style version bump, run by the build scripts
 ├── bump_manifest_version.py       <- syncs urtc.project.json's version to the native one (--sync)
-├── URTC_Flasher.spec              <- PyInstaller spec used by both build scripts above
 ├── docs/
 │   └── CLI_REFERENCE.md           <- command-line flags reference
 ├── tools/

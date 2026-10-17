@@ -24,7 +24,7 @@
 </p>
 
 
-**Version:** 0.2.6 (this tool's own version - shown in the window banner and
+**Version:** 0.2.7 (this tool's own version - shown in the window banner and
 title bar, tracked separately from the URTC board firmware version it
 writes. Follows an X.Y.Z scheme where the patch number bumps automatically
 on every real build via build_exe.bat/build_exe.sh - see CHANGELOG.md for
@@ -593,17 +593,19 @@ the failure path the same way.
 ## 8. 🔄 Reliability during a CAN update, and session logs
 
 If a page's ACK doesn't arrive within the normal 3s window during a CAN
-update, the tool retries the *wait* (not a resend of the page's data) up
-to twice more with a short backoff before giving up, recovering from an
-ACK that was delayed or lost on a noisy bus without the underlying data
-being lost. It deliberately does not resend page data on a timeout - if
-the original data actually arrived fine and only the ACK was lost,
-resending would make the bootloader read those bytes as the start of the
-*next* page, desyncing the transfer. Each retry also checks the
-bootloader's own heartbeat (sent roughly once a second) against what
-receiving the current page in full would imply - when they're
-consistent, the log says so, which is real evidence the data got
-through and only the ACK was lost, not just a longer wait and a hope.
+update, the tool waits again (it does not resend the page's data) up to
+twice more with a short backoff before giving up. This only helps an ACK
+that is merely late: the bootloader sends each page ACK once and never
+repeats it, so an ACK that was really lost cannot be recovered and the
+update is aborted with an error (the board is left in its bootloader and
+the update can simply be started again). The tool deliberately does not
+resend page data on a timeout - if the data had arrived fine, resending
+would make the bootloader read those bytes as the start of the *next*
+page, desyncing the transfer. While waiting, the bootloader's own
+heartbeat (sent roughly once a second) is compared with the progress the
+page would imply and the log mentions when they agree; the heartbeat is a
+whole percentage, so this is a hint only, not proof that the page arrived,
+and it never changes the outcome.
 
 Every session also writes a timestamped log file to `logs/`
 (`urtc_flasher_YYYYMMDD_HHMMSS.log`), independent of the on-screen log -
@@ -615,10 +617,14 @@ and is safe to delete; nothing reads old logs back in.
 
 **Bitrate selector + auto-detect** (Serial/SLCAN only): URTC's bus is fixed
 at 500 kbit/s, which stays the default - this is for a misconfigured
-adapter or troubleshooting a non-standard board. **Auto-detect** tries
-each standard SLCAN bitrate in turn against a version query and stops at
-the first one that gets a real response; not connected yet when you click
-it. SocketCAN's bitrate is set at the OS level (`ip link`), so this
+adapter or troubleshooting a non-standard board. **Auto-detect** only
+*listens*: it opens the adapter in SLCAN listen-only mode (`L`) at each
+standard bitrate in turn and stops at the first one where it hears a valid
+CAN frame, so it never transmits and cannot disturb a running bus. It
+therefore needs other nodes to be sending, and the adapter must support
+listen-only mode; on a silent bus (or with an adapter without it) it finds
+nothing and you choose the bitrate by hand. Not connected yet when you
+click it. SocketCAN's bitrate is set at the OS level (`ip link`), so this
 control is disabled for that transport - there's nothing here for it to try.
 
 **Bus activity** ("Check (2s)", next to Query): counts real protocol
@@ -916,7 +922,6 @@ from the SVG during development; it is not required to run the application.
 ├── build-test.sh                  <- same, for Linux
 ├── bump_version.py                <- odometer-style version bump, run by the build scripts
 ├── bump_manifest_version.py       <- syncs urtc.project.json's version to the native one (--sync)
-├── URTC_Flasher.spec              <- PyInstaller spec used by both build scripts above
 ├── docs/
 │   └── CLI_REFERENCE.md           <- command-line flags reference
 ├── tools/

@@ -51,7 +51,16 @@ set -euo pipefail
 # only at the bottom of the file would never run in that case, since
 # `set -e` jumps straight past it). Reading into a throwaway variable
 # because `read -p` alone still needs somewhere to put its input.
-trap 'read -p "Pulsa Enter para cerrar..." _' EXIT
+trap 'read -p "Press Enter to close..." _' EXIT
+
+echo "[1/6] Checking for Python 3 and tkinter..."
+if ! command -v python3 >/dev/null 2>&1; then
+    echo "      python3 was not found on PATH."
+    echo "      On Debian/Ubuntu:  sudo apt install python3 python3-pip python3-tk"
+    echo "      On Fedora:         sudo dnf install python3 python3-pip python3-tkinter"
+    echo "      On Arch:           sudo pacman -S python python-pip tk"
+    exit 1
+fi
 if ! python3 -c "import tkinter" 2>/dev/null; then
     echo "      tkinter isn't available for this Python install."
     echo "      On Debian/Ubuntu:  sudo apt install python3-tk"
@@ -62,20 +71,13 @@ fi
 echo "      Found."
 echo
 
-echo "[2/6] Installing Python dependencies..."
-python3 -m pip install --upgrade pip >/dev/null
-python3 -m pip install -r requirements.txt
-python3 -m pip install pyinstaller
-echo "      Done."
-echo
-
-echo "[3/6] Bumping FLASHER_VERSION (ecosystem-wide build-version policy)..."
+echo "[2/6] Bumping FLASHER_VERSION (ecosystem-wide build-version policy)..."
 # Every real packaged build gets a new patch version automatically - see
 # bump_version.py's own docstring for the base-10 carry rule
 # (1.1.9 -> 1.2.0). Runs before PyInstaller so the bumped value is what
 # actually gets compiled into this binary, not the pre-bump value.
 # HYDRA_UMC_SCRIPT_STANDARD_VERSION_STEP
-printf '%s\n' "[1/6] Incrementing project version and synchronising its manifest..."
+printf '%s\n' "      Incrementing project version and synchronising its manifest..."
 python3 bump_version.py || exit 1
 # HYDRA_UMC_SCRIPT_STANDARD_VERSION_CAPTURE_BEFORE
 HYDRA_UMC_VERSION_BEFORE="$(python3 -c 'import json, pathlib, sys; print(json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))["version"])' "$(dirname "$0")/urtc.project.json")"
@@ -91,6 +93,13 @@ printf '\n'
 echo "      Done."
 echo
 
+echo "[3/6] Installing Python dependencies..."
+python3 -m pip install --upgrade pip >/dev/null
+python3 -m pip install -r requirements.txt
+python3 -m pip install pyinstaller
+echo "      Done."
+echo
+
 echo "[4/6] Cleaning previous build..."
 # Clean slate before compiling: build/ holds PyInstaller's intermediate
 # artifacts (its own bytecode/dependency cache), and dist/ holds the
@@ -102,6 +111,8 @@ echo "      Done."
 echo
 
 echo "[5/6] Compiling URTC_Flasher with PyInstaller..."
+# No --windowed here (unlike build_exe.bat): on Linux a console binary keeps
+# stdout, so --cli prints its output when run from a terminal.
 # --hidden-import for each of this project's own modules: this file was
 # split from one large urtc_flasher.py into several (flasher_config.py,
 # flasher_transports.py, etc.) for readability. PyInstaller's static
