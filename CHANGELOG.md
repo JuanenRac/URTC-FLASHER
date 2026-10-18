@@ -20,6 +20,12 @@ increments instead (e.g. `0.1.9` -> `0.2.0`), and the same carry applies
 from `MINOR` into `MAJOR`. Running the tool from source (not through a
 build script) never changes the version - only a real build does.
 
+## [0.3.0] - Serial reader drops extended frames and line noise
+
+- **The serial (SLCAN) reader no longer turns an extended 29-bit frame into a standard one.** A `T` line from another device on the bus, or noise that looks like one, used to be delivered with its raw 29-bit value as the identifier, so a frame with id 0x00000111 was indistinguishable from the real 0x111 answer. Such lines are now discarded, as the SocketCAN and python-can transports already did.
+- **Identifiers and data digits must be real hexadecimal.** A signed, `0x`-prefixed or underscore-separated field in a received line used to be accepted by the number parser and delivered as a frame; the line is now ignored.
+- **More of the tool is covered by tests.** The CAN protocol is checked against vectors shared with the other URTC tools (identifiers, magic payloads, serial framing, version answers with the patch frame, the end-of-update minor field), and the image checks (bin, Intel HEX, ELF), the SWD wrappers and the expansion-slave update now have their own tests.
+
 ## [0.2.9] - Firmware from release assets, and the firmware patch number
 
 - **Download from GitHub reads the assets of a release.** The URTC firmware binaries are no longer kept in git: they are attached to each GitHub release. The download window now lists the images and their sha256 and manifest files from the latest release through the Releases API, has a box to type a release tag and load another release, and shows the tag it loaded. Files are only accepted from github.com release assets and the asset storage hosts it redirects to (objects.githubusercontent.com and release-assets.githubusercontent.com); the host is checked before the request and again on the address the answer came from, the size is compared with what the release announces, and an optional GITHUB_TOKEN raises the API rate limit.

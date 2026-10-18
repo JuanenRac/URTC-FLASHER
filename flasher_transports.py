@@ -38,6 +38,9 @@ from flasher_config import (
 # is a one-time setup on the adapter itself, unrelated to and separate from
 # flashing the URTC board.
 # =============================================================================
+_HEX_DIGITS = frozenset("0123456789abcdefABCDEF")
+
+
 class SLCANError(Exception):
     pass
 
@@ -175,15 +178,22 @@ class SLCAN:
             if frame_start == -1:
                 continue  # no frame in this line at all - pure status noise
             line = line[frame_start:]
+            if line[0] == "T":
+                # 'T' = extended (29-bit) ID frame. Every identifier of this
+                # protocol is a standard 11-bit one, so a 'T' line is noise or
+                # another device on the same bus; handing its raw 29-bit value
+                # on as a plain id could make it indistinguishable from a real
+                # answer (0x00000111 against 0x111). Discarded, as the
+                # SocketCAN and python-can transports do with extended frames.
+                continue
+            if any(ch not in _HEX_DIGITS for ch in line[1:]):
+                # int(..., 16) alone would also accept a sign, a "0x" prefix
+                # and underscores, turning line noise into a plausible frame.
+                continue
             try:
-                if line[0] == "t":
-                    can_id = int(line[1:4], 16)
-                    dlc = int(line[4:5], 16)
-                    data_start = 5
-                else:  # 'T' = extended 29-bit ID, not used by this protocol but handled for completeness
-                    can_id = int(line[1:9], 16)
-                    dlc = int(line[9:10], 16)
-                    data_start = 10
+                can_id = int(line[1:4], 16)
+                dlc = int(line[4:5], 16)
+                data_start = 5
                 # CAN 2.0 carries at most eight bytes.  A noisy serial line
                 # with SLCAN DLC 9..F used to pass the length check below and
                 # be delivered as an impossible frame to the flashing logic.
