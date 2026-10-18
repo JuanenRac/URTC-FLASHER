@@ -26,6 +26,14 @@ from pathlib import Path
 
 from PySide6.QtGui import QGuiApplication
 
+import flasher_swd_tools
+
+# A machine without pyOCD or STM32CubeProgrammer (a CI runner) still has to
+# exercise the command construction: the dry run never starts a process, so
+# a tool that is not installed is given a path that is never executed.
+_real_find_executable = flasher_swd_tools._find_executable
+flasher_swd_tools._find_executable = lambda names: _real_find_executable(names) or "/nonexistent/" + names[0]
+
 from flasher_config import (
     APP_FLASH_ADDR, BOOTLOADER_FLASH_ADDR,
     SLAVE_BOOTLOADER_FLASH_ADDR,
