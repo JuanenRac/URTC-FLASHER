@@ -4,7 +4,7 @@
 # reasoning, which applies here too since this module is only loaded once
 # that decision has already been made.
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 import glob
 import logging
@@ -61,7 +61,7 @@ HAVE_SOCKETCAN = hasattr(socket, "AF_CAN")
 # own ui/about_dialog.py).
 ABOUT_AUTHOR_NAME = "JuanenRac (Electro Hobby 3D)"
 ABOUT_AUTHOR_EMAIL = "electrohobby3d@gmail.com"
-ABOUT_LICENSE_NAME = "GNU General Public License v3.0 (GPL-3.0)"
+ABOUT_LICENSE_NAME = "GNU General Public License v3.0 or later (GPL-3.0-or-later)"
 
 # =============================================================================
 # GUI

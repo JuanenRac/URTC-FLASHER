@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Flasher - tests/test_bootloader_entry.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """The bootloader listens for START_UPDATE only for about 600 ms after it starts, and when it starts depends on the installed application. The tool used to sleep 0.8 s and then send
 START_UPDATE once; now it waits for the bootloader's own first heartbeat ("listening") and the update starts at once, and only without one does it fall back to the old wait."""

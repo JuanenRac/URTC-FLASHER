@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Flasher - tests/test_language_selector.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """The window offers the eight languages, saves the choice and says it applies on the next start."""
 from __future__ import annotations

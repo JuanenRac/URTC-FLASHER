@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Flasher - hand-off from worker threads to the Tk main thread.
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """Tkinter is not thread-safe: calling ``root.after`` or reading a Tk variable
 from a worker thread usually works, but is not guaranteed, and fails when the

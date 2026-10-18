@@ -17,7 +17,7 @@
 
 
 <p align="center">
-  <img src="https://img.shields.io/badge/License-GPL%203.0-blue.svg" alt="GPL 3.0">
+  <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Tkinter%20%7C%20Qt%20Quick-38d4e6.svg" alt="Tkinter and Qt Quick">
   <img src="https://img.shields.io/badge/Protocol-CAN--OTA-orange.svg" alt="CAN-OTA">
@@ -32,7 +32,7 @@ the version history and bump_version.py for the exact carry rule)
 
 **Author:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
 
-License: **GPL-3.0** for the source code, **CC BY-SA 4.0** for this
+License: **GPL-3.0-or-later** for the source code, **CC BY-SA 4.0** for this
 documentation - see `LICENSE` in this repository, or the "License and
 Copyright Notices" section at the end of this document.
 
@@ -65,7 +65,7 @@ either platform is a real board over real hardware — treat a first
 real-world flash attempt with the same caution you'd give any new tool
 talking to a bootloader: have JTAG on hand as a fallback. Everything else described here was exercised only against `MockCAN`, a simulated bootloader, never against a real board.
 
-**Honesty check - what actually runs today:** `tests/` holds 31 pytest files (385 tests: all pass; 4 of them skip without PySide6) - the CAN-OTA protocol against a real `MockCAN` transport (`flasher_transports.py`) that plays back a full simulated bootloader sequence (start/erase/receive, page data + PAGE_ACK, HMAC chunks, end-update with a real success or a specific `VERIFY_FAIL_REASON`), the signature rules (published signature sent without any key, unsigned image refused, manifest sha256 mismatch refused before any bus traffic), the image integrity checks and the bundled `firmware/` against its manifests. GitHub Actions (`.github/workflows/ci.yml`) runs this suite on every push, and `tools/build_test.py` runs it in `build-test.sh`/`.bat`. The two `verify_qt_*.py` scripts at the repo root are real end-to-end checks kept outside pytest (they need a real Qt event loop; run them with `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`); `verify_qt_swd_full_chip_flash.py` only builds the `PyOCDCLI`/`CubeProgrammerCLI` commands with `dry_run=True`. None of this has been run against a real board over real hardware in this environment. See `CHANGELOG.md` for exactly what has shipped so far. The simulated bootloader (`MockCAN`) is only a model written from the protocol description: it reproduces the page acknowledgements, the partial last page and the readback frames, but it is not the real bootloader, so a green test run does not replace a trial on a real board (the official 73476-byte image could not be installed, and the last frame of a backup was dropped, while the tests passed, precisely because the simulation was more forgiving than the real bootloader).
+**Honesty check - what actually runs today:** `tests/` holds 35 pytest files (405 tests: all pass; 4 of them skip without PySide6) - the CAN-OTA protocol against a real `MockCAN` transport (`flasher_transports.py`) that plays back a full simulated bootloader sequence (start/erase/receive, page data + PAGE_ACK, HMAC chunks, end-update with a real success or a specific `VERIFY_FAIL_REASON`), the signature rules (published signature sent without any key, unsigned image refused, manifest sha256 mismatch refused before any bus traffic), the image integrity checks and the bundled `firmware/` against its manifests. GitHub Actions (`.github/workflows/ci.yml`) runs this suite on every push, and `tools/build_test.py` runs it in `build-test.sh`/`.bat`. The two `verify_qt_*.py` scripts at the repo root are real end-to-end checks kept outside pytest (they need a real Qt event loop; run them with `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`); `verify_qt_swd_full_chip_flash.py` only builds the `PyOCDCLI`/`CubeProgrammerCLI` commands with `dry_run=True`. None of this has been run against a real board over real hardware in this environment. See `CHANGELOG.md` for exactly what has shipped so far. The simulated bootloader (`MockCAN`) is only a model written from the protocol description: it reproduces the page acknowledgements, the partial last page and the readback frames, but it is not the real bootloader, so a green test run does not replace a trial on a real board (the official 73476-byte image could not be installed, and the last frame of a backup was dropped, while the tests passed, precisely because the simulation was more forgiving than the real bootloader).
 
 > **Safety and security status:** this ecosystem is not a certified safety system, and no populated URTC board exists yet. The bootloaders check firmware images with CRC32 and a shared-key HMAC-SHA256, not with an asymmetric signature (planned); the published application images are signed with the public development key (`signing_key_kind: dev`), so anyone can produce an image the bootloader accepts; nothing has been transmitted to a real board. Read the [security baseline](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md) and the [threat model](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md) before relying on any statement here for the safety of a person.
 
@@ -73,9 +73,9 @@ talking to a bootloader: have JTAG on hand as a fallback. Everything else descri
 
 | | |
 |---|---|
-| Version | `0.3.1` |
+| Version | `0.3.2` |
 | Maturity | Functional |
-| Tests | 385 |
+| Tests | 405 |
 | Stack | Python / Tkinter (legacy advanced workflow) / PySide6 / Qt Quick / CAN-OTA |
 | Target | The PC of the person using it |
 | On real hardware | Simulated only: tested against emulators, fakes or simulators; no run on real hardware is recorded for this version |
@@ -172,7 +172,7 @@ The live flasher keeps its existing CAN-OTA and SWD/JTAG workflow, now on a dark
 - **Help** - Readme (opens this file in a read-only viewer window;
   picks up a translated version automatically once one exists for the
   current language), URTC GitHub (opens the project's repository in
-  your browser), License (this tool's GPL-3.0 license, read from the
+  your browser), License (this tool's GPL-3.0-or-later license, read from the
   repository's own `LICENSE` file), and About (version and author).
 
 **On startup**, the banner shows centered on screen for 5 seconds before
@@ -242,7 +242,7 @@ at this repository's own root:
 │   └── urtc_banner.png            <- shown at the top of the window, rendered from the .svg above
 ├── firmware/
 │   ├── URTC_MAIN_FIRMWARE_v<version>.bin  <- put new .bin files here
-│   └── URTC_MAIN_FIRMWARE_v0.3.2.bin  <- can keep older versions around too
+│   └── URTC_*  <- tools/sync_firmware.py replaces the URTC_* files of this folder with one release; other files stay
 ├── logs/                          <- created automatically, one file per session
 ├── urtc_config.json               <- optional, not included by default (see "Changing the HMAC key" below)
 ├── urtc_flasher.py                <- entry point: CLI args, splash screen, main window setup
@@ -993,6 +993,7 @@ from the SVG during development; it is not required to run the application.
 ├── README.md                      <- this file
 ├── README_spa.md / README_ita.md / README_fra.md / README_deu.md / README_zho.md / README_jpn.md / README_por.md  <- translations
 ├── LICENSE
+├── NOTICE                      Copyright notice and the license of the documentation
 ├── .gitattributes
 └── .gitignore
 ```
@@ -1086,6 +1087,7 @@ This project is part of the HYDRA-UMC robotics ecosystem by the same author (Jua
 - **[HYDRA-UMC-WATCH](https://github.com/JuanenRac/HYDRA-UMC-WATCH)** — WearOS companion app with haptic alert patterns and a paired-phone voice relay (not yet run on a physical watch).
 - **[URTC-SMART-RACK](https://github.com/JuanenRac/URTC-SMART-RACK)** — firmware for a board-mounting rack with real tool-ID decoding and Smart Idle pre-heating logic.
 - **[URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL)** — firmware plus a real Python vision companion for a thermal/RGB inspection tool head.
+- **[URTC-UPDATER](https://github.com/JuanenRac/URTC-UPDATER)** — desktop tool that detects, installs and updates the repositories of the URTC family, one explicit action at a time.
 - **[HYDRA-UMC-UPDATER](https://github.com/JuanenRac/HYDRA-UMC-UPDATER)** — administrative desktop tool that discovers, clones and updates every repo in this ecosystem.
 - **[HYDRA-UMC-OS-REBUILDER](https://github.com/JuanenRac/HYDRA-UMC-OS-REBUILDER)** — Windows/Linux desktop tool that builds a ready-to-flash CM5 image pre-loaded with the ecosystem's most current versions, with Raspberry-Pi-Imager-style first-boot Wi-Fi/user/SSH configuration.
 - **[HYDRA-UMC-OPS-AGENT](https://github.com/JuanenRac/HYDRA-UMC-OPS-AGENT)** — maintenance-incident coordinator: a low-privilege edge role collects a sanitized inventory/health snapshot, a control-plane role renders it read-only and asks an AI provider to suggest a diagnosis - never applies a patch or deploys anything.
@@ -1102,7 +1104,7 @@ covers:
 
 1. The source code (`urtc_flasher.py` and every `flasher_*.py` module)
    and any binary built from it via `build_exe.bat`/`build_exe.sh` are
-   available under the **GNU General Public License v3.0 (GPL-3.0)**.
+   available under the **GNU General Public License v3.0 or later (GPL-3.0-or-later)**.
    Full text at https://www.gnu.org/licenses/gpl-3.0.html.
 
 2. The documentation (this README and its own translations -
@@ -1123,7 +1125,7 @@ similar ground also exists at
 [URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO).
 
 If you build on this project, keep the licensing split in mind: code
-changes should stay GPL-3.0, documentation derivatives should stay CC
+changes should stay GPL-3.0-or-later, documentation derivatives should stay CC
 BY-SA - each with attribution back to this project and its author.
 
 ---

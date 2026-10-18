@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Flasher - tests/test_ui_mailbox.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """Worker threads never touch Tk: they post to a mailbox that the main thread drains."""
 from __future__ import annotations

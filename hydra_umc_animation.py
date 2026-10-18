@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Flasher - Animated HYDRA-UMC identity widget for Tkinter.
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """A tiny, dependency-free player for pre-rendered HYDRA-UMC SVG frames.
 

@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Flasher - tests/test_version_report.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """Before an update the tool says "installed X -> new Y" and warns about a downgrade."""
 from __future__ import annotations

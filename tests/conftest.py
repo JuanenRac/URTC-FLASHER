@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Flasher - tests/conftest.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """Most tests flash a synthetic image with no published manifest - in real
 use that is a self-built image on a bench board, which needs a signing key

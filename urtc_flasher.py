@@ -3,7 +3,7 @@
 URTC Flasher - cross-platform firmware update tool for the URTC board
 Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 
-Licensed under the GNU General Public License v3.0 (GPL-3.0), matching the
+Licensed under the GNU General Public License v3.0 or later (GPL-3.0-or-later), matching the
 URTC firmware itself. See LICENSE in the repository root.
 
 Flashes a compiled URTC application .bin file to a board over CAN bus.

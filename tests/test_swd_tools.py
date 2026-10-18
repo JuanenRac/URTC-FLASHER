@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Flasher - tests/test_swd_tools.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """The SWD/JTAG wrappers around pyOCD and STM32CubeProgrammer, with the child
 process replaced by a stand-in: the exact command lines, the order of the

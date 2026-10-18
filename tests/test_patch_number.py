@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Flasher - tests/test_patch_number.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """The firmware PATCH number over CAN: frame 0x7E9, the extended slave answer
 0x218, the patch in the end-of-update frame, and full compatibility with boards

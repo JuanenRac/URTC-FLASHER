@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Flasher - tests/test_slave_entry_check.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """A slave whose application is still running never enters its bootloader (the application only resets and the bootloader jumps straight back), so START_UPDATE is ignored and the
 update used to end in a generic timeout. The tool now says so at once."""

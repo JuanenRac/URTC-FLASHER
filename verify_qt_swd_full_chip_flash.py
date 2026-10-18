@@ -2,7 +2,7 @@
 # URTC Flasher - real, end-to-end check of the Qt Quick full-chip SWD/JTAG
 # programming panel (dry-run only - never touches real hardware)
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """Deliberately kept OUTSIDE tests/ - same real reason as the TESTER repo's
 own verify_qt_*.py scripts: needs a real Qt event loop for real cross-

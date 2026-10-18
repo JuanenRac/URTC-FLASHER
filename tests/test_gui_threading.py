@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Flasher - tests/test_gui_threading.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """The Tk window's worker threads must not touch Tk. The window is built without
 a display (no __init__): every Tk object is a fake that fails when it is used off the

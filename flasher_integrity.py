@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC-FLASHER - flasher_integrity.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """Checks that come before a flash may be reported as done.
 

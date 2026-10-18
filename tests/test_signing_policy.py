@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Flasher - tests/test_signing_policy.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """An image signed with the PUBLIC development key is flagged, and in "production only"
 mode it is refused before a single frame is sent."""

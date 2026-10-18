@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Flasher - tests/test_flasher_protocol_clock.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """
 flasher_protocol.py's own deadline/duration math used to read time.time()

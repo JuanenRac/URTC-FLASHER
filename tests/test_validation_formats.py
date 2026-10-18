@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Flasher - tests/test_validation_formats.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """Image plausibility checks done before anything is flashed: the raw .bin
 path of the CAN update, and the .hex / .elf / .bin paths of the SWD section.

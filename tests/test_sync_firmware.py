@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Flasher - tests/test_sync_firmware.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """tools/sync_firmware.py takes the firmware set from the assets of a URTC
 release or from a local folder, and checks it before touching firmware/."""

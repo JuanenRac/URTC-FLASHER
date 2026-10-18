@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Flasher - tests/test_flash_protocol_dispatch.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """Real gap this closes: flasher_protocol.py is the code that writes to
 real hardware over CAN, yet before this file only its verify-fail

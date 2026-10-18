@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Flasher - tests/test_bitrate_listen_only.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """Bitrate auto-detection must never transmit: the SLCAN channel is opened
 with "L" (listen-only) and a bitrate is found only by hearing a frame."""

@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Flasher - tests/test_version_resolution.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """The version written into the board with END_UPDATE is the real one of the image (its manifest, the one given, or the one in its file name) and is never invented: the tool used to
 report 1.0 for an image without a manifest, so every later official image (0.3.x, 0.4) looked older to the anti-rollback check and was rejected."""

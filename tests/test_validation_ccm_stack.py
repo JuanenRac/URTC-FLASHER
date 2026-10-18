@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Flasher - tests/test_validation_ccm_stack.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """The bootloader accepts an initial stack pointer in the main SRAM or in the CCM RAM; the plausibility check of the flasher only accepted the main SRAM, so a valid image with its stack
 in the CCM was marked invalid. The example configuration also no longer carries values that change how an image is signed or laid out."""

@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Flasher - tests/test_qt_bridge_log.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """The Qt Quick deck keeps a bounded log and shows it in the interface language."""
 from __future__ import annotations

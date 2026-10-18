@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Flasher - tests/test_flash_verify_fail_reporting.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """this project's own real acceptance test: "Bootloader falso acepta todos los
 bloques pero falla en checksum final: la UI no anuncia exito." -

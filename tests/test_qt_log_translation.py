@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Flasher - tests/test_qt_log_translation.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """The log lines of the Qt Quick deck start with a token; it is shown in the interface language."""
 from __future__ import annotations

@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Flasher - tests/test_ota_partial_page.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """The real bootloader writes (and acknowledges) a flash page when its 2048-byte buffer is FULL; the last page of an image that is not a whole number of pages is written and
 acknowledged only when END_UPDATE (0x7F4) arrives. The flasher used to wait for the acknowledgement of that last page BEFORE sending END_UPDATE, so every image whose size

@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC-FLASHER - tests/test_release_signature.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """The release signature of an image: the pinned key, the verifier and the pre-flash decision."""
 import hashlib

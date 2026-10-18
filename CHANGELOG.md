@@ -27,6 +27,14 @@ build script) never changes the version - only a real build does.
 - The header of the Qt Quick window has a language selector (the eight languages); the choice is saved and applies on the next start. The new log lines are translated in the eight languages.
 - The README examples no longer name a fixed bundled firmware version.
 - The build and run scripts read URTC_CI as their non-interactive switch.
+- The file tree of the README (all eight languages) shows what tools/sync_firmware.py really does with firmware/: it replaces the URTC_* files of the folder with the set of one release and leaves other files alone; it no longer says that older versions are kept next to the new one.
+- The README of every language lists URTC-UPDATER among the related projects.
+- CONTRIBUTING.md says what this tool verifies (a PAGE_ACK for every page and the verification status of the bootloader) and that the read-back of the copy is done by the bootloader, not by this tool.
+- .gitattributes keeps the firmware images (.bin, .elf) binary.
+- The CI workflow no longer carries steps for stacks this repository does not have.
+- LICENSE holds the full text of the GNU General Public License v3.0; the copyright notice and the license of the documentation moved to a new NOTICE file. The license is GPL-3.0-or-later everywhere: LICENSE.md, source headers, script banners, About texts and READMEs (eight languages).
+- A test compares hydra_umc_animation.py and hydra_umc_deck_widgets.py with the copies in the other desktop tool (by syntax tree, so comments and layout do not count) and fails when one of them changes alone; it skips when the other repository is not next to this one.
+- The number of tests and test files in the README (eight languages) and in the At a glance table is the current one, and the Japanese and Chinese texts no longer quote an older count.
 
 ## [0.3.1] - Claims aligned with what has been tested
 

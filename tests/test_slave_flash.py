@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Flasher - tests/test_slave_flash.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """The expansion-slave update (0x210-0x219 relayed by the main board), against
 a scripted stand-in for the slave bootloader: the frames the flasher sends,

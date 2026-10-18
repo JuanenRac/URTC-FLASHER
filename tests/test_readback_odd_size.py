@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Flasher - tests/test_readback_odd_size.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """The bootloader sends the last data frame of a readback with fewer than 8 bytes when the installed size is not a multiple of 8 (the official 0.3.3 image, 73476 bytes, leaves 4).
 The flasher only accepted frames of exactly 8 bytes, so that last frame was dropped, the page never completed and the backup failed after the page timeout."""

@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Flasher - Qt Quick CAN-OTA command deck
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """Qt Quick front end for the real, safe CAN-OTA workflow.
 

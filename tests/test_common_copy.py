@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Flasher - tests/test_common_copy.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """The generated protocol module and the shared vectors are copies: nobody edits them by hand, they do not fall behind
 the shared repository when it is next to this one, and the constants this program uses are the generated ones."""

@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Flasher - tests/test_python_can_transport.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """The optional python-can transport, against a stand-in `can` module (no adapter needed)."""
 from __future__ import annotations

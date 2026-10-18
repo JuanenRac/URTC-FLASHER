@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Flasher - tests/test_firmware_signature.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """Which signature goes to the bootloader (see URTC docs/FIRMWARE_SIGNING.TXT):
 the one published in <image>.manifest.json; a locally computed one only with

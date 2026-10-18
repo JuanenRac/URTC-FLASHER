@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Flasher - tests/test_github_download.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """The GitHub download path: the assets of a release are listed through the
 Releases API, only .bin images and their sidecars are offered, the file hosts

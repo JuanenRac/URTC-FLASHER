@@ -17,7 +17,7 @@
 
 
 <p align="center">
-  <img src="https://img.shields.io/badge/License-GPL%203.0-blue.svg" alt="GPL 3.0">
+  <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Tkinter%20%7C%20Qt%20Quick-38d4e6.svg" alt="Tkinter and Qt Quick">
   <img src="https://img.shields.io/badge/Protocol-CAN--OTA-orange.svg" alt="CAN-OTA">
@@ -31,7 +31,7 @@ CHANGELOG.md，确切的进位规则见 bump_version.py）
 
 **作者：** JuanenRac（Electro Hobby 3D）&lt;electrohobby3d@gmail.com&gt;
 
-许可证：源代码为 **GPL-3.0**，本文档为 **CC BY-SA 4.0**——见本仓库中的
+许可证：源代码为 **GPL-3.0-or-later**，本文档为 **CC BY-SA 4.0**——见本仓库中的
 `LICENSE`，或本文档末尾的“许可证与版权声明”一节。
 
 一款小型的跨平台 GUI 工具，用于通过 CAN 总线更新 URTC 板卡固件。它实现了
@@ -57,7 +57,7 @@ CAN 自我标识），以便你在决定要刷写什么之前，先看看当前�
 针对真实硬件的真实板卡——请以对待任何与引导程序通信的新工具同样的谨慎态度
 对待首次真实刷写尝试：手边备好 JTAG 作为后备手段。 这里描述的其他功能都只针对模拟引导程序 `MockCAN` 测试过，从未针对真实板卡测试过。
 
-**诚实核查 - 今天真正能运行的部分：** `tests/` 下有 31 个 pytest 文件（214 个测试：全部通过，其中 4 个在没有 PySide6 时跳过）——针对真实 `MockCAN` 传输（`flasher_transports.py`）的 CAN-OTA 协议测试，它会回放完整的模拟引导程序序列（开始／擦除／接收、页数据 + PAGE_ACK、HMAC 分块、以真实成功或特定 `VERIFY_FAIL_REASON` 结束更新）；签名规则（无需任何密钥即发送已发布的签名、拒绝未签名镜像、清单 sha256 不符时在任何总线通信前拒绝）；镜像完整性检查；以及随附 `firmware/` 与其清单的核对。GitHub Actions（`.github/workflows/ci.yml`）在每次推送时运行这套测试，`tools/build_test.py` 也会在 `build-test.sh`/`.bat` 中运行。根目录下的两个 `verify_qt_*.py` 脚本是 pytest 之外的真实端到端检查（需要真实的 Qt 事件循环；用 `QT_QPA_PLATFORM=offscreen python verify_qt_*.py` 运行）；`verify_qt_swd_full_chip_flash.py` 只以 `dry_run=True` 构造 `PyOCDCLI`/`CubeProgrammerCLI` 命令。这些都没有在本环境中针对真实板卡运行过。已发布的内容请参见 `CHANGELOG.md`。 模拟的引导程序（`MockCAN`）只是根据协议说明编写的模型：它能重现页确认、不完整的最后一页和回读帧，但它不是真正的引导程序，所以测试全部通过并不能代替在真实板卡上的试验（官方 73476 字节镜像曾无法安装、备份的最后一帧曾被丢弃，而测试却是通过的，正是因为模拟比真正的引导程序更宽松）。
+**诚实核查 - 今天真正能运行的部分：** `tests/` 下有 35 个 pytest 文件（405 个测试：全部通过，其中 4 个在没有 PySide6 时跳过）——针对真实 `MockCAN` 传输（`flasher_transports.py`）的 CAN-OTA 协议测试，它会回放完整的模拟引导程序序列（开始／擦除／接收、页数据 + PAGE_ACK、HMAC 分块、以真实成功或特定 `VERIFY_FAIL_REASON` 结束更新）；签名规则（无需任何密钥即发送已发布的签名、拒绝未签名镜像、清单 sha256 不符时在任何总线通信前拒绝）；镜像完整性检查；以及随附 `firmware/` 与其清单的核对。GitHub Actions（`.github/workflows/ci.yml`）在每次推送时运行这套测试，`tools/build_test.py` 也会在 `build-test.sh`/`.bat` 中运行。根目录下的两个 `verify_qt_*.py` 脚本是 pytest 之外的真实端到端检查（需要真实的 Qt 事件循环；用 `QT_QPA_PLATFORM=offscreen python verify_qt_*.py` 运行）；`verify_qt_swd_full_chip_flash.py` 只以 `dry_run=True` 构造 `PyOCDCLI`/`CubeProgrammerCLI` 命令。这些都没有在本环境中针对真实板卡运行过。已发布的内容请参见 `CHANGELOG.md`。 模拟的引导程序（`MockCAN`）只是根据协议说明编写的模型：它能重现页确认、不完整的最后一页和回读帧，但它不是真正的引导程序，所以测试全部通过并不能代替在真实板卡上的试验（官方 73476 字节镜像曾无法安装、备份的最后一帧曾被丢弃，而测试却是通过的，正是因为模拟比真正的引导程序更宽松）。
 
 > **安全与安防现状:**本生态系统不是经认证的安全系统,目前也不存在已组装的 URTC 电路板。引导程序使用 CRC32 和共享密钥的 HMAC-SHA256 校验固件映像,而非非对称签名(计划中);已发布的应用映像使用公开的开发密钥签名(`signing_key_kind: dev`),因此任何人都可以生成引导程序接受的映像;尚未向任何真实电路板发送过任何内容。在依赖此处任何说法来保障人身安全之前,请先阅读[安全基线](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md)和[威胁模型](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md)。
 
@@ -65,9 +65,9 @@ CAN 自我标识），以便你在决定要刷写什么之前，先看看当前�
 
 | | |
 |---|---|
-| 版本 | `0.3.1` |
+| 版本 | `0.3.2` |
 | 成熟度 | 可用 |
-| 测试 | 385 |
+| 测试 | 405 |
 | 技术栈 | Python / Tkinter (legacy advanced workflow) / PySide6 / Qt Quick / CAN-OTA |
 | 目标 | 使用者的电脑 |
 | 真实硬件 | 仅模拟：使用模拟器、替身或仿真测试；此版本没有在真实硬件上运行的记录 |
@@ -154,7 +154,7 @@ Qt Quick 窗口的标题栏有语言选择器；所选语言会被保存，并�
 - **语言** —— 在 8 种可用语言之间切换（翻译的工作方式见下方”语言”）。
 - **帮助** —— Readme（在一个只读查看器窗口中打开本文件；一旦当前语言存在
   已翻译的版本，会自动使用该版本）、URTC GitHub（在浏览器中打开项目的仓库）、
-  许可证（本工具的 GPL-3.0 许可证，读取自仓库自身的 `LICENSE` 文件），以及
+  许可证（本工具的 GPL-3.0-or-later 许可证，读取自仓库自身的 `LICENSE` 文件），以及
   关于（版本和作者）。
 
 **启动时**，横幅会在屏幕中央显示 5 秒，然后主窗口才出现——它不是主窗口本身
@@ -212,7 +212,7 @@ SocketCAN 没有这个特定的坑——访问一个类似 `can0` 的接口不�
 │   └── urtc_banner.png            <- 显示在窗口顶部，由上方的 .svg 渲染而成
 ├── firmware/
 │   ├── URTC_MAIN_FIRMWARE_v<version>.bin  <- 将新的 .bin 文件放在这里
-│   └── URTC_MAIN_FIRMWARE_v0.3.2.bin  <- 也可以保留旧版本
+│   └── URTC_*  <- tools/sync_firmware.py 会用某个发布版本的文件替换此文件夹中的 URTC_* 文件；其他文件保持不变
 ├── logs/                          <- 自动创建，每个会话一个文件
 ├── urtc_config.json               <- 可选，默认不包含（见下方“更改 HMAC 密钥”）
 ├── urtc_flasher.py                <- 入口点：CLI 参数、启动画面、主窗口设置
@@ -841,6 +841,7 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 ├── README_zho.md                  <- 本文件
 ├── README_spa.md / README_ita.md / README_fra.md / README_deu.md / README_jpn.md / README_por.md  <- 其他翻译
 ├── LICENSE
+├── NOTICE                      版权声明和文档许可证
 ├── .gitattributes
 └── .gitignore
 ```
@@ -933,6 +934,7 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 - **[HYDRA-UMC-WATCH](https://github.com/JuanenRac/HYDRA-UMC-WATCH)** — 带有触觉提醒模式与配对手机语音中继的 WearOS 伴侣应用(尚未在实体手表上运行)。
 - **[URTC-SMART-RACK](https://github.com/JuanenRac/URTC-SMART-RACK)** — 面向板卡安装机架的固件，具备真实的工具 ID 解码与 Smart Idle 预热逻辑。
 - **[URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL)** — 面向热成像/RGB 检测工具头的固件及真实 Python 视觉伴侣程序。
+- **[URTC-UPDATER](https://github.com/JuanenRac/URTC-UPDATER)** — 桌面工具，用于检测、安装和更新 URTC 系列的仓库，每次只执行一项明确的操作。
 - **[HYDRA-UMC-UPDATER](https://github.com/JuanenRac/HYDRA-UMC-UPDATER)** — 发现、克隆并更新本生态系统中每个仓库的管理类桌面工具。
 - **[HYDRA-UMC-OS-REBUILDER](https://github.com/JuanenRac/HYDRA-UMC-OS-REBUILDER)** —— 构建即刻可烧录、预装生态系统最新版本的 CM5 镜像的 Windows/Linux 桌面工具,具备类似 Raspberry Pi Imager 风格的首次启动 Wi-Fi/用户/SSH 配置。
 - **[HYDRA-UMC-OPS-AGENT](https://github.com/JuanenRac/HYDRA-UMC-OPS-AGENT)** — 维护事件协调器：一个低权限的边缘角色采集经过脱敏的库存/健康快照，一个控制面角色以只读方式渲染它，并请求某个 AI 提供方给出诊断建议——从不应用补丁，也从不部署任何内容。
@@ -948,7 +950,7 @@ URTC Flasher 版权所有 (c) 2026 JuanenRac（Electro Hobby 3D）。分发本�
 
 1. 源代码（`urtc_flasher.py` 及每一个 `flasher_*.py` 模块）以及通过
    `build_exe.bat`/`build_exe.sh` 从中构建的任何二进制文件，依据
-   **GNU 通用公共许可证 v3.0（GPL-3.0）** 提供。完整文本见
+   **GNU 通用公共许可证 v3.0（GPL-3.0-or-later）** 提供。完整文本见
    https://www.gnu.org/licenses/gpl-3.0.html。
 
 2. 文档（本 README 及其自身的翻译版本——`README_spa.md`、`README_ita.md`、
@@ -963,7 +965,7 @@ CERN-OHL-S v2；本工具自身的许可证并不延伸至那个独立的项目�
 一个覆盖类似功能范围的基于网页的替代方案也存在，位于
 [URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO)。
 
-如果你基于本项目进行开发，请留意这种许可证划分：代码更改应保持 GPL-3.0，
+如果你基于本项目进行开发，请留意这种许可证划分：代码更改应保持 GPL-3.0-or-later，
 文档衍生品应保持 CC BY-SA——每一项都需附带指向本项目及其作者的署名。
 
 ---

@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Flasher - tests/test_records.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """Session logs (where, how many) and the JSON report written after an update, and the
 choice of an official image for a board that has no firmware."""

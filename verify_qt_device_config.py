@@ -3,7 +3,7 @@
 # device-configuration writes (expansion board type / MLX sensor variant /
 # free tool config / device serial)
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """Deliberately kept OUTSIDE any pytest suite - needs a real PySide6 event
 loop for the real cross-thread Signal delivery every write worker uses.

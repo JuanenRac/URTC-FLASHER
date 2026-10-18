@@ -1,7 +1,7 @@
 # =============================================================================
 # URTC Flasher - tests/test_mock_readback.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """The simulated bootloader answers a readback like the real one: the size first, pages of
 8-byte frames, the last frame as short as needed, the next page after each ACK."""

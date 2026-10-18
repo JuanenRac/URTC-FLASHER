@@ -2,7 +2,7 @@
 # URTC Flasher - Configuration, language/translation loading, and protocol
 # constants shared by every other module in this project
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 import sys
 import os

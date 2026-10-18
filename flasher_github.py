@@ -2,7 +2,7 @@
 # URTC Flasher - Download firmware from the assets of a GitHub release of the
 # project's own repository (github.com/JuanenRac/URTC).
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 #
 # The URTC firmware binaries are not versioned in git: each release carries
 # them as assets (the images, their .sha256 and .manifest.json files and

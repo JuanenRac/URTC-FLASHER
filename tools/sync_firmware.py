@@ -2,7 +2,7 @@
 # =============================================================================
 # URTC Flasher - tools/sync_firmware.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
-# GPL-3.0 - see LICENSE
+# GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """Refreshes this tool's own firmware/ folder from a URTC firmware set: the
 four .bin images named in URTC's firmware_manifest.json, each with its
