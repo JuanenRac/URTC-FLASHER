@@ -24,7 +24,7 @@
 </p>
 
 
-**バージョン：** 0.3.0（本ツール自身のバージョン——ウィンドウのバナーと
+**バージョン：** 0.3.1（本ツール自身のバージョン——ウィンドウのバナーと
 タイトルバーに表示され、書き込み先の URTC ボードファームウェアのバージョン
 とは別に管理されます。X.Y.Z 方式に従い、パッチ番号は build_exe.bat/
 build_exe.sh による実際のビルドのたびに自動的に加算されます——バージョン
@@ -42,7 +42,7 @@ CAN バス経由で URTC ボードファームウェアを更新するための�
 あります——本ドキュメント末尾近くの「関連プロジェクト」を参照。本 README
 内の他のすべての `docs/*.TXT` の参照もそこを指しています）にある、まさに
 そのブートローダープロトコルを実装しています：HardwareID チェック、
-HMAC-SHA256 署名、ゴールデンイメージのバックアップスロット更新フロー、
+共有鍵の HMAC-SHA256（非対称署名ではありません）、ゴールデンイメージのバックアップスロット更新フロー、
 ブートローダーのハートビートメッセージによるリアルタイムの進捗表示、
 そして何を書き込むか決める前に現在何がインストールされているかを確認
 できるバージョン照会（このボードのアプリケーション*または*ブートローダー
@@ -68,16 +68,18 @@ HMAC-SHA256 署名、ゴールデンイメージのバックアップスロッ�
 でも**テストされていない**のは、実際のハードウェア上の実際のボードです——
 ブートローダーと通信する新しいツールに対して払うのと同じ注意をもって、
 最初の実際のフラッシュ試行に臨んでください：フォールバックとして手元に
-JTAG を用意しておいてください。
+JTAG を用意しておいてください。 ここで説明するその他の機能は、シミュレートされたブートローダーである `MockCAN` に対してのみ試されており、実機のボードに対して試したことはありません。
 
 **正直な現状確認 - 実際に今動くもの:** `tests/` には 31 個の pytest ファイル（214 件のテスト：すべて成功、うち 4 件は PySide6 がない場合スキップ）があります——完全なブートローダーシーケンス（開始／消去／受信、ページデータ + PAGE_ACK、HMAC チャンク、本当の成功または特定の `VERIFY_FAIL_REASON` による更新終了）を再現する実際の `MockCAN` トランスポート（`flasher_transports.py`）に対する CAN-OTA プロトコル、署名ルール（公開署名は鍵なしで送信、未署名イメージは拒否、マニフェストの sha256 不一致はバス通信前に拒否）、イメージ整合性チェック、同梱の `firmware/` とそのマニフェストの照合です。GitHub Actions（`.github/workflows/ci.yml`）が push のたびにこのスイートを実行し、`tools/build_test.py` も `build-test.sh`/`.bat` で実行します。ルートにある 2 つの `verify_qt_*.py` スクリプトは pytest の外にある本物のエンドツーエンドチェックです（本物の Qt イベントループが必要。`QT_QPA_PLATFORM=offscreen python verify_qt_*.py` で実行）。`verify_qt_swd_full_chip_flash.py` は `dry_run=True` で `PyOCDCLI`/`CubeProgrammerCLI` のコマンドを組み立てるだけです。この環境では実機ボードに対しては一切実行していません。何がリリースされたかは `CHANGELOG.md` を参照してください。 シミュレートされたブートローダー（`MockCAN`）はプロトコルの記述から作ったモデルにすぎません。ページ ACK、部分的な最後のページ、読み戻しフレームは再現しますが、本物のブートローダーではないため、テストがすべて成功しても実機での試験の代わりにはなりません（公式の 73476 バイトのイメージがインストールできず、バックアップの最後のフレームが失われていたのに、シミュレーションが本物のブートローダーより寛容だったためにテストは成功していました）。
+
+> **安全性とセキュリティの現状:** このエコシステムは認証された安全システムではなく、実装済みの URTC 基板もまだ存在しません。ブートローダーはファームウェアイメージを CRC32 と共有鍵の HMAC-SHA256 で検査しており、非対称署名ではありません(予定)。公開されているアプリケーションイメージは公開の開発用鍵(`signing_key_kind: dev`)で署名されているため、誰でもブートローダーが受け入れるイメージを作れます。実際の基板には何も送信されていません。ここに書かれた内容を人の安全のために頼る前に、[セキュリティベースライン](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md)と[脅威モデル](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md)をお読みください。
 
 ## 📋 ひと目で
 
 | | |
 |---|---|
-| バージョン | `0.3.0` |
-| 成熟度 | 確立 |
+| バージョン | `0.3.1` |
+| 成熟度 | 機能する |
 | テスト | 385 |
 | 技術 | Python / Tkinter (legacy advanced workflow) / PySide6 / Qt Quick / CAN-OTA |
 | 対象 | 利用者の PC |
@@ -164,16 +166,13 @@ PNG フレームにより、追加の GUI 実行時依存関係なしで Tkinter
 
 ### ビジュアル・コマンドデッキ
 
-共有の **Qt Quick** コマンドデッキは、同じ本番用の通信・検証・署名付き書き込みコードの上に載った第二のフロントエンドです：
+共有の **Qt Quick** コマンドデッキは、同じ通信・検証・書き込みコードの上に載った第二のフロントエンドです（シミュレーターに対してのみテスト済み。イメージの検査には共有鍵の HMAC-SHA256 を使用）：
 ~~~
 python urtc_flasher.py --qtquick
 ~~~
 提供されるのは、メインボードの CAN-OTA 更新（ブートローダー進入トリガーは常に最初に送信されます）、読み取り専用の SWD/JTAG 検出、Board Snapshot、4 つのデバイス設定書き込み、そして SWD/JTAG によるチップ全体のプログラミング（消去/書き込み、ドライラン、消去前のバックアップ、RDP チェック）です。Tkinter ウィンドウにある機能が**すべて**あるわけではありません：拡張スレーブのターゲット、「ボードはすでにブートローダー内」オプション、F-RAM 消去オプション、ダウングレードの許可、CAN によるファームウェアバックアップ、GitHub からのダウンロード、ビットレートの選択や自動検出（Serial/SLCAN は 500 kbit/s で開きます）、専用のバス動作チェックはありません。これらには既定の Tkinter インターフェースを使用してください。
 
-確立済みの CAN-OTA および SWD/JTAG ワークフローは維持したまま、ダークネイビー/
-シアンの操作面に刷新しました。製品ヘッダー、高コントラストの接続カード、読みやすい
-ファームウェア表、暗色の検証ログ、見やすい進捗表示を備えます。これは視覚性と
-アクセシビリティの改善であり、ブートローダープロトコルやハードウェア安全動作は変更しません。
+既存の CAN-OTA および SWD/JTAG ワークフローは維持したまま、ダークネイビー/シアンの操作面に刷新しました。製品ヘッダー、高コントラストの接続カード、読みやすいファームウェア表、暗色の検証ログ、見やすい進捗表示を備えます。これは視覚性とアクセシビリティの変更だけで、ブートローダープロトコルは変更しません。実機のボードで試したことはありません。
 
 ### メニューバー
 
@@ -352,7 +351,7 @@ SocketCAN にはこの特定の落とし穴はありません——`can0` のよ
 `<filename>.sha256`**——URTC のビルドが各イメージについて公開します（GitHub
 からイメージと一緒にダウンロードされます）。マニフェストにはバージョン、
 `sha256`、アプリケーションイメージの場合はブートローダーが期待する
-`hmac_sha256` 署名が含まれます：
+`hmac_sha256` の値（共有鍵の HMAC-SHA256 であり非対称署名ではありません。`signing_key_kind: dev` は公開の開発用鍵を示します）が含まれます：
 
 ```json
 {"component": "main_application", "version": "0.3.3", "sha256": "b48d4cd5...", "hmac_sha256": "b63a701e...", "signing_key_kind": "dev"}
@@ -895,7 +894,7 @@ GitHub からイメージをダウンロードすると両ファイルも一緒�
 ない自作イメージをベンチ用ボードに書き込む場合だけです。下記の
 `urtc_config.json` に `hmac_key_hex` / `slave_hmac_key_hex` を設定して
 ください。設定がない場合、そのイメージはブートローダーが持ち得ない鍵で署名
-されるのではなく拒否されます。URTC の `docs/FIRMWARE_SIGNING.TXT` を参照。
+されるのではなく拒否されます。URTC の `docs/FIRMWARE_SIGNING.TXT` を参照。 公開されているイメージは公開の開発用鍵（`signing_key_kind: dev`）で署名されているため、これは共有鍵による検査です。イメージがその鍵の保持者によって作られたことは示しますが、誰であるかは示しません。非対称署名（Ed25519）は計画中で、実装されていません。
 
 **またはスクリプトに触れずにこれらを上書きする：** `firmware/` の隣に
 ある任意の `urtc_config.json` は、署名キー、HardwareID、そしてメモリ
@@ -1074,9 +1073,9 @@ JSON 数値（`50580689`）のどちらも受け付けます——ファイル�
 **エコシステムの他のプロジェクト**
 
 *コアハードウェア&プラットフォーム*
-- **[HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC)** — 実際のロボットアームのマザーボード——CM5 ホスト + デュアルコア STM32H745、CAN-OTA/SPI-OTA 経由で最大 8 本のツールアームを統括。
+- **[HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC)** — ロボットアームのマザーボードの設計——CM5 ホスト + デュアルコア STM32H745、CAN-OTA/SPI-OTA 経由で最大 8 本のツールアームを統括することを目指す(ファームウェアは初期段階で、実装済みの基板はまだない)。
 - **[HYDRA-UMC-OS](https://github.com/JuanenRac/HYDRA-UMC-OS)** — CM5 向けの再現可能な Raspberry Pi OS プロダクト層——読み取り専用エージェント、検証済み設定/プロファイル、WiFi 初回接続プロビジョニング。
-- **[HYDRA-UMC-SDK](https://github.com/JuanenRac/HYDRA-UMC-SDK)** — すべてのブリッジが自身のコマンドを検証する共有 JSON-Schema 契約と安全ゲートの境界。
+- **[HYDRA-UMC-SDK](https://github.com/JuanenRac/HYDRA-UMC-SDK)** — すべてのブリッジが自身のコマンドを検証する共有 JSON-Schema 契約とソフトウェアのジョブゲート境界(認証済みの安全機能ではない)。
 - **[HYDRA-UMC-CONNECTOR-HUB](https://github.com/JuanenRac/HYDRA-UMC-CONNECTOR-HUB)** — 外部マシン用コネクタのための宣言的アダプターマニフェストのレジストリとバリデーター。SDK 自身の契約という発想を外部マシンにまで拡張し、産業用ゲートウェイ系のプロジェクトを置き換えることはありません。
 
 *コアバックエンド&クライアント*
@@ -1088,21 +1087,21 @@ JSON 数値（`50580689`）のどちらも受け付けます——ファイル�
 - **[HYDRA-UMC-DSI](https://github.com/JuanenRac/HYDRA-UMC-DSI)** — 本体搭載の 7 インチ DSI タッチスクリーン向けネイティブタッチ UI、CM5 自体に組み込み。
 - **[HYDRA-UMC-EDITOR-URDF](https://github.com/JuanenRac/HYDRA-UMC-EDITOR-URDF)** — 完成したモデルを STUDIO 自身のカタログへ送信するデスクトップ用グラフィカル URDF 作成/編集ツール。
 - **[HYDRA-UMC-EDITOR-STL](https://github.com/JuanenRac/HYDRA-UMC-EDITOR-STL)** — HYDRA-UMC-EDITOR-URDF も編集する同じモデルカタログ内で、実在するパーツを変換/置換/削除/追加するデスクトップ STL モデルエディタ。
-- **[HYDRA-UMC-BRIDGE-AMR](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-AMR)** — 実際の VDA 5050 MQTT パブリッシャーによる AGV/AMR フリートの調整境界。
-- **[HYDRA-UMC-BRIDGE-CNC](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-CNC)** — 実際の GRBL ステータス/制御バイトへのアクセスを持つ、CNC セルの高レベルコーディネーター。
-- **[HYDRA-UMC-BRIDGE-DROIDS](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-DROIDS)** — 実際の Boston Dynamics Spot コマンド送信機能を持つ、脚型/ヒューマノイドドロイドの調整境界。
-- **[HYDRA-UMC-BRIDGE-LASER](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-LASER)** — 実際のキー/筐体/インターロック GPIO セーフガード 3 系統を読み取る、レーザーセルの安全コーディネーター。
+- **[HYDRA-UMC-BRIDGE-AMR](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-AMR)** — VDA 5050 MQTT パブリッシャーによる AGV/AMR フリートの調整境界(エミュレートしたフリートに対してのみテスト済み)。
+- **[HYDRA-UMC-BRIDGE-CNC](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-CNC)** — GRBL ステータス/制御バイトへのアクセスを持つ、CNC セルの高レベルコーディネーター(エミュレーターに対してのみテスト済み)。
+- **[HYDRA-UMC-BRIDGE-DROIDS](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-DROIDS)** — Boston Dynamics Spot コマンド送信機能を持つ、脚型/ヒューマノイドドロイドの調整境界(エミュレーターに対してのみテスト済み)。
+- **[HYDRA-UMC-BRIDGE-LASER](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-LASER)** — キー/筐体/インターロックの GPIO 信号 3 系統を読み取るレーザーセルのコーディネーター(模擬チップに対してのみテスト済み。レーザーの武装や発射はできない)。
 - **[HYDRA-UMC-BRIDGE-OPENPNP](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-OPENPNP)** — OpenPnP ピックアンドプレースの基板フローを安全に統括する高レベルコーディネーター。
 - **[HYDRA-UMC-BRIDGE-PRINTER3D](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-PRINTER3D)** — 実際にゲート制御されたジョブコマンドを持つ、Moonraker/Klipper 3D プリンター向けの安全な調整境界。
-- **[HYDRA-UMC-BRIDGE-ROS2](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-ROS2)** — 実際の遅延インポート rclpy ROS 2 トランスポートを持つ安全コーディネーター。
-- **[HYDRA-UMC-BRIDGE-UAV](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-UAV)** — 実際の MAVLink コマンド送信機能を持つ、カメラ搭載 UAV の調整境界。
+- **[HYDRA-UMC-BRIDGE-ROS2](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-ROS2)** — 遅延インポートの rclpy ROS 2 トランスポートを持つコーディネーター(ROS 2 環境ではまだ実行していない)。
+- **[HYDRA-UMC-BRIDGE-UAV](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-UAV)** — MAVLink コマンド送信機能を持つ、カメラ搭載 UAV の調整境界(エミュレーターに対してのみテスト済み)。
 
 *ビジョン AI ノード(Hailo-8)*
 - **[HYDRA-UMC-VISION-NODE](https://github.com/JuanenRac/HYDRA-UMC-VISION-NODE)** — Hailo-8 ビジョンパイプラインの統合ハブ、段階ごとの実際のハードウェア準備状況チェック付き。
 - **[HYDRA-UMC-DETECTION-HEF](https://github.com/JuanenRac/HYDRA-UMC-DETECTION-HEF)** — Hailo アーキテクチャ/チェックサムによる安全読み込み検証を備えた、実際のコンパイル済みモデルレジストリ。
 - **[HYDRA-UMC-VISION-STREAMER](https://github.com/JuanenRac/HYDRA-UMC-VISION-STREAMER)** — 実際の HailoRT 統合境界を持つ、実際の GStreamer パイプライン + MediaMTX 設定生成器。
-- **[HYDRA-UMC-VISUAL-SERVOING-API](https://github.com/JuanenRac/HYDRA-UMC-VISUAL-SERVOING-API)** — 上流のゾーン状態に応じて安全ゲート制御される、実際の Position-Based Visual Servoing 補正則。
-- **[HYDRA-UMC-SAFETY-ZONES](https://github.com/JuanenRac/HYDRA-UMC-SAFETY-ZONES)** — キャリブレーションの鮮度を強制する、実際のゾーン侵入チェックと E-STOP 要求。
+- **[HYDRA-UMC-VISUAL-SERVOING-API](https://github.com/JuanenRac/HYDRA-UMC-VISUAL-SERVOING-API)** — ゾーン状態を条件に承認する Position-Based Visual Servoing 補正則。カメラによる姿勢推定はまだない。
+- **[HYDRA-UMC-SAFETY-ZONES](https://github.com/JuanenRac/HYDRA-UMC-SAFETY-ZONES)** — ファイルから物体位置を受け取る、ゾーン侵入・キャリブレーション鮮度・E-STOP 要求の v0 ロジック。検出器は接続されておらず、物理 E-STOP もまだ配線されていない。
 
 *コグニティブ AI ノード(Hailo-10)*
 - **[HYDRA-UMC-COGNITIVE-NODE](https://github.com/JuanenRac/HYDRA-UMC-COGNITIVE-NODE)** — Hailo-10 コグニティブパイプライン(LLM/VLA/音声オーケストレーション)の統合ハブ。
@@ -1121,7 +1120,7 @@ JSON 数値（`50580689`）のどちらも受け付けます——ファイル�
 
 *デジタルツイン&シミュレーション*
 - **[HYDRA-UMC-TWIN](https://github.com/JuanenRac/HYDRA-UMC-TWIN)** — 実際のバージョン互換性同期契約を持つ、デジタルツインエンジンの統合ハブ。
-- **[HYDRA-UMC-HIL-BRIDGE](https://github.com/JuanenRac/HYDRA-UMC-HIL-BRIDGE)** — シミュレーションと実際のハードウェアの間でコマンドをルーティングする、実際のハードウェア・イン・ザ・ループ安全インターロック。
+- **[HYDRA-UMC-HIL-BRIDGE](https://github.com/JuanenRac/HYDRA-UMC-HIL-BRIDGE)** — シミュレーションと実機の間にソフトウェアの衝突インターロックを備えたハードウェア・イン・ザ・ループのルーター(実機なしでテスト済み)。
 - **[HYDRA-UMC-PHYSICS-REPLICA](https://github.com/JuanenRac/HYDRA-UMC-PHYSICS-REPLICA)** — 実際の URDF サブセットに対する、実際の順運動学と関節限界検証。
 - **[HYDRA-UMC-SYNTHETIC-DATA-GEN](https://github.com/JuanenRac/HYDRA-UMC-SYNTHETIC-DATA-GEN)** — YOLO/COCO アノテーションのエクスポート機能を持つ、実際のプロシージャル 2D シーンジェネレーター。
 
@@ -1139,7 +1138,7 @@ JSON 数値（`50580689`）のどちらも受け付けます——ファイル�
 
 *補完ツール&エコシステム運用*
 - **[HYDRA-UMC-DASHBOARD-AI](https://github.com/JuanenRac/HYDRA-UMC-DASHBOARD-AI)** — 誠実な統計フォールバックを備えた、DATALAKE/ANOMALY-DETECTOR 上のスマートサマリーと異常ハイライトパネル。
-- **[HYDRA-UMC-WATCH](https://github.com/JuanenRac/HYDRA-UMC-WATCH)** — 実際の触覚アラートとペアリングされたスマートフォンへの音声リレーを備えた WearOS コンパニオンアプリ。
+- **[HYDRA-UMC-WATCH](https://github.com/JuanenRac/HYDRA-UMC-WATCH)** — 触覚アラートのパターンとペアリング済みスマートフォンへの音声リレーを備えた WearOS コンパニオンアプリ(物理的なウォッチではまだ実行していない)。
 - **[URTC-SMART-RACK](https://github.com/JuanenRac/URTC-SMART-RACK)** — 実際の工具 ID デコードと Smart Idle 予熱ロジックを備えた、基板搭載ラック用ファームウェア。
 - **[URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL)** — サーマル/RGB 検査ツールヘッド向けの、ファームウェアと実際の Python ビジョンコンパニオン。
 - **[HYDRA-UMC-UPDATER](https://github.com/JuanenRac/HYDRA-UMC-UPDATER)** — このエコシステム内のすべてのリポジトリを検出・クローン・更新する、管理用デスクトップツール。

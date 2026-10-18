@@ -24,7 +24,7 @@
 </p>
 
 
-**版本：** 0.3.0（本工具自身的版本——显示在窗口横幅和标题栏中，与它所写入的
+**版本：** 0.3.1（本工具自身的版本——显示在窗口横幅和标题栏中，与它所写入的
 URTC 板卡固件版本分开跟踪。遵循 X.Y.Z 方案，其中补丁号在每次通过
 build_exe.bat/build_exe.sh 进行的真实构建时自动递增——版本历史见
 CHANGELOG.md，确切的进位规则见 bump_version.py）
@@ -38,7 +38,7 @@ CHANGELOG.md，确切的进位规则见 bump_version.py）
 `docs/CANBUS.TXT` 中的确切引导程序协议（位于本工具所对接的同级
 [URTC](https://github.com/JuanenRac/URTC) 仓库中——见本文档末尾附近的
 “相关项目”；本 README 中提到的每一个其他 `docs/*.TXT` 引用也都指向该处）：
-HardwareID 检查、HMAC-SHA256 签名、黄金镜像备份槽更新流程、通过引导程序心跳
+HardwareID 检查、共享密钥的 HMAC-SHA256（并非非对称签名）、黄金镜像备份槽更新流程、通过引导程序心跳
 消息实现的实时进度，以及一次版本查询（本板卡的应用程序*或*引导程序是否通过
 CAN 自我标识），以便你在决定要刷写什么之前，先看看当前已安装的内容。
 
@@ -55,16 +55,18 @@ CAN 自我标识），以便你在决定要刷写什么之前，先看看当前�
 逐字节验证，SocketCAN 帧打包也已通过一次往返打包/解包测试针对 Linux 的
 `struct can_frame` 布局进行了验证。在这两个平台上**尚未**经过测试的是，
 针对真实硬件的真实板卡——请以对待任何与引导程序通信的新工具同样的谨慎态度
-对待首次真实刷写尝试：手边备好 JTAG 作为后备手段。
+对待首次真实刷写尝试：手边备好 JTAG 作为后备手段。 这里描述的其他功能都只针对模拟引导程序 `MockCAN` 测试过，从未针对真实板卡测试过。
 
 **诚实核查 - 今天真正能运行的部分：** `tests/` 下有 31 个 pytest 文件（214 个测试：全部通过，其中 4 个在没有 PySide6 时跳过）——针对真实 `MockCAN` 传输（`flasher_transports.py`）的 CAN-OTA 协议测试，它会回放完整的模拟引导程序序列（开始／擦除／接收、页数据 + PAGE_ACK、HMAC 分块、以真实成功或特定 `VERIFY_FAIL_REASON` 结束更新）；签名规则（无需任何密钥即发送已发布的签名、拒绝未签名镜像、清单 sha256 不符时在任何总线通信前拒绝）；镜像完整性检查；以及随附 `firmware/` 与其清单的核对。GitHub Actions（`.github/workflows/ci.yml`）在每次推送时运行这套测试，`tools/build_test.py` 也会在 `build-test.sh`/`.bat` 中运行。根目录下的两个 `verify_qt_*.py` 脚本是 pytest 之外的真实端到端检查（需要真实的 Qt 事件循环；用 `QT_QPA_PLATFORM=offscreen python verify_qt_*.py` 运行）；`verify_qt_swd_full_chip_flash.py` 只以 `dry_run=True` 构造 `PyOCDCLI`/`CubeProgrammerCLI` 命令。这些都没有在本环境中针对真实板卡运行过。已发布的内容请参见 `CHANGELOG.md`。 模拟的引导程序（`MockCAN`）只是根据协议说明编写的模型：它能重现页确认、不完整的最后一页和回读帧，但它不是真正的引导程序，所以测试全部通过并不能代替在真实板卡上的试验（官方 73476 字节镜像曾无法安装、备份的最后一帧曾被丢弃，而测试却是通过的，正是因为模拟比真正的引导程序更宽松）。
+
+> **安全与安防现状:**本生态系统不是经认证的安全系统,目前也不存在已组装的 URTC 电路板。引导程序使用 CRC32 和共享密钥的 HMAC-SHA256 校验固件映像,而非非对称签名(计划中);已发布的应用映像使用公开的开发密钥签名(`signing_key_kind: dev`),因此任何人都可以生成引导程序接受的映像;尚未向任何真实电路板发送过任何内容。在依赖此处任何说法来保障人身安全之前,请先阅读[安全基线](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md)和[威胁模型](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md)。
 
 ## 📋 速览
 
 | | |
 |---|---|
-| 版本 | `0.3.0` |
-| 成熟度 | 成熟 |
+| 版本 | `0.3.1` |
+| 成熟度 | 可用 |
 | 测试 | 385 |
 | 技术栈 | Python / Tkinter (legacy advanced workflow) / PySide6 / Qt Quick / CAN-OTA |
 | 目标 | 使用者的电脑 |
@@ -135,15 +137,13 @@ python3 urtc_flasher.py
 
 ### 可视化控制台
 
-共享的 **Qt Quick** 命令控制台是建立在同一套生产用传输、验证和签名刷写代码之上的第二个前端：
+共享的 **Qt Quick** 命令控制台是建立在同一套传输、验证和刷写代码之上的第二个前端（仅针对模拟器测试过；镜像校验使用共享密钥的 HMAC-SHA256）：
 ~~~
 python urtc_flasher.py --qtquick
 ~~~
 它提供主板的 CAN-OTA 更新（始终先发送进入引导程序的触发）、只读 SWD/JTAG 探测、Board Snapshot、4 项设备配置写入，以及完整的 SWD/JTAG 芯片编程（擦除/写入、演练模式、擦除前备份、RDP 检查）。它**并不**具备 Tkinter 窗口的全部功能：没有扩展从属目标、没有“板卡已在引导程序中”选项、没有 F-RAM 擦除选项、没有降级授权、没有 CAN 固件备份、没有 GitHub 下载、没有比特率选择或自动检测（Serial/SLCAN 以 500 kbit/s 打开），也没有专门的总线活动检查。这些功能请使用默认的 Tkinter 界面。
 
-成熟的 CAN-OTA 与 SWD/JTAG 流程保持不变，现在使用深海军蓝/青色控制界面：
-产品标题、高对比度连接卡、清晰的固件表格、深色验证日志以及可见的进度通道。
-这只是视觉与可访问性改进，不会改变 bootloader 协议或硬件安全行为。
+现有的 CAN-OTA 与 SWD/JTAG 流程保持不变，现在使用深海军蓝/青色控制界面：产品标题、高对比度连接卡、清晰的固件表格、深色验证日志以及可见的进度通道。这只是视觉与可访问性改动，不会改变 bootloader 协议，其中任何内容也从未在真实板卡上试过。
 
 ### 菜单栏
 
@@ -286,7 +286,7 @@ Python 都自带）加载，而非 Pillow，因此不会增加新的依赖。`bu
 **与每个固件文件放在一起的 `<filename>.manifest.json` 和
 `<filename>.sha256`**——由 URTC 构建为每个镜像发布（从 GitHub 下载时会一并
 下载）。清单包含版本、`sha256`，对于应用镜像还包含引导程序期望的
-`hmac_sha256` 签名：
+`hmac_sha256` 值（共享密钥的 HMAC-SHA256，并非非对称签名；`signing_key_kind: dev` 表示公开的开发密钥）：
 
 ```json
 {"component": "main_application", "version": "0.3.3", "sha256": "b48d4cd5...", "hmac_sha256": "b63a701e...", "signing_key_kind": "dev"}
@@ -691,7 +691,7 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 更新随附的 `firmware/` 文件夹（`--check` 用于校验）。默认从 URTC 最新发布版本的资源（assets）中获取这一组文件（`--release TAG` 可选择其他版本）；也可以改为传入本地文件夹作为参数，例如本地的 URTC 构建。只有在测试板上刷写没有
 清单的自建镜像时才需要密钥：在下方的 `urtc_config.json` 中设置
 `hmac_key_hex` / `slave_hmac_key_hex`——没有密钥时，此类镜像会被拒绝，而不是
-用引导程序不可能拥有的密钥签名。参见 URTC 的 `docs/FIRMWARE_SIGNING.TXT`。
+用引导程序不可能拥有的密钥签名。参见 URTC 的 `docs/FIRMWARE_SIGNING.TXT`。 已发布的镜像使用公开的开发密钥（`signing_key_kind: dev`）签名，因此这只是共享密钥校验：它表明镜像由持有该密钥的人生成，而不表明对方是谁；非对称签名（Ed25519）仍在计划中，尚未实现。
 
 **或者在不改动脚本的情况下覆盖这一切：** 一个位于 `firmware/` 旁边的
 可选 `urtc_config.json` 可以设置签名密钥、HardwareID，以及内存映射值——
@@ -861,9 +861,9 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 **生态系统中的其他项目**
 
 *核心硬件与平台*
-- **[HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC)** — 机器人手臂的真实主板——CM5 主机 + 双核 STM32H745，通过 CAN-OTA/SPI-OTA 协调最多 8 条工具臂。
+- **[HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC)** — 机器人手臂主板设计——CM5 主机 + 双核 STM32H745,目标是通过 CAN-OTA/SPI-OTA 协调最多 8 条工具臂(固件处于早期阶段,尚无已组装的电路板)。
 - **[HYDRA-UMC-OS](https://github.com/JuanenRac/HYDRA-UMC-OS)** — 面向 CM5 的可复现 Raspberry Pi OS 产品层——只读代理、经过验证的配置/配置文件、WiFi 首次配网。
-- **[HYDRA-UMC-SDK](https://github.com/JuanenRac/HYDRA-UMC-SDK)** — 每个桥接都据此校验自身指令的共享 JSON-Schema 契约与安全门限边界。
+- **[HYDRA-UMC-SDK](https://github.com/JuanenRac/HYDRA-UMC-SDK)** — 每个桥接都据此校验自身指令的共享 JSON-Schema 契约与软件作业门限边界(并非经认证的安全功能)。
 - **[HYDRA-UMC-CONNECTOR-HUB](https://github.com/JuanenRac/HYDRA-UMC-CONNECTOR-HUB)** — 面向外部机器连接器的声明式适配器清单注册与校验工具；把 SDK 自身的契约理念扩展到外部机器，而不取代工业网关类项目。
 
 *核心后端与客户端*
@@ -875,21 +875,21 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 - **[HYDRA-UMC-DSI](https://github.com/JuanenRac/HYDRA-UMC-DSI)** — 面向机载 7 英寸 DSI 触摸屏的原生触控界面，直接嵌入 CM5 本体。
 - **[HYDRA-UMC-EDITOR-URDF](https://github.com/JuanenRac/HYDRA-UMC-EDITOR-URDF)** — 将完成的模型推送到 STUDIO 自身目录的桌面版图形化 URDF 创建/编辑工具。
 - **[HYDRA-UMC-EDITOR-STL](https://github.com/JuanenRac/HYDRA-UMC-EDITOR-STL)** — 桌面 STL 模型编辑器，在 HYDRA-UMC-EDITOR-URDF 编辑的同一模型目录中变换/替换/移除/添加真实部件。
-- **[HYDRA-UMC-BRIDGE-AMR](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-AMR)** — 通过真实的 VDA 5050 MQTT 发布者为 AGV/AMR 车队提供的协调边界。
-- **[HYDRA-UMC-BRIDGE-CNC](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-CNC)** — 具备真实 GRBL 状态/控制字节访问能力的高层 CNC 单元协调器。
-- **[HYDRA-UMC-BRIDGE-DROIDS](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-DROIDS)** — 面向足式/人形机器人的协调边界，具备真实的 Boston Dynamics Spot 指令发送器。
-- **[HYDRA-UMC-BRIDGE-LASER](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-LASER)** — 读取 3 项真实钥匙/外壳/联锁 GPIO 安全信号的激光单元安全协调器。
+- **[HYDRA-UMC-BRIDGE-AMR](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-AMR)** — 通过 VDA 5050 MQTT 发布者为 AGV/AMR 车队提供的协调边界(仅针对仿真车队测试)。
+- **[HYDRA-UMC-BRIDGE-CNC](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-CNC)** — 具备 GRBL 状态/控制字节访问能力的高层 CNC 单元协调器(仅针对模拟器测试)。
+- **[HYDRA-UMC-BRIDGE-DROIDS](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-DROIDS)** — 面向足式/人形机器人的协调边界,带有 Boston Dynamics Spot 指令发送器(仅针对模拟器测试)。
+- **[HYDRA-UMC-BRIDGE-LASER](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-LASER)** — 读取 3 路钥匙/外壳/联锁 GPIO 信号的激光单元协调器(仅针对模拟芯片测试;无法使激光器上膛或发射)。
 - **[HYDRA-UMC-BRIDGE-OPENPNP](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-OPENPNP)** — 面向 OpenPnP 贴片机板级流程的安全高层协调器。
 - **[HYDRA-UMC-BRIDGE-PRINTER3D](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-PRINTER3D)** — 面向 Moonraker/Klipper 3D 打印机的安全协调边界，具备真实的受控作业指令。
-- **[HYDRA-UMC-BRIDGE-ROS2](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-ROS2)** — 具备真实的惰性导入 rclpy ROS 2 传输层的安全协调器。
-- **[HYDRA-UMC-BRIDGE-UAV](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-UAV)** — 面向搭载摄像头的无人机的协调边界，具备真实的 MAVLink 指令发送器。
+- **[HYDRA-UMC-BRIDGE-ROS2](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-ROS2)** — 带有惰性导入 rclpy ROS 2 传输层的协调器(尚未在 ROS 2 环境中运行)。
+- **[HYDRA-UMC-BRIDGE-UAV](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-UAV)** — 面向搭载摄像头的无人机的协调边界,带有 MAVLink 指令发送器(仅针对模拟器测试)。
 
 *视觉 AI 节点(Hailo-8)*
 - **[HYDRA-UMC-VISION-NODE](https://github.com/JuanenRac/HYDRA-UMC-VISION-NODE)** — 面向 Hailo-8 视觉流水线的集成中枢，具备逐阶段的真实硬件就绪检测。
 - **[HYDRA-UMC-DETECTION-HEF](https://github.com/JuanenRac/HYDRA-UMC-DETECTION-HEF)** — 具备 Hailo 架构/校验和安全加载验证的真实编译模型注册表。
 - **[HYDRA-UMC-VISION-STREAMER](https://github.com/JuanenRac/HYDRA-UMC-VISION-STREAMER)** — 具备真实 HailoRT 集成边界的真实 GStreamer 流水线 + MediaMTX 配置生成器。
-- **[HYDRA-UMC-VISUAL-SERVOING-API](https://github.com/JuanenRac/HYDRA-UMC-VISUAL-SERVOING-API)** — 具备真实 Position-Based Visual Servoing 修正律，并依据上游区域状态进行安全门控。
-- **[HYDRA-UMC-SAFETY-ZONES](https://github.com/JuanenRac/HYDRA-UMC-SAFETY-ZONES)** — 具备校准新鲜度强制检查的真实区域入侵检测与 E-STOP 请求。
+- **[HYDRA-UMC-VISUAL-SERVOING-API](https://github.com/JuanenRac/HYDRA-UMC-VISUAL-SERVOING-API)** — 以区域状态为授权条件的 Position-Based Visual Servoing 修正律;尚无摄像头位姿估计。
+- **[HYDRA-UMC-SAFETY-ZONES](https://github.com/JuanenRac/HYDRA-UMC-SAFETY-ZONES)** — 从文件读取物体位置的 v0 区域入侵、校准新鲜度与 E-STOP 请求逻辑;没有检测器为其供数,也尚未连接任何物理 E-STOP。
 
 *认知 AI 节点(Hailo-10)*
 - **[HYDRA-UMC-COGNITIVE-NODE](https://github.com/JuanenRac/HYDRA-UMC-COGNITIVE-NODE)** — 面向 Hailo-10 认知流水线(LLM/VLA/语音编排)的集成中枢。
@@ -908,7 +908,7 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 
 *数字孪生与仿真*
 - **[HYDRA-UMC-TWIN](https://github.com/JuanenRac/HYDRA-UMC-TWIN)** — 面向数字孪生引擎的集成中枢，具备真实的版本兼容性同步契约。
-- **[HYDRA-UMC-HIL-BRIDGE](https://github.com/JuanenRac/HYDRA-UMC-HIL-BRIDGE)** — 在仿真与真实硬件之间路由指令的真实硬件在环安全联锁。
+- **[HYDRA-UMC-HIL-BRIDGE](https://github.com/JuanenRac/HYDRA-UMC-HIL-BRIDGE)** — 在仿真与真实硬件之间带有软件碰撞联锁的硬件在环路由器(未在真实硬件上测试)。
 - **[HYDRA-UMC-PHYSICS-REPLICA](https://github.com/JuanenRac/HYDRA-UMC-PHYSICS-REPLICA)** — 面向真实 URDF 子集的真实正向运动学与关节限位校验。
 - **[HYDRA-UMC-SYNTHETIC-DATA-GEN](https://github.com/JuanenRac/HYDRA-UMC-SYNTHETIC-DATA-GEN)** — 具备 YOLO/COCO 标注导出功能的真实程序化 2D 场景生成器。
 
@@ -926,7 +926,7 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 
 *辅助工具与生态系统运维*
 - **[HYDRA-UMC-DASHBOARD-AI](https://github.com/JuanenRac/HYDRA-UMC-DASHBOARD-AI)** — 基于 DATALAKE/ANOMALY-DETECTOR 的智能摘要与异常高亮面板，具备诚实的统计回退机制。
-- **[HYDRA-UMC-WATCH](https://github.com/JuanenRac/HYDRA-UMC-WATCH)** — 具备真实触觉提醒与配对手机语音中继功能的 WearOS 伴侣应用。
+- **[HYDRA-UMC-WATCH](https://github.com/JuanenRac/HYDRA-UMC-WATCH)** — 带有触觉提醒模式与配对手机语音中继的 WearOS 伴侣应用(尚未在实体手表上运行)。
 - **[URTC-SMART-RACK](https://github.com/JuanenRac/URTC-SMART-RACK)** — 面向板卡安装机架的固件，具备真实的工具 ID 解码与 Smart Idle 预热逻辑。
 - **[URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL)** — 面向热成像/RGB 检测工具头的固件及真实 Python 视觉伴侣程序。
 - **[HYDRA-UMC-UPDATER](https://github.com/JuanenRac/HYDRA-UMC-UPDATER)** — 发现、克隆并更新本生态系统中每个仓库的管理类桌面工具。

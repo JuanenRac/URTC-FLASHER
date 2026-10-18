@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "ecosystem": "URTC",
   "name": "URTC-FLASHER",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "role": "tool",
   "stack": "python-qtquick",
   "technologies": [
@@ -14,11 +14,11 @@
     "SWD/JTAG"
   ],
   "deployment_target": "user-pc",
-  "maturity": "established",
+  "maturity": "functional",
   "family": "URTC Tool Platform",
   "parent": "URTC",
   "build": "Standalone Python desktop tool. pip install -r requirements.txt; Qt Quick CAN-OTA deck is started with --qtquick.",
-  "notes": "Real GUI flashing tool (CAN-OTA + full-chip SWD/JTAG). Qt Quick (`--qtquick`) is a second front end over the same transport, validation and signed flashing code: CAN-OTA update of the main board, read-only SWD/JTAG discovery, Board Snapshot, the 4 device-configuration writes and full-chip SWD/JTAG programming. It does not have everything the Tkinter window has (no expansion-slave target, no already-in-bootloader option, no F-RAM erase, no downgrade authorisation, no CAN backup, no GitHub download, fixed 500 kbit/s bitrate, no bus-activity check). Tkinter remains the default interface. flasher_protocol.py's deadline/duration math uses time.monotonic() throughout, not the civil clock, so an NTP sync or manual clock change mid-flash can never shorten or lengthen a real timeout.",
+  "notes": "GUI flashing tool (CAN-OTA + full-chip SWD/JTAG), exercised only against a simulated bootloader (MockCAN), never against a real board. Qt Quick (`--qtquick`) is a second front end over the same transport, validation and flashing code: CAN-OTA update of the main board, read-only SWD/JTAG discovery, Board Snapshot, the 4 device-configuration writes and full-chip SWD/JTAG programming. It does not have everything the Tkinter window has (no expansion-slave target, no already-in-bootloader option, no F-RAM erase, no downgrade authorisation, no CAN backup, no GitHub download, fixed 500 kbit/s bitrate, no bus-activity check). Tkinter remains the default interface. flasher_protocol.py's deadline/duration math uses time.monotonic() throughout, not the civil clock, so an NTP sync or manual clock change mid-flash can never shorten or lengthen a real timeout.",
   "native_version": {
     "file": "flasher_config.py",
     "pattern": "FLASHER_VERSION\\s*=\\s*\"(\\d+)\\.(\\d+)\\.(\\d+)\""

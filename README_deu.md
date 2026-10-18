@@ -24,7 +24,7 @@
 </p>
 
 
-**Version:** 0.3.0 (die Version dieses Tools selbst - angezeigt im
+**Version:** 0.3.1 (die Version dieses Tools selbst - angezeigt im
 Fenster-Banner und in der Titelleiste, getrennt verfolgt von der
 Firmware-Version der URTC-Platine, die es schreibt. Folgt einem
 X.Y.Z-Schema, bei dem die Patch-Nummer bei jedem echten Build über
@@ -39,8 +39,7 @@ Abschnitt „Lizenz und Urheberrechtshinweise" am Ende dieses Dokuments.
 
 Ein kleines plattformübergreifendes GUI-Tool zum Aktualisieren der
 URTC-Platinen-Firmware über den CAN-Bus. Es implementiert genau das
-Bootloader-Protokoll aus `docs/CANBUS.TXT`: die HardwareID-Prüfung, die
-HMAC-SHA256-Signierung, den Golden-Image-Backup-Slot-Update-Ablauf, den
+Bootloader-Protokoll aus `docs/CANBUS.TXT`: die HardwareID-Prüfung, das HMAC-SHA256 mit gemeinsamem Schlüssel (keine asymmetrische Signatur), den Golden-Image-Backup-Slot-Update-Ablauf, den
 Live-Fortschritt über die Heartbeat-Nachrichten des Bootloaders, und
 eine Versionsabfrage (identifiziert, ob sich die Anwendung *oder* der
 Bootloader dieser Platine über CAN meldet), damit Sie sehen können, was
@@ -69,16 +68,18 @@ Test verifiziert. Was auf keiner der 2 Plattformen getestet wurde, ist
 eine echte Platine auf echter Hardware - behandeln Sie einen ersten
 echten Flash-Versuch mit derselben Vorsicht, die Sie jedem neuen Tool
 entgegenbringen würden, das mit einem Bootloader spricht: halten Sie
-JTAG als Rückfalloption bereit.
+JTAG als Rückfalloption bereit. Alles Übrige hier Beschriebene wurde nur gegen `MockCAN`, einen simulierten Bootloader, erprobt, nie gegen eine echte Platine.
 
 **Ehrlichkeitscheck - was heute wirklich läuft:** `tests/` enthält 31 pytest-Dateien (385 Tests: alle bestehen; 4 davon werden ohne PySide6 übersprungen) - das CAN-OTA-Protokoll gegen einen echten `MockCAN`-Transport (`flasher_transports.py`), der eine vollständige simulierte Bootloader-Sequenz abspielt (Start/Löschen/Empfang, Seitendaten + PAGE_ACK, HMAC-Blöcke, Update-Ende mit echtem Erfolg oder einem bestimmten `VERIFY_FAIL_REASON`), die Signaturregeln (veröffentlichte Signatur ohne Schlüssel gesendet, unsigniertes Image abgelehnt, nicht passender Manifest-sha256 vor jedem Busverkehr abgelehnt), die Image-Integritätsprüfungen und den mitgelieferten Ordner `firmware/` gegen seine Manifeste. GitHub Actions (`.github/workflows/ci.yml`) führt diese Suite bei jedem Push aus, und `tools/build_test.py` führt sie in `build-test.sh`/`.bat` aus. Die beiden Skripte `verify_qt_*.py` im Wurzelverzeichnis sind echte End-to-End-Prüfungen außerhalb von pytest (sie brauchen eine echte Qt-Ereignisschleife; Aufruf mit `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`); `verify_qt_swd_full_chip_flash.py` baut die Befehle für `PyOCDCLI`/`CubeProgrammerCLI` nur mit `dry_run=True`. Nichts davon wurde in dieser Umgebung gegen eine echte Platine ausgeführt. Siehe `CHANGELOG.md` für den genauen Stand. Der simulierte Bootloader (`MockCAN`) ist nur ein aus der Protokollbeschreibung gebautes Modell: Er bildet die Seiten-ACKs, die teilweise letzte Seite und die Readback-Frames nach, ist aber nicht der echte Bootloader, daher ersetzt ein grüner Testlauf keinen Versuch an einer echten Platine (das offizielle Image mit 73476 Byte ließ sich nicht installieren und der letzte Frame einer Sicherung ging verloren, während die Tests bestanden, gerade weil die Simulation nachsichtiger war als der echte Bootloader).
+
+> **Stand von Sicherheit (Safety) und Security:** Dieses Ökosystem ist kein zertifiziertes Sicherheitssystem, und es existiert noch keine bestückte URTC-Platine. Die Bootloader prüfen Firmware-Images mit CRC32 und einem HMAC-SHA256 mit gemeinsamem Schlüssel, nicht mit einer asymmetrischen Signatur (geplant); die veröffentlichten Anwendungs-Images sind mit dem öffentlichen Entwicklungsschlüssel signiert (`signing_key_kind: dev`), sodass jeder ein vom Bootloader akzeptiertes Image erzeugen kann; an eine echte Platine wurde noch nichts gesendet. Lesen Sie die [Sicherheitsbasis](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md) und das [Bedrohungsmodell](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md), bevor Sie sich für die Sicherheit einer Person auf eine Aussage hier verlassen.
 
 ## 📋 Auf einen Blick
 
 | | |
 |---|---|
-| Version | `0.3.0` |
-| Reifegrad | Etabliert |
+| Version | `0.3.1` |
+| Reifegrad | Funktionsfähig |
 | Tests | 385 |
 | Technik | Python / Tkinter (legacy advanced workflow) / PySide6 / Qt Quick / CAN-OTA |
 | Ziel | Der PC der Person, die es benutzt |
@@ -169,17 +170,13 @@ bleibt bewusst statisch.
 
 ### Visuelles Steuerpult
 
-Das gemeinsame **Qt Quick**-Bedienfeld ist eine zweite Oberfläche über demselben Produktiv-Code für Transport, Prüfung und signiertes Flashen:
+Das gemeinsame **Qt Quick**-Bedienfeld ist eine zweite Oberfläche über demselben Code für Transport, Prüfung und Flashen (nur gegen den Simulator getestet; die Image-Prüfung nutzt ein HMAC-SHA256 mit gemeinsamem Schlüssel):
 ~~~
 python urtc_flasher.py --qtquick
 ~~~
 Es bietet das CAN-OTA-Update der Hauptplatine (der Auslöser für den Bootloader-Einstieg wird immer zuerst gesendet), die schreibgeschützte SWD/JTAG-Erkennung, Board Snapshot, die 4 Geräte-Konfigurationsschreibvorgänge und die vollständige SWD/JTAG-Chip-Programmierung (Löschen/Schreiben, Probelauf, Sicherung vor dem Löschen, RDP-Prüfung). Es hat **nicht** alles, was das Tkinter-Fenster hat: kein Erweiterungs-Slave-Ziel, keine Option „Platine ist bereits im Bootloader“, keine F-RAM-Löschoption, keine Downgrade-Freigabe, keine CAN-Firmware-Sicherung, keinen GitHub-Download, keine Bitratenwahl oder -erkennung (Serial/SLCAN wird mit 500 kbit/s geöffnet) und keine eigene Busaktivitätsprüfung. Verwenden Sie dafür die Standard-Tkinter-Oberfläche.
 
-Der bewährte CAN-OTA- und SWD/JTAG-Ablauf bleibt erhalten und liegt nun auf
-einer dunkelblau-cyanfarbenen Steueroberfläche: Produktkopf, kontrastreiche
-Verbindungskarte, lesbare Firmware-Tabellen, dunkles Prüfprotokoll und
-sichtbarer Fortschritt. Dies verbessert Darstellung und Zugänglichkeit, ohne
-Bootloader-Protokoll oder Hardware-Sicherheitsverhalten zu verändern.
+Der bestehende CAN-OTA- und SWD/JTAG-Ablauf bleibt erhalten und liegt nun auf einer dunkelblau-cyanfarbenen Steueroberfläche: Produktkopf, kontrastreiche Verbindungskarte, lesbare Firmware-Tabellen, dunkles Prüfprotokoll und sichtbarer Fortschritt. Dies ist nur eine Änderung von Darstellung und Zugänglichkeit; das Bootloader-Protokoll bleibt unverändert, und nichts davon wurde auf einer echten Platine ausprobiert.
 
 ### Menüleiste
 
@@ -373,8 +370,7 @@ Grund:
 **`<dateiname>.manifest.json` und `<dateiname>.sha256`, neben jeder
 Firmware-Datei** - vom URTC-Build für jedes Image veröffentlicht (und von
 GitHub zusammen damit heruntergeladen). Das Manifest enthält die Version,
-den `sha256` und bei Anwendungs-Images die `hmac_sha256`-Signatur, die der
-Bootloader erwartet:
+den `sha256` und bei Anwendungs-Images den `hmac_sha256`-Wert, den der Bootloader erwartet (ein HMAC-SHA256 mit gemeinsamem Schlüssel, keine asymmetrische Signatur; `signing_key_kind: dev` kennzeichnet den öffentlichen Entwicklungsschlüssel):
 
 ```json
 {"component": "main_application", "version": "0.3.3", "sha256": "b48d4cd5...", "hmac_sha256": "b63a701e...", "signing_key_kind": "dev"}
@@ -968,7 +964,7 @@ aktualisiert den mitgelieferten Ordner `firmware/` aus dem URTC-Build
 Testplatine braucht einen Schlüssel: `hmac_key_hex` / `slave_hmac_key_hex`
 in `urtc_config.json` (unten) setzen - ohne ihn wird ein solches Image
 abgelehnt, statt mit einem Schlüssel signiert zu werden, den der Bootloader
-nicht haben kann. Siehe `docs/FIRMWARE_SIGNING.TXT` in URTC.
+nicht haben kann. Siehe `docs/FIRMWARE_SIGNING.TXT` in URTC. Die veröffentlichten Images sind mit dem öffentlichen Entwicklungsschlüssel signiert (`signing_key_kind: dev`); es handelt sich also um eine Prüfung mit gemeinsamem Schlüssel: Sie zeigt, dass das Image von jemandem mit diesem Schlüssel erzeugt wurde, nicht von wem; asymmetrisches Signieren (Ed25519) ist geplant, nicht implementiert.
 
 **Oder ersetzen Sie all dies, ohne das Skript zu berühren:** eine
 optionale `urtc_config.json` neben `firmware/` kann den Signierschlüssel,
@@ -1151,9 +1147,9 @@ Dieses Projekt ist Teil des HYDRA-UMC-Robotik-Ökosystems desselben Autors (Juan
 **Ebenfalls Teil des Ökosystems**
 
 *Kern-Hardware & Plattform*
-- **[HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC)** — das physische Motherboard des Roboterarms: CM5-Host + Dual-Core-STM32H745, koordiniert bis zu 8 Werkzeugarme über CAN-OTA/SPI-OTA.
+- **[HYDRA-UMC](https://github.com/JuanenRac/HYDRA-UMC)** — der Entwurf des Motherboards des Roboterarms: CM5-Host + Dual-Core-STM32H745, gedacht zur Koordination von bis zu 8 Werkzeugarmen über CAN-OTA/SPI-OTA (Firmware in einer frühen Phase; noch keine bestückte Platine).
 - **[HYDRA-UMC-OS](https://github.com/JuanenRac/HYDRA-UMC-OS)** — reproduzierbare Raspberry-Pi-OS-Produktschicht für den CM5: schreibgeschützter Agent, validierte Konfiguration/Profile, WiFi-Ersteinrichtung.
-- **[HYDRA-UMC-SDK](https://github.com/JuanenRac/HYDRA-UMC-SDK)** — der gemeinsame JSON-Schema-Vertrag und die Sicherheitsschranke, gegen die jede Bridge ihre Befehle validiert.
+- **[HYDRA-UMC-SDK](https://github.com/JuanenRac/HYDRA-UMC-SDK)** — der gemeinsame JSON-Schema-Vertrag und die Software-Auftragsschranke, gegen die jede Bridge ihre Befehle validiert (keine zertifizierte Sicherheitsfunktion).
 - **[HYDRA-UMC-CONNECTOR-HUB](https://github.com/JuanenRac/HYDRA-UMC-CONNECTOR-HUB)** — deklaratives Adapter-Manifest-Register und Validator für Konnektoren externer Maschinen; erweitert die eigene Vertragsidee des SDK auf externe Maschinen, ohne die Industrie-Gateway-Projekte zu ersetzen.
 
 *Kern-Backend & Clients*
@@ -1165,21 +1161,21 @@ Dieses Projekt ist Teil des HYDRA-UMC-Robotik-Ökosystems desselben Autors (Juan
 - **[HYDRA-UMC-DSI](https://github.com/JuanenRac/HYDRA-UMC-DSI)** — native Touch-UI für das eingebaute 7"-DSI-Touchscreen, direkt auf dem CM5 eingebettet.
 - **[HYDRA-UMC-EDITOR-URDF](https://github.com/JuanenRac/HYDRA-UMC-EDITOR-URDF)** — grafischer Desktop-URDF-Ersteller/-Editor, der fertige Modelle in STUDIOs eigenen Katalog überträgt.
 - **[HYDRA-UMC-EDITOR-STL](https://github.com/JuanenRac/HYDRA-UMC-EDITOR-STL)** — Desktop-STL-Modelleditor, der echte Teile im selben Modellkatalog transformiert/ersetzt/entfernt/hinzufügt, den auch HYDRA-UMC-EDITOR-URDF bearbeitet.
-- **[HYDRA-UMC-BRIDGE-AMR](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-AMR)** — Koordinationsschranke für AGV-/AMR-Flotten über einen echten VDA-5050-MQTT-Publisher.
-- **[HYDRA-UMC-BRIDGE-CNC](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-CNC)** — High-Level-Koordinator für CNC-Zellen mit echtem GRBL-Status-/Steuerbyte-Zugriff.
-- **[HYDRA-UMC-BRIDGE-DROIDS](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-DROIDS)** — Koordinationsschranke für laufende/humanoide Droiden, mit einem echten Boston-Dynamics-Spot-Befehlssender.
-- **[HYDRA-UMC-BRIDGE-LASER](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-LASER)** — Sicherheitskoordinator für Laserzellen, liest 3 echte Schlüssel-/Gehäuse-/Verriegelungs-GPIO-Sicherungen.
+- **[HYDRA-UMC-BRIDGE-AMR](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-AMR)** — Koordinationsschranke für AGV-/AMR-Flotten über einen VDA-5050-MQTT-Publisher (nur gegen eine emulierte Flotte getestet).
+- **[HYDRA-UMC-BRIDGE-CNC](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-CNC)** — High-Level-Koordinator für CNC-Zellen mit GRBL-Status-/Steuerbyte-Zugriff (nur gegen einen Emulator getestet).
+- **[HYDRA-UMC-BRIDGE-DROIDS](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-DROIDS)** — Koordinationsschranke für laufende/humanoide Droiden, mit einem Boston-Dynamics-Spot-Befehlssender (nur gegen einen Emulator getestet).
+- **[HYDRA-UMC-BRIDGE-LASER](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-LASER)** — Koordinator für Laserzellen, liest 3 Schlüssel-/Gehäuse-/Verriegelungs-GPIO-Signale (nur gegen einen simulierten Chip getestet; kann keinen Laser scharfschalten oder auslösen).
 - **[HYDRA-UMC-BRIDGE-OPENPNP](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-OPENPNP)** — sicherer High-Level-Koordinator für den Leiterplattenfluss von OpenPnP Pick-and-Place.
 - **[HYDRA-UMC-BRIDGE-PRINTER3D](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-PRINTER3D)** — sichere Koordinationsschranke für Moonraker/Klipper-3D-Drucker, mit echten gesicherten Job-Befehlen.
-- **[HYDRA-UMC-BRIDGE-ROS2](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-ROS2)** — Sicherheitskoordinator mit einem echten, träge importierten rclpy-ROS-2-Transport.
-- **[HYDRA-UMC-BRIDGE-UAV](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-UAV)** — Koordinationsschranke für kameraausgestattete UAVs, mit einem echten MAVLink-Befehlssender.
+- **[HYDRA-UMC-BRIDGE-ROS2](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-ROS2)** — Koordinator mit einem träge importierten rclpy-ROS-2-Transport (noch nicht gegen eine ROS-2-Installation ausgeführt).
+- **[HYDRA-UMC-BRIDGE-UAV](https://github.com/JuanenRac/HYDRA-UMC-BRIDGE-UAV)** — Koordinationsschranke für kameraausgestattete UAVs, mit einem MAVLink-Befehlssender (nur gegen einen Emulator getestet).
 
 *Vision-KI-Knoten (Hailo-8)*
 - **[HYDRA-UMC-VISION-NODE](https://github.com/JuanenRac/HYDRA-UMC-VISION-NODE)** — Integrationsknoten für die Hailo-8-Vision-Pipeline, mit einer echten stufenweisen Hardware-Bereitschaftsprüfung.
 - **[HYDRA-UMC-DETECTION-HEF](https://github.com/JuanenRac/HYDRA-UMC-DETECTION-HEF)** — echte Registry für kompilierte Modelle mit Hailo-Architektur-/Prüfsummen-Safe-Load-Verifizierung.
 - **[HYDRA-UMC-VISION-STREAMER](https://github.com/JuanenRac/HYDRA-UMC-VISION-STREAMER)** — echter GStreamer-Pipeline- + MediaMTX-Konfigurationsgenerator mit einer echten HailoRT-Integrationsschranke.
-- **[HYDRA-UMC-VISUAL-SERVOING-API](https://github.com/JuanenRac/HYDRA-UMC-VISUAL-SERVOING-API)** — echtes Position-Based-Visual-Servoing-Korrekturgesetz, sicherheitsgesteuert nach vorgelagertem Zonenstatus.
-- **[HYDRA-UMC-SAFETY-ZONES](https://github.com/JuanenRac/HYDRA-UMC-SAFETY-ZONES)** — echte Zonenverletzungsprüfung und E-STOP-Anforderung, mit erzwungener Kalibrierungsaktualität.
+- **[HYDRA-UMC-VISUAL-SERVOING-API](https://github.com/JuanenRac/HYDRA-UMC-VISUAL-SERVOING-API)** — Position-Based-Visual-Servoing-Korrekturgesetz mit Freigabe abhängig vom Zonenstatus; noch keine Posenschätzung per Kamera.
+- **[HYDRA-UMC-SAFETY-ZONES](https://github.com/JuanenRac/HYDRA-UMC-SAFETY-ZONES)** — v0-Logik für Zonenverletzung, Kalibrierungsaktualität und E-STOP-Anforderung, die Objektpositionen aus einer Datei nimmt; kein Detektor speist sie, und noch kein physischer E-STOP ist angeschlossen.
 
 *Kognitiver KI-Knoten (Hailo-10)*
 - **[HYDRA-UMC-COGNITIVE-NODE](https://github.com/JuanenRac/HYDRA-UMC-COGNITIVE-NODE)** — Integrationsknoten für die Hailo-10-Cognitive-Pipeline (LLM-/VLA-/Sprach-Orchestrierung).
@@ -1198,7 +1194,7 @@ Dieses Projekt ist Teil des HYDRA-UMC-Robotik-Ökosystems desselben Autors (Juan
 
 *Digitaler Zwilling & Simulation*
 - **[HYDRA-UMC-TWIN](https://github.com/JuanenRac/HYDRA-UMC-TWIN)** — Integrationsknoten für die Digital-Twin-Engine, mit einem echten Versionskompatibilitäts-Sync-Vertrag.
-- **[HYDRA-UMC-HIL-BRIDGE](https://github.com/JuanenRac/HYDRA-UMC-HIL-BRIDGE)** — echte Hardware-in-the-Loop-Sicherheitsverriegelung, die Befehle zwischen Simulation und echter Hardware routet.
+- **[HYDRA-UMC-HIL-BRIDGE](https://github.com/JuanenRac/HYDRA-UMC-HIL-BRIDGE)** — Hardware-in-the-Loop-Router mit einer Software-Kollisionsverriegelung zwischen Simulation und echter Hardware (ohne echte Hardware getestet).
 - **[HYDRA-UMC-PHYSICS-REPLICA](https://github.com/JuanenRac/HYDRA-UMC-PHYSICS-REPLICA)** — echte Vorwärtskinematik und Gelenkgrenzenvalidierung über eine echte URDF-Teilmenge.
 - **[HYDRA-UMC-SYNTHETIC-DATA-GEN](https://github.com/JuanenRac/HYDRA-UMC-SYNTHETIC-DATA-GEN)** — echter prozeduraler 2D-Szenengenerator mit YOLO/COCO-Annotationsexport.
 
@@ -1216,7 +1212,7 @@ Dieses Projekt ist Teil des HYDRA-UMC-Robotik-Ökosystems desselben Autors (Juan
 
 *Ergänzende Tools & Ökosystembetrieb*
 - **[HYDRA-UMC-DASHBOARD-AI](https://github.com/JuanenRac/HYDRA-UMC-DASHBOARD-AI)** — Smart-Summaries- und Anomaly-Highlighting-Panels über DATALAKE/ANOMALY-DETECTOR, mit einem ehrlichen statistischen Fallback.
-- **[HYDRA-UMC-WATCH](https://github.com/JuanenRac/HYDRA-UMC-WATCH)** — WearOS-Begleit-App mit echten haptischen Alarmen und einem Sprach-Relay zum gekoppelten Telefon.
+- **[HYDRA-UMC-WATCH](https://github.com/JuanenRac/HYDRA-UMC-WATCH)** — WearOS-Begleit-App mit haptischen Alarmmustern und einem Sprach-Relay zum gekoppelten Telefon (noch nicht auf einer physischen Uhr ausgeführt).
 - **[URTC-SMART-RACK](https://github.com/JuanenRac/URTC-SMART-RACK)** — Firmware für ein Platinenmontagegestell mit echter Werkzeug-ID-Dekodierung und Smart-Idle-Vorheizlogik.
 - **[URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL)** — Firmware plus ein echter Python-Vision-Begleiter für einen Thermal-/RGB-Inspektionswerkzeugkopf.
 - **[HYDRA-UMC-UPDATER](https://github.com/JuanenRac/HYDRA-UMC-UPDATER)** — administratives Desktop-Tool, das jedes Repository in diesem Ökosystem entdeckt, klont und aktualisiert.

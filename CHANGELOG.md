@@ -20,6 +20,12 @@ increments instead (e.g. `0.1.9` -> `0.2.0`), and the same carry applies
 from `MINOR` into `MAJOR`. Running the tool from source (not through a
 build script) never changes the version - only a real build does.
 
+## [0.3.1] - Claims aligned with what has been tested
+
+- Maturity is functional: nothing here has been verified on real hardware yet.
+- The README (all eight languages) no longer presents the signed flashing path as authenticated: the check is a shared-key HMAC-SHA256, the published images are signed with the public development key, and asymmetric signatures are planned.
+- The README states that every flashing path was exercised only against the MockCAN simulator, never against a real board.
+
 ## [0.3.0] - Serial reader drops extended frames and line noise
 
 - **The serial (SLCAN) reader no longer turns an extended 29-bit frame into a standard one.** A `T` line from another device on the bus, or noise that looks like one, used to be delivered with its raw 29-bit value as the identifier, so a frame with id 0x00000111 was indistinguishable from the real 0x111 answer. Such lines are now discarded, as the SocketCAN and python-can transports already did.
