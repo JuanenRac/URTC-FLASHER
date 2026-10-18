@@ -24,7 +24,7 @@
 </p>
 
 
-**バージョン：** 0.3.2（本ツール自身のバージョン——ウィンドウのバナーと
+**バージョン：** 0.3.3（本ツール自身のバージョン——ウィンドウのバナーと
 タイトルバーに表示され、書き込み先の URTC ボードファームウェアのバージョン
 とは別に管理されます。X.Y.Z 方式に従い、パッチ番号は build_exe.bat/
 build_exe.sh による実際のビルドのたびに自動的に加算されます——バージョン
@@ -78,7 +78,7 @@ JTAG を用意しておいてください。 ここで説明するその他の�
 
 | | |
 |---|---|
-| バージョン | `0.3.2` |
+| バージョン | `0.3.3` |
 | 成熟度 | 機能する |
 | テスト | 405 |
 | 技術 | Python / Tkinter (legacy advanced workflow) / PySide6 / Qt Quick / CAN-OTA |
@@ -1039,6 +1039,7 @@ JSON 数値（`50580689`）のどちらも受け付けます——ファイル�
 ├── build_exe.sh                   <- Linux 独立ビルド
 ├── build-test.bat                 <- バージョンを更新しないビルド/コンパイル確認
 ├── build-test.sh                  <- 同上、Linux 向け
+├── bump.py                        <- 明示的なバージョン加算コマンド（コンパイルでは加算されない）
 ├── bump_version.py                <- オドメーター式バージョンインクリメント、ビルドスクリプトが実行
 ├── bump_manifest_version.py       <- urtc.project.json のバージョンをネイティブ側と同期（--sync）
 ├── docs/
@@ -1162,7 +1163,7 @@ URTC Flasher の著作権は (c) 2026 JuanenRac（Electro Hobby 3D）に帰属�
 
 2. ドキュメント（本 README およびその自身の翻訳版——`README_spa.md`、`README_ita.md`、`README_fra.md`、`README_deu.md`、`README_zho.md`、`README_jpn.md`）は、**クリエイティブ・コモンズ 表示-継承 4.0 国際（CC BY-SA 4.0）** の下で提供されます。全文は https://creativecommons.org/licenses/by-sa/4.0/ を参照してください。
 
-本ツールは [URTC（Universal Robot Tool Controller）](https://github.com/JuanenRac/URTC) プロジェクトの CAN-OTA/SWD-JTAG 書き込みコンパニオンです——本ツールが対応対象としているボードファームウェア、ハードウェア設計、完全なプロトコルドキュメントは、同プロジェクト自身のリポジトリを参照してください。URTC 自身のファームウェアは GPL-3.0 であり、そのハードウェア設計は CERN-OHL-S v2 です。本ツール自身のここでのライセンスはその独立したプロジェクトには及ばず、その逆も同様です。類似の範囲をカバーする Web ベースの代替案も、[URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO) に存在します。
+本ツールは [URTC（Universal Robot Tool Controller）](https://github.com/JuanenRac/URTC) プロジェクトの CAN-OTA/SWD-JTAG 書き込みコンパニオンです——本ツールが対応対象としているボードファームウェア、ハードウェア設計、完全なプロトコルドキュメントは、同プロジェクト自身のリポジトリを参照してください。URTC 自身のファームウェアは GPL-3.0-or-later であり、そのハードウェア設計は CERN-OHL-S v2 です。本ツール自身のここでのライセンスはその独立したプロジェクトには及ばず、その逆も同様です。類似の範囲をカバーする Web ベースの代替案も、[URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO) に存在します。
 
 本プロジェクトを基に開発を行う際は、このライセンス区分を念頭に置いてください：コードの変更は GPL-3.0-or-later を維持し、ドキュメントの派生物は CC BY-SA を維持してください——いずれも本プロジェクトおよびその作者への帰属表示を伴う必要があります。
 

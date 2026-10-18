@@ -24,7 +24,7 @@
 </p>
 
 
-**Versión:** 0.3.2 (la versión de esta herramienta - se muestra en el banner
+**Versión:** 0.3.3 (la versión de esta herramienta - se muestra en el banner
 de la ventana y en la barra de título, se controla por separado de la
 versión del firmware de la placa URTC que escribe. Sigue un esquema X.Y.Z
 donde el número de parche sube automáticamente en cada build real via
@@ -75,7 +75,7 @@ como respaldo. Todo lo demás descrito aquí se ha ejercitado solo contra `MockC
 
 | | |
 |---|---|
-| Versión | `0.3.2` |
+| Versión | `0.3.3` |
 | Madurez | Funcional |
 | Tests | 405 |
 | Tecnología | Python / Tkinter (legacy advanced workflow) / PySide6 / Qt Quick / CAN-OTA |
@@ -1072,6 +1072,7 @@ ejecutar la aplicación.
 ├── build_exe.sh                   <- compilación independiente para Linux
 ├── build-test.bat                 <- comprobación de build/compilación sin subir versión
 ├── build-test.sh                  <- lo mismo, para Linux
+├── bump.py                        <- Orden explícita de subir versión (compilar nunca la sube)
 ├── bump_version.py                <- incremento de versión tipo cuentakilómetros, ejecutado por los scripts de build
 ├── bump_manifest_version.py       <- sincroniza la versión de urtc.project.json con la nativa (--sync)
 ├── docs/

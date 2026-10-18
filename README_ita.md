@@ -24,7 +24,7 @@
 </p>
 
 
-**Versione:** 0.3.2 (la versione di questo strumento - mostrata nel banner
+**Versione:** 0.3.3 (la versione di questo strumento - mostrata nel banner
 della finestra e nella barra del titolo, tracciata separatamente dalla
 versione del firmware della scheda URTC che scrive. Segue uno schema
 X.Y.Z in cui il numero di patch aumenta automaticamente a ogni build
@@ -77,7 +77,7 @@ portata di mano il JTAG come ripiego. Tutto il resto descritto qui è stato prov
 
 | | |
 |---|---|
-| Versione | `0.3.2` |
+| Versione | `0.3.3` |
 | Maturità | Funzionale |
 | Test | 405 |
 | Tecnologia | Python / Tkinter (legacy advanced workflow) / PySide6 / Qt Quick / CAN-OTA |
@@ -1073,6 +1073,7 @@ l'applicazione.
 ├── build_exe.sh                   <- build standalone per Linux
 ├── build-test.bat                 <- controllo build/compilazione senza incremento di versione
 ├── build-test.sh                  <- lo stesso, per Linux
+├── bump.py                        <- Comando esplicito per alzare la versione (compilare non la alza mai)
 ├── bump_version.py                <- incremento di versione stile contachilometri, eseguito dagli script di build
 ├── bump_manifest_version.py       <- sincronizza la versione di urtc.project.json con quella nativa (--sync)
 ├── docs/

@@ -24,7 +24,7 @@
 </p>
 
 
-**Version:** 0.3.2 (die Version dieses Tools selbst - angezeigt im
+**Version:** 0.3.3 (die Version dieses Tools selbst - angezeigt im
 Fenster-Banner und in der Titelleiste, getrennt verfolgt von der
 Firmware-Version der URTC-Platine, die es schreibt. Folgt einem
 X.Y.Z-Schema, bei dem die Patch-Nummer bei jedem echten Build über
@@ -78,7 +78,7 @@ JTAG als Rückfalloption bereit. Alles Übrige hier Beschriebene wurde nur gegen
 
 | | |
 |---|---|
-| Version | `0.3.2` |
+| Version | `0.3.3` |
 | Reifegrad | Funktionsfähig |
 | Tests | 405 |
 | Technik | Python / Tkinter (legacy advanced workflow) / PySide6 / Qt Quick / CAN-OTA |
@@ -192,7 +192,7 @@ Der bestehende CAN-OTA- und SWD/JTAG-Ablauf bleibt erhalten und liegt nun auf ei
   Betrachterfenster; übernimmt automatisch eine übersetzte Version,
   sobald eine für die aktuelle Sprache existiert), URTC GitHub (öffnet
   das Repository des Projekts in Ihrem Browser), Lizenz (die
-  GPL-3.0-Lizenz dieses Tools, gelesen aus der eigenen `LICENSE`-Datei
+  GPL-3.0-or-later-Lizenz dieses Tools, gelesen aus der eigenen `LICENSE`-Datei
   des Repositorys), und Über (Version und Autor).
 
 **Beim Start** wird das Banner 5 Sekunden lang zentriert auf dem
@@ -1113,6 +1113,7 @@ nicht erforderlich.
 ├── build_exe.sh                   <- eigenständiger Build für Linux
 ├── build-test.bat                 <- Build-/Kompilierprüfung ohne Versionserhöhung
 ├── build-test.sh                  <- Dasselbe, für Linux
+├── bump.py                        <- Ausdrücklicher Befehl zum Erhöhen der Version (Kompilieren erhöht nie)
 ├── bump_version.py                <- Versionserhöhung im Kilometerzähler-Stil, von den Build-Skripten ausgeführt
 ├── bump_manifest_version.py       <- Synchronisiert die Version von urtc.project.json mit der nativen (--sync)
 ├── docs/
@@ -1255,7 +1256,7 @@ Dieses Tool ist der CAN-OTA/SWD-JTAG-Flash-Begleiter des
 -Projekts - siehe das eigene Repository dieses Projekts für die
 Platinen-Firmware, Hardware-Designs und die vollständige
 Protokolldokumentation, gegen die dieses Tool implementiert. Die eigene
-Firmware von URTC ist GPL-3.0 und ihre Hardware-Designs sind CERN-OHL-S
+Firmware von URTC ist GPL-3.0-or-later und ihre Hardware-Designs sind CERN-OHL-S
 v2; die eigene Lizenz dieses Tools erstreckt sich hier nicht auf dieses
 separate Projekt, und umgekehrt. Eine webbasierte Alternative, die
 ähnliches Terrain abdeckt, existiert ebenfalls unter

@@ -14,13 +14,13 @@ REM HYDRA_UMC_SCRIPT_STANDARD_BANNER_BEGIN
 echo.
 echo *****************************************************************************
 echo * URTC-FLASHER - build_exe.bat
-echo * Mode      : INCREMENTAL BUILD
+echo * Mode      : BUILD (no version change)
 echo * Author    : JuanenRac (Electro Hobby 3D)
 echo * Email     : electrohobby3d@gmail.com
 echo * Copyright : (C) 2026 JuanenRac
 echo * License   : GPL-3.0-or-later - see LICENSE
 echo * ------------------------------------------------------------------------- *
-echo * 1. Increment the project version and synchronise its manifest.
+echo * 1. Read the project version (compiling never changes it; run bump.py to raise it).
 echo * 2. Run this project's declared build, verification and packaging commands.
 echo * 3. Report the result and keep an interactive terminal open.
 echo *****************************************************************************
@@ -44,27 +44,18 @@ REM see bump_version.py's own docstring for the base-10 carry rule
 REM (1.1.9 -> 1.2.0). Runs before PyInstaller so the bumped value is what
 REM actually gets compiled into this .exe, not the pre-bump value.
 REM HYDRA_UMC_SCRIPT_STANDARD_VERSION_STEP
-echo       Incrementing project version and synchronising its manifest...
-python bump_version.py
-if errorlevel 1 ( echo NATIVE VERSION BUMP FAILED. & %KEEP_OPEN% & exit /b 1 )
+echo       Reading the project version (compiling never changes it; raise it with bump.py first)...
 REM HYDRA_UMC_SCRIPT_STANDARD_VERSION_CAPTURE_BEFORE
 for /f "usebackq delims=" %%V in (`python -c "import json; print(json.load(open(r'%~dp0urtc.project.json', encoding='utf-8'))['version'])"`) do set "HYDRA_UMC_VERSION_BEFORE=%%V"
-python "%~dp0bump_manifest_version.py" --sync
-if errorlevel 1 ( echo VERSION SYNCHRONIZATION FAILED. & %KEEP_OPEN% & exit /b 1 )
-if errorlevel 1 (
-    echo       ERROR: version bump failed - see the output above.
-    %KEEP_OPEN%
-    exit /b 1
-)
 REM HYDRA_UMC_SCRIPT_STANDARD_VERSION_CAPTURE_AFTER
 for /f "usebackq delims=" %%V in (`python -c "import json; print(json.load(open(r'%~dp0urtc.project.json', encoding='utf-8'))['version'])"`) do set "HYDRA_UMC_VERSION_AFTER=%%V"
 if not defined HYDRA_UMC_VERSION_BEFORE set "HYDRA_UMC_VERSION_BEFORE=unknown"
 if not defined HYDRA_UMC_VERSION_AFTER set "HYDRA_UMC_VERSION_AFTER=unknown"
 echo.
 echo *****************************************************************************
-echo * VERSION INCREMENT COMPLETED
+echo * VERSION UNCHANGED BY THIS BUILD
 echo * v%HYDRA_UMC_VERSION_BEFORE% ^> v%HYDRA_UMC_VERSION_AFTER%
-echo * Project manifest has been synchronised by the project build flow.
+echo * Raise the version explicitly with bump.py before a release build.
 echo *****************************************************************************
 echo.
 echo.

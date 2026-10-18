@@ -13,13 +13,13 @@
 # HYDRA_UMC_SCRIPT_STANDARD_BANNER_BEGIN
 printf '\n*******************************************************************************\n'
 printf '%s\n' "* URTC-FLASHER - build_exe.sh"
-printf '%s\n' "* Mode      : INCREMENTAL BUILD"
+printf '%s\n' "* Mode      : BUILD (no version change)"
 printf '%s\n' "* Author    : JuanenRac (Electro Hobby 3D)"
 printf '%s\n' "* Email     : electrohobby3d@gmail.com"
 printf '%s\n' "* Copyright : (C) 2026 JuanenRac"
 printf '%s\n' "* License   : GPL-3.0-or-later - see LICENSE"
 printf '%s\n' "* ------------------------------------------------------------------------- *"
-printf '%s\n' "* 1. Increment the project version and synchronise its manifest."
+printf '%s\n' "* 1. Read the project version (compiling never changes it; run bump.py to raise it)."
 printf '%s\n' "* 2. Run this project's declared build, verification and packaging commands."
 printf '%s\n' "* 3. Report the result and keep an interactive terminal open."
 printf '%s\n' "*******************************************************************************"
@@ -77,17 +77,15 @@ echo "[2/6] Bumping FLASHER_VERSION (ecosystem-wide build-version policy)..."
 # (1.1.9 -> 1.2.0). Runs before PyInstaller so the bumped value is what
 # actually gets compiled into this binary, not the pre-bump value.
 # HYDRA_UMC_SCRIPT_STANDARD_VERSION_STEP
-printf '%s\n' "      Incrementing project version and synchronising its manifest..."
-python3 bump_version.py || exit 1
+printf '%s\n' "      Reading the project version (compiling never changes it; raise it with bump.py first)..."
 # HYDRA_UMC_SCRIPT_STANDARD_VERSION_CAPTURE_BEFORE
 HYDRA_UMC_VERSION_BEFORE="$(python3 -c 'import json, pathlib, sys; print(json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))["version"])' "$(dirname "$0")/urtc.project.json")"
-python3 "$(dirname "$0")/bump_manifest_version.py" --sync || exit 1
 # HYDRA_UMC_SCRIPT_STANDARD_VERSION_CAPTURE_AFTER
 HYDRA_UMC_VERSION_AFTER="$(python3 -c 'import json, pathlib, sys; print(json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))["version"])' "$(dirname "$0")/urtc.project.json")"
 printf '\n*******************************************************************************\n'
-printf '%s\n' '* VERSION INCREMENT COMPLETED'
+printf '%s\n' '* VERSION UNCHANGED BY THIS BUILD'
 printf '%s\n' "* v${HYDRA_UMC_VERSION_BEFORE:-unknown} -> v${HYDRA_UMC_VERSION_AFTER:-unknown}"
-printf '%s\n' '* Project manifest has been synchronised by the project build flow.'
+printf '%s\n' '* Raise the version explicitly with bump.py before a release build.'
 printf '%s\n' '*******************************************************************************'
 printf '\n'
 echo "      Done."

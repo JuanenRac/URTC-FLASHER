@@ -24,7 +24,7 @@
 </p>
 
 
-**版本：** 0.3.2（本工具自身的版本——显示在窗口横幅和标题栏中，与它所写入的
+**版本：** 0.3.3（本工具自身的版本——显示在窗口横幅和标题栏中，与它所写入的
 URTC 板卡固件版本分开跟踪。遵循 X.Y.Z 方案，其中补丁号在每次通过
 build_exe.bat/build_exe.sh 进行的真实构建时自动递增——版本历史见
 CHANGELOG.md，确切的进位规则见 bump_version.py）
@@ -65,7 +65,7 @@ CAN 自我标识），以便你在决定要刷写什么之前，先看看当前�
 
 | | |
 |---|---|
-| 版本 | `0.3.2` |
+| 版本 | `0.3.3` |
 | 成熟度 | 可用 |
 | 测试 | 405 |
 | 技术栈 | Python / Tkinter (legacy advanced workflow) / PySide6 / Qt Quick / CAN-OTA |
@@ -828,6 +828,7 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 ├── build_exe.sh                   <- Linux 独立构建
 ├── build-test.bat                 <- 不递增版本号的构建/编译检查
 ├── build-test.sh                  <- 同上，适用于 Linux
+├── bump.py                        <- 显式的版本递增命令（编译从不递增）
 ├── bump_version.py                <- 里程表式版本递增，由构建脚本运行
 ├── bump_manifest_version.py       <- 将 urtc.project.json 的版本与原生版本同步（--sync）
 ├── docs/
@@ -960,7 +961,7 @@ URTC Flasher 版权所有 (c) 2026 JuanenRac（Electro Hobby 3D）。分发本�
 
 本工具是 [URTC（Universal Robot Tool Controller）](https://github.com/JuanenRac/URTC)
 项目的 CAN-OTA/SWD-JTAG 刷写配套工具——本工具所对接的板卡固件、硬件设计和
-完整协议文档见该项目自身的仓库。URTC 自身的固件为 GPL-3.0，其硬件设计为
+完整协议文档见该项目自身的仓库。URTC 自身的固件为 GPL-3.0-or-later，其硬件设计为
 CERN-OHL-S v2；本工具自身的许可证并不延伸至那个独立的项目，反之亦然。
 一个覆盖类似功能范围的基于网页的替代方案也存在，位于
 [URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO)。

@@ -12,7 +12,7 @@ This project consists of source code and its own documentation, made available u
 2. The documentation (this README and its own translations - `README_spa.md`, `README_ita.md`, `README_fra.md`, `README_deu.md`) is available under **Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)**.
    Full text: https://creativecommons.org/licenses/by-sa/4.0/
 
-This tool is the CAN-OTA/SWD-JTAG flashing companion to the [URTC (Universal Robot Tool Controller)](https://github.com/JuanenRac/URTC) project - see that project's own repository for the board firmware, hardware designs, and full protocol documentation this tool implements against. URTC's own firmware is GPL-3.0 and its hardware designs are CERN-OHL-S v2; this tool's own license here doesn't extend to that separate project, and vice versa.
+This tool is the CAN-OTA/SWD-JTAG flashing companion to the [URTC (Universal Robot Tool Controller)](https://github.com/JuanenRac/URTC) project - see that project's own repository for the board firmware, hardware designs, and full protocol documentation this tool implements against. URTC's own firmware is GPL-3.0-or-later and its hardware designs are CERN-OHL-S v2; this tool's own license here doesn't extend to that separate project, and vice versa.
 
 If you build on this project, keep the licensing split in mind: code changes should stay GPL-3.0-or-later, documentation derivatives should stay CC BY-SA - each with attribution back to this project and its author.
 

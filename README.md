@@ -24,10 +24,10 @@
 </p>
 
 
-**Version:** 0.3.2 (this tool's own version - shown in the window banner and
+**Version:** 0.3.3 (this tool's own version - shown in the window banner and
 title bar, tracked separately from the URTC board firmware version it
-writes. Follows an X.Y.Z scheme where the patch number bumps automatically
-on every real build via build_exe.bat/build_exe.sh - see CHANGELOG.md for
+writes. Follows an X.Y.Z scheme where the patch number is raised by the
+explicit `python bump.py` step - building never changes it - see CHANGELOG.md for
 the version history and bump_version.py for the exact carry rule)
 
 **Author:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
@@ -73,7 +73,7 @@ talking to a bootloader: have JTAG on hand as a fallback. Everything else descri
 
 | | |
 |---|---|
-| Version | `0.3.2` |
+| Version | `0.3.3` |
 | Maturity | Functional |
 | Tests | 405 |
 | Stack | Python / Tkinter (legacy advanced workflow) / PySide6 / Qt Quick / CAN-OTA |
@@ -981,7 +981,8 @@ from the SVG during development; it is not required to run the application.
 ├── build_exe.sh                   <- Linux standalone build
 ├── build-test.bat                 <- non-versioning build/compile check
 ├── build-test.sh                  <- same, for Linux
-├── bump_version.py                <- odometer-style version bump, run by the build scripts
+├── bump.py                        <- Explicit version bump command (building never bumps)
+├── bump_version.py                <- odometer-style version bump, called by bump.py
 ├── bump_manifest_version.py       <- syncs urtc.project.json's version to the native one (--sync)
 ├── docs/
 │   └── CLI_REFERENCE.md           <- command-line flags reference
@@ -1118,7 +1119,7 @@ This tool is the CAN-OTA/SWD-JTAG flashing companion to the
 [URTC (Universal Robot Tool Controller)](https://github.com/JuanenRac/URTC)
 project - see that project's own repository for the board firmware,
 hardware designs, and full protocol documentation this tool implements
-against. URTC's own firmware is GPL-3.0 and its hardware designs are
+against. URTC's own firmware is GPL-3.0-or-later and its hardware designs are
 CERN-OHL-S v2; this tool's own license here doesn't extend to that
 separate project, and vice versa. A web-based alternative covering
 similar ground also exists at

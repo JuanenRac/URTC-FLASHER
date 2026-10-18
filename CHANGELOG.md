@@ -20,6 +20,11 @@ increments instead (e.g. `0.1.9` -> `0.2.0`), and the same carry applies
 from `MINOR` into `MAJOR`. Running the tool from source (not through a
 build script) never changes the version - only a real build does.
 
+## [0.3.3] - An explicit bump command: building never changes the version
+
+- Building no longer changes the version: build_exe.bat and build_exe.sh only read it, and raising it is the explicit `python bump.py` step.
+- Every licence statement and source header says GPL-3.0-or-later.
+
 ## [0.3.2] - Release signatures, shared protocol constants and a language selector
 
 - Release signatures: every file of an official release has an Ed25519 signature (<file>.sig) by the key of the releases. The flasher carries the public key and checks <image>.sig before a flash (a wrong signature blocks the update, a missing one is reported as the image of a bench pre-release), and tools/sync_firmware.py checks every file it downloads, refusing a wrong signature and requiring --allow-unsigned for a set that has none.
