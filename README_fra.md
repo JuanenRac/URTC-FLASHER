@@ -24,7 +24,7 @@
 </p>
 
 
-**Version :** 0.3.1 (la version de cet outil - affichée dans la bannière
+**Version :** 0.3.2 (la version de cet outil - affichée dans la bannière
 de la fenêtre et la barre de titre, suivie séparément de la version du
 firmware de la carte URTC qu'il écrit. Suit un schéma X.Y.Z où le numéro
 de patch augmente automatiquement à chaque build réel via
@@ -173,6 +173,8 @@ python urtc_flasher.py --qtquick
 ~~~
 Il offre la mise à jour CAN-OTA de la carte principale (le déclencheur d'entrée dans le bootloader est toujours envoyé en premier), la découverte SWD/JTAG en lecture seule, Board Snapshot, les 4 écritures de configuration de l'appareil et la programmation complète de la puce par SWD/JTAG (effacement/écriture, simulation, sauvegarde avant effacement, contrôle RDP). Il n'a **pas** tout ce qu'a la fenêtre Tkinter : pas de cible esclave d'extension, pas d'option « la carte est déjà dans le bootloader », pas d'option d'effacement de la F-RAM, pas d'autorisation de downgrade, pas de sauvegarde du firmware par CAN, pas de téléchargement GitHub, pas de choix ni de détection du débit (Serial/SLCAN s'ouvre à 500 kbit/s) et pas de contrôle dédié de l'activité du bus. Pour cela, utilisez l'interface Tkinter par défaut.
 
+L'en-tête de la fenêtre Qt Quick a un sélecteur de langue ; le choix est enregistré et s'applique au prochain démarrage.
+
 Le flux CAN-OTA et SWD/JTAG existant est conservé sur une surface de contrôle bleu nuit/cyan : en-tête produit, carte de connexion contrastée, tableaux de firmware lisibles, journal de vérification sombre et progression visible. Il s'agit seulement d'un changement visuel et d'accessibilité ; le protocole du bootloader n'est pas modifié, et rien de tout cela n'a été essayé sur une vraie carte.
 
 ### Barre de menu
@@ -261,7 +263,7 @@ Cet outil s'attend à un dossier `firmware/` juste à côté de
 │   ├── URTC_LOGO_FLASHER.svg      <- source de la banniere (vectorielle)
 │   └── urtc_banner.png            <- affichee en haut de la fenetre, rendue depuis le .svg ci-dessus
 ├── firmware/
-│   ├── URTC_MAIN_FIRMWARE_v0.3.3.bin  <- placez les nouveaux fichiers .bin ici
+│   ├── URTC_MAIN_FIRMWARE_v<version>.bin  <- placez les nouveaux fichiers .bin ici
 │   └── URTC_SLAVE_FIRMWARE_v0.1.9.bin        <- application du chip esclave d'extension, le cas echeant
 ├── logs/                          <- cree automatiquement, un fichier par session
 ├── urtc_config.json               <- optionnel, non inclus par defaut (voir "Changer la cle HMAC" ci-dessous)
@@ -319,7 +321,7 @@ liste avec un ✓ ou ✗ clair et la raison :
 
 | Fichier | Taille | Statut |
 |---|---|---|
-| URTC_MAIN_FIRMWARE_v0.3.3.bin | 71.8 KB | ✓ semble valide |
+| URTC_MAIN_FIRMWARE_v<version>.bin | 71.8 KB | ✓ semble valide |
 | URTC_SLAVE_FIRMWARE_v0.1.9.bin | 33.9 KB | ✓ semble valide |
 | notes.txt.bin | 0.1 KB | ✗ le premier mot ne ressemble pas a un pointeur de pile valide |
 
@@ -360,13 +362,15 @@ liste avec un ✓ ou ✗ clair et la raison :
   temps ; une variable d'environnement `GITHUB_TOKEN` la relève) - rien
   ici ne nécessite un compte GitHub.
 
+Chaque fichier d'une release officielle a une signature de release (`<fichier>.sig`, Ed25519) : le flasher la vérifie lorsqu'elle est présente et refuse une signature incorrecte. Un jeu sans signatures, comme une pré-release de banc, n'est accepté par `tools/sync_firmware.py` qu'avec `--allow-unsigned`.
+
 **`<nomdefichier>.manifest.json` et `<nomdefichier>.sha256`, à côté de
 chaque fichier firmware** - publiés par le build URTC pour chaque image (et
 téléchargés avec elle depuis GitHub). Le manifeste contient la version, le
 `sha256` et, pour les images d'application, la valeur `hmac_sha256` attendue par le bootloader (un HMAC-SHA256 à clé partagée, pas une signature asymétrique ; `signing_key_kind: dev` désigne la clé publique de développement) :
 
 ```json
-{"component": "main_application", "version": "0.3.3", "sha256": "b48d4cd5...", "hmac_sha256": "b63a701e...", "signing_key_kind": "dev"}
+{"component": "main_application", "version": "<version>", "sha256": "b48d4cd5...", "hmac_sha256": "b63a701e...", "signing_key_kind": "dev"}
 ```
 
 Les deux empreintes sont vérifiées juste avant le flashage et une
@@ -1021,7 +1025,7 @@ pour exécuter l'application.
 │   ├── urtc_icon.ico              <- icône barre des tâches/fenêtre sous Windows
 │   └── urtc_icon.png              <- icône barre des tâches/fenêtre sous Linux
 ├── firmware/
-│   ├── URTC_MAIN_FIRMWARE_v0.3.3.bin     <- firmware applicatif actuel de la carte principale
+│   ├── URTC_MAIN_FIRMWARE_v<version>.bin     <- firmware applicatif actuel de la carte principale
 │   ├── URTC_MAIN_BOOTLOADER_v0.3.8.bin   <- bootloader de la carte principale (SWD/JTAG uniquement, exclu de la
 │   │                                         liste de firmware CAN-OTA - voir section 3 ci-dessus)
 │   ├── URTC_SLAVE_FIRMWARE_v0.1.9.bin    <- application de la puce esclave d'extension (cartes d'extension avancées uniquement)

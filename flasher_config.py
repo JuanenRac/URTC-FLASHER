@@ -8,17 +8,19 @@ import sys
 import os
 import json
 
+from urtc_can import protocol
+
 # =============================================================================
 # Protocol constants - must match bootloader_common.h exactly
 # =============================================================================
-CAN_ID_ENTER_BOOTLOADER = 0x7F0
-CAN_ID_START_UPDATE     = 0x7F1
-CAN_ID_DATA             = 0x7F2
-CAN_ID_PAGE_ACK         = 0x7F3
-CAN_ID_END_UPDATE       = 0x7F4
-CAN_ID_STATUS           = 0x7F5
-CAN_ID_HEARTBEAT        = 0x7F6
-CAN_ID_HMAC_CHUNK       = 0x7F7
+CAN_ID_ENTER_BOOTLOADER = protocol.CAN_ID_ENTER_BOOTLOADER
+CAN_ID_START_UPDATE     = protocol.CAN_ID_START_UPDATE
+CAN_ID_DATA             = protocol.CAN_ID_DATA
+CAN_ID_PAGE_ACK         = protocol.CAN_ID_PAGE_ACK
+CAN_ID_END_UPDATE       = protocol.CAN_ID_END_UPDATE
+CAN_ID_STATUS           = protocol.CAN_ID_STATUS
+CAN_ID_HEARTBEAT        = protocol.CAN_ID_HEARTBEAT
+CAN_ID_HMAC_CHUNK       = protocol.CAN_ID_HMAC_CHUNK
 
 # Expansion slave chip's own OTA relay - same overall flow as the main
 # board's own 0x7F0-0x7F7 above, but reached via the I2C link bridge
@@ -30,29 +32,29 @@ CAN_ID_HMAC_CHUNK       = 0x7F7
 # needed the way a real CAN write-and-forget does) - see
 # flash_slave() in flasher_protocol.py for how progress is tracked
 # instead (polling 0x216).
-CAN_ID_SLAVE_ENTER_BOOTLOADER = 0x210
-CAN_ID_SLAVE_START_UPDATE     = 0x211
-CAN_ID_SLAVE_HMAC_CHUNK       = 0x212
-CAN_ID_SLAVE_DATA             = 0x213
-CAN_ID_SLAVE_END_UPDATE       = 0x214
-CAN_ID_SLAVE_STATUS           = 0x215
-CAN_ID_SLAVE_PROGRESS         = 0x216
-CAN_ID_SLAVE_VERSION_RESP_1   = 0x217
-CAN_ID_SLAVE_VERSION_RESP_2   = 0x218
-CAN_ID_SLAVE_VERIFY_FAIL_REASON = 0x219  # only meaningful right after CAN_ID_SLAVE_STATUS reports STATUS_VERIFY_FAIL (0x05) - same VERIFY_FAIL_REASONS values below as the main board's own 0x7F5
-CAN_ID_QUERY_VERSION    = 0x7F8
-CAN_ID_VERSION_RESPONSE = 0x7F9
-CAN_ID_QUERY_FRAM_STATE = 0x190  # Query the FM24CL64B's recovered state (application-side, not the bootloader)
-CAN_ID_FRAM_STATE_RESP = 0x191   # Answers CAN_ID_QUERY_FRAM_STATE, also sent after an erase
-CAN_ID_ERASE_FRAM = 0x192        # Magic-payload erase - see ERASE_FRAM_MAGIC below
-CAN_ID_SET_EXPANSION_TYPE = 0x1A0  # Sets/persists which CONN_EXPANSION variant is installed
-CAN_ID_EXPANSION_TYPE_RESP = 0x1A1  # Query, or the response to setting it - see EXPANSION.TXT
-CAN_ID_SET_MLX_VARIANT = 0x1A6  # Sets/persists which MLX9064x family member is installed
-CAN_ID_MLX_VARIANT_RESP = 0x1A7  # Query, or the response to setting it - see CANBUS.TXT
-CAN_ID_SET_FREE_TOOL = 0x1A2  # Sets/persists free_tool_selection - see EEPROM.TXT section 5
-CAN_ID_FREE_TOOL_CONFIG_RESP = 0x1A3  # Query, or the response to setting it - carries raw ID-jumper reading too
-CAN_ID_SET_DEVICE_SERIAL = 0x1A4  # Sets/persists device_serial_number - see EEPROM.TXT section 6
-CAN_ID_PERIPHERAL_INFO_RESP = 0x1A5  # Query, or the response to setting it - carries peripheral type too
+CAN_ID_SLAVE_ENTER_BOOTLOADER = protocol.CAN_ID_SLAVE_ENTER_BOOTLOADER
+CAN_ID_SLAVE_START_UPDATE     = protocol.CAN_ID_SLAVE_START_UPDATE
+CAN_ID_SLAVE_HMAC_CHUNK       = protocol.CAN_ID_SLAVE_HMAC_CHUNK
+CAN_ID_SLAVE_DATA             = protocol.CAN_ID_SLAVE_DATA
+CAN_ID_SLAVE_END_UPDATE       = protocol.CAN_ID_SLAVE_END_UPDATE
+CAN_ID_SLAVE_STATUS           = protocol.CAN_ID_SLAVE_STATUS
+CAN_ID_SLAVE_PROGRESS         = protocol.CAN_ID_SLAVE_PROGRESS
+CAN_ID_SLAVE_VERSION_RESP_1   = protocol.CAN_ID_SLAVE_VERSION_RESP_1
+CAN_ID_SLAVE_VERSION_RESP_2   = protocol.CAN_ID_SLAVE_VERSION_RESP_2
+CAN_ID_SLAVE_VERIFY_FAIL_REASON = protocol.CAN_ID_SLAVE_VERIFY_FAIL_REASON  # only meaningful right after CAN_ID_SLAVE_STATUS reports STATUS_VERIFY_FAIL (0x05) - same VERIFY_FAIL_REASONS values below as the main board's own 0x7F5
+CAN_ID_QUERY_VERSION    = protocol.CAN_ID_QUERY_VERSION
+CAN_ID_VERSION_RESPONSE = protocol.CAN_ID_VERSION_RESPONSE
+CAN_ID_QUERY_FRAM_STATE = protocol.CAN_ID_FRAM_QUERY  # Query the FM24CL64B's recovered state (application-side, not the bootloader)
+CAN_ID_FRAM_STATE_RESP = protocol.CAN_ID_FRAM_STATE_RESP   # Answers CAN_ID_QUERY_FRAM_STATE, also sent after an erase
+CAN_ID_ERASE_FRAM = protocol.CAN_ID_ERASE_FRAM        # Magic-payload erase - see ERASE_FRAM_MAGIC below
+CAN_ID_SET_EXPANSION_TYPE = protocol.CAN_ID_SET_EXPANSION_TYPE  # Sets/persists which CONN_EXPANSION variant is installed
+CAN_ID_EXPANSION_TYPE_RESP = protocol.CAN_ID_EXPANSION_TYPE_RESP  # Query, or the response to setting it - see EXPANSION.TXT
+CAN_ID_SET_MLX_VARIANT = protocol.CAN_ID_SET_MLX_VARIANT  # Sets/persists which MLX9064x family member is installed
+CAN_ID_MLX_VARIANT_RESP = protocol.CAN_ID_MLX_VARIANT_RESP  # Query, or the response to setting it - see CANBUS.TXT
+CAN_ID_SET_FREE_TOOL = protocol.CAN_ID_SET_FREE_TOOL  # Sets/persists free_tool_selection - see EEPROM.TXT section 5
+CAN_ID_FREE_TOOL_CONFIG_RESP = protocol.CAN_ID_FREE_TOOL_CONFIG_RESP  # Query, or the response to setting it - carries raw ID-jumper reading too
+CAN_ID_SET_DEVICE_SERIAL = protocol.CAN_ID_SET_DEVICE_SERIAL  # Sets/persists device_serial_number - see EEPROM.TXT section 6
+CAN_ID_PERIPHERAL_INFO_RESP = protocol.CAN_ID_PERIPHERAL_INFO_RESP  # Query, or the response to setting it - carries peripheral type too
 
 # Index in this list matches the value URTC actually stores (0-6) - see
 # EXPANSION.TXT for what each configuration is.
@@ -81,16 +83,16 @@ MLX_SENSOR_VARIANTS = [
     "2 - MLX90641 (16x12)",
     "3 - MLX90642 (32x24, onboard calc)",
 ]
-ERASE_FRAM_MAGIC = bytes([0xE3, 0xA5, 0xE0, 0xFF])
-CAN_ID_BOOTLOADER_VERSION_RESPONSE = 0x7FA  # sent only by the bootloader, alongside 0x7F9, when it's the one answering
-CAN_ID_VERSION_PATCH_RESPONSE = 0x7E9  # DLC=3 (optional): answering side, installed application PATCH (0xFF = unknown), flags (bit 0 = the bootloader reads the patch from the minor field of 0x7F4 / 0x214); sent right after 0x7F9 by boards that know their patch, never by older ones
+ERASE_FRAM_MAGIC = protocol.MAGIC_ERASE_FRAM
+CAN_ID_BOOTLOADER_VERSION_RESPONSE = protocol.CAN_ID_BOOTLOADER_VERSION_RESPONSE  # sent only by the bootloader, alongside 0x7F9, when it's the one answering
+CAN_ID_VERSION_PATCH_RESPONSE = protocol.CAN_ID_VERSION_PATCH_RESPONSE  # DLC=3 (optional): answering side, installed application PATCH (0xFF = unknown), flags (bit 0 = the bootloader reads the patch from the minor field of 0x7F4 / 0x214); sent right after 0x7F9 by boards that know their patch, never by older ones
 PATCH_UNKNOWN = 0xFF
 PATCH_FLAG = 0x80  # high byte of the 16-bit minor field of 0x7F4 / 0x214: 0x80 | PATCH (0-127), only towards a bootloader that announced support
-CAN_ID_QUERY_ERROR_COUNTERS = 0x7FB  # answered by whichever of the application or bootloader is currently running, same dual-answerable convention as CAN_ID_QUERY_VERSION
-CAN_ID_ERROR_COUNTERS_RESPONSE = 0x7FC  # DLC=2: TEC (Transmit Error Counter), REC (Receive Error Counter) - read directly from the CAN peripheral's own ESR register on the board's side
-CAN_ID_AUTHORIZE_DOWNGRADE = 0x7FD  # DLC=4, magic payload 0xD0,0x9E,0x12,0xAD - authorizes the CURRENT update attempt only to bypass the bootloader's own anti-rollback check; must be sent after 0x7F1 and before 0x7F4 for the same attempt, see CANBUS.TXT
-CAN_ID_READBACK = 0x7FE  # bidirectional, distinguished by DLC: master sends any DLC to start, bootloader replies DLC=4 (total size) once then DLC=8 (raw data) repeatedly - see CANBUS.TXT
-CAN_ID_READBACK_PAGE_ACK = 0x7FF  # sent to the bootloader after each 2048-byte page of readback data is safely received: DLC=4, big-endian page index
+CAN_ID_QUERY_ERROR_COUNTERS = protocol.CAN_ID_QUERY_ERROR_COUNTERS  # answered by whichever of the application or bootloader is currently running, same dual-answerable convention as CAN_ID_QUERY_VERSION
+CAN_ID_ERROR_COUNTERS_RESPONSE = protocol.CAN_ID_ERROR_COUNTERS_RESPONSE  # DLC=2: TEC (Transmit Error Counter), REC (Receive Error Counter) - read directly from the CAN peripheral's own ESR register on the board's side
+CAN_ID_AUTHORIZE_DOWNGRADE = protocol.CAN_ID_AUTHORIZE_DOWNGRADE  # DLC=4, magic payload 0xD0,0x9E,0x12,0xAD - authorizes the CURRENT update attempt only to bypass the bootloader's own anti-rollback check; must be sent after 0x7F1 and before 0x7F4 for the same attempt, see CANBUS.TXT
+CAN_ID_READBACK = protocol.CAN_ID_READBACK  # bidirectional, distinguished by DLC: master sends any DLC to start, bootloader replies DLC=4 (total size) once then DLC=8 (raw data) repeatedly - see CANBUS.TXT
+CAN_ID_READBACK_PAGE_ACK = protocol.CAN_ID_READBACK_PAGE_ACK  # sent to the bootloader after each 2048-byte page of readback data is safely received: DLC=4, big-endian page index
 
 STATUS_NAMES = {
     0x01: "Listening",
@@ -121,13 +123,13 @@ VERIFY_FAIL_REASONS = {
 # exactly, or every update this tool sends will be rejected (HardwareID
 # mismatch). Signatures are not computed here - see the signing-key note
 # below.
-THIS_HARDWARE_ID = 0x0303CC01  # STM32F303CCT6, URTC board revision 1
-SLAVE_HARDWARE_ID = 0x0303CB01  # STM32F303CBT6, expansion slave chip - see slave_common.h's own THIS_HARDWARE_ID, verified against the real source rather than assumed to differ only in the last hex digit
+THIS_HARDWARE_ID = protocol.HARDWARE_ID_MAIN  # STM32F303CCT6, URTC board revision 1
+SLAVE_HARDWARE_ID = protocol.HARDWARE_ID_SLAVE  # STM32F303CBT6, expansion slave chip - see slave_common.h's own THIS_HARDWARE_ID, verified against the real source rather than assumed to differ only in the last hex digit
 # There is deliberately NO constant for the board firmware's version: the version written into the end-update frame is the real one of the image being sent (its manifest, the
 # --version given, or the file name), never a default - an invented one made every later official image look older to the anti-rollback check.
 
 # This tool's OWN version (shown in the banner and window title) - about the flasher script itself.
-FLASHER_VERSION = "0.3.1"
+FLASHER_VERSION = "0.3.2"
 FLASHER_AUTHOR = "JuanenRac"
 
 # --- HMAC signing keys: none by default ---
@@ -145,7 +147,7 @@ SLAVE_HMAC_KEY = None
 
 APP_MAX_SIZE = 112 * 1024
 SLAVE_APP_MAX_SIZE = 54 * 1024  # matches STM32F303CBTx_SLAVEAPP.ld's own 54K main slot at 0x08005000 - verified against the real linker script, not assumed to match the main board's own 112K
-FLASH_PAGE_SIZE = 2048
+FLASH_PAGE_SIZE = protocol.FLASH_PAGE_SIZE
 BITRATE_500K_SLCAN_CODE = "6"  # SLCAN's "Sx" bitrate codes: 6 = 500 kbit/s
 # Full standard SLCAN/Lawicel bitrate code table, for the bitrate selector
 # and auto-detect (see FlasherGUI.auto_detect_bitrate). 500k stays the

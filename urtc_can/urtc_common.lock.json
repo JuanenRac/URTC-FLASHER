@@ -1,0 +1,10 @@
+{
+  "format": 1,
+  "urtc_common_version": "0.0.2",
+  "files": {
+    "protocol.py": {
+      "from": "src/urtc_common/protocol.py",
+      "sha256": "ba6f964fc124af1dda6e2bed4bf722f4b1e6cfa55b962b7cf8b44a501193864b"
+    }
+  }
+}

@@ -33,10 +33,10 @@ from flasher_config import (
     CAN_ID_SET_DEVICE_SERIAL, CAN_ID_SET_EXPANSION_TYPE,
     CAN_ID_SET_FREE_TOOL, CAN_ID_SET_MLX_VARIANT,
     EXPANSION_BOARD_TYPES, FIRMWARE_FOLDER,
-    FLASHER_VERSION, ICON_IMAGE_PATH, MLX_SENSOR_VARIANTS,
+    AVAILABLE_LANGUAGES, FLASHER_VERSION, ICON_IMAGE_PATH, MLX_SENSOR_VARIANTS,
     PYOCD_TARGET_NAME, SLAVE_APP_FLASH_ADDR, SLAVE_APP_MAX_SIZE,
     SLAVE_BOOTLOADER_FLASH_ADDR, SLAVE_BOOTLOADER_MAX_SIZE,
-    SLAVE_PYOCD_TARGET_NAME, SLAVE_TOTAL_FLASH_SIZE, TOOL_NAMES, _, translate_log_line,
+    SLAVE_PYOCD_TARGET_NAME, SLAVE_TOTAL_FLASH_SIZE, TOOL_NAMES, _, _current_language, save_config, translate_log_line,
 )
 from flasher_integrity import preflight_image
 from flasher_protocol import FlashError, URTCFlasher, minor_with_patch
@@ -149,6 +149,30 @@ class FlasherQtBridge(QObject):
     @Property(str, constant=True)
     def version(self) -> str:
         return FLASHER_VERSION
+
+    @Property("QStringList", constant=True)
+    def languageNames(self) -> list:
+        """The names of the interface languages, each in its own language; the choice is saved and applies on the next start."""
+        return [name for _code, name in AVAILABLE_LANGUAGES]
+
+    @Property(int, constant=True)
+    def languageIndex(self) -> int:
+        codes = [code for code, _name in AVAILABLE_LANGUAGES]
+        return codes.index(_current_language) if _current_language in codes else 0
+
+    @Slot(int, result=str)
+    def selectLanguage(self, index: int) -> str:
+        """Saves the chosen language in the configuration file and returns the (already translated) notice to show."""
+        if not 0 <= index < len(AVAILABLE_LANGUAGES):
+            return ""
+        code = AVAILABLE_LANGUAGES[index][0]
+        if code == _current_language:
+            return ""
+        if save_config({"language": code}):
+            self._log(f"LANGUAGE_SAVED {code}")
+            return _("MSG_RESTART_NEEDED")
+        self._log(f"LANGUAGE_SAVE_FAILED {code}")
+        return ""
 
     @Property(str, constant=True)
     def iconSource(self) -> str:
@@ -1069,6 +1093,8 @@ class FlasherQtBridge(QObject):
                 self._log(f"IMAGE_REFUSED {reasons}")
                 raise FlashError(reasons)
             self._log(f"IMAGE_DIGEST_{'VERIFIED' if check.verified else 'RECORDED'} {check.sha256}")
+            if check.release_signature in ("signed", "unsigned"):
+                self._log(f"IMAGE_RELEASE_{check.release_signature.upper()}")
             flasher = URTCFlasher(
                 self._transport, log=self._log, progress_cb=self._flashProgress.emit,
                 stop_flag=lambda: self._cancel_requested,

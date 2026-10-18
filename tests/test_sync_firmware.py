@@ -101,7 +101,7 @@ def test_the_release_assets_are_downloaded_and_then_synced(tmp_path, dest):
     fake = FakeRelease(assets)
     work = tmp_path / "work"
     work.mkdir()
-    tag = sync_firmware.download_release(work, "v0.3.5", fetch=fake.fetch, download=fake.download)
+    tag = sync_firmware.download_release(work, "v0.3.5", fetch=fake.fetch, download=fake.download, allow_unsigned=True)
     assert tag == "v0.3.5" and fake.asked_tag == "v0.3.5"
     assert "URTC_MAIN_FIRMWARE_v0.3.5.hex" not in fake.downloaded
     assert len(fake.downloaded) == 1 + 2 * 3
@@ -116,7 +116,7 @@ def test_a_release_that_lacks_an_asset_is_reported(tmp_path, dest):
     work = tmp_path / "work"
     work.mkdir()
     with pytest.raises(SystemExit) as info:
-        sync_firmware.download_release(work, None, fetch=fake.fetch, download=fake.download)
+        sync_firmware.download_release(work, None, fetch=fake.fetch, download=fake.download, allow_unsigned=True)
     assert "SLAVE_FIRMWARE_v0.1.9.bin.manifest.json" in str(info.value)
 
 
@@ -128,7 +128,9 @@ def test_the_default_mode_downloads_the_latest_release(tmp_path, dest, monkeypat
     import flasher_github
     monkeypatch.setattr(flasher_github, "fetch_release", fake.fetch)
     monkeypatch.setattr(flasher_github, "download_file", fake.download)
-    assert sync_firmware.main(["sync_firmware.py"]) == 0
+    assert sync_firmware.main(["sync_firmware.py"]) == 1  # no release signatures in this set
+    assert "--allow-unsigned" in capsys.readouterr().out
+    assert sync_firmware.main(["sync_firmware.py", "--allow-unsigned"]) == 0
     assert fake.asked_tag is None
     assert "release v0.3.5" in capsys.readouterr().out
     assert sync_firmware.check(dest) == [] and len(list(dest.iterdir())) == 6
@@ -144,3 +146,70 @@ def test_a_download_failure_is_reported_without_a_traceback_and_firmware_is_unto
     assert sync_firmware.main(["sync_firmware.py", "--release", "v0.3.4"]) == 1
     assert "no network" in capsys.readouterr().out
     assert [p.name for p in dest.iterdir()] == ["URTC_OLD_FIRMWARE_v0.0.1.bin"]
+
+
+try:
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+except ImportError:
+    Ed25519PrivateKey = None
+
+
+def _sign_set(folder: Path, key, only=None, wrong_for=None):
+    """Writes <file>.sig for every file of the set, with a throwaway key."""
+    import flasher_release_signature as sig
+
+    for path in sorted(folder.iterdir()):
+        if path.suffix == ".sig" or (only and path.name not in only):
+            continue
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        name = "other.bin" if path.name == wrong_for else path.name
+        Path(str(path) + ".sig").write_text(key.sign(sig.release_message(name, digest)).hex() + "\n", encoding="ascii")
+
+
+@pytest.fixture
+def test_key(monkeypatch):
+    if Ed25519PrivateKey is None:
+        pytest.skip("cryptography is not installed")
+    import flasher_release_signature as sig
+    from cryptography.hazmat.primitives import serialization
+
+    key = Ed25519PrivateKey.generate()
+    monkeypatch.setattr(sig, "PUBLIC_KEY_HEX", key.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw).hex())
+    return key
+
+
+def test_a_signed_release_is_accepted_and_its_signatures_are_kept(tmp_path, dest, test_key):
+    assets = tmp_path / "assets"
+    _release_set(assets)
+    _sign_set(assets, test_key)
+    fake = FakeRelease(assets)
+    work = tmp_path / "work"
+    work.mkdir()
+    sync_firmware.download_release(work, "v0.3.5", fetch=fake.fetch, download=fake.download)
+    sync_firmware.sync(work)
+    assert sync_firmware.check(dest) == []
+    assert (dest / "URTC_MAIN_FIRMWARE_v0.3.5.bin.sig").is_file()
+
+
+def test_a_signature_of_another_file_or_key_is_refused_even_with_allow_unsigned(tmp_path, dest, test_key):
+    assets = tmp_path / "assets"
+    _release_set(assets)
+    _sign_set(assets, test_key, wrong_for="URTC_MAIN_FIRMWARE_v0.3.5.bin")
+    fake = FakeRelease(assets)
+    work = tmp_path / "work"
+    work.mkdir()
+    with pytest.raises(SystemExit) as info:
+        sync_firmware.download_release(work, "v0.3.5", fetch=fake.fetch, download=fake.download, allow_unsigned=True)
+    assert "does not match its release signature" in str(info.value)
+
+
+def test_a_release_with_only_some_signatures_is_refused_unless_unsigned_is_allowed(tmp_path, dest, test_key):
+    assets = tmp_path / "assets"
+    _release_set(assets)
+    _sign_set(assets, test_key, only={"URTC_MAIN_FIRMWARE_v0.3.5.bin"})
+    fake = FakeRelease(assets)
+    work = tmp_path / "work"
+    work.mkdir()
+    with pytest.raises(SystemExit) as info:
+        sync_firmware.download_release(work, "v0.3.5", fetch=fake.fetch, download=fake.download)
+    assert "no release signature" in str(info.value)

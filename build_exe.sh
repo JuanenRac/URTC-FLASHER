@@ -51,7 +51,7 @@ set -euo pipefail
 # only at the bottom of the file would never run in that case, since
 # `set -e` jumps straight past it). Reading into a throwaway variable
 # because `read -p` alone still needs somewhere to put its input.
-trap 'if [ -t 0 ] && [ "${HYDRA_UMC_CI:-}" != "1" ] && [ -z "${CI:-}" ]; then read -r -p "Press Enter to close..." _ || true; fi' EXIT
+trap 'if [ -t 0 ] && [ "${URTC_CI:-}" != "1" ] && [ -z "${CI:-}" ]; then read -r -p "Press Enter to close..." _ || true; fi' EXIT
 
 echo "[1/6] Checking for Python 3 and tkinter..."
 if ! command -v python3 >/dev/null 2>&1; then

@@ -24,7 +24,7 @@
 </p>
 
 
-**Version:** 0.3.1 (die Version dieses Tools selbst - angezeigt im
+**Version:** 0.3.2 (die Version dieses Tools selbst - angezeigt im
 Fenster-Banner und in der Titelleiste, getrennt verfolgt von der
 Firmware-Version der URTC-Platine, die es schreibt. Folgt einem
 X.Y.Z-Schema, bei dem die Patch-Nummer bei jedem echten Build über
@@ -176,6 +176,8 @@ python urtc_flasher.py --qtquick
 ~~~
 Es bietet das CAN-OTA-Update der Hauptplatine (der Auslöser für den Bootloader-Einstieg wird immer zuerst gesendet), die schreibgeschützte SWD/JTAG-Erkennung, Board Snapshot, die 4 Geräte-Konfigurationsschreibvorgänge und die vollständige SWD/JTAG-Chip-Programmierung (Löschen/Schreiben, Probelauf, Sicherung vor dem Löschen, RDP-Prüfung). Es hat **nicht** alles, was das Tkinter-Fenster hat: kein Erweiterungs-Slave-Ziel, keine Option „Platine ist bereits im Bootloader“, keine F-RAM-Löschoption, keine Downgrade-Freigabe, keine CAN-Firmware-Sicherung, keinen GitHub-Download, keine Bitratenwahl oder -erkennung (Serial/SLCAN wird mit 500 kbit/s geöffnet) und keine eigene Busaktivitätsprüfung. Verwenden Sie dafür die Standard-Tkinter-Oberfläche.
 
+Der Kopf des Qt-Quick-Fensters hat eine Sprachauswahl; die Auswahl wird gespeichert und gilt beim nächsten Start.
+
 Der bestehende CAN-OTA- und SWD/JTAG-Ablauf bleibt erhalten und liegt nun auf einer dunkelblau-cyanfarbenen Steueroberfläche: Produktkopf, kontrastreiche Verbindungskarte, lesbare Firmware-Tabellen, dunkles Prüfprotokoll und sichtbarer Fortschritt. Dies ist nur eine Änderung von Darstellung und Zugänglichkeit; das Bootloader-Protokoll bleibt unverändert, und nichts davon wurde auf einer echten Platine ausprobiert.
 
 ### Menüleiste
@@ -265,7 +267,7 @@ Dieses Tool erwartet einen `firmware/`-Ordner direkt neben
 │   ├── URTC_LOGO_FLASHER.svg      <- Banner-Quelle (Vektor)
 │   └── urtc_banner.png            <- oben im Fenster angezeigt, aus dem .svg oben gerendert
 ├── firmware/
-│   ├── URTC_MAIN_FIRMWARE_v0.3.3.bin  <- neue .bin-Dateien hier ablegen
+│   ├── URTC_MAIN_FIRMWARE_v<version>.bin  <- neue .bin-Dateien hier ablegen
 │   └── URTC_SLAVE_FIRMWARE_v0.1.9.bin        <- Anwendung des Erweiterungs-Slave-Chips, falls zutreffend
 ├── logs/                          <- automatisch erstellt, eine Datei pro Sitzung
 ├── urtc_config.json               <- optional, nicht standardmaessig enthalten (siehe "Den HMAC-Schluessel aendern" unten)
@@ -326,7 +328,7 @@ Grund:
 
 | Datei | Größe | Status |
 |---|---|---|
-| URTC_MAIN_FIRMWARE_v0.3.3.bin | 71.8 KB | ✓ sieht gültig aus |
+| URTC_MAIN_FIRMWARE_v<version>.bin | 71.8 KB | ✓ sieht gültig aus |
 | URTC_SLAVE_FIRMWARE_v0.1.9.bin | 33.9 KB | ✓ sieht gültig aus |
 | notes.txt.bin | 0.1 KB | ✗ erstes Wort sieht nicht wie ein gültiger Stack-Pointer aus |
 
@@ -367,13 +369,15 @@ Grund:
   eine Umgebungsvariable `GITHUB_TOKEN` hebt es an) - nichts hier
   benötigt ein GitHub-Konto.
 
+Jede Datei eines offiziellen Releases hat eine Release-Signatur (`<Datei>.sig`, Ed25519): Der Flasher prüft sie, wenn sie vorhanden ist, und lehnt eine falsche ab. Ein Satz ohne Signaturen, etwa eine Bench-Vorabversion, wird von `tools/sync_firmware.py` nur mit `--allow-unsigned` akzeptiert.
+
 **`<dateiname>.manifest.json` und `<dateiname>.sha256`, neben jeder
 Firmware-Datei** - vom URTC-Build für jedes Image veröffentlicht (und von
 GitHub zusammen damit heruntergeladen). Das Manifest enthält die Version,
 den `sha256` und bei Anwendungs-Images den `hmac_sha256`-Wert, den der Bootloader erwartet (ein HMAC-SHA256 mit gemeinsamem Schlüssel, keine asymmetrische Signatur; `signing_key_kind: dev` kennzeichnet den öffentlichen Entwicklungsschlüssel):
 
 ```json
-{"component": "main_application", "version": "0.3.3", "sha256": "b48d4cd5...", "hmac_sha256": "b63a701e...", "signing_key_kind": "dev"}
+{"component": "main_application", "version": "<version>", "sha256": "b48d4cd5...", "hmac_sha256": "b63a701e...", "signing_key_kind": "dev"}
 ```
 
 Beide Prüfsummen werden direkt vor dem Flashen geprüft, und eine
@@ -1032,7 +1036,7 @@ nicht erforderlich.
 │   ├── urtc_icon.ico              <- Taskleisten-/Fenstersymbol unter Windows
 │   └── urtc_icon.png              <- Taskleisten-/Fenstersymbol unter Linux
 ├── firmware/
-│   ├── URTC_MAIN_FIRMWARE_v0.3.3.bin     <- aktuelle Anwendungs-Firmware der Hauptplatine
+│   ├── URTC_MAIN_FIRMWARE_v<version>.bin     <- aktuelle Anwendungs-Firmware der Hauptplatine
 │   ├── URTC_MAIN_BOOTLOADER_v0.3.8.bin   <- Bootloader der Hauptplatine (nur SWD/JTAG, aus der
 │   │                                         CAN-OTA-Firmwareliste herausgefiltert - siehe Abschnitt 3 oben)
 │   ├── URTC_SLAVE_FIRMWARE_v0.1.9.bin    <- Anwendung des Erweiterungs-Slave-Chips (nur fortgeschrittene Erweiterungsplatinen)

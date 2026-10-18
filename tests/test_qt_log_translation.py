@@ -41,8 +41,8 @@ def test_an_unknown_line_is_returned_unchanged(monkeypatch):
 def test_every_token_the_deck_logs_has_a_label_in_every_language():
     source = (ROOT / "qt_flasher.py").read_text(encoding="utf-8")
     tokens = set(re.findall(r"""(?:_log|emit)\(\s*f?["']([A-Z][A-Z0-9_]+)""", source))
-    tokens = {t for t in tokens if not t.endswith("_")}  # IMAGE_DIGEST_{VERIFIED,RECORDED} is built from two parts and listed below
-    tokens |= {"IMAGE_DIGEST_VERIFIED", "IMAGE_DIGEST_RECORDED"}
+    tokens = {t for t in tokens if not t.endswith("_")}  # IMAGE_DIGEST_{VERIFIED,RECORDED} and IMAGE_RELEASE_{SIGNED,UNSIGNED} are built from two parts and listed below
+    tokens |= {"IMAGE_DIGEST_VERIFIED", "IMAGE_DIGEST_RECORDED", "IMAGE_RELEASE_SIGNED", "IMAGE_RELEASE_UNSIGNED"}
     assert {"PORT_SCAN", "FLASH_FAILED", "SWD_FLASH_STARTED", "IMAGE_REFUSED"} <= tokens
     for language in LANGUAGES:
         table = load_language(language)

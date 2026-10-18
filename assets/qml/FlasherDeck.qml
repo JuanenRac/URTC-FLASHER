@@ -135,6 +135,15 @@ ApplicationWindow {
                 }
                 Item { Layout.fillWidth: true }
                 Text { text: flasherBackend.status; color: flasherBackend.connected ? "#43db9b" : muted; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 11 }
+                ComboBox {
+                    id: languageBox
+                    model: flasherBackend.languageNames
+                    currentIndex: flasherBackend.languageIndex
+                    Layout.preferredWidth: 130
+                    font.pixelSize: 11
+                    onActivated: function(index) { languageNotice.text = flasherBackend.selectLanguage(index) }
+                }
+                Text { id: languageNotice; visible: text !== ""; color: "#e0b04a"; font.pixelSize: 10; Layout.maximumWidth: 220; wrapMode: Text.WordWrap }
                 Text { text: "v" + flasherBackend.version; color: muted; font.family: "Bahnschrift"; font.pixelSize: 10 }
             }
         }

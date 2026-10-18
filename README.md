@@ -24,7 +24,7 @@
 </p>
 
 
-**Version:** 0.3.1 (this tool's own version - shown in the window banner and
+**Version:** 0.3.2 (this tool's own version - shown in the window banner and
 title bar, tracked separately from the URTC board firmware version it
 writes. Follows an X.Y.Z scheme where the patch number bumps automatically
 on every real build via build_exe.bat/build_exe.sh - see CHANGELOG.md for
@@ -158,6 +158,8 @@ python urtc_flasher.py --qtquick
 ~~~
 It offers the CAN-OTA update of the main board (the bootloader-entry trigger is always sent first), read-only SWD/JTAG discovery, Board Snapshot, the 4 device-configuration writes, and full-chip SWD/JTAG programming (erase/write, dry run, back-up-before-erasing, RDP check). It does **not** have everything the Tkinter window has: there is no expansion-slave target, no "board is already in the bootloader" option, no F-RAM erase option, no downgrade authorisation, no CAN firmware backup, no GitHub download, no bitrate choice or auto-detection (Serial/SLCAN is opened at 500 kbit/s) and no dedicated bus-activity check. For those, use the default Tkinter interface.
 
+The header of the Qt Quick window has a language selector; the choice is saved and applies on the next start.
+
 The live flasher keeps its existing CAN-OTA and SWD/JTAG workflow, now on a dark navy/cyan command-deck surface: a product header, high-contrast connection card, readable firmware tables, dark verification log and visible progress channel. This is a visual and accessibility change only; it does not alter the bootloader protocol, and none of it has been tried on a real board.
 
 ### Menu bar
@@ -239,7 +241,7 @@ at this repository's own root:
 │   ├── URTC_LOGO_FLASHER.svg      <- banner source (vector)
 │   └── urtc_banner.png            <- shown at the top of the window, rendered from the .svg above
 ├── firmware/
-│   ├── URTC_MAIN_FIRMWARE_v0.3.3.bin  <- put new .bin files here
+│   ├── URTC_MAIN_FIRMWARE_v<version>.bin  <- put new .bin files here
 │   └── URTC_MAIN_FIRMWARE_v0.3.2.bin  <- can keep older versions around too
 ├── logs/                          <- created automatically, one file per session
 ├── urtc_config.json               <- optional, not included by default (see "Changing the HMAC key" below)
@@ -291,7 +293,7 @@ in the list with a clear ✓ or ✗ and the reason why:
 
 | File | Size | Status |
 |---|---|---|
-| URTC_MAIN_FIRMWARE_v0.3.3.bin | 71.8 KB | ✓ looks valid |
+| URTC_MAIN_FIRMWARE_v<version>.bin | 71.8 KB | ✓ looks valid |
 | URTC_SLAVE_FIRMWARE_v0.1.9.bin | 33.9 KB | ✓ looks valid |
 | notes.txt.bin | 0.1 KB | ✗ first word doesn't look like a valid stack pointer |
 
@@ -326,13 +328,15 @@ in the list with a clear ✓ or ✗ and the reason why:
   `GITHUB_TOKEN` environment variable raises it) - nothing here needs a
   GitHub account.
 
+Each file of an official release has a release signature (`<file>.sig`, Ed25519): the flasher verifies it when it is there and refuses a wrong one. A set without signatures, such as a bench pre-release, is accepted by `tools/sync_firmware.py` only with `--allow-unsigned`.
+
 **`<filename>.manifest.json` and `<filename>.sha256`, next to each firmware
 file** - published by the URTC build for every image (and downloaded
 together with it from GitHub). The manifest carries the version, the
 `sha256` and, for application images, the `hmac_sha256` value the bootloader expects (a shared-key HMAC-SHA256, not an asymmetric signature; `signing_key_kind: dev` marks the public development key):
 
 ```json
-{"component": "main_application", "version": "0.3.3", "sha256": "b48d4cd5...", "hmac_sha256": "b63a701e...", "signing_key_kind": "dev"}
+{"component": "main_application", "version": "<version>", "sha256": "b48d4cd5...", "hmac_sha256": "b63a701e...", "signing_key_kind": "dev"}
 ```
 
 Both digests are checked right before flashing and a mismatch **refuses the
@@ -900,7 +904,7 @@ from the SVG during development; it is not required to run the application.
 │   ├── urtc_icon.ico              <- Windows taskbar/window icon
 │   └── urtc_icon.png              <- Linux taskbar/window icon
 ├── firmware/
-│   ├── URTC_MAIN_FIRMWARE_v0.3.3.bin     <- current main-board application firmware
+│   ├── URTC_MAIN_FIRMWARE_v<version>.bin     <- current main-board application firmware
 │   ├── URTC_MAIN_BOOTLOADER_v0.3.8.bin   <- main-board bootloader (SWD/JTAG only, filtered out of
 │   │                                         the CAN-OTA firmware list - see section 3 above)
 │   ├── URTC_SLAVE_FIRMWARE_v0.1.9.bin    <- expansion slave application (advanced expansion boards only)

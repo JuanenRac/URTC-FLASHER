@@ -20,6 +20,14 @@ increments instead (e.g. `0.1.9` -> `0.2.0`), and the same carry applies
 from `MINOR` into `MAJOR`. Running the tool from source (not through a
 build script) never changes the version - only a real build does.
 
+## [0.3.2] - Release signatures, shared protocol constants and a language selector
+
+- Release signatures: every file of an official release has an Ed25519 signature (<file>.sig) by the key of the releases. The flasher carries the public key and checks <image>.sig before a flash (a wrong signature blocks the update, a missing one is reported as the image of a bench pre-release), and tools/sync_firmware.py checks every file it downloads, refusing a wrong signature and requiring --allow-unsigned for a set that has none.
+- The CAN identifiers, the hardware ids, the flash page size and the erase-memory magic bytes are now aliases of the generated protocol module (urtc_can/protocol.py, a copy of URTC-COMMON kept honest by a lock file); a new test fails when the copy is edited by hand or falls behind, and the shared conformance vectors are refreshed.
+- The header of the Qt Quick window has a language selector (the eight languages); the choice is saved and applies on the next start. The new log lines are translated in the eight languages.
+- The README examples no longer name a fixed bundled firmware version.
+- The build and run scripts read URTC_CI as their non-interactive switch.
+
 ## [0.3.1] - Claims aligned with what has been tested
 
 - Maturity is functional: nothing here has been verified on real hardware yet.

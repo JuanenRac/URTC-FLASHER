@@ -24,7 +24,7 @@
 </p>
 
 
-**版本：** 0.3.1（本工具自身的版本——显示在窗口横幅和标题栏中，与它所写入的
+**版本：** 0.3.2（本工具自身的版本——显示在窗口横幅和标题栏中，与它所写入的
 URTC 板卡固件版本分开跟踪。遵循 X.Y.Z 方案，其中补丁号在每次通过
 build_exe.bat/build_exe.sh 进行的真实构建时自动递增——版本历史见
 CHANGELOG.md，确切的进位规则见 bump_version.py）
@@ -143,6 +143,8 @@ python urtc_flasher.py --qtquick
 ~~~
 它提供主板的 CAN-OTA 更新（始终先发送进入引导程序的触发）、只读 SWD/JTAG 探测、Board Snapshot、4 项设备配置写入，以及完整的 SWD/JTAG 芯片编程（擦除/写入、演练模式、擦除前备份、RDP 检查）。它**并不**具备 Tkinter 窗口的全部功能：没有扩展从属目标、没有“板卡已在引导程序中”选项、没有 F-RAM 擦除选项、没有降级授权、没有 CAN 固件备份、没有 GitHub 下载、没有比特率选择或自动检测（Serial/SLCAN 以 500 kbit/s 打开），也没有专门的总线活动检查。这些功能请使用默认的 Tkinter 界面。
 
+Qt Quick 窗口的标题栏有语言选择器；所选语言会被保存，并在下次启动时生效。
+
 现有的 CAN-OTA 与 SWD/JTAG 流程保持不变，现在使用深海军蓝/青色控制界面：产品标题、高对比度连接卡、清晰的固件表格、深色验证日志以及可见的进度通道。这只是视觉与可访问性改动，不会改变 bootloader 协议，其中任何内容也从未在真实板卡上试过。
 
 ### 菜单栏
@@ -209,7 +211,7 @@ SocketCAN 没有这个特定的坑——访问一个类似 `can0` 的接口不�
 │   ├── URTC_LOGO_FLASHER.svg      <- 横幅源文件（矢量图）
 │   └── urtc_banner.png            <- 显示在窗口顶部，由上方的 .svg 渲染而成
 ├── firmware/
-│   ├── URTC_MAIN_FIRMWARE_v0.3.3.bin  <- 将新的 .bin 文件放在这里
+│   ├── URTC_MAIN_FIRMWARE_v<version>.bin  <- 将新的 .bin 文件放在这里
 │   └── URTC_MAIN_FIRMWARE_v0.3.2.bin  <- 也可以保留旧版本
 ├── logs/                          <- 自动创建，每个会话一个文件
 ├── urtc_config.json               <- 可选，默认不包含（见下方“更改 HMAC 密钥”）
@@ -256,7 +258,7 @@ Python 都自带）加载，而非 Pillow，因此不会增加新的依赖。`bu
 
 | 文件 | 大小 | 状态 |
 |---|---|---|
-| URTC_MAIN_FIRMWARE_v0.3.3.bin | 71.8 KB | ✓ 看起来有效 |
+| URTC_MAIN_FIRMWARE_v<version>.bin | 71.8 KB | ✓ 看起来有效 |
 | URTC_SLAVE_FIRMWARE_v0.1.9.bin | 33.9 KB | ✓ 看起来有效 |
 | notes.txt.bin | 0.1 KB | ✗ 第一个字看起来不像一个有效的堆栈指针 |
 
@@ -283,13 +285,15 @@ Python 都自带）加载，而非 Pillow，因此不会增加新的依赖。`bu
   变量 `GITHUB_TOKEN` 可以提高该限制）——这里的任何内容都不需要 GitHub
   账户。
 
+正式发布的每个文件都有发布签名（`<文件>.sig`，Ed25519）：刷写器在签名存在时会验证，并拒绝错误的签名。没有签名的文件集（例如试验台预发布版）只有加上 `--allow-unsigned` 才会被 `tools/sync_firmware.py` 接受。
+
 **与每个固件文件放在一起的 `<filename>.manifest.json` 和
 `<filename>.sha256`**——由 URTC 构建为每个镜像发布（从 GitHub 下载时会一并
 下载）。清单包含版本、`sha256`，对于应用镜像还包含引导程序期望的
 `hmac_sha256` 值（共享密钥的 HMAC-SHA256，并非非对称签名；`signing_key_kind: dev` 表示公开的开发密钥）：
 
 ```json
-{"component": "main_application", "version": "0.3.3", "sha256": "b48d4cd5...", "hmac_sha256": "b63a701e...", "signing_key_kind": "dev"}
+{"component": "main_application", "version": "<version>", "sha256": "b48d4cd5...", "hmac_sha256": "b63a701e...", "signing_key_kind": "dev"}
 ```
 
 刷写前会立即校验这两个摘要，不一致时会在向总线发送任何数据之前**拒绝刷写**
@@ -748,7 +752,7 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 │   ├── urtc_icon.ico              <- Windows 任务栏/窗口图标
 │   └── urtc_icon.png              <- Linux 任务栏/窗口图标
 ├── firmware/
-│   ├── URTC_MAIN_FIRMWARE_v0.3.3.bin     <- 当前的主板应用固件
+│   ├── URTC_MAIN_FIRMWARE_v<version>.bin     <- 当前的主板应用固件
 │   ├── URTC_MAIN_BOOTLOADER_v0.3.8.bin   <- 主板引导程序（仅限 SWD/JTAG，从 CAN-OTA
 │   │                                         固件列表中过滤掉——见上方第 3 节）
 │   ├── URTC_SLAVE_FIRMWARE_v0.1.9.bin    <- 扩展从属应用程序（仅限高级扩展板）

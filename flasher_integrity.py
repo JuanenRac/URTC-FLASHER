@@ -21,6 +21,8 @@ import re
 import zlib
 from dataclasses import dataclass, field
 
+import flasher_release_signature as release_signature
+
 _SHA256_RE = re.compile(r"^[0-9a-fA-F]{64}$")
 _CRC32_RE = re.compile(r"^(?:0x)?[0-9a-fA-F]{1,8}$")
 
@@ -115,6 +117,7 @@ class Preflight:
     verified: bool
     sha256: str = ""
     reasons: tuple[str, ...] = field(default_factory=tuple)
+    release_signature: str = ""  # "signed", "unsigned" (no <image>.sig) or "invalid"
 
 
 def read_manifest_sha256(path: str) -> str | None:
@@ -145,17 +148,23 @@ def manifest_signing_kind(path: str) -> str | None:
 
 def preflight_image(path: str) -> Preflight:
     """Every published digest (`<image>.sha256` and the manifest's sha256)
-    must match the image, and must agree with each other."""
+    must match the image, and must agree with each other. A release signature
+    (`<image>.sig`) next to the image must verify against the pinned key of the
+    releases; a missing one is only an error once the transition is over
+    (flasher_release_signature.REQUIRE_RELEASE_SIGNATURE)."""
+    status = release_signature.check_file(path)
+    refused = release_signature.refusal(status)
     sidecar = read_sidecar_sha256(path)
     declared = read_manifest_sha256(path)
     if sidecar and declared and sidecar != declared:
-        return Preflight(True, False, "", (f"{path}.sha256 ({sidecar}) and its manifest ({declared}) disagree",))
+        return Preflight(True, False, "", (f"{path}.sha256 ({sidecar}) and its manifest ({declared}) disagree",), status.state)
     expected = sidecar or declared
     if expected is None:
         try:
             sha, _crc = _digests(path)
         except OSError as exc:
-            return Preflight(True, False, "", (f"cannot read the image: {exc}",))
-        return Preflight(False, False, sha)
+            return Preflight(True, False, "", (f"cannot read the image: {exc}",), status.state)
+        return Preflight(refused is not None, False, sha, (refused,) if refused else (), status.state)
     result = verify_image(path, expected)
-    return Preflight(not result.ok, result.ok, result.sha256, result.reasons)
+    reasons = result.reasons + ((refused,) if refused else ())
+    return Preflight(bool(reasons) or not result.ok, result.ok and not refused, result.sha256, reasons, status.state)

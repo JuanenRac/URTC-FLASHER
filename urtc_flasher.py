@@ -165,6 +165,7 @@ def run_cli(argv):
         _cli_log("ERROR: the image was refused: " + "; ".join(check.reasons))
         return 2
     _cli_log(("Image digest verified: " if check.verified else "Image digest (no published digest to compare): ") + check.sha256)
+    _cli_log({"signed": "Release signature verified.", "unsigned": "No release signature (image of a bench pre-release)."}.get(check.release_signature, ""))
 
     transport = None
     try:

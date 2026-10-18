@@ -27,10 +27,10 @@ echo ***************************************************************************
 echo.
 REM HYDRA_UMC_SCRIPT_STANDARD_BANNER_END
 setlocal EnableDelayedExpansion
-rem Keep the window open for people, never in automation (CI / HYDRA_UMC_CI).
+rem Keep the window open for people, never in automation (CI / URTC_CI).
 set "KEEP_OPEN=pause"
 if defined CI set "KEEP_OPEN=ver >nul"
-if "%HYDRA_UMC_CI%"=="1" set "KEEP_OPEN=ver >nul"
+if "%URTC_CI%"=="1" set "KEEP_OPEN=ver >nul"
 echo [1/6] Installing Python dependencies...
 python -m pip install --upgrade pip >nul
 python -m pip install -r requirements.txt

@@ -24,7 +24,7 @@
 </p>
 
 
-**Versão:** 0.3.1 (a versão desta própria ferramenta - mostrada no banner da
+**Versão:** 0.3.2 (a versão desta própria ferramenta - mostrada no banner da
 janela e na barra de título, acompanhada separadamente da versão do firmware
 da placa URTC que escreve. Segue um esquema X.Y.Z em que o número de patch
 sobe automaticamente em cada build real através de build_exe.bat/build_exe.sh
@@ -167,6 +167,8 @@ python urtc_flasher.py --qtquick
 ~~~
 Oferece a atualização CAN-OTA da placa principal (o disparador de entrada no bootloader é sempre enviado primeiro), a descoberta SWD/JTAG só de leitura, Board Snapshot, as 4 escritas de configuração do dispositivo e a programação completa do chip por SWD/JTAG (apagar/escrever, simulação, cópia de segurança antes de apagar, verificação do RDP). **Não** tem tudo o que a janela Tkinter tem: não há destino escravo de expansão, nem a opção "a placa já está no bootloader", nem a opção de apagar a F-RAM, nem autorização de downgrade, nem cópia de segurança do firmware por CAN, nem transferência do GitHub, nem escolha ou deteção automática do débito (Serial/SLCAN abre-se a 500 kbit/s) e nenhuma verificação própria da atividade do barramento. Para isso, use a interface Tkinter por defeito.
 
+O cabeçalho da janela Qt Quick tem um seletor de idioma; a escolha é guardada e aplica-se no próximo arranque.
+
 O fluxo CAN-OTA e SWD/JTAG existente é mantido, agora numa superfície de painel de comando azul-marinho/ciano escura: um cabeçalho de produto, um cartão de ligação de alto contraste, tabelas de firmware legíveis, um registo de verificação escuro e um canal de progresso visível. Trata-se apenas de uma alteração visual e de acessibilidade; não altera o protocolo do bootloader e nada disto foi experimentado numa placa real.
 
 ### Barra de menus
@@ -248,7 +250,7 @@ na raiz deste mesmo repositório:
 │   ├── URTC_LOGO_FLASHER.svg      <- banner source (vector)
 │   └── urtc_banner.png            <- shown at the top of the window, rendered from the .svg above
 ├── firmware/
-│   ├── URTC_MAIN_FIRMWARE_v0.3.3.bin  <- put new .bin files here
+│   ├── URTC_MAIN_FIRMWARE_v<version>.bin  <- put new .bin files here
 │   └── URTC_MAIN_FIRMWARE_v0.3.2.bin  <- can keep older versions around too
 ├── logs/                          <- created automatically, one file per session
 ├── urtc_config.json               <- optional, not included by default (see "Changing the HMAC key" below)
@@ -301,7 +303,7 @@ tamanho tem de caber no slot principal). Cada ficheiro aparece na lista com um
 
 | Ficheiro | Tamanho | Estado |
 |---|---|---|
-| URTC_MAIN_FIRMWARE_v0.3.3.bin | 71.8 KB | ✓ parece válido |
+| URTC_MAIN_FIRMWARE_v<version>.bin | 71.8 KB | ✓ parece válido |
 | URTC_SLAVE_FIRMWARE_v0.1.9.bin | 33.9 KB | ✓ parece válido |
 | notes.txt.bin | 0.1 KB | ✗ a primeira palavra não parece um stack pointer válido |
 
@@ -339,13 +341,15 @@ tamanho tem de caber no slot principal). Cada ficheiro aparece na lista com um
   intervalo; uma variável de ambiente `GITHUB_TOKEN` aumenta-o) - nada
   aqui precisa de uma conta GitHub.
 
+Cada ficheiro de uma release oficial tem uma assinatura de release (`<ficheiro>.sig`, Ed25519): o flasher verifica-a quando existe e recusa uma errada. Um conjunto sem assinaturas, como uma pré-release de bancada, só é aceite por `tools/sync_firmware.py` com `--allow-unsigned`.
+
 **`<filename>.manifest.json` e `<filename>.sha256`, ao lado de cada ficheiro
 de firmware** - publicados pela build do URTC para cada imagem (e
 descarregados juntamente com ela do GitHub). O manifesto contém a versão, o
 `sha256` e, para imagens de aplicação, o valor `hmac_sha256` que o bootloader espera (um HMAC-SHA256 de chave partilhada, não uma assinatura assimétrica; `signing_key_kind: dev` indica a chave pública de desenvolvimento):
 
 ```json
-{"component": "main_application", "version": "0.3.3", "sha256": "b48d4cd5...", "hmac_sha256": "b63a701e...", "signing_key_kind": "dev"}
+{"component": "main_application", "version": "<version>", "sha256": "b48d4cd5...", "hmac_sha256": "b63a701e...", "signing_key_kind": "dev"}
 ```
 
 Ambos os digests são verificados mesmo antes da gravação e uma discrepância
@@ -943,7 +947,7 @@ aplicação.
 │   ├── urtc_icon.ico              <- Windows taskbar/window icon
 │   └── urtc_icon.png              <- Linux taskbar/window icon
 ├── firmware/
-│   ├── URTC_MAIN_FIRMWARE_v0.3.3.bin     <- current main-board application firmware
+│   ├── URTC_MAIN_FIRMWARE_v<version>.bin     <- current main-board application firmware
 │   ├── URTC_MAIN_BOOTLOADER_v0.3.8.bin   <- main-board bootloader (SWD/JTAG only, filtered out of
 │   │                                         the CAN-OTA firmware list - see section 3 above)
 │   ├── URTC_SLAVE_FIRMWARE_v0.1.9.bin    <- expansion slave application (advanced expansion boards only)

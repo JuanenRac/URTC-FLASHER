@@ -1,1165 +1,6384 @@
 {
- "format": 1,
- "about": "Cross-implementation CAN protocol vectors. Every URTC client that implements a vector must reproduce it byte for byte. Hex strings have no separators; ids are written 0xNNN. A vector may carry a note when the readers are allowed to differ.",
- "identifiers": [
-  {
-   "id": "0x095",
-   "names": {
-    "tester": "CAN_ID_IMPACT_EVENT",
-    "web": "CAN_ID_IMPACT_EVENT"
-   }
-  },
-  {
-   "id": "0x100",
-   "names": {
-    "tester": "CAN_ID_GLOBAL_STATUS",
-    "web": "CAN_ID_STATUS_LED_CMD"
-   }
-  },
-  {
-   "id": "0x110",
-   "names": {
-    "tester": "CAN_ID_QUERY_ACTIVE_TOOL",
-    "web": "CAN_ID_QUERY_ACTIVE_TOOL"
-   }
-  },
-  {
-   "id": "0x111",
-   "names": {
-    "tester": "CAN_ID_ACTIVE_TOOL_RESP",
-    "web": "CAN_ID_ACTIVE_TOOL_RESP"
-   }
-  },
-  {
-   "id": "0x120",
-   "names": {
-    "tester": "CAN_ID_MOTION_CMD",
-    "web": "CAN_ID_MOTION_CMD"
-   }
-  },
-  {
-   "id": "0x130",
-   "names": {
-    "tester": "CAN_ID_SOLDER_SETPOINT",
-    "web": "CAN_ID_SOLDER_SETPOINT"
-   }
-  },
-  {
-   "id": "0x131",
-   "names": {
-    "tester": "CAN_ID_SOLDER_FEEDER_RESET",
-    "web": "CAN_ID_SOLDER_FEEDER_RESET"
-   }
-  },
-  {
-   "id": "0x132",
-   "names": {
-    "tester": "CAN_ID_SOLDER_FEEDER_POS",
-    "web": "CAN_ID_SOLDER_FEEDER_QUERY"
-   }
-  },
-  {
-   "id": "0x135",
-   "names": {
-    "tester": "CAN_ID_SOLDER_TELEMETRY",
-    "web": "CAN_ID_SOLDER_TELEMETRY"
-   }
-  },
-  {
-   "id": "0x140",
-   "names": {
-    "tester": "CAN_ID_DRILL_CMD",
-    "web": "CAN_ID_DRILL_CMD"
-   }
-  },
-  {
-   "id": "0x145",
-   "names": {
-    "tester": "CAN_ID_VACUUM_TELEMETRY",
-    "web": "CAN_ID_VACUUM_TELEMETRY"
-   }
-  },
-  {
-   "id": "0x147",
-   "names": {
-    "tester": "CAN_ID_DRILL_TELEMETRY",
-    "web": "CAN_ID_DRILL_TELEMETRY"
-   }
-  },
-  {
-   "id": "0x150",
-   "names": {
-    "tester": "CAN_ID_AOI_CMD",
-    "web": "CAN_ID_AOI_CMD"
-   }
-  },
-  {
-   "id": "0x155",
-   "names": {
-    "tester": "CAN_ID_AOI_TELEMETRY",
-    "web": "CAN_ID_AOI_TELEMETRY"
-   }
-  },
-  {
-   "id": "0x160",
-   "names": {
-    "tester": "CAN_ID_LASER_CMD",
-    "web": "CAN_ID_LASER_CMD"
-   }
-  },
-  {
-   "id": "0x165",
-   "names": {
-    "tester": "CAN_ID_LASER_TELEMETRY",
-    "web": "CAN_ID_LASER_TELEMETRY"
-   }
-  },
-  {
-   "id": "0x170",
-   "names": {
-    "tester": "CAN_ID_3DP_THERMAL_MOTION",
-    "web": "CAN_ID_3DP_THERMAL_MOTION"
-   }
-  },
-  {
-   "id": "0x173",
-   "names": {
-    "tester": "CAN_ID_3DP_LAYER_FAN_CMD",
-    "web": "CAN_ID_3DP_LAYERFAN_CMD"
-   }
-  },
-  {
-   "id": "0x175",
-   "names": {
-    "tester": "CAN_ID_3DP_HOTEND_TELEM",
-    "web": "CAN_ID_3DP_HOTEND_TELEMETRY"
-   }
-  },
-  {
-   "id": "0x177",
-   "names": {
-    "tester": "CAN_ID_3DP_LAYER_FAN_RPM",
-    "web": "CAN_ID_3DP_LAYERFAN_TELEMETRY"
-   }
-  },
-  {
-   "id": "0x178",
-   "names": {
-    "tester": "CAN_ID_3DP_HOTEND_FAN_CMD",
-    "web": "CAN_ID_3DP_HOTENDFAN_CMD"
-   }
-  },
-  {
-   "id": "0x179",
-   "names": {
-    "tester": "CAN_ID_3DP_HOTEND_FAN_RPM",
-    "web": "CAN_ID_3DP_HOTENDFAN_TELEMETRY"
-   }
-  },
-  {
-   "id": "0x180",
-   "names": {
-    "tester": "CAN_ID_EXP_SPI_CMD",
-    "web": "CAN_ID_EXPANSION_SPI_REQ"
-   }
-  },
-  {
-   "id": "0x181",
-   "names": {
-    "tester": "CAN_ID_EXP_SPI_RESP",
-    "web": "CAN_ID_EXPANSION_SPI_RESP"
-   }
-  },
-  {
-   "id": "0x182",
-   "names": {
-    "tester": "CAN_ID_QUERY_DIAG0",
-    "web": "CAN_ID_EXPANSION_DIAG0_REQ"
-   }
-  },
-  {
-   "id": "0x183",
-   "names": {
-    "tester": "CAN_ID_DIAG0_RESP",
-    "web": "CAN_ID_EXPANSION_DIAG0_RESP"
-   }
-  },
-  {
-   "id": "0x190",
-   "names": {
-    "flasher": "CAN_ID_QUERY_FRAM_STATE",
-    "tester": "CAN_ID_QUERY_FRAM_STATE",
-    "web": "CAN_ID_FRAM_QUERY"
-   }
-  },
-  {
-   "id": "0x191",
-   "names": {
-    "flasher": "CAN_ID_FRAM_STATE_RESP",
-    "tester": "CAN_ID_FRAM_STATE_RESP",
-    "web": "CAN_ID_FRAM_STATE_RESP"
-   }
-  },
-  {
-   "id": "0x192",
-   "names": {
-    "flasher": "CAN_ID_ERASE_FRAM",
-    "tester": "CAN_ID_ERASE_FRAM",
-    "web": "CAN_ID_ERASE_FRAM"
-   }
-  },
-  {
-   "id": "0x1A0",
-   "names": {
-    "flasher": "CAN_ID_SET_EXPANSION_TYPE",
-    "web": "CAN_ID_SET_EXPANSION_TYPE"
-   }
-  },
-  {
-   "id": "0x1A1",
-   "names": {
-    "flasher": "CAN_ID_EXPANSION_TYPE_RESP",
-    "tester": "CAN_ID_EXPANSION_TYPE_RESP",
-    "web": "CAN_ID_EXPANSION_TYPE_RESP"
-   }
-  },
-  {
-   "id": "0x1A2",
-   "names": {
-    "flasher": "CAN_ID_SET_FREE_TOOL",
-    "web": "CAN_ID_SET_FREE_TOOL"
-   }
-  },
-  {
-   "id": "0x1A3",
-   "names": {
-    "flasher": "CAN_ID_FREE_TOOL_CONFIG_RESP",
-    "tester": "CAN_ID_FREE_TOOL_CONFIG_RESP",
-    "web": "CAN_ID_FREE_TOOL_CONFIG_RESP"
-   }
-  },
-  {
-   "id": "0x1A4",
-   "names": {
-    "flasher": "CAN_ID_SET_DEVICE_SERIAL",
-    "web": "CAN_ID_SET_DEVICE_SERIAL"
-   }
-  },
-  {
-   "id": "0x1A5",
-   "names": {
-    "flasher": "CAN_ID_PERIPHERAL_INFO_RESP",
-    "tester": "CAN_ID_PERIPHERAL_INFO_RESP",
-    "web": "CAN_ID_PERIPHERAL_INFO_RESP"
-   }
-  },
-  {
-   "id": "0x1A6",
-   "names": {
-    "flasher": "CAN_ID_SET_MLX_VARIANT",
-    "web": "CAN_ID_SET_MLX_VARIANT"
-   }
-  },
-  {
-   "id": "0x1A7",
-   "names": {
-    "flasher": "CAN_ID_MLX_VARIANT_RESP",
-    "tester": "CAN_ID_MLX_VARIANT_RESP",
-    "web": "CAN_ID_MLX_VARIANT_RESP"
-   }
-  },
-  {
-   "id": "0x1B0",
-   "names": {
-    "tester": "CAN_ID_ELECTROMAGNET_CMD",
-    "web": "CAN_ID_ELECTROMAGNET_CMD"
-   }
-  },
-  {
-   "id": "0x1C0",
-   "names": {
-    "tester": "CAN_ID_SPOT_WELD_CMD",
-    "web": "CAN_ID_WELD_SPOT_CMD"
-   }
-  },
-  {
-   "id": "0x1D0",
-   "names": {
-    "tester": "CAN_ID_UV_CURING_CMD",
-    "web": "CAN_ID_UV_CURING_CMD"
-   }
-  },
-  {
-   "id": "0x1E0",
-   "names": {
-    "tester": "CAN_ID_HOTAIR_CMD",
-    "web": "CAN_ID_HOTAIR_CMD"
-   }
-  },
-  {
-   "id": "0x1F0",
-   "names": {
-    "tester": "CAN_ID_CRIMPING_CMD",
-    "web": "CAN_ID_CRIMPING_CMD"
-   }
-  },
-  {
-   "id": "0x200",
-   "names": {
-    "tester": "CAN_ID_ULTRASONIC_WELD_CMD",
-    "web": "CAN_ID_WELD_ULTRASONIC_CMD"
-   }
-  },
-  {
-   "id": "0x210",
-   "names": {
-    "flasher": "CAN_ID_SLAVE_ENTER_BOOTLOADER",
-    "web": "CAN_ID_SLAVE_ENTER_BOOTLOADER"
-   }
-  },
-  {
-   "id": "0x211",
-   "names": {
-    "flasher": "CAN_ID_SLAVE_START_UPDATE",
-    "web": "CAN_ID_SLAVE_START_UPDATE"
-   }
-  },
-  {
-   "id": "0x212",
-   "names": {
-    "flasher": "CAN_ID_SLAVE_HMAC_CHUNK",
-    "web": "CAN_ID_SLAVE_HMAC_CHUNK"
-   }
-  },
-  {
-   "id": "0x213",
-   "names": {
-    "flasher": "CAN_ID_SLAVE_DATA",
-    "web": "CAN_ID_SLAVE_DATA"
-   }
-  },
-  {
-   "id": "0x214",
-   "names": {
-    "flasher": "CAN_ID_SLAVE_END_UPDATE",
-    "web": "CAN_ID_SLAVE_END_UPDATE"
-   }
-  },
-  {
-   "id": "0x215",
-   "names": {
-    "flasher": "CAN_ID_SLAVE_STATUS",
-    "web": "CAN_ID_SLAVE_STATUS"
-   }
-  },
-  {
-   "id": "0x216",
-   "names": {
-    "flasher": "CAN_ID_SLAVE_PROGRESS",
-    "web": "CAN_ID_SLAVE_PROGRESS"
-   }
-  },
-  {
-   "id": "0x217",
-   "names": {
-    "flasher": "CAN_ID_SLAVE_VERSION_RESP_1",
-    "web": "CAN_ID_SLAVE_VERSION_RESP_1"
-   }
-  },
-  {
-   "id": "0x218",
-   "names": {
-    "flasher": "CAN_ID_SLAVE_VERSION_RESP_2",
-    "web": "CAN_ID_SLAVE_VERSION_RESP_2"
-   }
-  },
-  {
-   "id": "0x219",
-   "names": {
-    "flasher": "CAN_ID_SLAVE_VERIFY_FAIL_REASON",
-    "web": "CAN_ID_SLAVE_VERIFY_FAIL_REASON"
-   }
-  },
-  {
-   "id": "0x230",
-   "names": {
-    "tester": "CAN_ID_PASTE_JETTING_CONFIG",
-    "web": "CAN_ID_PASTE_JETTING_CONFIG"
-   }
-  },
-  {
-   "id": "0x231",
-   "names": {
-    "tester": "CAN_ID_PASTE_JETTING_PULSE",
-    "web": "CAN_ID_PASTE_JETTING_PULSE"
-   }
-  },
-  {
-   "id": "0x240",
-   "names": {
-    "tester": "CAN_ID_ADS1115_CONFIG",
-    "web": "CAN_ID_FLYING_PROBE_ADS_CONFIG"
-   }
-  },
-  {
-   "id": "0x241",
-   "names": {
-    "tester": "CAN_ID_ADS1115_TRIGGER",
-    "web": "CAN_ID_FLYING_PROBE_ADS_TRIGGER"
-   }
-  },
-  {
-   "id": "0x242",
-   "names": {
-    "tester": "CAN_ID_ADS1115_RESULT",
-    "web": "CAN_ID_FLYING_PROBE_ADS_RESULT"
-   }
-  },
-  {
-   "id": "0x243",
-   "names": {
-    "tester": "CAN_ID_FLYING_PROBE_BASIC",
-    "web": "CAN_ID_FLYING_PROBE_BASIC"
-   }
-  },
-  {
-   "id": "0x250",
-   "names": {
-    "tester": "CAN_ID_THERMAL_TRIGGER",
-    "web": "CAN_ID_THERMAL_TRIGGER"
-   }
-  },
-  {
-   "id": "0x251",
-   "names": {
-    "tester": "CAN_ID_THERMAL_STATUS",
-    "web": "CAN_ID_THERMAL_STATUS"
-   }
-  },
-  {
-   "id": "0x252",
-   "names": {
-    "tester": "CAN_ID_THERMAL_RAW_CHUNK_REQ",
-    "web": "CAN_ID_THERMAL_RAW_CHUNK_REQ"
-   }
-  },
-  {
-   "id": "0x253",
-   "names": {
-    "tester": "CAN_ID_THERMAL_RAW_CHUNK",
-    "web": "CAN_ID_THERMAL_RAW_CHUNK_RESP"
-   }
-  },
-  {
-   "id": "0x254",
-   "names": {
-    "tester": "CAN_ID_THERMAL_CALIB_CHUNK_REQ",
-    "web": "CAN_ID_THERMAL_CAL_CHUNK_REQ"
-   }
-  },
-  {
-   "id": "0x255",
-   "names": {
-    "tester": "CAN_ID_THERMAL_CALIB_CHUNK",
-    "web": "CAN_ID_THERMAL_CAL_CHUNK_RESP"
-   }
-  },
-  {
-   "id": "0x7E9",
-   "names": {
-    "flasher": "CAN_ID_VERSION_PATCH_RESPONSE",
-    "web": "CAN_ID_VERSION_PATCH_RESPONSE"
-   }
-  },
-  {
-   "id": "0x7F0",
-   "names": {
-    "flasher": "CAN_ID_ENTER_BOOTLOADER",
-    "web": "CAN_ID_ENTER_BOOTLOADER"
-   }
-  },
-  {
-   "id": "0x7F1",
-   "names": {
-    "flasher": "CAN_ID_START_UPDATE",
-    "web": "CAN_ID_START_UPDATE"
-   }
-  },
-  {
-   "id": "0x7F2",
-   "names": {
-    "flasher": "CAN_ID_DATA",
-    "web": "CAN_ID_DATA"
-   }
-  },
-  {
-   "id": "0x7F3",
-   "names": {
-    "flasher": "CAN_ID_PAGE_ACK",
-    "web": "CAN_ID_PAGE_ACK"
-   }
-  },
-  {
-   "id": "0x7F4",
-   "names": {
-    "flasher": "CAN_ID_END_UPDATE",
-    "web": "CAN_ID_END_UPDATE"
-   }
-  },
-  {
-   "id": "0x7F5",
-   "names": {
-    "flasher": "CAN_ID_STATUS",
-    "web": "CAN_ID_STATUS"
-   }
-  },
-  {
-   "id": "0x7F6",
-   "names": {
-    "flasher": "CAN_ID_HEARTBEAT",
-    "web": "CAN_ID_HEARTBEAT"
-   }
-  },
-  {
-   "id": "0x7F7",
-   "names": {
-    "flasher": "CAN_ID_HMAC_CHUNK",
-    "web": "CAN_ID_HMAC_CHUNK"
-   }
-  },
-  {
-   "id": "0x7F8",
-   "names": {
-    "flasher": "CAN_ID_QUERY_VERSION",
-    "tester": "CAN_ID_QUERY_VERSION",
-    "web": "CAN_ID_QUERY_VERSION"
-   }
-  },
-  {
-   "id": "0x7F9",
-   "names": {
-    "flasher": "CAN_ID_VERSION_RESPONSE",
-    "tester": "CAN_ID_VERSION_RESPONSE",
-    "web": "CAN_ID_VERSION_RESPONSE"
-   }
-  },
-  {
-   "id": "0x7FA",
-   "names": {
-    "flasher": "CAN_ID_BOOTLOADER_VERSION_RESPONSE",
-    "web": "CAN_ID_BOOTLOADER_VERSION_RESPONSE"
-   }
-  },
-  {
-   "id": "0x7FB",
-   "names": {
-    "flasher": "CAN_ID_QUERY_ERROR_COUNTERS",
-    "web": "CAN_ID_QUERY_ERROR_COUNTERS"
-   }
-  },
-  {
-   "id": "0x7FC",
-   "names": {
-    "flasher": "CAN_ID_ERROR_COUNTERS_RESPONSE",
-    "web": "CAN_ID_ERROR_COUNTERS_RESPONSE"
-   }
-  },
-  {
-   "id": "0x7FD",
-   "names": {
-    "flasher": "CAN_ID_AUTHORIZE_DOWNGRADE",
-    "web": "CAN_ID_AUTHORIZE_DOWNGRADE"
-   }
-  },
-  {
-   "id": "0x7FE",
-   "names": {
-    "flasher": "CAN_ID_READBACK",
-    "web": "CAN_ID_READBACK"
-   }
-  },
-  {
-   "id": "0x7FF",
-   "names": {
-    "flasher": "CAN_ID_READBACK_PAGE_ACK",
-    "web": "CAN_ID_READBACK_PAGE_ACK"
-   }
-  }
- ],
- "magic_payloads": [
-  {
-   "name": "enter_bootloader",
-   "id": "0x7F0",
-   "data": "B0071D5A"
-  },
-  {
-   "name": "authorize_downgrade",
-   "id": "0x7FD",
-   "data": "D09E12AD"
-  },
-  {
-   "name": "erase_fram",
-   "id": "0x192",
-   "data": "E3A5E0FF"
-  },
-  {
-   "name": "solder_feeder_reset",
-   "id": "0x131",
-   "data": "52535030"
-  }
- ],
- "slcan_encode": [
-  {
-   "id": "0x7F8",
-   "data": "00",
-   "line": "t7F8100"
-  },
-  {
-   "id": "0x7F0",
-   "data": "B0071D5A",
-   "line": "t7F04B0071D5A"
-  },
-  {
-   "id": "0x000",
-   "data": "",
-   "line": "t0000"
-  },
-  {
-   "id": "0x7FF",
-   "data": "0102030405060708",
-   "line": "t7FF80102030405060708"
-  },
-  {
-   "id": "0x100",
-   "data": "FF000A0B00000000",
-   "line": "t1008FF000A0B00000000"
-  },
-  {
-   "id": "0x1A4",
-   "data": "0A",
-   "line": "t1A410A"
-  }
- ],
- "slcan_encode_rejected": [
-  {
-   "id": "0x800",
-   "data": ""
-  },
-  {
-   "id": "0xFFF",
-   "data": "00"
-  },
-  {
-   "id": "0x100",
-   "data": "000102030405060708"
-  }
- ],
- "slcan_decode": [
-  {
-   "name": "active tool answer",
-   "line": "t1116010000000000",
-   "frame": {
-    "id": "0x111",
-    "data": "010000000000"
-   }
-  },
-  {
-   "name": "version answer",
-   "line": "t7F98000303CC01000003",
-   "frame": {
-    "id": "0x7F9",
-    "data": "000303CC01000003"
-   }
-  },
-  {
-   "name": "empty payload",
-   "line": "t1000",
-   "frame": {
-    "id": "0x100",
-    "data": ""
-   }
-  },
-  {
-   "name": "full eight bytes",
-   "line": "t7FF8FFFFFFFFFFFFFFFF",
-   "frame": {
-    "id": "0x7FF",
-    "data": "FFFFFFFFFFFFFFFF"
-   }
-  },
-  {
-   "name": "lower-case hex digits",
-   "line": "t1a6101",
-   "frame": {
-    "id": "0x1A6",
-    "data": "01"
-   }
-  },
-  {
-   "name": "DLC 9 is not a CAN 2.0 frame",
-   "line": "t1239010203040506070809",
-   "frame": null
-  },
-  {
-   "name": "DLC F is not a CAN 2.0 frame",
-   "line": "t123F000000000000000000000000000000",
-   "frame": null
-  },
-  {
-   "name": "truncated payload",
-   "line": "t11140102",
-   "frame": null
-  },
-  {
-   "name": "non-hex payload",
-   "line": "t1116ZZ0000000000",
-   "frame": null
-  },
-  {
-   "name": "non-hex identifier",
-   "line": "t1G10",
-   "frame": null
-  },
-  {
-   "name": "signed identifier",
-   "line": "t+1F0",
-   "frame": null
-  },
-  {
-   "name": "0x-prefixed identifier",
-   "line": "t0x10",
-   "frame": null
-  },
-  {
-   "name": "underscore in identifier",
-   "line": "t1_20",
-   "frame": null
-  },
-  {
-   "name": "empty line",
-   "line": "",
-   "frame": null
-  },
-  {
-   "name": "status character only",
-   "line": "z",
-   "frame": null
-  },
-  {
-   "name": "bare t",
-   "line": "t",
-   "frame": null
-  },
-  {
-   "name": "identifier cut short",
-   "line": "t11",
-   "frame": null
-  },
-  {
-   "name": "extended frame whose 29-bit id looks like 0x111",
-   "line": "T0000011180102030405060708",
-   "frame": null
-  },
-  {
-   "name": "extended frame without payload",
-   "line": "T000001110",
-   "frame": null
-  },
-  {
-   "name": "remote request, standard",
-   "line": "r1110",
-   "frame": null
-  },
-  {
-   "name": "remote request, extended",
-   "line": "R000001110",
-   "frame": null
-  },
-  {
-   "name": "adapter timestamp after the payload",
-   "line": "t11101234",
-   "frame": {
-    "id": "0x111",
-    "data": ""
-   },
-   "note": "Adapters with timestamps enabled append 4 hex digits after the payload. This protocol never enables them, so the readers may differ here; each client documents what it does."
-  }
- ],
- "quick_state": [
-  {
-   "name": "four-byte answer from firmware before the thermal guard",
-   "data": "0A000100",
-   "expect": {
-    "tool_id": 10,
-    "system_error": false,
-    "can_error": true,
-    "booting": false,
-    "thermal_fault": null,
-    "reset_cause": null,
-    "watchdog_reset": false
-   }
-  },
-  {
-   "name": "five bytes: thermal fault, no reset cause",
-   "data": "0A01000002",
-   "expect": {
-    "tool_id": 10,
-    "system_error": true,
-    "can_error": false,
-    "booting": false,
-    "thermal_fault": 2,
-    "reset_cause": null,
-    "watchdog_reset": false
-   }
-  },
-  {
-   "name": "six bytes: watchdog reset",
-   "data": "000000000001",
-   "expect": {
-    "tool_id": 0,
-    "system_error": false,
-    "can_error": false,
-    "booting": false,
-    "thermal_fault": 0,
-    "reset_cause": 1,
-    "watchdog_reset": true
-   }
-  },
-  {
-   "name": "six bytes: power-on reset, boot sequence running",
-   "data": "190000010108",
-   "expect": {
-    "tool_id": 25,
-    "system_error": false,
-    "can_error": false,
-    "booting": true,
-    "thermal_fault": 1,
-    "reset_cause": 8,
-    "watchdog_reset": false
-   }
-  },
-  {
-   "name": "three bytes is not an answer",
-   "data": "000000",
-   "expect": null
-  }
- ],
- "version_query": [
-  {
-   "name": "application with patch",
-   "frames": [
-    [
-     "0x7F9",
-     "000303CC01000003"
-    ],
-    [
-     "0x7E9",
-     "000500"
-    ]
-   ],
-   "expect": {
-    "responder": "application",
-    "hardware_id": "0x0303CC01",
-    "major": 0,
-    "minor": 3,
-    "patch": 5,
-    "patch_aware": true,
-    "accepts_patch_in_end_update": false
-   }
-  },
-  {
-   "name": "application that predates the patch frame",
-   "frames": [
-    [
-     "0x7F9",
-     "000303CC01000003"
-    ]
-   ],
-   "expect": {
-    "responder": "application",
-    "hardware_id": "0x0303CC01",
-    "major": 0,
-    "minor": 3,
-    "patch": null,
-    "patch_aware": false,
-    "accepts_patch_in_end_update": false
-   }
-  },
-  {
-   "name": "patch 0xFF means unknown but the board is patch-aware",
-   "frames": [
-    [
-     "0x7F9",
-     "000303CC01000003"
-    ],
-    [
-     "0x7E9",
-     "00FF00"
-    ]
-   ],
-   "expect": {
-    "responder": "application",
-    "hardware_id": "0x0303CC01",
-    "major": 0,
-    "minor": 3,
-    "patch": null,
-    "patch_aware": true,
-    "accepts_patch_in_end_update": false
-   }
-  },
-  {
-   "name": "bootloader with 0x7FA and a patch frame announcing the end-update patch",
-   "frames": [
-    [
-     "0x7F9",
-     "010303CC01000004"
-    ],
-    [
-     "0x7FA",
-     "000309"
-    ],
-    [
-     "0x7E9",
-     "010701"
-    ]
-   ],
-   "expect": {
-    "responder": "bootloader",
-    "hardware_id": "0x0303CC01",
-    "major": 0,
-    "minor": 4,
-    "patch": 7,
-    "patch_aware": true,
-    "accepts_patch_in_end_update": true,
-    "bootloader": [
-     0,
-     3,
-     9
-    ]
-   }
-  },
-  {
-   "name": "patch frame longer than 3 bytes: extra bytes ignored",
-   "frames": [
-    [
-     "0x7F9",
-     "000303CC01000003"
-    ],
-    [
-     "0x7E9",
-     "0009007F"
-    ]
-   ],
-   "expect": {
-    "responder": "application",
-    "hardware_id": "0x0303CC01",
-    "major": 0,
-    "minor": 3,
-    "patch": 9,
-    "patch_aware": true,
-    "accepts_patch_in_end_update": false
-   }
-  },
-  {
-   "name": "patch frame shorter than 3 bytes is not a patch frame",
-   "frames": [
-    [
-     "0x7F9",
-     "000303CC01000003"
-    ],
-    [
-     "0x7E9",
-     "0005"
-    ]
-   ],
-   "expect": {
-    "responder": "application",
-    "hardware_id": "0x0303CC01",
-    "major": 0,
-    "minor": 3,
-    "patch": null,
-    "patch_aware": false,
-    "accepts_patch_in_end_update": false
-   }
-  },
-  {
-   "name": "version answer shorter than 8 bytes gets no answer",
-   "frames": [
-    [
-     "0x7F9",
-     "000303CC010000"
-    ]
-   ],
-   "expect": null
-  }
- ],
- "minor_field": [
-  {
-   "minor": 3,
-   "patch": 5,
-   "bootloader_accepts_patch": true,
-   "expect": 34051
-  },
-  {
-   "minor": 3,
-   "patch": 5,
-   "bootloader_accepts_patch": false,
-   "expect": 3
-  },
-  {
-   "minor": 3,
-   "patch": null,
-   "bootloader_accepts_patch": true,
-   "expect": 3
-  },
-  {
-   "minor": 3,
-   "patch": 0,
-   "bootloader_accepts_patch": true,
-   "expect": 32771
-  },
-  {
-   "minor": 3,
-   "patch": 127,
-   "bootloader_accepts_patch": true,
-   "expect": 65283
-  },
-  {
-   "minor": 3,
-   "patch": 128,
-   "bootloader_accepts_patch": true,
-   "expect": 3
-  },
-  {
-   "minor": 255,
-   "patch": 1,
-   "bootloader_accepts_patch": true,
-   "expect": 33279
-  },
-  {
-   "minor": 3,
-   "patch": -1,
-   "bootloader_accepts_patch": true,
-   "expect": 3
-  }
- ],
- "version_order": [
-  {
-   "installed": [
-    0,
-    3,
-    5
-   ],
-   "candidate": [
-    0,
-    3,
-    5
-   ],
-   "expect": 0
-  },
-  {
-   "installed": [
-    0,
-    3,
-    5
-   ],
-   "candidate": [
-    0,
-    3,
-    6
-   ],
-   "expect": 1
-  },
-  {
-   "installed": [
-    0,
-    3,
-    5
-   ],
-   "candidate": [
-    0,
-    3,
-    4
-   ],
-   "expect": -1
-  },
-  {
-   "installed": [
-    0,
-    3,
-    null
-   ],
-   "candidate": [
-    0,
-    3,
-    4
-   ],
-   "expect": 0
-  },
-  {
-   "installed": [
-    0,
-    3,
-    5
-   ],
-   "candidate": [
-    0,
-    3,
-    null
-   ],
-   "expect": 0
-  },
-  {
-   "installed": [
-    0,
-    3,
-    9
-   ],
-   "candidate": [
-    0,
-    4,
-    0
-   ],
-   "expect": 1
-  },
-  {
-   "installed": [
-    0,
-    4,
-    0
-   ],
-   "candidate": [
-    0,
-    3,
-    9
-   ],
-   "expect": -1
-  },
-  {
-   "installed": [
-    1,
-    0,
-    0
-   ],
-   "candidate": [
-    0,
-    9,
-    9
-   ],
-   "expect": -1
-  },
-  {
-   "installed": [
-    0,
-    9,
-    9
-   ],
-   "candidate": [
-    1,
-    0,
-    0
-   ],
-   "expect": 1
-  }
- ]
+  "format": 2,
+  "about": "Cross-implementation CAN protocol vectors. Every URTC client that implements a vector must reproduce it byte for byte. Hex strings have no separators; ids are written 0xNNN. A vector may carry a note when the readers are allowed to differ. The sections up to version_order are written by hand; identifiers_all, frames_encode, frames_decode, frames_rejected and slcan_stream are generated from spec/can_protocol.json by tools/make_conformance.py.",
+  "identifiers": [
+    {
+      "id": "0x095",
+      "names": {
+        "tester": "CAN_ID_IMPACT_EVENT",
+        "web": "CAN_ID_IMPACT_EVENT"
+      }
+    },
+    {
+      "id": "0x100",
+      "names": {
+        "tester": "CAN_ID_GLOBAL_STATUS",
+        "web": "CAN_ID_STATUS_LED_CMD"
+      }
+    },
+    {
+      "id": "0x110",
+      "names": {
+        "tester": "CAN_ID_QUERY_ACTIVE_TOOL",
+        "web": "CAN_ID_QUERY_ACTIVE_TOOL"
+      }
+    },
+    {
+      "id": "0x111",
+      "names": {
+        "tester": "CAN_ID_ACTIVE_TOOL_RESP",
+        "web": "CAN_ID_ACTIVE_TOOL_RESP"
+      }
+    },
+    {
+      "id": "0x120",
+      "names": {
+        "tester": "CAN_ID_MOTION_CMD",
+        "web": "CAN_ID_MOTION_CMD"
+      }
+    },
+    {
+      "id": "0x130",
+      "names": {
+        "tester": "CAN_ID_SOLDER_SETPOINT",
+        "web": "CAN_ID_SOLDER_SETPOINT"
+      }
+    },
+    {
+      "id": "0x131",
+      "names": {
+        "tester": "CAN_ID_SOLDER_FEEDER_RESET",
+        "web": "CAN_ID_SOLDER_FEEDER_RESET"
+      }
+    },
+    {
+      "id": "0x132",
+      "names": {
+        "tester": "CAN_ID_SOLDER_FEEDER_POS",
+        "web": "CAN_ID_SOLDER_FEEDER_QUERY"
+      }
+    },
+    {
+      "id": "0x135",
+      "names": {
+        "tester": "CAN_ID_SOLDER_TELEMETRY",
+        "web": "CAN_ID_SOLDER_TELEMETRY"
+      }
+    },
+    {
+      "id": "0x140",
+      "names": {
+        "tester": "CAN_ID_DRILL_CMD",
+        "web": "CAN_ID_DRILL_CMD"
+      }
+    },
+    {
+      "id": "0x145",
+      "names": {
+        "tester": "CAN_ID_VACUUM_TELEMETRY",
+        "web": "CAN_ID_VACUUM_TELEMETRY"
+      }
+    },
+    {
+      "id": "0x147",
+      "names": {
+        "tester": "CAN_ID_DRILL_TELEMETRY",
+        "web": "CAN_ID_DRILL_TELEMETRY"
+      }
+    },
+    {
+      "id": "0x150",
+      "names": {
+        "tester": "CAN_ID_AOI_CMD",
+        "web": "CAN_ID_AOI_CMD"
+      }
+    },
+    {
+      "id": "0x155",
+      "names": {
+        "tester": "CAN_ID_AOI_TELEMETRY",
+        "web": "CAN_ID_AOI_TELEMETRY"
+      }
+    },
+    {
+      "id": "0x160",
+      "names": {
+        "tester": "CAN_ID_LASER_CMD",
+        "web": "CAN_ID_LASER_CMD"
+      }
+    },
+    {
+      "id": "0x165",
+      "names": {
+        "tester": "CAN_ID_LASER_TELEMETRY",
+        "web": "CAN_ID_LASER_TELEMETRY"
+      }
+    },
+    {
+      "id": "0x170",
+      "names": {
+        "tester": "CAN_ID_3DP_THERMAL_MOTION",
+        "web": "CAN_ID_3DP_THERMAL_MOTION"
+      }
+    },
+    {
+      "id": "0x173",
+      "names": {
+        "tester": "CAN_ID_3DP_LAYER_FAN_CMD",
+        "web": "CAN_ID_3DP_LAYERFAN_CMD"
+      }
+    },
+    {
+      "id": "0x175",
+      "names": {
+        "tester": "CAN_ID_3DP_HOTEND_TELEM",
+        "web": "CAN_ID_3DP_HOTEND_TELEMETRY"
+      }
+    },
+    {
+      "id": "0x177",
+      "names": {
+        "tester": "CAN_ID_3DP_LAYER_FAN_RPM",
+        "web": "CAN_ID_3DP_LAYERFAN_TELEMETRY"
+      }
+    },
+    {
+      "id": "0x178",
+      "names": {
+        "tester": "CAN_ID_3DP_HOTEND_FAN_CMD",
+        "web": "CAN_ID_3DP_HOTENDFAN_CMD"
+      }
+    },
+    {
+      "id": "0x179",
+      "names": {
+        "tester": "CAN_ID_3DP_HOTEND_FAN_RPM",
+        "web": "CAN_ID_3DP_HOTENDFAN_TELEMETRY"
+      }
+    },
+    {
+      "id": "0x180",
+      "names": {
+        "tester": "CAN_ID_EXP_SPI_CMD",
+        "web": "CAN_ID_EXPANSION_SPI_REQ"
+      }
+    },
+    {
+      "id": "0x181",
+      "names": {
+        "tester": "CAN_ID_EXP_SPI_RESP",
+        "web": "CAN_ID_EXPANSION_SPI_RESP"
+      }
+    },
+    {
+      "id": "0x182",
+      "names": {
+        "tester": "CAN_ID_QUERY_DIAG0",
+        "web": "CAN_ID_EXPANSION_DIAG0_REQ"
+      }
+    },
+    {
+      "id": "0x183",
+      "names": {
+        "tester": "CAN_ID_DIAG0_RESP",
+        "web": "CAN_ID_EXPANSION_DIAG0_RESP"
+      }
+    },
+    {
+      "id": "0x190",
+      "names": {
+        "flasher": "CAN_ID_QUERY_FRAM_STATE",
+        "tester": "CAN_ID_QUERY_FRAM_STATE",
+        "web": "CAN_ID_FRAM_QUERY"
+      }
+    },
+    {
+      "id": "0x191",
+      "names": {
+        "flasher": "CAN_ID_FRAM_STATE_RESP",
+        "tester": "CAN_ID_FRAM_STATE_RESP",
+        "web": "CAN_ID_FRAM_STATE_RESP"
+      }
+    },
+    {
+      "id": "0x192",
+      "names": {
+        "flasher": "CAN_ID_ERASE_FRAM",
+        "tester": "CAN_ID_ERASE_FRAM",
+        "web": "CAN_ID_ERASE_FRAM"
+      }
+    },
+    {
+      "id": "0x1A0",
+      "names": {
+        "flasher": "CAN_ID_SET_EXPANSION_TYPE",
+        "web": "CAN_ID_SET_EXPANSION_TYPE"
+      }
+    },
+    {
+      "id": "0x1A1",
+      "names": {
+        "flasher": "CAN_ID_EXPANSION_TYPE_RESP",
+        "tester": "CAN_ID_EXPANSION_TYPE_RESP",
+        "web": "CAN_ID_EXPANSION_TYPE_RESP"
+      }
+    },
+    {
+      "id": "0x1A2",
+      "names": {
+        "flasher": "CAN_ID_SET_FREE_TOOL",
+        "web": "CAN_ID_SET_FREE_TOOL"
+      }
+    },
+    {
+      "id": "0x1A3",
+      "names": {
+        "flasher": "CAN_ID_FREE_TOOL_CONFIG_RESP",
+        "tester": "CAN_ID_FREE_TOOL_CONFIG_RESP",
+        "web": "CAN_ID_FREE_TOOL_CONFIG_RESP"
+      }
+    },
+    {
+      "id": "0x1A4",
+      "names": {
+        "flasher": "CAN_ID_SET_DEVICE_SERIAL",
+        "web": "CAN_ID_SET_DEVICE_SERIAL"
+      }
+    },
+    {
+      "id": "0x1A5",
+      "names": {
+        "flasher": "CAN_ID_PERIPHERAL_INFO_RESP",
+        "tester": "CAN_ID_PERIPHERAL_INFO_RESP",
+        "web": "CAN_ID_PERIPHERAL_INFO_RESP"
+      }
+    },
+    {
+      "id": "0x1A6",
+      "names": {
+        "flasher": "CAN_ID_SET_MLX_VARIANT",
+        "web": "CAN_ID_SET_MLX_VARIANT"
+      }
+    },
+    {
+      "id": "0x1A7",
+      "names": {
+        "flasher": "CAN_ID_MLX_VARIANT_RESP",
+        "tester": "CAN_ID_MLX_VARIANT_RESP",
+        "web": "CAN_ID_MLX_VARIANT_RESP"
+      }
+    },
+    {
+      "id": "0x1B0",
+      "names": {
+        "tester": "CAN_ID_ELECTROMAGNET_CMD",
+        "web": "CAN_ID_ELECTROMAGNET_CMD"
+      }
+    },
+    {
+      "id": "0x1C0",
+      "names": {
+        "tester": "CAN_ID_SPOT_WELD_CMD",
+        "web": "CAN_ID_WELD_SPOT_CMD"
+      }
+    },
+    {
+      "id": "0x1D0",
+      "names": {
+        "tester": "CAN_ID_UV_CURING_CMD",
+        "web": "CAN_ID_UV_CURING_CMD"
+      }
+    },
+    {
+      "id": "0x1E0",
+      "names": {
+        "tester": "CAN_ID_HOTAIR_CMD",
+        "web": "CAN_ID_HOTAIR_CMD"
+      }
+    },
+    {
+      "id": "0x1F0",
+      "names": {
+        "tester": "CAN_ID_CRIMPING_CMD",
+        "web": "CAN_ID_CRIMPING_CMD"
+      }
+    },
+    {
+      "id": "0x200",
+      "names": {
+        "tester": "CAN_ID_ULTRASONIC_WELD_CMD",
+        "web": "CAN_ID_WELD_ULTRASONIC_CMD"
+      }
+    },
+    {
+      "id": "0x210",
+      "names": {
+        "flasher": "CAN_ID_SLAVE_ENTER_BOOTLOADER",
+        "web": "CAN_ID_SLAVE_ENTER_BOOTLOADER"
+      }
+    },
+    {
+      "id": "0x211",
+      "names": {
+        "flasher": "CAN_ID_SLAVE_START_UPDATE",
+        "web": "CAN_ID_SLAVE_START_UPDATE"
+      }
+    },
+    {
+      "id": "0x212",
+      "names": {
+        "flasher": "CAN_ID_SLAVE_HMAC_CHUNK",
+        "web": "CAN_ID_SLAVE_HMAC_CHUNK"
+      }
+    },
+    {
+      "id": "0x213",
+      "names": {
+        "flasher": "CAN_ID_SLAVE_DATA",
+        "web": "CAN_ID_SLAVE_DATA"
+      }
+    },
+    {
+      "id": "0x214",
+      "names": {
+        "flasher": "CAN_ID_SLAVE_END_UPDATE",
+        "web": "CAN_ID_SLAVE_END_UPDATE"
+      }
+    },
+    {
+      "id": "0x215",
+      "names": {
+        "flasher": "CAN_ID_SLAVE_STATUS",
+        "web": "CAN_ID_SLAVE_STATUS"
+      }
+    },
+    {
+      "id": "0x216",
+      "names": {
+        "flasher": "CAN_ID_SLAVE_PROGRESS",
+        "web": "CAN_ID_SLAVE_PROGRESS"
+      }
+    },
+    {
+      "id": "0x217",
+      "names": {
+        "flasher": "CAN_ID_SLAVE_VERSION_RESP_1",
+        "web": "CAN_ID_SLAVE_VERSION_RESP_1"
+      }
+    },
+    {
+      "id": "0x218",
+      "names": {
+        "flasher": "CAN_ID_SLAVE_VERSION_RESP_2",
+        "web": "CAN_ID_SLAVE_VERSION_RESP_2"
+      }
+    },
+    {
+      "id": "0x219",
+      "names": {
+        "flasher": "CAN_ID_SLAVE_VERIFY_FAIL_REASON",
+        "web": "CAN_ID_SLAVE_VERIFY_FAIL_REASON"
+      }
+    },
+    {
+      "id": "0x230",
+      "names": {
+        "tester": "CAN_ID_PASTE_JETTING_CONFIG",
+        "web": "CAN_ID_PASTE_JETTING_CONFIG"
+      }
+    },
+    {
+      "id": "0x231",
+      "names": {
+        "tester": "CAN_ID_PASTE_JETTING_PULSE",
+        "web": "CAN_ID_PASTE_JETTING_PULSE"
+      }
+    },
+    {
+      "id": "0x240",
+      "names": {
+        "tester": "CAN_ID_ADS1115_CONFIG",
+        "web": "CAN_ID_FLYING_PROBE_ADS_CONFIG"
+      }
+    },
+    {
+      "id": "0x241",
+      "names": {
+        "tester": "CAN_ID_ADS1115_TRIGGER",
+        "web": "CAN_ID_FLYING_PROBE_ADS_TRIGGER"
+      }
+    },
+    {
+      "id": "0x242",
+      "names": {
+        "tester": "CAN_ID_ADS1115_RESULT",
+        "web": "CAN_ID_FLYING_PROBE_ADS_RESULT"
+      }
+    },
+    {
+      "id": "0x243",
+      "names": {
+        "tester": "CAN_ID_FLYING_PROBE_BASIC",
+        "web": "CAN_ID_FLYING_PROBE_BASIC"
+      }
+    },
+    {
+      "id": "0x250",
+      "names": {
+        "tester": "CAN_ID_THERMAL_TRIGGER",
+        "web": "CAN_ID_THERMAL_TRIGGER"
+      }
+    },
+    {
+      "id": "0x251",
+      "names": {
+        "tester": "CAN_ID_THERMAL_STATUS",
+        "web": "CAN_ID_THERMAL_STATUS"
+      }
+    },
+    {
+      "id": "0x252",
+      "names": {
+        "tester": "CAN_ID_THERMAL_RAW_CHUNK_REQ",
+        "web": "CAN_ID_THERMAL_RAW_CHUNK_REQ"
+      }
+    },
+    {
+      "id": "0x253",
+      "names": {
+        "tester": "CAN_ID_THERMAL_RAW_CHUNK",
+        "web": "CAN_ID_THERMAL_RAW_CHUNK_RESP"
+      }
+    },
+    {
+      "id": "0x254",
+      "names": {
+        "tester": "CAN_ID_THERMAL_CALIB_CHUNK_REQ",
+        "web": "CAN_ID_THERMAL_CAL_CHUNK_REQ"
+      }
+    },
+    {
+      "id": "0x255",
+      "names": {
+        "tester": "CAN_ID_THERMAL_CALIB_CHUNK",
+        "web": "CAN_ID_THERMAL_CAL_CHUNK_RESP"
+      }
+    },
+    {
+      "id": "0x7E9",
+      "names": {
+        "flasher": "CAN_ID_VERSION_PATCH_RESPONSE",
+        "web": "CAN_ID_VERSION_PATCH_RESPONSE"
+      }
+    },
+    {
+      "id": "0x7F0",
+      "names": {
+        "flasher": "CAN_ID_ENTER_BOOTLOADER",
+        "web": "CAN_ID_ENTER_BOOTLOADER"
+      }
+    },
+    {
+      "id": "0x7F1",
+      "names": {
+        "flasher": "CAN_ID_START_UPDATE",
+        "web": "CAN_ID_START_UPDATE"
+      }
+    },
+    {
+      "id": "0x7F2",
+      "names": {
+        "flasher": "CAN_ID_DATA",
+        "web": "CAN_ID_DATA"
+      }
+    },
+    {
+      "id": "0x7F3",
+      "names": {
+        "flasher": "CAN_ID_PAGE_ACK",
+        "web": "CAN_ID_PAGE_ACK"
+      }
+    },
+    {
+      "id": "0x7F4",
+      "names": {
+        "flasher": "CAN_ID_END_UPDATE",
+        "web": "CAN_ID_END_UPDATE"
+      }
+    },
+    {
+      "id": "0x7F5",
+      "names": {
+        "flasher": "CAN_ID_STATUS",
+        "web": "CAN_ID_STATUS"
+      }
+    },
+    {
+      "id": "0x7F6",
+      "names": {
+        "flasher": "CAN_ID_HEARTBEAT",
+        "web": "CAN_ID_HEARTBEAT"
+      }
+    },
+    {
+      "id": "0x7F7",
+      "names": {
+        "flasher": "CAN_ID_HMAC_CHUNK",
+        "web": "CAN_ID_HMAC_CHUNK"
+      }
+    },
+    {
+      "id": "0x7F8",
+      "names": {
+        "flasher": "CAN_ID_QUERY_VERSION",
+        "tester": "CAN_ID_QUERY_VERSION",
+        "web": "CAN_ID_QUERY_VERSION"
+      }
+    },
+    {
+      "id": "0x7F9",
+      "names": {
+        "flasher": "CAN_ID_VERSION_RESPONSE",
+        "tester": "CAN_ID_VERSION_RESPONSE",
+        "web": "CAN_ID_VERSION_RESPONSE"
+      }
+    },
+    {
+      "id": "0x7FA",
+      "names": {
+        "flasher": "CAN_ID_BOOTLOADER_VERSION_RESPONSE",
+        "web": "CAN_ID_BOOTLOADER_VERSION_RESPONSE"
+      }
+    },
+    {
+      "id": "0x7FB",
+      "names": {
+        "flasher": "CAN_ID_QUERY_ERROR_COUNTERS",
+        "web": "CAN_ID_QUERY_ERROR_COUNTERS"
+      }
+    },
+    {
+      "id": "0x7FC",
+      "names": {
+        "flasher": "CAN_ID_ERROR_COUNTERS_RESPONSE",
+        "web": "CAN_ID_ERROR_COUNTERS_RESPONSE"
+      }
+    },
+    {
+      "id": "0x7FD",
+      "names": {
+        "flasher": "CAN_ID_AUTHORIZE_DOWNGRADE",
+        "web": "CAN_ID_AUTHORIZE_DOWNGRADE"
+      }
+    },
+    {
+      "id": "0x7FE",
+      "names": {
+        "flasher": "CAN_ID_READBACK",
+        "web": "CAN_ID_READBACK"
+      }
+    },
+    {
+      "id": "0x7FF",
+      "names": {
+        "flasher": "CAN_ID_READBACK_PAGE_ACK",
+        "web": "CAN_ID_READBACK_PAGE_ACK"
+      }
+    }
+  ],
+  "magic_payloads": [
+    {
+      "name": "enter_bootloader",
+      "id": "0x7F0",
+      "data": "B0071D5A"
+    },
+    {
+      "name": "authorize_downgrade",
+      "id": "0x7FD",
+      "data": "D09E12AD"
+    },
+    {
+      "name": "erase_fram",
+      "id": "0x192",
+      "data": "E3A5E0FF"
+    },
+    {
+      "name": "solder_feeder_reset",
+      "id": "0x131",
+      "data": "52535030"
+    }
+  ],
+  "slcan_encode": [
+    {
+      "id": "0x7F8",
+      "data": "00",
+      "line": "t7F8100"
+    },
+    {
+      "id": "0x7F0",
+      "data": "B0071D5A",
+      "line": "t7F04B0071D5A"
+    },
+    {
+      "id": "0x000",
+      "data": "",
+      "line": "t0000"
+    },
+    {
+      "id": "0x7FF",
+      "data": "0102030405060708",
+      "line": "t7FF80102030405060708"
+    },
+    {
+      "id": "0x100",
+      "data": "FF000A0B00000000",
+      "line": "t1008FF000A0B00000000"
+    },
+    {
+      "id": "0x1A4",
+      "data": "0A",
+      "line": "t1A410A"
+    }
+  ],
+  "slcan_encode_rejected": [
+    {
+      "id": "0x800",
+      "data": ""
+    },
+    {
+      "id": "0xFFF",
+      "data": "00"
+    },
+    {
+      "id": "0x100",
+      "data": "000102030405060708"
+    }
+  ],
+  "slcan_decode": [
+    {
+      "name": "active tool answer",
+      "line": "t1116010000000000",
+      "frame": {
+        "id": "0x111",
+        "data": "010000000000"
+      }
+    },
+    {
+      "name": "version answer",
+      "line": "t7F98000303CC01000003",
+      "frame": {
+        "id": "0x7F9",
+        "data": "000303CC01000003"
+      }
+    },
+    {
+      "name": "empty payload",
+      "line": "t1000",
+      "frame": {
+        "id": "0x100",
+        "data": ""
+      }
+    },
+    {
+      "name": "full eight bytes",
+      "line": "t7FF8FFFFFFFFFFFFFFFF",
+      "frame": {
+        "id": "0x7FF",
+        "data": "FFFFFFFFFFFFFFFF"
+      }
+    },
+    {
+      "name": "lower-case hex digits",
+      "line": "t1a6101",
+      "frame": {
+        "id": "0x1A6",
+        "data": "01"
+      }
+    },
+    {
+      "name": "DLC 9 is not a CAN 2.0 frame",
+      "line": "t1239010203040506070809",
+      "frame": null
+    },
+    {
+      "name": "DLC F is not a CAN 2.0 frame",
+      "line": "t123F000000000000000000000000000000",
+      "frame": null
+    },
+    {
+      "name": "truncated payload",
+      "line": "t11140102",
+      "frame": null
+    },
+    {
+      "name": "non-hex payload",
+      "line": "t1116ZZ0000000000",
+      "frame": null
+    },
+    {
+      "name": "non-hex identifier",
+      "line": "t1G10",
+      "frame": null
+    },
+    {
+      "name": "signed identifier",
+      "line": "t+1F0",
+      "frame": null
+    },
+    {
+      "name": "0x-prefixed identifier",
+      "line": "t0x10",
+      "frame": null
+    },
+    {
+      "name": "underscore in identifier",
+      "line": "t1_20",
+      "frame": null
+    },
+    {
+      "name": "empty line",
+      "line": "",
+      "frame": null
+    },
+    {
+      "name": "status character only",
+      "line": "z",
+      "frame": null
+    },
+    {
+      "name": "bare t",
+      "line": "t",
+      "frame": null
+    },
+    {
+      "name": "identifier cut short",
+      "line": "t11",
+      "frame": null
+    },
+    {
+      "name": "extended frame whose 29-bit id looks like 0x111",
+      "line": "T0000011180102030405060708",
+      "frame": null
+    },
+    {
+      "name": "extended frame without payload",
+      "line": "T000001110",
+      "frame": null
+    },
+    {
+      "name": "remote request, standard",
+      "line": "r1110",
+      "frame": null
+    },
+    {
+      "name": "remote request, extended",
+      "line": "R000001110",
+      "frame": null
+    },
+    {
+      "name": "adapter timestamp after the payload",
+      "line": "t11101234",
+      "frame": {
+        "id": "0x111",
+        "data": ""
+      },
+      "note": "Adapters with timestamps enabled append 4 hex digits after the payload. This protocol never enables them, so the readers may differ here; each client documents what it does."
+    }
+  ],
+  "quick_state": [
+    {
+      "name": "four-byte answer from firmware before the thermal guard",
+      "data": "0A000100",
+      "expect": {
+        "tool_id": 10,
+        "system_error": false,
+        "can_error": true,
+        "booting": false,
+        "thermal_fault": null,
+        "reset_cause": null,
+        "watchdog_reset": false
+      }
+    },
+    {
+      "name": "five bytes: thermal fault, no reset cause",
+      "data": "0A01000002",
+      "expect": {
+        "tool_id": 10,
+        "system_error": true,
+        "can_error": false,
+        "booting": false,
+        "thermal_fault": 2,
+        "reset_cause": null,
+        "watchdog_reset": false
+      }
+    },
+    {
+      "name": "six bytes: watchdog reset",
+      "data": "000000000001",
+      "expect": {
+        "tool_id": 0,
+        "system_error": false,
+        "can_error": false,
+        "booting": false,
+        "thermal_fault": 0,
+        "reset_cause": 1,
+        "watchdog_reset": true
+      }
+    },
+    {
+      "name": "six bytes: power-on reset, boot sequence running",
+      "data": "190000010108",
+      "expect": {
+        "tool_id": 25,
+        "system_error": false,
+        "can_error": false,
+        "booting": true,
+        "thermal_fault": 1,
+        "reset_cause": 8,
+        "watchdog_reset": false
+      }
+    },
+    {
+      "name": "three bytes is not an answer",
+      "data": "000000",
+      "expect": null
+    }
+  ],
+  "version_query": [
+    {
+      "name": "application with patch",
+      "frames": [
+        [
+          "0x7F9",
+          "000303CC01000003"
+        ],
+        [
+          "0x7E9",
+          "000500"
+        ]
+      ],
+      "expect": {
+        "responder": "application",
+        "hardware_id": "0x0303CC01",
+        "major": 0,
+        "minor": 3,
+        "patch": 5,
+        "patch_aware": true,
+        "accepts_patch_in_end_update": false
+      }
+    },
+    {
+      "name": "application that predates the patch frame",
+      "frames": [
+        [
+          "0x7F9",
+          "000303CC01000003"
+        ]
+      ],
+      "expect": {
+        "responder": "application",
+        "hardware_id": "0x0303CC01",
+        "major": 0,
+        "minor": 3,
+        "patch": null,
+        "patch_aware": false,
+        "accepts_patch_in_end_update": false
+      }
+    },
+    {
+      "name": "patch 0xFF means unknown but the board is patch-aware",
+      "frames": [
+        [
+          "0x7F9",
+          "000303CC01000003"
+        ],
+        [
+          "0x7E9",
+          "00FF00"
+        ]
+      ],
+      "expect": {
+        "responder": "application",
+        "hardware_id": "0x0303CC01",
+        "major": 0,
+        "minor": 3,
+        "patch": null,
+        "patch_aware": true,
+        "accepts_patch_in_end_update": false
+      }
+    },
+    {
+      "name": "bootloader with 0x7FA and a patch frame announcing the end-update patch",
+      "frames": [
+        [
+          "0x7F9",
+          "010303CC01000004"
+        ],
+        [
+          "0x7FA",
+          "000309"
+        ],
+        [
+          "0x7E9",
+          "010701"
+        ]
+      ],
+      "expect": {
+        "responder": "bootloader",
+        "hardware_id": "0x0303CC01",
+        "major": 0,
+        "minor": 4,
+        "patch": 7,
+        "patch_aware": true,
+        "accepts_patch_in_end_update": true,
+        "bootloader": [
+          0,
+          3,
+          9
+        ]
+      }
+    },
+    {
+      "name": "patch frame longer than 3 bytes: extra bytes ignored",
+      "frames": [
+        [
+          "0x7F9",
+          "000303CC01000003"
+        ],
+        [
+          "0x7E9",
+          "0009007F"
+        ]
+      ],
+      "expect": {
+        "responder": "application",
+        "hardware_id": "0x0303CC01",
+        "major": 0,
+        "minor": 3,
+        "patch": 9,
+        "patch_aware": true,
+        "accepts_patch_in_end_update": false
+      }
+    },
+    {
+      "name": "patch frame shorter than 3 bytes is not a patch frame",
+      "frames": [
+        [
+          "0x7F9",
+          "000303CC01000003"
+        ],
+        [
+          "0x7E9",
+          "0005"
+        ]
+      ],
+      "expect": {
+        "responder": "application",
+        "hardware_id": "0x0303CC01",
+        "major": 0,
+        "minor": 3,
+        "patch": null,
+        "patch_aware": false,
+        "accepts_patch_in_end_update": false
+      }
+    },
+    {
+      "name": "version answer shorter than 8 bytes gets no answer",
+      "frames": [
+        [
+          "0x7F9",
+          "000303CC010000"
+        ]
+      ],
+      "expect": null
+    }
+  ],
+  "minor_field": [
+    {
+      "minor": 3,
+      "patch": 5,
+      "bootloader_accepts_patch": true,
+      "expect": 34051
+    },
+    {
+      "minor": 3,
+      "patch": 5,
+      "bootloader_accepts_patch": false,
+      "expect": 3
+    },
+    {
+      "minor": 3,
+      "patch": null,
+      "bootloader_accepts_patch": true,
+      "expect": 3
+    },
+    {
+      "minor": 3,
+      "patch": 0,
+      "bootloader_accepts_patch": true,
+      "expect": 32771
+    },
+    {
+      "minor": 3,
+      "patch": 127,
+      "bootloader_accepts_patch": true,
+      "expect": 65283
+    },
+    {
+      "minor": 3,
+      "patch": 128,
+      "bootloader_accepts_patch": true,
+      "expect": 3
+    },
+    {
+      "minor": 255,
+      "patch": 1,
+      "bootloader_accepts_patch": true,
+      "expect": 33279
+    },
+    {
+      "minor": 3,
+      "patch": -1,
+      "bootloader_accepts_patch": true,
+      "expect": 3
+    }
+  ],
+  "version_order": [
+    {
+      "installed": [
+        0,
+        3,
+        5
+      ],
+      "candidate": [
+        0,
+        3,
+        5
+      ],
+      "expect": 0
+    },
+    {
+      "installed": [
+        0,
+        3,
+        5
+      ],
+      "candidate": [
+        0,
+        3,
+        6
+      ],
+      "expect": 1
+    },
+    {
+      "installed": [
+        0,
+        3,
+        5
+      ],
+      "candidate": [
+        0,
+        3,
+        4
+      ],
+      "expect": -1
+    },
+    {
+      "installed": [
+        0,
+        3,
+        null
+      ],
+      "candidate": [
+        0,
+        3,
+        4
+      ],
+      "expect": 0
+    },
+    {
+      "installed": [
+        0,
+        3,
+        5
+      ],
+      "candidate": [
+        0,
+        3,
+        null
+      ],
+      "expect": 0
+    },
+    {
+      "installed": [
+        0,
+        3,
+        9
+      ],
+      "candidate": [
+        0,
+        4,
+        0
+      ],
+      "expect": 1
+    },
+    {
+      "installed": [
+        0,
+        4,
+        0
+      ],
+      "candidate": [
+        0,
+        3,
+        9
+      ],
+      "expect": -1
+    },
+    {
+      "installed": [
+        1,
+        0,
+        0
+      ],
+      "candidate": [
+        0,
+        9,
+        9
+      ],
+      "expect": -1
+    },
+    {
+      "installed": [
+        0,
+        9,
+        9
+      ],
+      "candidate": [
+        1,
+        0,
+        0
+      ],
+      "expect": 1
+    }
+  ],
+  "identifiers_all": [
+    {
+      "id": "0x095",
+      "name": "IMPACT_EVENT"
+    },
+    {
+      "id": "0x100",
+      "name": "GLOBAL_STATUS"
+    },
+    {
+      "id": "0x110",
+      "name": "QUERY_ACTIVE_TOOL"
+    },
+    {
+      "id": "0x111",
+      "name": "ACTIVE_TOOL_RESP"
+    },
+    {
+      "id": "0x120",
+      "name": "MOTION_CMD"
+    },
+    {
+      "id": "0x130",
+      "name": "SOLDER_SETPOINT"
+    },
+    {
+      "id": "0x131",
+      "name": "SOLDER_FEEDER_RESET"
+    },
+    {
+      "id": "0x132",
+      "name": "SOLDER_FEEDER_POS"
+    },
+    {
+      "id": "0x135",
+      "name": "SOLDER_TELEMETRY"
+    },
+    {
+      "id": "0x140",
+      "name": "DRILL_CMD"
+    },
+    {
+      "id": "0x145",
+      "name": "VACUUM_TELEMETRY"
+    },
+    {
+      "id": "0x147",
+      "name": "DRILL_TELEMETRY"
+    },
+    {
+      "id": "0x150",
+      "name": "AOI_CMD"
+    },
+    {
+      "id": "0x155",
+      "name": "AOI_TELEMETRY"
+    },
+    {
+      "id": "0x160",
+      "name": "LASER_CMD"
+    },
+    {
+      "id": "0x165",
+      "name": "LASER_TELEMETRY"
+    },
+    {
+      "id": "0x170",
+      "name": "PRINTER_THERMAL_MOTION"
+    },
+    {
+      "id": "0x173",
+      "name": "PRINTER_LAYERFAN_CMD"
+    },
+    {
+      "id": "0x175",
+      "name": "PRINTER_HOTEND_TELEMETRY"
+    },
+    {
+      "id": "0x177",
+      "name": "PRINTER_LAYERFAN_RPM"
+    },
+    {
+      "id": "0x178",
+      "name": "PRINTER_HOTENDFAN_CMD"
+    },
+    {
+      "id": "0x179",
+      "name": "PRINTER_HOTENDFAN_RPM"
+    },
+    {
+      "id": "0x180",
+      "name": "EXPANSION_SPI_REQ"
+    },
+    {
+      "id": "0x181",
+      "name": "EXPANSION_SPI_RESP"
+    },
+    {
+      "id": "0x182",
+      "name": "EXPANSION_DIAG0_REQ"
+    },
+    {
+      "id": "0x183",
+      "name": "EXPANSION_DIAG0_RESP"
+    },
+    {
+      "id": "0x190",
+      "name": "FRAM_QUERY"
+    },
+    {
+      "id": "0x191",
+      "name": "FRAM_STATE_RESP"
+    },
+    {
+      "id": "0x192",
+      "name": "ERASE_FRAM"
+    },
+    {
+      "id": "0x1A0",
+      "name": "SET_EXPANSION_TYPE"
+    },
+    {
+      "id": "0x1A1",
+      "name": "EXPANSION_TYPE_RESP"
+    },
+    {
+      "id": "0x1A2",
+      "name": "SET_FREE_TOOL"
+    },
+    {
+      "id": "0x1A3",
+      "name": "FREE_TOOL_CONFIG_RESP"
+    },
+    {
+      "id": "0x1A4",
+      "name": "SET_DEVICE_SERIAL"
+    },
+    {
+      "id": "0x1A5",
+      "name": "PERIPHERAL_INFO_RESP"
+    },
+    {
+      "id": "0x1A6",
+      "name": "SET_MLX_VARIANT"
+    },
+    {
+      "id": "0x1A7",
+      "name": "MLX_VARIANT_RESP"
+    },
+    {
+      "id": "0x1A8",
+      "name": "BLACKBOX_QUERY"
+    },
+    {
+      "id": "0x1A9",
+      "name": "BLACKBOX_CHUNK"
+    },
+    {
+      "id": "0x1AA",
+      "name": "THERMAL_STATS_QUERY"
+    },
+    {
+      "id": "0x1AB",
+      "name": "THERMAL_STATS_RESP"
+    },
+    {
+      "id": "0x1B0",
+      "name": "ELECTROMAGNET_CMD"
+    },
+    {
+      "id": "0x1C0",
+      "name": "SPOT_WELD_CMD"
+    },
+    {
+      "id": "0x1D0",
+      "name": "UV_CURING_CMD"
+    },
+    {
+      "id": "0x1E0",
+      "name": "HOTAIR_CMD"
+    },
+    {
+      "id": "0x1F0",
+      "name": "CRIMPING_CMD"
+    },
+    {
+      "id": "0x200",
+      "name": "ULTRASONIC_WELD_CMD"
+    },
+    {
+      "id": "0x210",
+      "name": "SLAVE_ENTER_BOOTLOADER"
+    },
+    {
+      "id": "0x211",
+      "name": "SLAVE_START_UPDATE"
+    },
+    {
+      "id": "0x212",
+      "name": "SLAVE_HMAC_CHUNK"
+    },
+    {
+      "id": "0x213",
+      "name": "SLAVE_DATA"
+    },
+    {
+      "id": "0x214",
+      "name": "SLAVE_END_UPDATE"
+    },
+    {
+      "id": "0x215",
+      "name": "SLAVE_STATUS"
+    },
+    {
+      "id": "0x216",
+      "name": "SLAVE_PROGRESS"
+    },
+    {
+      "id": "0x217",
+      "name": "SLAVE_VERSION_RESP_1"
+    },
+    {
+      "id": "0x218",
+      "name": "SLAVE_VERSION_RESP_2"
+    },
+    {
+      "id": "0x219",
+      "name": "SLAVE_VERIFY_FAIL_REASON"
+    },
+    {
+      "id": "0x220",
+      "name": "SLAVE_REG_WRITE"
+    },
+    {
+      "id": "0x221",
+      "name": "SLAVE_REG_READ"
+    },
+    {
+      "id": "0x230",
+      "name": "PASTE_JETTING_CONFIG"
+    },
+    {
+      "id": "0x231",
+      "name": "PASTE_JETTING_PULSE"
+    },
+    {
+      "id": "0x240",
+      "name": "ADS1115_CONFIG"
+    },
+    {
+      "id": "0x241",
+      "name": "ADS1115_TRIGGER"
+    },
+    {
+      "id": "0x242",
+      "name": "ADS1115_RESULT"
+    },
+    {
+      "id": "0x243",
+      "name": "FLYING_PROBE_BASIC"
+    },
+    {
+      "id": "0x250",
+      "name": "THERMAL_TRIGGER"
+    },
+    {
+      "id": "0x251",
+      "name": "THERMAL_STATUS"
+    },
+    {
+      "id": "0x252",
+      "name": "THERMAL_RAW_CHUNK_REQ"
+    },
+    {
+      "id": "0x253",
+      "name": "THERMAL_RAW_CHUNK"
+    },
+    {
+      "id": "0x254",
+      "name": "THERMAL_CAL_CHUNK_REQ"
+    },
+    {
+      "id": "0x255",
+      "name": "THERMAL_CAL_CHUNK"
+    },
+    {
+      "id": "0x7E9",
+      "name": "VERSION_PATCH_RESPONSE"
+    },
+    {
+      "id": "0x7F0",
+      "name": "ENTER_BOOTLOADER"
+    },
+    {
+      "id": "0x7F1",
+      "name": "START_UPDATE"
+    },
+    {
+      "id": "0x7F2",
+      "name": "DATA"
+    },
+    {
+      "id": "0x7F3",
+      "name": "PAGE_ACK"
+    },
+    {
+      "id": "0x7F4",
+      "name": "END_UPDATE"
+    },
+    {
+      "id": "0x7F5",
+      "name": "STATUS"
+    },
+    {
+      "id": "0x7F6",
+      "name": "HEARTBEAT"
+    },
+    {
+      "id": "0x7F7",
+      "name": "HMAC_CHUNK"
+    },
+    {
+      "id": "0x7F8",
+      "name": "QUERY_VERSION"
+    },
+    {
+      "id": "0x7F9",
+      "name": "VERSION_RESPONSE"
+    },
+    {
+      "id": "0x7FA",
+      "name": "BOOTLOADER_VERSION_RESPONSE"
+    },
+    {
+      "id": "0x7FB",
+      "name": "QUERY_ERROR_COUNTERS"
+    },
+    {
+      "id": "0x7FC",
+      "name": "ERROR_COUNTERS_RESPONSE"
+    },
+    {
+      "id": "0x7FD",
+      "name": "AUTHORIZE_DOWNGRADE"
+    },
+    {
+      "id": "0x7FE",
+      "name": "READBACK"
+    },
+    {
+      "id": "0x7FF",
+      "name": "READBACK_PAGE_ACK"
+    }
+  ],
+  "frames_encode": [
+    {
+      "name": "IMPACT_EVENT response: impact",
+      "message": "IMPACT_EVENT",
+      "layout": "impact_event",
+      "fields": {
+        "event": 1
+      },
+      "frame": {
+        "id": "0x095",
+        "data": "01"
+      }
+    },
+    {
+      "name": "GLOBAL_STATUS request: all off",
+      "message": "GLOBAL_STATUS",
+      "layout": "global_status",
+      "fields": {
+        "status_r": 0,
+        "status_g": 0,
+        "status_b": 0,
+        "display_mode": 0,
+        "ring_r": 0,
+        "ring_g": 0,
+        "ring_b": 0,
+        "ring_on": 0
+      },
+      "frame": {
+        "id": "0x100",
+        "data": "0000000000000000"
+      }
+    },
+    {
+      "name": "GLOBAL_STATUS request: night mode with a blue ring",
+      "message": "GLOBAL_STATUS",
+      "layout": "global_status",
+      "fields": {
+        "status_r": 255,
+        "status_g": 128,
+        "status_b": 0,
+        "display_mode": 1,
+        "ring_r": 0,
+        "ring_g": 0,
+        "ring_b": 255,
+        "ring_on": 1
+      },
+      "frame": {
+        "id": "0x100",
+        "data": "FF8000010000FF01"
+      }
+    },
+    {
+      "name": "QUERY_ACTIVE_TOOL request: empty query",
+      "message": "QUERY_ACTIVE_TOOL",
+      "layout": "query_active_tool",
+      "fields": {},
+      "frame": {
+        "id": "0x110",
+        "data": ""
+      }
+    },
+    {
+      "name": "ACTIVE_TOOL_RESP response: idle soldering iron after a power-on reset",
+      "message": "ACTIVE_TOOL_RESP",
+      "layout": "active_tool_resp",
+      "fields": {
+        "tool_id": 0,
+        "system_error": 0,
+        "can_error": 0,
+        "booting": 0,
+        "thermal_fault": 0,
+        "reset_cause": 8
+      },
+      "frame": {
+        "id": "0x111",
+        "data": "000000000008"
+      }
+    },
+    {
+      "name": "MOTION_CMD request: forward 1000 steps",
+      "message": "MOTION_CMD",
+      "layout": "motion_cmd",
+      "fields": {
+        "direction": 1,
+        "steps": 1000
+      },
+      "frame": {
+        "id": "0x120",
+        "data": "01000003E8"
+      }
+    },
+    {
+      "name": "MOTION_CMD request: stop",
+      "message": "MOTION_CMD",
+      "layout": "motion_cmd",
+      "fields": {
+        "direction": 0,
+        "steps": 0
+      },
+      "frame": {
+        "id": "0x120",
+        "data": "0000000000"
+      }
+    },
+    {
+      "name": "SOLDER_SETPOINT request: 350 C",
+      "message": "SOLDER_SETPOINT",
+      "layout": "solder_setpoint",
+      "fields": {
+        "setpoint_c": 350
+      },
+      "frame": {
+        "id": "0x130",
+        "data": "015E"
+      }
+    },
+    {
+      "name": "SOLDER_SETPOINT request: off",
+      "message": "SOLDER_SETPOINT",
+      "layout": "solder_setpoint",
+      "fields": {
+        "setpoint_c": 0
+      },
+      "frame": {
+        "id": "0x130",
+        "data": "0000"
+      }
+    },
+    {
+      "name": "SOLDER_FEEDER_RESET request: reset",
+      "message": "SOLDER_FEEDER_RESET",
+      "layout": "solder_feeder_reset",
+      "fields": {
+        "magic": "52535030"
+      },
+      "frame": {
+        "id": "0x131",
+        "data": "52535030"
+      }
+    },
+    {
+      "name": "SOLDER_FEEDER_POS request: empty query",
+      "message": "SOLDER_FEEDER_POS",
+      "layout": "solder_feeder_pos_request",
+      "fields": {},
+      "frame": {
+        "id": "0x132",
+        "data": ""
+      }
+    },
+    {
+      "name": "SOLDER_FEEDER_POS response: net retracted",
+      "message": "SOLDER_FEEDER_POS",
+      "layout": "solder_feeder_pos_response",
+      "fields": {
+        "position": -1500
+      },
+      "frame": {
+        "id": "0x132",
+        "data": "FFFFFA24"
+      }
+    },
+    {
+      "name": "SOLDER_TELEMETRY response: 25 C",
+      "message": "SOLDER_TELEMETRY",
+      "layout": "solder_telemetry",
+      "fields": {
+        "temperature_c": 25
+      },
+      "frame": {
+        "id": "0x135",
+        "data": "0019"
+      }
+    },
+    {
+      "name": "DRILL_CMD request: half speed counter-clockwise",
+      "message": "DRILL_CMD",
+      "layout": "drill_cmd",
+      "fields": {
+        "speed": 128,
+        "direction": 1
+      },
+      "frame": {
+        "id": "0x140",
+        "data": "8001"
+      }
+    },
+    {
+      "name": "VACUUM_TELEMETRY response: object picked up",
+      "message": "VACUUM_TELEMETRY",
+      "layout": "vacuum_telemetry",
+      "fields": {
+        "adc": 2048,
+        "detected": 1
+      },
+      "frame": {
+        "id": "0x145",
+        "data": "080001"
+      }
+    },
+    {
+      "name": "DRILL_TELEMETRY response: 3000 rpm",
+      "message": "DRILL_TELEMETRY",
+      "layout": "drill_telemetry",
+      "fields": {
+        "rpm": 3000,
+        "endstop": 0
+      },
+      "frame": {
+        "id": "0x147",
+        "data": "0BB800"
+      }
+    },
+    {
+      "name": "AOI_CMD request: strobe 100 ms",
+      "message": "AOI_CMD",
+      "layout": "aoi_cmd",
+      "fields": {
+        "mode": 1,
+        "strobe_period_ms": 100
+      },
+      "frame": {
+        "id": "0x150",
+        "data": "010064"
+      }
+    },
+    {
+      "name": "AOI_TELEMETRY response: open",
+      "message": "AOI_TELEMETRY",
+      "layout": "aoi_telemetry",
+      "fields": {
+        "endstop": 0
+      },
+      "frame": {
+        "id": "0x155",
+        "data": "00"
+      }
+    },
+    {
+      "name": "LASER_CMD request: armed at 100",
+      "message": "LASER_CMD",
+      "layout": "laser_cmd",
+      "fields": {
+        "power": 100,
+        "interlock": 1
+      },
+      "frame": {
+        "id": "0x160",
+        "data": "6401"
+      }
+    },
+    {
+      "name": "LASER_CMD request: safe off",
+      "message": "LASER_CMD",
+      "layout": "laser_cmd",
+      "fields": {
+        "power": 0,
+        "interlock": 0
+      },
+      "frame": {
+        "id": "0x160",
+        "data": "0000"
+      }
+    },
+    {
+      "name": "LASER_TELEMETRY response: triggered",
+      "message": "LASER_TELEMETRY",
+      "layout": "laser_telemetry",
+      "fields": {
+        "endstop": 1
+      },
+      "frame": {
+        "id": "0x165",
+        "data": "01"
+      }
+    },
+    {
+      "name": "PRINTER_THERMAL_MOTION request: 200 C, extrude 16 steps",
+      "message": "PRINTER_THERMAL_MOTION",
+      "layout": "printer_thermal_motion",
+      "fields": {
+        "nozzle_setpoint_c": 200,
+        "extruder_direction": 1,
+        "extruder_steps": 16
+      },
+      "frame": {
+        "id": "0x170",
+        "data": "00C801000010"
+      }
+    },
+    {
+      "name": "PRINTER_THERMAL_MOTION request: heater off",
+      "message": "PRINTER_THERMAL_MOTION",
+      "layout": "printer_thermal_motion",
+      "fields": {
+        "nozzle_setpoint_c": 0,
+        "extruder_direction": 1,
+        "extruder_steps": 0
+      },
+      "frame": {
+        "id": "0x170",
+        "data": "000001000000"
+      }
+    },
+    {
+      "name": "PRINTER_LAYERFAN_CMD request: full",
+      "message": "PRINTER_LAYERFAN_CMD",
+      "layout": "printer_layerfan_cmd",
+      "fields": {
+        "power": 255
+      },
+      "frame": {
+        "id": "0x173",
+        "data": "FF"
+      }
+    },
+    {
+      "name": "PRINTER_HOTEND_TELEMETRY response: 200 C",
+      "message": "PRINTER_HOTEND_TELEMETRY",
+      "layout": "printer_hotend_telemetry",
+      "fields": {
+        "temperature_c": 200
+      },
+      "frame": {
+        "id": "0x175",
+        "data": "00C8"
+      }
+    },
+    {
+      "name": "PRINTER_LAYERFAN_RPM response: 4800 rpm",
+      "message": "PRINTER_LAYERFAN_RPM",
+      "layout": "printer_layerfan_rpm",
+      "fields": {
+        "rpm": 4800
+      },
+      "frame": {
+        "id": "0x177",
+        "data": "12C0"
+      }
+    },
+    {
+      "name": "PRINTER_HOTENDFAN_CMD request: full",
+      "message": "PRINTER_HOTENDFAN_CMD",
+      "layout": "printer_hotendfan_cmd",
+      "fields": {
+        "power": 255
+      },
+      "frame": {
+        "id": "0x178",
+        "data": "FF"
+      }
+    },
+    {
+      "name": "PRINTER_HOTENDFAN_RPM response: 5000 rpm",
+      "message": "PRINTER_HOTENDFAN_RPM",
+      "layout": "printer_hotendfan_rpm",
+      "fields": {
+        "rpm": 5000
+      },
+      "frame": {
+        "id": "0x179",
+        "data": "1388"
+      }
+    },
+    {
+      "name": "EXPANSION_SPI_REQ request: three bytes",
+      "message": "EXPANSION_SPI_REQ",
+      "layout": "expansion_spi_req",
+      "fields": {
+        "data": "010203"
+      },
+      "frame": {
+        "id": "0x180",
+        "data": "03010203"
+      }
+    },
+    {
+      "name": "EXPANSION_SPI_RESP response: three bytes back",
+      "message": "EXPANSION_SPI_RESP",
+      "layout": "expansion_spi_resp",
+      "fields": {
+        "data": "A1B2C3"
+      },
+      "frame": {
+        "id": "0x181",
+        "data": "03A1B2C3"
+      }
+    },
+    {
+      "name": "EXPANSION_DIAG0_REQ request: empty query",
+      "message": "EXPANSION_DIAG0_REQ",
+      "layout": "expansion_diag0_req",
+      "fields": {},
+      "frame": {
+        "id": "0x182",
+        "data": ""
+      }
+    },
+    {
+      "name": "EXPANSION_DIAG0_RESP response: high",
+      "message": "EXPANSION_DIAG0_RESP",
+      "layout": "expansion_diag0_resp",
+      "fields": {
+        "level": 1
+      },
+      "frame": {
+        "id": "0x183",
+        "data": "01"
+      }
+    },
+    {
+      "name": "FRAM_QUERY request: empty query",
+      "message": "FRAM_QUERY",
+      "layout": "fram_query",
+      "fields": {},
+      "frame": {
+        "id": "0x190",
+        "data": ""
+      }
+    },
+    {
+      "name": "FRAM_STATE_RESP response: saved soldering state",
+      "message": "FRAM_STATE_RESP",
+      "layout": "fram_state_resp",
+      "fields": {
+        "valid": 1,
+        "tool_id": 0,
+        "had_error": 0,
+        "setpoint_c": 350,
+        "speed": 0,
+        "dir_or_interlock": 0,
+        "fan": 0
+      },
+      "frame": {
+        "id": "0x191",
+        "data": "010000015E000000"
+      }
+    },
+    {
+      "name": "ERASE_FRAM request: erase",
+      "message": "ERASE_FRAM",
+      "layout": "erase_fram",
+      "fields": {
+        "magic": "E3A5E0FF"
+      },
+      "frame": {
+        "id": "0x192",
+        "data": "E3A5E0FF"
+      }
+    },
+    {
+      "name": "SET_EXPANSION_TYPE request: advanced TMC5160A",
+      "message": "SET_EXPANSION_TYPE",
+      "layout": "set_expansion_type",
+      "fields": {
+        "board_type": 4
+      },
+      "frame": {
+        "id": "0x1A0",
+        "data": "04"
+      }
+    },
+    {
+      "name": "EXPANSION_TYPE_RESP request: empty query",
+      "message": "EXPANSION_TYPE_RESP",
+      "layout": "expansion_type_resp_request",
+      "fields": {},
+      "frame": {
+        "id": "0x1A1",
+        "data": ""
+      }
+    },
+    {
+      "name": "EXPANSION_TYPE_RESP response: none",
+      "message": "EXPANSION_TYPE_RESP",
+      "layout": "expansion_type_resp_response",
+      "fields": {
+        "board_type": 0
+      },
+      "frame": {
+        "id": "0x1A1",
+        "data": "00"
+      }
+    },
+    {
+      "name": "SET_FREE_TOOL request: thermal inspection",
+      "message": "SET_FREE_TOOL",
+      "layout": "set_free_tool",
+      "fields": {
+        "selection": 23
+      },
+      "frame": {
+        "id": "0x1A2",
+        "data": "17"
+      }
+    },
+    {
+      "name": "FREE_TOOL_CONFIG_RESP request: empty query",
+      "message": "FREE_TOOL_CONFIG_RESP",
+      "layout": "free_tool_config_resp_request",
+      "fields": {},
+      "frame": {
+        "id": "0x1A3",
+        "data": ""
+      }
+    },
+    {
+      "name": "FREE_TOOL_CONFIG_RESP response: jumpers 0x1F, tool 3 chosen",
+      "message": "FREE_TOOL_CONFIG_RESP",
+      "layout": "free_tool_config_resp_response",
+      "fields": {
+        "jumper_reading": 31,
+        "selection": 4
+      },
+      "frame": {
+        "id": "0x1A3",
+        "data": "1F04"
+      }
+    },
+    {
+      "name": "SET_DEVICE_SERIAL request: serial 7",
+      "message": "SET_DEVICE_SERIAL",
+      "layout": "set_device_serial",
+      "fields": {
+        "serial": 7
+      },
+      "frame": {
+        "id": "0x1A4",
+        "data": "07"
+      }
+    },
+    {
+      "name": "PERIPHERAL_INFO_RESP request: empty query",
+      "message": "PERIPHERAL_INFO_RESP",
+      "layout": "peripheral_info_resp_request",
+      "fields": {},
+      "frame": {
+        "id": "0x1A5",
+        "data": ""
+      }
+    },
+    {
+      "name": "PERIPHERAL_INFO_RESP response: URTC, serial 7",
+      "message": "PERIPHERAL_INFO_RESP",
+      "layout": "peripheral_info_resp_response",
+      "fields": {
+        "peripheral_type": 3,
+        "serial": 7
+      },
+      "frame": {
+        "id": "0x1A5",
+        "data": "0307"
+      }
+    },
+    {
+      "name": "SET_MLX_VARIANT request: MLX90640",
+      "message": "SET_MLX_VARIANT",
+      "layout": "set_mlx_variant",
+      "fields": {
+        "variant": 1
+      },
+      "frame": {
+        "id": "0x1A6",
+        "data": "01"
+      }
+    },
+    {
+      "name": "MLX_VARIANT_RESP request: empty query",
+      "message": "MLX_VARIANT_RESP",
+      "layout": "mlx_variant_resp_request",
+      "fields": {},
+      "frame": {
+        "id": "0x1A7",
+        "data": ""
+      }
+    },
+    {
+      "name": "MLX_VARIANT_RESP response: MLX90641",
+      "message": "MLX_VARIANT_RESP",
+      "layout": "mlx_variant_resp_response",
+      "fields": {
+        "variant": 2
+      },
+      "frame": {
+        "id": "0x1A7",
+        "data": "02"
+      }
+    },
+    {
+      "name": "BLACKBOX_QUERY request: first chunk",
+      "message": "BLACKBOX_QUERY",
+      "layout": "blackbox_query",
+      "fields": {
+        "chunk_index": 0
+      },
+      "frame": {
+        "id": "0x1A8",
+        "data": "00"
+      }
+    },
+    {
+      "name": "BLACKBOX_CHUNK response: one of the four frames",
+      "message": "BLACKBOX_CHUNK",
+      "layout": "blackbox_chunk",
+      "fields": {
+        "data": "0102030405060708"
+      },
+      "frame": {
+        "id": "0x1A9",
+        "data": "0102030405060708"
+      }
+    },
+    {
+      "name": "THERMAL_STATS_QUERY request: empty query",
+      "message": "THERMAL_STATS_QUERY",
+      "layout": "thermal_stats_query",
+      "fields": {},
+      "frame": {
+        "id": "0x1AA",
+        "data": ""
+      }
+    },
+    {
+      "name": "THERMAL_STATS_RESP response: two faults",
+      "message": "THERMAL_STATS_RESP",
+      "layout": "thermal_stats_resp",
+      "fields": {
+        "fault_count": 2,
+        "heater_on_seconds": 3600,
+        "last_fault": 1,
+        "persisted": 1
+      },
+      "frame": {
+        "id": "0x1AB",
+        "data": "000200000E100101"
+      }
+    },
+    {
+      "name": "ELECTROMAGNET_CMD request: energise",
+      "message": "ELECTROMAGNET_CMD",
+      "layout": "electromagnet_cmd",
+      "fields": {
+        "coil": 1
+      },
+      "frame": {
+        "id": "0x1B0",
+        "data": "01"
+      }
+    },
+    {
+      "name": "SPOT_WELD_CMD request: 100 ms pulse",
+      "message": "SPOT_WELD_CMD",
+      "layout": "spot_weld_cmd",
+      "fields": {
+        "fire": 1,
+        "duration_ms": 100
+      },
+      "frame": {
+        "id": "0x1C0",
+        "data": "010064"
+      }
+    },
+    {
+      "name": "UV_CURING_CMD request: half",
+      "message": "UV_CURING_CMD",
+      "layout": "uv_curing_cmd",
+      "fields": {
+        "duty": 128
+      },
+      "frame": {
+        "id": "0x1D0",
+        "data": "80"
+      }
+    },
+    {
+      "name": "HOTAIR_CMD request: 300 C, blower 200",
+      "message": "HOTAIR_CMD",
+      "layout": "hotair_cmd",
+      "fields": {
+        "setpoint_c": 300,
+        "blower_duty": 200
+      },
+      "frame": {
+        "id": "0x1E0",
+        "data": "012CC8"
+      }
+    },
+    {
+      "name": "CRIMPING_CMD request: forward 500 steps",
+      "message": "CRIMPING_CMD",
+      "layout": "crimping_cmd",
+      "fields": {
+        "direction": 1,
+        "steps": 500
+      },
+      "frame": {
+        "id": "0x1F0",
+        "data": "01000001F4"
+      }
+    },
+    {
+      "name": "ULTRASONIC_WELD_CMD request: 250 ms pulse",
+      "message": "ULTRASONIC_WELD_CMD",
+      "layout": "ultrasonic_weld_cmd",
+      "fields": {
+        "fire": 1,
+        "duration_ms": 250
+      },
+      "frame": {
+        "id": "0x200",
+        "data": "0100FA"
+      }
+    },
+    {
+      "name": "SLAVE_ENTER_BOOTLOADER request: enter",
+      "message": "SLAVE_ENTER_BOOTLOADER",
+      "layout": "slave_enter_bootloader",
+      "fields": {
+        "magic": "B0071D5A"
+      },
+      "frame": {
+        "id": "0x210",
+        "data": "B0071D5A"
+      }
+    },
+    {
+      "name": "SLAVE_START_UPDATE request: 1 KiB image",
+      "message": "SLAVE_START_UPDATE",
+      "layout": "slave_start_update",
+      "fields": {
+        "total_size": 1024,
+        "hardware_id": 50580225
+      },
+      "frame": {
+        "id": "0x211",
+        "data": "000004000303CB01"
+      }
+    },
+    {
+      "name": "SLAVE_HMAC_CHUNK request: first of four",
+      "message": "SLAVE_HMAC_CHUNK",
+      "layout": "slave_hmac_chunk",
+      "fields": {
+        "hmac_part": "0001020304050607"
+      },
+      "frame": {
+        "id": "0x212",
+        "data": "0001020304050607"
+      }
+    },
+    {
+      "name": "SLAVE_DATA request: four bytes",
+      "message": "SLAVE_DATA",
+      "layout": "slave_data",
+      "fields": {
+        "data": "DEADBEEF"
+      },
+      "frame": {
+        "id": "0x213",
+        "data": "DEADBEEF"
+      }
+    },
+    {
+      "name": "SLAVE_END_UPDATE request: 0.2.0",
+      "message": "SLAVE_END_UPDATE",
+      "layout": "slave_end_update",
+      "fields": {
+        "crc32": 305419896,
+        "version_major": 0,
+        "version_minor_field": 2
+      },
+      "frame": {
+        "id": "0x214",
+        "data": "1234567800000002"
+      }
+    },
+    {
+      "name": "SLAVE_STATUS request: empty query",
+      "message": "SLAVE_STATUS",
+      "layout": "slave_status_request",
+      "fields": {},
+      "frame": {
+        "id": "0x215",
+        "data": ""
+      }
+    },
+    {
+      "name": "SLAVE_STATUS response: receiving",
+      "message": "SLAVE_STATUS",
+      "layout": "slave_status_response",
+      "fields": {
+        "status": 3
+      },
+      "frame": {
+        "id": "0x215",
+        "data": "03"
+      }
+    },
+    {
+      "name": "SLAVE_PROGRESS request: empty query",
+      "message": "SLAVE_PROGRESS",
+      "layout": "slave_progress_request",
+      "fields": {},
+      "frame": {
+        "id": "0x216",
+        "data": ""
+      }
+    },
+    {
+      "name": "SLAVE_PROGRESS response: half",
+      "message": "SLAVE_PROGRESS",
+      "layout": "slave_progress_response",
+      "fields": {
+        "progress": 50
+      },
+      "frame": {
+        "id": "0x216",
+        "data": "32"
+      }
+    },
+    {
+      "name": "SLAVE_VERSION_RESP_1 request: empty query",
+      "message": "SLAVE_VERSION_RESP_1",
+      "layout": "slave_version_resp_1_request",
+      "fields": {},
+      "frame": {
+        "id": "0x217",
+        "data": ""
+      }
+    },
+    {
+      "name": "SLAVE_VERSION_RESP_1 response: slave bootloader",
+      "message": "SLAVE_VERSION_RESP_1",
+      "layout": "slave_version_resp_1_response",
+      "fields": {
+        "responder": 1,
+        "hardware_id": 50580225,
+        "version_major": 0,
+        "version_minor_high": 0
+      },
+      "frame": {
+        "id": "0x217",
+        "data": "010303CB01000000"
+      }
+    },
+    {
+      "name": "SLAVE_VERSION_RESP_2 response: legacy form",
+      "message": "SLAVE_VERSION_RESP_2",
+      "layout": "slave_version_resp_2",
+      "fields": {
+        "version_minor_low": 2,
+        "bootloader_major": 0
+      },
+      "frame": {
+        "id": "0x218",
+        "data": "0200"
+      }
+    },
+    {
+      "name": "SLAVE_VERSION_RESP_2 response: patch extension",
+      "message": "SLAVE_VERSION_RESP_2",
+      "layout": "slave_version_resp_2",
+      "fields": {
+        "version_minor_low": 2,
+        "bootloader_major": 0,
+        "app_patch": 1,
+        "bootloader_minor": 1,
+        "bootloader_patch": 3
+      },
+      "frame": {
+        "id": "0x218",
+        "data": "0200010103"
+      }
+    },
+    {
+      "name": "SLAVE_VERIFY_FAIL_REASON request: empty query",
+      "message": "SLAVE_VERIFY_FAIL_REASON",
+      "layout": "slave_verify_fail_reason_request",
+      "fields": {},
+      "frame": {
+        "id": "0x219",
+        "data": ""
+      }
+    },
+    {
+      "name": "SLAVE_VERIFY_FAIL_REASON response: CRC32",
+      "message": "SLAVE_VERIFY_FAIL_REASON",
+      "layout": "slave_verify_fail_reason_response",
+      "fields": {
+        "reason": 2
+      },
+      "frame": {
+        "id": "0x219",
+        "data": "02"
+      }
+    },
+    {
+      "name": "SLAVE_REG_WRITE request: PWM stop channel 1",
+      "message": "SLAVE_REG_WRITE",
+      "layout": "slave_reg_write",
+      "fields": {
+        "register": 50,
+        "payload": "01"
+      },
+      "frame": {
+        "id": "0x220",
+        "data": "3201"
+      }
+    },
+    {
+      "name": "SLAVE_REG_READ request: read two bytes of register 0x22",
+      "message": "SLAVE_REG_READ",
+      "layout": "slave_reg_read_request",
+      "fields": {
+        "register": 34,
+        "length": 2
+      },
+      "frame": {
+        "id": "0x221",
+        "data": "2202"
+      }
+    },
+    {
+      "name": "SLAVE_REG_READ response: two bytes",
+      "message": "SLAVE_REG_READ",
+      "layout": "slave_reg_read_response",
+      "fields": {
+        "data": "1234"
+      },
+      "frame": {
+        "id": "0x221",
+        "data": "1234"
+      }
+    },
+    {
+      "name": "PASTE_JETTING_CONFIG request: channel 1 at 1 kHz",
+      "message": "PASTE_JETTING_CONFIG",
+      "layout": "paste_jetting_config",
+      "fields": {
+        "channel": 1,
+        "frequency_hz": 1000
+      },
+      "frame": {
+        "id": "0x230",
+        "data": "0103E8"
+      }
+    },
+    {
+      "name": "PASTE_JETTING_PULSE request: 50 percent for 20 ms",
+      "message": "PASTE_JETTING_PULSE",
+      "layout": "paste_jetting_pulse",
+      "fields": {
+        "channel": 0,
+        "duty_percent": 50,
+        "duration_ms": 20
+      },
+      "frame": {
+        "id": "0x231",
+        "data": "003214"
+      }
+    },
+    {
+      "name": "ADS1115_CONFIG request: config register",
+      "message": "ADS1115_CONFIG",
+      "layout": "ads1115_config",
+      "fields": {
+        "config": 34179
+      },
+      "frame": {
+        "id": "0x240",
+        "data": "8583"
+      }
+    },
+    {
+      "name": "ADS1115_TRIGGER request: empty query",
+      "message": "ADS1115_TRIGGER",
+      "layout": "ads1115_trigger",
+      "fields": {},
+      "frame": {
+        "id": "0x241",
+        "data": ""
+      }
+    },
+    {
+      "name": "ADS1115_RESULT request: empty query",
+      "message": "ADS1115_RESULT",
+      "layout": "ads1115_result_request",
+      "fields": {},
+      "frame": {
+        "id": "0x242",
+        "data": ""
+      }
+    },
+    {
+      "name": "ADS1115_RESULT response: negative reading",
+      "message": "ADS1115_RESULT",
+      "layout": "ads1115_result_response",
+      "fields": {
+        "raw": -2
+      },
+      "frame": {
+        "id": "0x242",
+        "data": "FFFE"
+      }
+    },
+    {
+      "name": "FLYING_PROBE_BASIC response: mid scale",
+      "message": "FLYING_PROBE_BASIC",
+      "layout": "flying_probe_basic",
+      "fields": {
+        "adc": 2048
+      },
+      "frame": {
+        "id": "0x243",
+        "data": "0800"
+      }
+    },
+    {
+      "name": "THERMAL_TRIGGER request: empty query",
+      "message": "THERMAL_TRIGGER",
+      "layout": "thermal_trigger",
+      "fields": {},
+      "frame": {
+        "id": "0x250",
+        "data": ""
+      }
+    },
+    {
+      "name": "THERMAL_STATUS request: empty query",
+      "message": "THERMAL_STATUS",
+      "layout": "thermal_status_request",
+      "fields": {},
+      "frame": {
+        "id": "0x251",
+        "data": ""
+      }
+    },
+    {
+      "name": "THERMAL_STATUS response: ready",
+      "message": "THERMAL_STATUS",
+      "layout": "thermal_status_response",
+      "fields": {
+        "status": 2
+      },
+      "frame": {
+        "id": "0x251",
+        "data": "02"
+      }
+    },
+    {
+      "name": "THERMAL_RAW_CHUNK_REQ request: chunk 5",
+      "message": "THERMAL_RAW_CHUNK_REQ",
+      "layout": "thermal_raw_chunk_req",
+      "fields": {
+        "chunk": 5
+      },
+      "frame": {
+        "id": "0x252",
+        "data": "05"
+      }
+    },
+    {
+      "name": "THERMAL_RAW_CHUNK response: one of the four frames",
+      "message": "THERMAL_RAW_CHUNK",
+      "layout": "thermal_raw_chunk",
+      "fields": {
+        "data": "0001000200030004"
+      },
+      "frame": {
+        "id": "0x253",
+        "data": "0001000200030004"
+      }
+    },
+    {
+      "name": "THERMAL_CAL_CHUNK_REQ request: chunk 0",
+      "message": "THERMAL_CAL_CHUNK_REQ",
+      "layout": "thermal_cal_chunk_req",
+      "fields": {
+        "chunk": 0
+      },
+      "frame": {
+        "id": "0x254",
+        "data": "00"
+      }
+    },
+    {
+      "name": "THERMAL_CAL_CHUNK response: 2550 and 2600 centi-degrees",
+      "message": "THERMAL_CAL_CHUNK",
+      "layout": "thermal_cal_chunk",
+      "fields": {
+        "data": "09F60A2809F60A28"
+      },
+      "frame": {
+        "id": "0x255",
+        "data": "09F60A2809F60A28"
+      }
+    },
+    {
+      "name": "VERSION_PATCH_RESPONSE response: application patch 5",
+      "message": "VERSION_PATCH_RESPONSE",
+      "layout": "version_patch_response",
+      "fields": {
+        "responder": 0,
+        "patch": 5,
+        "flags": 0
+      },
+      "frame": {
+        "id": "0x7E9",
+        "data": "000500"
+      }
+    },
+    {
+      "name": "VERSION_PATCH_RESPONSE response: bootloader patch 7 accepting the end-update patch",
+      "message": "VERSION_PATCH_RESPONSE",
+      "layout": "version_patch_response",
+      "fields": {
+        "responder": 1,
+        "patch": 7,
+        "flags": 1
+      },
+      "frame": {
+        "id": "0x7E9",
+        "data": "010701"
+      }
+    },
+    {
+      "name": "ENTER_BOOTLOADER request: enter",
+      "message": "ENTER_BOOTLOADER",
+      "layout": "enter_bootloader",
+      "fields": {
+        "magic": "B0071D5A"
+      },
+      "frame": {
+        "id": "0x7F0",
+        "data": "B0071D5A"
+      }
+    },
+    {
+      "name": "START_UPDATE request: 1 KiB image",
+      "message": "START_UPDATE",
+      "layout": "start_update",
+      "fields": {
+        "total_size": 1024,
+        "hardware_id": 50580481
+      },
+      "frame": {
+        "id": "0x7F1",
+        "data": "000004000303CC01"
+      }
+    },
+    {
+      "name": "DATA request: eight bytes",
+      "message": "DATA",
+      "layout": "data",
+      "fields": {
+        "data": "0102030405060708"
+      },
+      "frame": {
+        "id": "0x7F2",
+        "data": "0102030405060708"
+      }
+    },
+    {
+      "name": "PAGE_ACK response: page 3",
+      "message": "PAGE_ACK",
+      "layout": "page_ack",
+      "fields": {
+        "page_index": 3
+      },
+      "frame": {
+        "id": "0x7F3",
+        "data": "00000003"
+      }
+    },
+    {
+      "name": "END_UPDATE request: legacy 0.3",
+      "message": "END_UPDATE",
+      "layout": "end_update",
+      "fields": {
+        "crc32": 3735928559,
+        "version_major": 0,
+        "version_minor_field": 3
+      },
+      "frame": {
+        "id": "0x7F4",
+        "data": "DEADBEEF00000003"
+      }
+    },
+    {
+      "name": "END_UPDATE request: 0.3.5 with the patch",
+      "message": "END_UPDATE",
+      "layout": "end_update",
+      "fields": {
+        "crc32": 3735928559,
+        "version_major": 0,
+        "version_minor_field": 34051
+      },
+      "frame": {
+        "id": "0x7F4",
+        "data": "DEADBEEF00008503"
+      }
+    },
+    {
+      "name": "STATUS response: receiving",
+      "message": "STATUS",
+      "layout": "status",
+      "fields": {
+        "status": 3
+      },
+      "frame": {
+        "id": "0x7F5",
+        "data": "03"
+      }
+    },
+    {
+      "name": "STATUS response: rollback rejected",
+      "message": "STATUS",
+      "layout": "status",
+      "fields": {
+        "status": 5,
+        "reason": 5
+      },
+      "frame": {
+        "id": "0x7F5",
+        "data": "0505"
+      }
+    },
+    {
+      "name": "HEARTBEAT response: receiving at 40 percent",
+      "message": "HEARTBEAT",
+      "layout": "heartbeat",
+      "fields": {
+        "status": 3,
+        "progress": 40
+      },
+      "frame": {
+        "id": "0x7F6",
+        "data": "0328"
+      }
+    },
+    {
+      "name": "HMAC_CHUNK request: first of four",
+      "message": "HMAC_CHUNK",
+      "layout": "hmac_chunk",
+      "fields": {
+        "hmac_part": "0001020304050607"
+      },
+      "frame": {
+        "id": "0x7F7",
+        "data": "0001020304050607"
+      }
+    },
+    {
+      "name": "QUERY_VERSION request: empty query",
+      "message": "QUERY_VERSION",
+      "layout": "query_version",
+      "fields": {},
+      "frame": {
+        "id": "0x7F8",
+        "data": ""
+      }
+    },
+    {
+      "name": "VERSION_RESPONSE response: application 0.3",
+      "message": "VERSION_RESPONSE",
+      "layout": "version_response",
+      "fields": {
+        "responder": 0,
+        "hardware_id": 50580481,
+        "version_major": 0,
+        "version_minor": 3
+      },
+      "frame": {
+        "id": "0x7F9",
+        "data": "000303CC01000003"
+      }
+    },
+    {
+      "name": "BOOTLOADER_VERSION_RESPONSE response: 0.3.9",
+      "message": "BOOTLOADER_VERSION_RESPONSE",
+      "layout": "bootloader_version_response",
+      "fields": {
+        "major": 0,
+        "minor": 3,
+        "patch": 9
+      },
+      "frame": {
+        "id": "0x7FA",
+        "data": "000309"
+      }
+    },
+    {
+      "name": "QUERY_ERROR_COUNTERS request: empty query",
+      "message": "QUERY_ERROR_COUNTERS",
+      "layout": "query_error_counters",
+      "fields": {},
+      "frame": {
+        "id": "0x7FB",
+        "data": ""
+      }
+    },
+    {
+      "name": "ERROR_COUNTERS_RESPONSE response: clean bus",
+      "message": "ERROR_COUNTERS_RESPONSE",
+      "layout": "error_counters_response",
+      "fields": {
+        "tec": 0,
+        "rec": 0
+      },
+      "frame": {
+        "id": "0x7FC",
+        "data": "0000"
+      }
+    },
+    {
+      "name": "AUTHORIZE_DOWNGRADE request: authorise",
+      "message": "AUTHORIZE_DOWNGRADE",
+      "layout": "authorize_downgrade",
+      "fields": {
+        "magic": "D09E12AD"
+      },
+      "frame": {
+        "id": "0x7FD",
+        "data": "D09E12AD"
+      }
+    },
+    {
+      "name": "READBACK request: empty query",
+      "message": "READBACK",
+      "layout": "readback_request",
+      "fields": {},
+      "frame": {
+        "id": "0x7FE",
+        "data": ""
+      }
+    },
+    {
+      "name": "READBACK response size: 2 KiB installed",
+      "message": "READBACK",
+      "layout": "readback_response_size",
+      "fields": {
+        "total_size": 2048
+      },
+      "frame": {
+        "id": "0x7FE",
+        "data": "00000800"
+      }
+    },
+    {
+      "name": "READBACK response data: eight bytes",
+      "message": "READBACK",
+      "layout": "readback_response_data",
+      "fields": {
+        "data": "0102030405060708"
+      },
+      "frame": {
+        "id": "0x7FE",
+        "data": "0102030405060708"
+      }
+    },
+    {
+      "name": "READBACK_PAGE_ACK request: page 0",
+      "message": "READBACK_PAGE_ACK",
+      "layout": "readback_page_ack",
+      "fields": {
+        "page_index": 0
+      },
+      "frame": {
+        "id": "0x7FF",
+        "data": "00000000"
+      }
+    }
+  ],
+  "frames_decode": [
+    {
+      "name": "IMPACT_EVENT response: impact",
+      "message": "IMPACT_EVENT",
+      "layout": "impact_event",
+      "frame": {
+        "id": "0x095",
+        "data": "01"
+      },
+      "fields": {
+        "event": 1
+      }
+    },
+    {
+      "name": "IMPACT_EVENT response: 0 bytes is too short",
+      "message": "IMPACT_EVENT",
+      "layout": "impact_event",
+      "frame": {
+        "id": "0x095",
+        "data": ""
+      },
+      "fields": null
+    },
+    {
+      "name": "IMPACT_EVENT response: one byte too many is refused when strict",
+      "message": "IMPACT_EVENT",
+      "layout": "impact_event",
+      "frame": {
+        "id": "0x095",
+        "data": "0100"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "GLOBAL_STATUS request: all off",
+      "message": "GLOBAL_STATUS",
+      "layout": "global_status",
+      "frame": {
+        "id": "0x100",
+        "data": "0000000000000000"
+      },
+      "fields": {
+        "status_r": 0,
+        "status_g": 0,
+        "status_b": 0,
+        "display_mode": 0,
+        "ring_r": 0,
+        "ring_g": 0,
+        "ring_b": 0,
+        "ring_on": 0
+      }
+    },
+    {
+      "name": "GLOBAL_STATUS request: night mode with a blue ring",
+      "message": "GLOBAL_STATUS",
+      "layout": "global_status",
+      "frame": {
+        "id": "0x100",
+        "data": "FF8000010000FF01"
+      },
+      "fields": {
+        "status_r": 255,
+        "status_g": 128,
+        "status_b": 0,
+        "display_mode": 1,
+        "ring_r": 0,
+        "ring_g": 0,
+        "ring_b": 255,
+        "ring_on": 1
+      }
+    },
+    {
+      "name": "GLOBAL_STATUS request: 7 bytes is too short",
+      "message": "GLOBAL_STATUS",
+      "layout": "global_status",
+      "frame": {
+        "id": "0x100",
+        "data": "00000000000000"
+      },
+      "fields": null
+    },
+    {
+      "name": "QUERY_ACTIVE_TOOL request: empty query",
+      "message": "QUERY_ACTIVE_TOOL",
+      "layout": "query_active_tool",
+      "frame": {
+        "id": "0x110",
+        "data": ""
+      },
+      "fields": {}
+    },
+    {
+      "name": "ACTIVE_TOOL_RESP response: idle soldering iron after a power-on reset",
+      "message": "ACTIVE_TOOL_RESP",
+      "layout": "active_tool_resp",
+      "frame": {
+        "id": "0x111",
+        "data": "000000000008"
+      },
+      "fields": {
+        "tool_id": 0,
+        "system_error": 0,
+        "can_error": 0,
+        "booting": 0,
+        "thermal_fault": 0,
+        "reset_cause": 8
+      }
+    },
+    {
+      "name": "ACTIVE_TOOL_RESP response: four bytes (older firmware)",
+      "message": "ACTIVE_TOOL_RESP",
+      "layout": "active_tool_resp",
+      "frame": {
+        "id": "0x111",
+        "data": "0A000100"
+      },
+      "fields": {
+        "tool_id": 10,
+        "system_error": 0,
+        "can_error": 1,
+        "booting": 0,
+        "thermal_fault": null,
+        "reset_cause": null
+      }
+    },
+    {
+      "name": "ACTIVE_TOOL_RESP response: five bytes",
+      "message": "ACTIVE_TOOL_RESP",
+      "layout": "active_tool_resp",
+      "frame": {
+        "id": "0x111",
+        "data": "0A01000002"
+      },
+      "fields": {
+        "tool_id": 10,
+        "system_error": 1,
+        "can_error": 0,
+        "booting": 0,
+        "thermal_fault": 2,
+        "reset_cause": null
+      }
+    },
+    {
+      "name": "ACTIVE_TOOL_RESP response: 3 bytes is too short",
+      "message": "ACTIVE_TOOL_RESP",
+      "layout": "active_tool_resp",
+      "frame": {
+        "id": "0x111",
+        "data": "000000"
+      },
+      "fields": null
+    },
+    {
+      "name": "MOTION_CMD request: forward 1000 steps",
+      "message": "MOTION_CMD",
+      "layout": "motion_cmd",
+      "frame": {
+        "id": "0x120",
+        "data": "01000003E8"
+      },
+      "fields": {
+        "direction": 1,
+        "steps": 1000
+      }
+    },
+    {
+      "name": "MOTION_CMD request: stop",
+      "message": "MOTION_CMD",
+      "layout": "motion_cmd",
+      "frame": {
+        "id": "0x120",
+        "data": "0000000000"
+      },
+      "fields": {
+        "direction": 0,
+        "steps": 0
+      }
+    },
+    {
+      "name": "MOTION_CMD request: 4 bytes is too short",
+      "message": "MOTION_CMD",
+      "layout": "motion_cmd",
+      "frame": {
+        "id": "0x120",
+        "data": "01000003"
+      },
+      "fields": null
+    },
+    {
+      "name": "MOTION_CMD request: one byte too many is refused when strict",
+      "message": "MOTION_CMD",
+      "layout": "motion_cmd",
+      "frame": {
+        "id": "0x120",
+        "data": "01000003E800"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "SOLDER_SETPOINT request: 350 C",
+      "message": "SOLDER_SETPOINT",
+      "layout": "solder_setpoint",
+      "frame": {
+        "id": "0x130",
+        "data": "015E"
+      },
+      "fields": {
+        "setpoint_c": 350
+      }
+    },
+    {
+      "name": "SOLDER_SETPOINT request: off",
+      "message": "SOLDER_SETPOINT",
+      "layout": "solder_setpoint",
+      "frame": {
+        "id": "0x130",
+        "data": "0000"
+      },
+      "fields": {
+        "setpoint_c": 0
+      }
+    },
+    {
+      "name": "SOLDER_SETPOINT request: 1 bytes is too short",
+      "message": "SOLDER_SETPOINT",
+      "layout": "solder_setpoint",
+      "frame": {
+        "id": "0x130",
+        "data": "01"
+      },
+      "fields": null
+    },
+    {
+      "name": "SOLDER_SETPOINT request: one byte too many is refused when strict",
+      "message": "SOLDER_SETPOINT",
+      "layout": "solder_setpoint",
+      "frame": {
+        "id": "0x130",
+        "data": "015E00"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "SOLDER_FEEDER_RESET request: reset",
+      "message": "SOLDER_FEEDER_RESET",
+      "layout": "solder_feeder_reset",
+      "frame": {
+        "id": "0x131",
+        "data": "52535030"
+      },
+      "fields": {
+        "magic": "52535030"
+      }
+    },
+    {
+      "name": "SOLDER_FEEDER_RESET request: 3 bytes is too short",
+      "message": "SOLDER_FEEDER_RESET",
+      "layout": "solder_feeder_reset",
+      "frame": {
+        "id": "0x131",
+        "data": "525350"
+      },
+      "fields": null
+    },
+    {
+      "name": "SOLDER_FEEDER_RESET request: one byte too many is refused when strict",
+      "message": "SOLDER_FEEDER_RESET",
+      "layout": "solder_feeder_reset",
+      "frame": {
+        "id": "0x131",
+        "data": "5253503000"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "SOLDER_FEEDER_POS request: empty query",
+      "message": "SOLDER_FEEDER_POS",
+      "layout": "solder_feeder_pos_request",
+      "frame": {
+        "id": "0x132",
+        "data": ""
+      },
+      "fields": {}
+    },
+    {
+      "name": "SOLDER_FEEDER_POS response: net retracted",
+      "message": "SOLDER_FEEDER_POS",
+      "layout": "solder_feeder_pos_response",
+      "frame": {
+        "id": "0x132",
+        "data": "FFFFFA24"
+      },
+      "fields": {
+        "position": -1500
+      }
+    },
+    {
+      "name": "SOLDER_FEEDER_POS response: 3 bytes is too short",
+      "message": "SOLDER_FEEDER_POS",
+      "layout": "solder_feeder_pos_response",
+      "frame": {
+        "id": "0x132",
+        "data": "FFFFFA"
+      },
+      "fields": null
+    },
+    {
+      "name": "SOLDER_FEEDER_POS response: one byte too many is refused when strict",
+      "message": "SOLDER_FEEDER_POS",
+      "layout": "solder_feeder_pos_response",
+      "frame": {
+        "id": "0x132",
+        "data": "FFFFFA2400"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "SOLDER_TELEMETRY response: 25 C",
+      "message": "SOLDER_TELEMETRY",
+      "layout": "solder_telemetry",
+      "frame": {
+        "id": "0x135",
+        "data": "0019"
+      },
+      "fields": {
+        "temperature_c": 25
+      }
+    },
+    {
+      "name": "SOLDER_TELEMETRY response: 1 bytes is too short",
+      "message": "SOLDER_TELEMETRY",
+      "layout": "solder_telemetry",
+      "frame": {
+        "id": "0x135",
+        "data": "00"
+      },
+      "fields": null
+    },
+    {
+      "name": "SOLDER_TELEMETRY response: one byte too many is refused when strict",
+      "message": "SOLDER_TELEMETRY",
+      "layout": "solder_telemetry",
+      "frame": {
+        "id": "0x135",
+        "data": "001900"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "DRILL_CMD request: half speed counter-clockwise",
+      "message": "DRILL_CMD",
+      "layout": "drill_cmd",
+      "frame": {
+        "id": "0x140",
+        "data": "8001"
+      },
+      "fields": {
+        "speed": 128,
+        "direction": 1
+      }
+    },
+    {
+      "name": "DRILL_CMD request: 1 bytes is too short",
+      "message": "DRILL_CMD",
+      "layout": "drill_cmd",
+      "frame": {
+        "id": "0x140",
+        "data": "80"
+      },
+      "fields": null
+    },
+    {
+      "name": "DRILL_CMD request: one byte too many is refused when strict",
+      "message": "DRILL_CMD",
+      "layout": "drill_cmd",
+      "frame": {
+        "id": "0x140",
+        "data": "800100"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "VACUUM_TELEMETRY response: object picked up",
+      "message": "VACUUM_TELEMETRY",
+      "layout": "vacuum_telemetry",
+      "frame": {
+        "id": "0x145",
+        "data": "080001"
+      },
+      "fields": {
+        "adc": 2048,
+        "detected": 1
+      }
+    },
+    {
+      "name": "VACUUM_TELEMETRY response: 2 bytes is too short",
+      "message": "VACUUM_TELEMETRY",
+      "layout": "vacuum_telemetry",
+      "frame": {
+        "id": "0x145",
+        "data": "0800"
+      },
+      "fields": null
+    },
+    {
+      "name": "VACUUM_TELEMETRY response: one byte too many is refused when strict",
+      "message": "VACUUM_TELEMETRY",
+      "layout": "vacuum_telemetry",
+      "frame": {
+        "id": "0x145",
+        "data": "08000100"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "DRILL_TELEMETRY response: 3000 rpm",
+      "message": "DRILL_TELEMETRY",
+      "layout": "drill_telemetry",
+      "frame": {
+        "id": "0x147",
+        "data": "0BB800"
+      },
+      "fields": {
+        "rpm": 3000,
+        "endstop": 0
+      }
+    },
+    {
+      "name": "DRILL_TELEMETRY response: 2 bytes is too short",
+      "message": "DRILL_TELEMETRY",
+      "layout": "drill_telemetry",
+      "frame": {
+        "id": "0x147",
+        "data": "0BB8"
+      },
+      "fields": null
+    },
+    {
+      "name": "DRILL_TELEMETRY response: one byte too many is refused when strict",
+      "message": "DRILL_TELEMETRY",
+      "layout": "drill_telemetry",
+      "frame": {
+        "id": "0x147",
+        "data": "0BB80000"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "AOI_CMD request: strobe 100 ms",
+      "message": "AOI_CMD",
+      "layout": "aoi_cmd",
+      "frame": {
+        "id": "0x150",
+        "data": "010064"
+      },
+      "fields": {
+        "mode": 1,
+        "strobe_period_ms": 100
+      }
+    },
+    {
+      "name": "AOI_CMD request: 2 bytes is too short",
+      "message": "AOI_CMD",
+      "layout": "aoi_cmd",
+      "frame": {
+        "id": "0x150",
+        "data": "0100"
+      },
+      "fields": null
+    },
+    {
+      "name": "AOI_CMD request: one byte too many is refused when strict",
+      "message": "AOI_CMD",
+      "layout": "aoi_cmd",
+      "frame": {
+        "id": "0x150",
+        "data": "01006400"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "AOI_TELEMETRY response: open",
+      "message": "AOI_TELEMETRY",
+      "layout": "aoi_telemetry",
+      "frame": {
+        "id": "0x155",
+        "data": "00"
+      },
+      "fields": {
+        "endstop": 0
+      }
+    },
+    {
+      "name": "AOI_TELEMETRY response: 0 bytes is too short",
+      "message": "AOI_TELEMETRY",
+      "layout": "aoi_telemetry",
+      "frame": {
+        "id": "0x155",
+        "data": ""
+      },
+      "fields": null
+    },
+    {
+      "name": "AOI_TELEMETRY response: one byte too many is refused when strict",
+      "message": "AOI_TELEMETRY",
+      "layout": "aoi_telemetry",
+      "frame": {
+        "id": "0x155",
+        "data": "0000"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "LASER_CMD request: armed at 100",
+      "message": "LASER_CMD",
+      "layout": "laser_cmd",
+      "frame": {
+        "id": "0x160",
+        "data": "6401"
+      },
+      "fields": {
+        "power": 100,
+        "interlock": 1
+      }
+    },
+    {
+      "name": "LASER_CMD request: safe off",
+      "message": "LASER_CMD",
+      "layout": "laser_cmd",
+      "frame": {
+        "id": "0x160",
+        "data": "0000"
+      },
+      "fields": {
+        "power": 0,
+        "interlock": 0
+      }
+    },
+    {
+      "name": "LASER_CMD request: 1 bytes is too short",
+      "message": "LASER_CMD",
+      "layout": "laser_cmd",
+      "frame": {
+        "id": "0x160",
+        "data": "64"
+      },
+      "fields": null
+    },
+    {
+      "name": "LASER_CMD request: one byte too many is refused when strict",
+      "message": "LASER_CMD",
+      "layout": "laser_cmd",
+      "frame": {
+        "id": "0x160",
+        "data": "640100"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "LASER_TELEMETRY response: triggered",
+      "message": "LASER_TELEMETRY",
+      "layout": "laser_telemetry",
+      "frame": {
+        "id": "0x165",
+        "data": "01"
+      },
+      "fields": {
+        "endstop": 1
+      }
+    },
+    {
+      "name": "LASER_TELEMETRY response: 0 bytes is too short",
+      "message": "LASER_TELEMETRY",
+      "layout": "laser_telemetry",
+      "frame": {
+        "id": "0x165",
+        "data": ""
+      },
+      "fields": null
+    },
+    {
+      "name": "LASER_TELEMETRY response: one byte too many is refused when strict",
+      "message": "LASER_TELEMETRY",
+      "layout": "laser_telemetry",
+      "frame": {
+        "id": "0x165",
+        "data": "0100"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "PRINTER_THERMAL_MOTION request: 200 C, extrude 16 steps",
+      "message": "PRINTER_THERMAL_MOTION",
+      "layout": "printer_thermal_motion",
+      "frame": {
+        "id": "0x170",
+        "data": "00C801000010"
+      },
+      "fields": {
+        "nozzle_setpoint_c": 200,
+        "extruder_direction": 1,
+        "extruder_steps": 16
+      }
+    },
+    {
+      "name": "PRINTER_THERMAL_MOTION request: heater off",
+      "message": "PRINTER_THERMAL_MOTION",
+      "layout": "printer_thermal_motion",
+      "frame": {
+        "id": "0x170",
+        "data": "000001000000"
+      },
+      "fields": {
+        "nozzle_setpoint_c": 0,
+        "extruder_direction": 1,
+        "extruder_steps": 0
+      }
+    },
+    {
+      "name": "PRINTER_THERMAL_MOTION request: 5 bytes is too short",
+      "message": "PRINTER_THERMAL_MOTION",
+      "layout": "printer_thermal_motion",
+      "frame": {
+        "id": "0x170",
+        "data": "00C8010000"
+      },
+      "fields": null
+    },
+    {
+      "name": "PRINTER_THERMAL_MOTION request: one byte too many is refused when strict",
+      "message": "PRINTER_THERMAL_MOTION",
+      "layout": "printer_thermal_motion",
+      "frame": {
+        "id": "0x170",
+        "data": "00C80100001000"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "PRINTER_LAYERFAN_CMD request: full",
+      "message": "PRINTER_LAYERFAN_CMD",
+      "layout": "printer_layerfan_cmd",
+      "frame": {
+        "id": "0x173",
+        "data": "FF"
+      },
+      "fields": {
+        "power": 255
+      }
+    },
+    {
+      "name": "PRINTER_LAYERFAN_CMD request: 0 bytes is too short",
+      "message": "PRINTER_LAYERFAN_CMD",
+      "layout": "printer_layerfan_cmd",
+      "frame": {
+        "id": "0x173",
+        "data": ""
+      },
+      "fields": null
+    },
+    {
+      "name": "PRINTER_LAYERFAN_CMD request: one byte too many is refused when strict",
+      "message": "PRINTER_LAYERFAN_CMD",
+      "layout": "printer_layerfan_cmd",
+      "frame": {
+        "id": "0x173",
+        "data": "FF00"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "PRINTER_HOTEND_TELEMETRY response: 200 C",
+      "message": "PRINTER_HOTEND_TELEMETRY",
+      "layout": "printer_hotend_telemetry",
+      "frame": {
+        "id": "0x175",
+        "data": "00C8"
+      },
+      "fields": {
+        "temperature_c": 200
+      }
+    },
+    {
+      "name": "PRINTER_HOTEND_TELEMETRY response: 1 bytes is too short",
+      "message": "PRINTER_HOTEND_TELEMETRY",
+      "layout": "printer_hotend_telemetry",
+      "frame": {
+        "id": "0x175",
+        "data": "00"
+      },
+      "fields": null
+    },
+    {
+      "name": "PRINTER_HOTEND_TELEMETRY response: one byte too many is refused when strict",
+      "message": "PRINTER_HOTEND_TELEMETRY",
+      "layout": "printer_hotend_telemetry",
+      "frame": {
+        "id": "0x175",
+        "data": "00C800"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "PRINTER_LAYERFAN_RPM response: 4800 rpm",
+      "message": "PRINTER_LAYERFAN_RPM",
+      "layout": "printer_layerfan_rpm",
+      "frame": {
+        "id": "0x177",
+        "data": "12C0"
+      },
+      "fields": {
+        "rpm": 4800
+      }
+    },
+    {
+      "name": "PRINTER_LAYERFAN_RPM response: 1 bytes is too short",
+      "message": "PRINTER_LAYERFAN_RPM",
+      "layout": "printer_layerfan_rpm",
+      "frame": {
+        "id": "0x177",
+        "data": "12"
+      },
+      "fields": null
+    },
+    {
+      "name": "PRINTER_LAYERFAN_RPM response: one byte too many is refused when strict",
+      "message": "PRINTER_LAYERFAN_RPM",
+      "layout": "printer_layerfan_rpm",
+      "frame": {
+        "id": "0x177",
+        "data": "12C000"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "PRINTER_HOTENDFAN_CMD request: full",
+      "message": "PRINTER_HOTENDFAN_CMD",
+      "layout": "printer_hotendfan_cmd",
+      "frame": {
+        "id": "0x178",
+        "data": "FF"
+      },
+      "fields": {
+        "power": 255
+      }
+    },
+    {
+      "name": "PRINTER_HOTENDFAN_CMD request: 0 bytes is too short",
+      "message": "PRINTER_HOTENDFAN_CMD",
+      "layout": "printer_hotendfan_cmd",
+      "frame": {
+        "id": "0x178",
+        "data": ""
+      },
+      "fields": null
+    },
+    {
+      "name": "PRINTER_HOTENDFAN_CMD request: one byte too many is refused when strict",
+      "message": "PRINTER_HOTENDFAN_CMD",
+      "layout": "printer_hotendfan_cmd",
+      "frame": {
+        "id": "0x178",
+        "data": "FF00"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "PRINTER_HOTENDFAN_RPM response: 5000 rpm",
+      "message": "PRINTER_HOTENDFAN_RPM",
+      "layout": "printer_hotendfan_rpm",
+      "frame": {
+        "id": "0x179",
+        "data": "1388"
+      },
+      "fields": {
+        "rpm": 5000
+      }
+    },
+    {
+      "name": "PRINTER_HOTENDFAN_RPM response: 1 bytes is too short",
+      "message": "PRINTER_HOTENDFAN_RPM",
+      "layout": "printer_hotendfan_rpm",
+      "frame": {
+        "id": "0x179",
+        "data": "13"
+      },
+      "fields": null
+    },
+    {
+      "name": "PRINTER_HOTENDFAN_RPM response: one byte too many is refused when strict",
+      "message": "PRINTER_HOTENDFAN_RPM",
+      "layout": "printer_hotendfan_rpm",
+      "frame": {
+        "id": "0x179",
+        "data": "138800"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "EXPANSION_SPI_REQ request: three bytes",
+      "message": "EXPANSION_SPI_REQ",
+      "layout": "expansion_spi_req",
+      "frame": {
+        "id": "0x180",
+        "data": "03010203"
+      },
+      "fields": {
+        "count": 3,
+        "data": "010203"
+      }
+    },
+    {
+      "name": "EXPANSION_SPI_REQ request: 1 bytes is too short",
+      "message": "EXPANSION_SPI_REQ",
+      "layout": "expansion_spi_req",
+      "frame": {
+        "id": "0x180",
+        "data": "03"
+      },
+      "fields": null
+    },
+    {
+      "name": "EXPANSION_SPI_RESP response: three bytes back",
+      "message": "EXPANSION_SPI_RESP",
+      "layout": "expansion_spi_resp",
+      "frame": {
+        "id": "0x181",
+        "data": "03A1B2C3"
+      },
+      "fields": {
+        "count": 3,
+        "data": "A1B2C3"
+      }
+    },
+    {
+      "name": "EXPANSION_SPI_RESP response: 1 bytes is too short",
+      "message": "EXPANSION_SPI_RESP",
+      "layout": "expansion_spi_resp",
+      "frame": {
+        "id": "0x181",
+        "data": "03"
+      },
+      "fields": null
+    },
+    {
+      "name": "EXPANSION_DIAG0_REQ request: empty query",
+      "message": "EXPANSION_DIAG0_REQ",
+      "layout": "expansion_diag0_req",
+      "frame": {
+        "id": "0x182",
+        "data": ""
+      },
+      "fields": {}
+    },
+    {
+      "name": "EXPANSION_DIAG0_RESP response: high",
+      "message": "EXPANSION_DIAG0_RESP",
+      "layout": "expansion_diag0_resp",
+      "frame": {
+        "id": "0x183",
+        "data": "01"
+      },
+      "fields": {
+        "level": 1
+      }
+    },
+    {
+      "name": "EXPANSION_DIAG0_RESP response: 0 bytes is too short",
+      "message": "EXPANSION_DIAG0_RESP",
+      "layout": "expansion_diag0_resp",
+      "frame": {
+        "id": "0x183",
+        "data": ""
+      },
+      "fields": null
+    },
+    {
+      "name": "EXPANSION_DIAG0_RESP response: one byte too many is refused when strict",
+      "message": "EXPANSION_DIAG0_RESP",
+      "layout": "expansion_diag0_resp",
+      "frame": {
+        "id": "0x183",
+        "data": "0100"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "FRAM_QUERY request: empty query",
+      "message": "FRAM_QUERY",
+      "layout": "fram_query",
+      "frame": {
+        "id": "0x190",
+        "data": ""
+      },
+      "fields": {}
+    },
+    {
+      "name": "FRAM_STATE_RESP response: saved soldering state",
+      "message": "FRAM_STATE_RESP",
+      "layout": "fram_state_resp",
+      "frame": {
+        "id": "0x191",
+        "data": "010000015E000000"
+      },
+      "fields": {
+        "valid": 1,
+        "tool_id": 0,
+        "had_error": 0,
+        "setpoint_c": 350,
+        "speed": 0,
+        "dir_or_interlock": 0,
+        "fan": 0
+      }
+    },
+    {
+      "name": "FRAM_STATE_RESP response: 7 bytes is too short",
+      "message": "FRAM_STATE_RESP",
+      "layout": "fram_state_resp",
+      "frame": {
+        "id": "0x191",
+        "data": "010000015E0000"
+      },
+      "fields": null
+    },
+    {
+      "name": "ERASE_FRAM request: erase",
+      "message": "ERASE_FRAM",
+      "layout": "erase_fram",
+      "frame": {
+        "id": "0x192",
+        "data": "E3A5E0FF"
+      },
+      "fields": {
+        "magic": "E3A5E0FF"
+      }
+    },
+    {
+      "name": "ERASE_FRAM request: 3 bytes is too short",
+      "message": "ERASE_FRAM",
+      "layout": "erase_fram",
+      "frame": {
+        "id": "0x192",
+        "data": "E3A5E0"
+      },
+      "fields": null
+    },
+    {
+      "name": "ERASE_FRAM request: one byte too many is refused when strict",
+      "message": "ERASE_FRAM",
+      "layout": "erase_fram",
+      "frame": {
+        "id": "0x192",
+        "data": "E3A5E0FF00"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "SET_EXPANSION_TYPE request: advanced TMC5160A",
+      "message": "SET_EXPANSION_TYPE",
+      "layout": "set_expansion_type",
+      "frame": {
+        "id": "0x1A0",
+        "data": "04"
+      },
+      "fields": {
+        "board_type": 4
+      }
+    },
+    {
+      "name": "SET_EXPANSION_TYPE request: 0 bytes is too short",
+      "message": "SET_EXPANSION_TYPE",
+      "layout": "set_expansion_type",
+      "frame": {
+        "id": "0x1A0",
+        "data": ""
+      },
+      "fields": null
+    },
+    {
+      "name": "EXPANSION_TYPE_RESP request: empty query",
+      "message": "EXPANSION_TYPE_RESP",
+      "layout": "expansion_type_resp_request",
+      "frame": {
+        "id": "0x1A1",
+        "data": ""
+      },
+      "fields": {}
+    },
+    {
+      "name": "EXPANSION_TYPE_RESP response: none",
+      "message": "EXPANSION_TYPE_RESP",
+      "layout": "expansion_type_resp_response",
+      "frame": {
+        "id": "0x1A1",
+        "data": "00"
+      },
+      "fields": {
+        "board_type": 0
+      }
+    },
+    {
+      "name": "EXPANSION_TYPE_RESP response: 0 bytes is too short",
+      "message": "EXPANSION_TYPE_RESP",
+      "layout": "expansion_type_resp_response",
+      "frame": {
+        "id": "0x1A1",
+        "data": ""
+      },
+      "fields": null
+    },
+    {
+      "name": "EXPANSION_TYPE_RESP response: one byte too many is refused when strict",
+      "message": "EXPANSION_TYPE_RESP",
+      "layout": "expansion_type_resp_response",
+      "frame": {
+        "id": "0x1A1",
+        "data": "0000"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "SET_FREE_TOOL request: thermal inspection",
+      "message": "SET_FREE_TOOL",
+      "layout": "set_free_tool",
+      "frame": {
+        "id": "0x1A2",
+        "data": "17"
+      },
+      "fields": {
+        "selection": 23
+      }
+    },
+    {
+      "name": "SET_FREE_TOOL request: 0 bytes is too short",
+      "message": "SET_FREE_TOOL",
+      "layout": "set_free_tool",
+      "frame": {
+        "id": "0x1A2",
+        "data": ""
+      },
+      "fields": null
+    },
+    {
+      "name": "FREE_TOOL_CONFIG_RESP request: empty query",
+      "message": "FREE_TOOL_CONFIG_RESP",
+      "layout": "free_tool_config_resp_request",
+      "frame": {
+        "id": "0x1A3",
+        "data": ""
+      },
+      "fields": {}
+    },
+    {
+      "name": "FREE_TOOL_CONFIG_RESP response: jumpers 0x1F, tool 3 chosen",
+      "message": "FREE_TOOL_CONFIG_RESP",
+      "layout": "free_tool_config_resp_response",
+      "frame": {
+        "id": "0x1A3",
+        "data": "1F04"
+      },
+      "fields": {
+        "jumper_reading": 31,
+        "selection": 4
+      }
+    },
+    {
+      "name": "FREE_TOOL_CONFIG_RESP response: 1 bytes is too short",
+      "message": "FREE_TOOL_CONFIG_RESP",
+      "layout": "free_tool_config_resp_response",
+      "frame": {
+        "id": "0x1A3",
+        "data": "1F"
+      },
+      "fields": null
+    },
+    {
+      "name": "FREE_TOOL_CONFIG_RESP response: one byte too many is refused when strict",
+      "message": "FREE_TOOL_CONFIG_RESP",
+      "layout": "free_tool_config_resp_response",
+      "frame": {
+        "id": "0x1A3",
+        "data": "1F0400"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "SET_DEVICE_SERIAL request: serial 7",
+      "message": "SET_DEVICE_SERIAL",
+      "layout": "set_device_serial",
+      "frame": {
+        "id": "0x1A4",
+        "data": "07"
+      },
+      "fields": {
+        "serial": 7
+      }
+    },
+    {
+      "name": "SET_DEVICE_SERIAL request: 0 bytes is too short",
+      "message": "SET_DEVICE_SERIAL",
+      "layout": "set_device_serial",
+      "frame": {
+        "id": "0x1A4",
+        "data": ""
+      },
+      "fields": null
+    },
+    {
+      "name": "PERIPHERAL_INFO_RESP request: empty query",
+      "message": "PERIPHERAL_INFO_RESP",
+      "layout": "peripheral_info_resp_request",
+      "frame": {
+        "id": "0x1A5",
+        "data": ""
+      },
+      "fields": {}
+    },
+    {
+      "name": "PERIPHERAL_INFO_RESP response: URTC, serial 7",
+      "message": "PERIPHERAL_INFO_RESP",
+      "layout": "peripheral_info_resp_response",
+      "frame": {
+        "id": "0x1A5",
+        "data": "0307"
+      },
+      "fields": {
+        "peripheral_type": 3,
+        "serial": 7
+      }
+    },
+    {
+      "name": "PERIPHERAL_INFO_RESP response: 1 bytes is too short",
+      "message": "PERIPHERAL_INFO_RESP",
+      "layout": "peripheral_info_resp_response",
+      "frame": {
+        "id": "0x1A5",
+        "data": "03"
+      },
+      "fields": null
+    },
+    {
+      "name": "PERIPHERAL_INFO_RESP response: one byte too many is refused when strict",
+      "message": "PERIPHERAL_INFO_RESP",
+      "layout": "peripheral_info_resp_response",
+      "frame": {
+        "id": "0x1A5",
+        "data": "030700"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "SET_MLX_VARIANT request: MLX90640",
+      "message": "SET_MLX_VARIANT",
+      "layout": "set_mlx_variant",
+      "frame": {
+        "id": "0x1A6",
+        "data": "01"
+      },
+      "fields": {
+        "variant": 1
+      }
+    },
+    {
+      "name": "SET_MLX_VARIANT request: 0 bytes is too short",
+      "message": "SET_MLX_VARIANT",
+      "layout": "set_mlx_variant",
+      "frame": {
+        "id": "0x1A6",
+        "data": ""
+      },
+      "fields": null
+    },
+    {
+      "name": "MLX_VARIANT_RESP request: empty query",
+      "message": "MLX_VARIANT_RESP",
+      "layout": "mlx_variant_resp_request",
+      "frame": {
+        "id": "0x1A7",
+        "data": ""
+      },
+      "fields": {}
+    },
+    {
+      "name": "MLX_VARIANT_RESP response: MLX90641",
+      "message": "MLX_VARIANT_RESP",
+      "layout": "mlx_variant_resp_response",
+      "frame": {
+        "id": "0x1A7",
+        "data": "02"
+      },
+      "fields": {
+        "variant": 2
+      }
+    },
+    {
+      "name": "MLX_VARIANT_RESP response: 0 bytes is too short",
+      "message": "MLX_VARIANT_RESP",
+      "layout": "mlx_variant_resp_response",
+      "frame": {
+        "id": "0x1A7",
+        "data": ""
+      },
+      "fields": null
+    },
+    {
+      "name": "MLX_VARIANT_RESP response: one byte too many is refused when strict",
+      "message": "MLX_VARIANT_RESP",
+      "layout": "mlx_variant_resp_response",
+      "frame": {
+        "id": "0x1A7",
+        "data": "0200"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "BLACKBOX_QUERY request: first chunk",
+      "message": "BLACKBOX_QUERY",
+      "layout": "blackbox_query",
+      "frame": {
+        "id": "0x1A8",
+        "data": "00"
+      },
+      "fields": {
+        "chunk_index": 0
+      }
+    },
+    {
+      "name": "BLACKBOX_QUERY request: 0 bytes is too short",
+      "message": "BLACKBOX_QUERY",
+      "layout": "blackbox_query",
+      "frame": {
+        "id": "0x1A8",
+        "data": ""
+      },
+      "fields": null
+    },
+    {
+      "name": "BLACKBOX_CHUNK response: one of the four frames",
+      "message": "BLACKBOX_CHUNK",
+      "layout": "blackbox_chunk",
+      "frame": {
+        "id": "0x1A9",
+        "data": "0102030405060708"
+      },
+      "fields": {
+        "data": "0102030405060708"
+      }
+    },
+    {
+      "name": "BLACKBOX_CHUNK response: 7 bytes is too short",
+      "message": "BLACKBOX_CHUNK",
+      "layout": "blackbox_chunk",
+      "frame": {
+        "id": "0x1A9",
+        "data": "01020304050607"
+      },
+      "fields": null
+    },
+    {
+      "name": "THERMAL_STATS_QUERY request: empty query",
+      "message": "THERMAL_STATS_QUERY",
+      "layout": "thermal_stats_query",
+      "frame": {
+        "id": "0x1AA",
+        "data": ""
+      },
+      "fields": {}
+    },
+    {
+      "name": "THERMAL_STATS_RESP response: two faults",
+      "message": "THERMAL_STATS_RESP",
+      "layout": "thermal_stats_resp",
+      "frame": {
+        "id": "0x1AB",
+        "data": "000200000E100101"
+      },
+      "fields": {
+        "fault_count": 2,
+        "heater_on_seconds": 3600,
+        "last_fault": 1,
+        "persisted": 1
+      }
+    },
+    {
+      "name": "THERMAL_STATS_RESP response: 7 bytes is too short",
+      "message": "THERMAL_STATS_RESP",
+      "layout": "thermal_stats_resp",
+      "frame": {
+        "id": "0x1AB",
+        "data": "000200000E1001"
+      },
+      "fields": null
+    },
+    {
+      "name": "ELECTROMAGNET_CMD request: energise",
+      "message": "ELECTROMAGNET_CMD",
+      "layout": "electromagnet_cmd",
+      "frame": {
+        "id": "0x1B0",
+        "data": "01"
+      },
+      "fields": {
+        "coil": 1
+      }
+    },
+    {
+      "name": "ELECTROMAGNET_CMD request: 0 bytes is too short",
+      "message": "ELECTROMAGNET_CMD",
+      "layout": "electromagnet_cmd",
+      "frame": {
+        "id": "0x1B0",
+        "data": ""
+      },
+      "fields": null
+    },
+    {
+      "name": "ELECTROMAGNET_CMD request: one byte too many is refused when strict",
+      "message": "ELECTROMAGNET_CMD",
+      "layout": "electromagnet_cmd",
+      "frame": {
+        "id": "0x1B0",
+        "data": "0100"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "SPOT_WELD_CMD request: 100 ms pulse",
+      "message": "SPOT_WELD_CMD",
+      "layout": "spot_weld_cmd",
+      "frame": {
+        "id": "0x1C0",
+        "data": "010064"
+      },
+      "fields": {
+        "fire": 1,
+        "duration_ms": 100
+      }
+    },
+    {
+      "name": "SPOT_WELD_CMD request: 2 bytes is too short",
+      "message": "SPOT_WELD_CMD",
+      "layout": "spot_weld_cmd",
+      "frame": {
+        "id": "0x1C0",
+        "data": "0100"
+      },
+      "fields": null
+    },
+    {
+      "name": "SPOT_WELD_CMD request: one byte too many is refused when strict",
+      "message": "SPOT_WELD_CMD",
+      "layout": "spot_weld_cmd",
+      "frame": {
+        "id": "0x1C0",
+        "data": "01006400"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "UV_CURING_CMD request: half",
+      "message": "UV_CURING_CMD",
+      "layout": "uv_curing_cmd",
+      "frame": {
+        "id": "0x1D0",
+        "data": "80"
+      },
+      "fields": {
+        "duty": 128
+      }
+    },
+    {
+      "name": "UV_CURING_CMD request: 0 bytes is too short",
+      "message": "UV_CURING_CMD",
+      "layout": "uv_curing_cmd",
+      "frame": {
+        "id": "0x1D0",
+        "data": ""
+      },
+      "fields": null
+    },
+    {
+      "name": "UV_CURING_CMD request: one byte too many is refused when strict",
+      "message": "UV_CURING_CMD",
+      "layout": "uv_curing_cmd",
+      "frame": {
+        "id": "0x1D0",
+        "data": "8000"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "HOTAIR_CMD request: 300 C, blower 200",
+      "message": "HOTAIR_CMD",
+      "layout": "hotair_cmd",
+      "frame": {
+        "id": "0x1E0",
+        "data": "012CC8"
+      },
+      "fields": {
+        "setpoint_c": 300,
+        "blower_duty": 200
+      }
+    },
+    {
+      "name": "HOTAIR_CMD request: 2 bytes is too short",
+      "message": "HOTAIR_CMD",
+      "layout": "hotair_cmd",
+      "frame": {
+        "id": "0x1E0",
+        "data": "012C"
+      },
+      "fields": null
+    },
+    {
+      "name": "HOTAIR_CMD request: one byte too many is refused when strict",
+      "message": "HOTAIR_CMD",
+      "layout": "hotair_cmd",
+      "frame": {
+        "id": "0x1E0",
+        "data": "012CC800"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "CRIMPING_CMD request: forward 500 steps",
+      "message": "CRIMPING_CMD",
+      "layout": "crimping_cmd",
+      "frame": {
+        "id": "0x1F0",
+        "data": "01000001F4"
+      },
+      "fields": {
+        "direction": 1,
+        "steps": 500
+      }
+    },
+    {
+      "name": "CRIMPING_CMD request: 4 bytes is too short",
+      "message": "CRIMPING_CMD",
+      "layout": "crimping_cmd",
+      "frame": {
+        "id": "0x1F0",
+        "data": "01000001"
+      },
+      "fields": null
+    },
+    {
+      "name": "CRIMPING_CMD request: one byte too many is refused when strict",
+      "message": "CRIMPING_CMD",
+      "layout": "crimping_cmd",
+      "frame": {
+        "id": "0x1F0",
+        "data": "01000001F400"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "ULTRASONIC_WELD_CMD request: 250 ms pulse",
+      "message": "ULTRASONIC_WELD_CMD",
+      "layout": "ultrasonic_weld_cmd",
+      "frame": {
+        "id": "0x200",
+        "data": "0100FA"
+      },
+      "fields": {
+        "fire": 1,
+        "duration_ms": 250
+      }
+    },
+    {
+      "name": "ULTRASONIC_WELD_CMD request: 2 bytes is too short",
+      "message": "ULTRASONIC_WELD_CMD",
+      "layout": "ultrasonic_weld_cmd",
+      "frame": {
+        "id": "0x200",
+        "data": "0100"
+      },
+      "fields": null
+    },
+    {
+      "name": "ULTRASONIC_WELD_CMD request: one byte too many is refused when strict",
+      "message": "ULTRASONIC_WELD_CMD",
+      "layout": "ultrasonic_weld_cmd",
+      "frame": {
+        "id": "0x200",
+        "data": "0100FA00"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "SLAVE_ENTER_BOOTLOADER request: enter",
+      "message": "SLAVE_ENTER_BOOTLOADER",
+      "layout": "slave_enter_bootloader",
+      "frame": {
+        "id": "0x210",
+        "data": "B0071D5A"
+      },
+      "fields": {
+        "magic": "B0071D5A"
+      }
+    },
+    {
+      "name": "SLAVE_ENTER_BOOTLOADER request: 3 bytes is too short",
+      "message": "SLAVE_ENTER_BOOTLOADER",
+      "layout": "slave_enter_bootloader",
+      "frame": {
+        "id": "0x210",
+        "data": "B0071D"
+      },
+      "fields": null
+    },
+    {
+      "name": "SLAVE_ENTER_BOOTLOADER request: one byte too many is refused when strict",
+      "message": "SLAVE_ENTER_BOOTLOADER",
+      "layout": "slave_enter_bootloader",
+      "frame": {
+        "id": "0x210",
+        "data": "B0071D5A00"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "SLAVE_START_UPDATE request: 1 KiB image",
+      "message": "SLAVE_START_UPDATE",
+      "layout": "slave_start_update",
+      "frame": {
+        "id": "0x211",
+        "data": "000004000303CB01"
+      },
+      "fields": {
+        "total_size": 1024,
+        "hardware_id": 50580225
+      }
+    },
+    {
+      "name": "SLAVE_START_UPDATE request: 7 bytes is too short",
+      "message": "SLAVE_START_UPDATE",
+      "layout": "slave_start_update",
+      "frame": {
+        "id": "0x211",
+        "data": "000004000303CB"
+      },
+      "fields": null
+    },
+    {
+      "name": "SLAVE_HMAC_CHUNK request: first of four",
+      "message": "SLAVE_HMAC_CHUNK",
+      "layout": "slave_hmac_chunk",
+      "frame": {
+        "id": "0x212",
+        "data": "0001020304050607"
+      },
+      "fields": {
+        "hmac_part": "0001020304050607"
+      }
+    },
+    {
+      "name": "SLAVE_HMAC_CHUNK request: 7 bytes is too short",
+      "message": "SLAVE_HMAC_CHUNK",
+      "layout": "slave_hmac_chunk",
+      "frame": {
+        "id": "0x212",
+        "data": "00010203040506"
+      },
+      "fields": null
+    },
+    {
+      "name": "SLAVE_DATA request: four bytes",
+      "message": "SLAVE_DATA",
+      "layout": "slave_data",
+      "frame": {
+        "id": "0x213",
+        "data": "DEADBEEF"
+      },
+      "fields": {
+        "data": "DEADBEEF"
+      }
+    },
+    {
+      "name": "SLAVE_DATA request: 0 bytes is too short",
+      "message": "SLAVE_DATA",
+      "layout": "slave_data",
+      "frame": {
+        "id": "0x213",
+        "data": ""
+      },
+      "fields": null
+    },
+    {
+      "name": "SLAVE_END_UPDATE request: 0.2.0",
+      "message": "SLAVE_END_UPDATE",
+      "layout": "slave_end_update",
+      "frame": {
+        "id": "0x214",
+        "data": "1234567800000002"
+      },
+      "fields": {
+        "crc32": 305419896,
+        "version_major": 0,
+        "version_minor_field": 2
+      }
+    },
+    {
+      "name": "SLAVE_END_UPDATE request: 7 bytes is too short",
+      "message": "SLAVE_END_UPDATE",
+      "layout": "slave_end_update",
+      "frame": {
+        "id": "0x214",
+        "data": "12345678000000"
+      },
+      "fields": null
+    },
+    {
+      "name": "SLAVE_STATUS request: empty query",
+      "message": "SLAVE_STATUS",
+      "layout": "slave_status_request",
+      "frame": {
+        "id": "0x215",
+        "data": ""
+      },
+      "fields": {}
+    },
+    {
+      "name": "SLAVE_STATUS response: receiving",
+      "message": "SLAVE_STATUS",
+      "layout": "slave_status_response",
+      "frame": {
+        "id": "0x215",
+        "data": "03"
+      },
+      "fields": {
+        "status": 3
+      }
+    },
+    {
+      "name": "SLAVE_STATUS response: 0 bytes is too short",
+      "message": "SLAVE_STATUS",
+      "layout": "slave_status_response",
+      "frame": {
+        "id": "0x215",
+        "data": ""
+      },
+      "fields": null
+    },
+    {
+      "name": "SLAVE_STATUS response: one byte too many is refused when strict",
+      "message": "SLAVE_STATUS",
+      "layout": "slave_status_response",
+      "frame": {
+        "id": "0x215",
+        "data": "0300"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "SLAVE_PROGRESS request: empty query",
+      "message": "SLAVE_PROGRESS",
+      "layout": "slave_progress_request",
+      "frame": {
+        "id": "0x216",
+        "data": ""
+      },
+      "fields": {}
+    },
+    {
+      "name": "SLAVE_PROGRESS response: half",
+      "message": "SLAVE_PROGRESS",
+      "layout": "slave_progress_response",
+      "frame": {
+        "id": "0x216",
+        "data": "32"
+      },
+      "fields": {
+        "progress": 50
+      }
+    },
+    {
+      "name": "SLAVE_PROGRESS response: 0 bytes is too short",
+      "message": "SLAVE_PROGRESS",
+      "layout": "slave_progress_response",
+      "frame": {
+        "id": "0x216",
+        "data": ""
+      },
+      "fields": null
+    },
+    {
+      "name": "SLAVE_PROGRESS response: one byte too many is refused when strict",
+      "message": "SLAVE_PROGRESS",
+      "layout": "slave_progress_response",
+      "frame": {
+        "id": "0x216",
+        "data": "3200"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "SLAVE_VERSION_RESP_1 request: empty query",
+      "message": "SLAVE_VERSION_RESP_1",
+      "layout": "slave_version_resp_1_request",
+      "frame": {
+        "id": "0x217",
+        "data": ""
+      },
+      "fields": {}
+    },
+    {
+      "name": "SLAVE_VERSION_RESP_1 response: slave bootloader",
+      "message": "SLAVE_VERSION_RESP_1",
+      "layout": "slave_version_resp_1_response",
+      "frame": {
+        "id": "0x217",
+        "data": "010303CB01000000"
+      },
+      "fields": {
+        "responder": 1,
+        "hardware_id": 50580225,
+        "version_major": 0,
+        "version_minor_high": 0
+      }
+    },
+    {
+      "name": "SLAVE_VERSION_RESP_1 response: 7 bytes is too short",
+      "message": "SLAVE_VERSION_RESP_1",
+      "layout": "slave_version_resp_1_response",
+      "frame": {
+        "id": "0x217",
+        "data": "010303CB010000"
+      },
+      "fields": null
+    },
+    {
+      "name": "SLAVE_VERSION_RESP_2 response: legacy form",
+      "message": "SLAVE_VERSION_RESP_2",
+      "layout": "slave_version_resp_2",
+      "frame": {
+        "id": "0x218",
+        "data": "0200"
+      },
+      "fields": {
+        "version_minor_low": 2,
+        "bootloader_major": 0,
+        "app_patch": null,
+        "bootloader_minor": null,
+        "bootloader_patch": null
+      }
+    },
+    {
+      "name": "SLAVE_VERSION_RESP_2 response: patch extension",
+      "message": "SLAVE_VERSION_RESP_2",
+      "layout": "slave_version_resp_2",
+      "frame": {
+        "id": "0x218",
+        "data": "0200010103"
+      },
+      "fields": {
+        "version_minor_low": 2,
+        "bootloader_major": 0,
+        "app_patch": 1,
+        "bootloader_minor": 1,
+        "bootloader_patch": 3
+      }
+    },
+    {
+      "name": "SLAVE_VERSION_RESP_2 response: 1 bytes is too short",
+      "message": "SLAVE_VERSION_RESP_2",
+      "layout": "slave_version_resp_2",
+      "frame": {
+        "id": "0x218",
+        "data": "02"
+      },
+      "fields": null
+    },
+    {
+      "name": "SLAVE_VERIFY_FAIL_REASON request: empty query",
+      "message": "SLAVE_VERIFY_FAIL_REASON",
+      "layout": "slave_verify_fail_reason_request",
+      "frame": {
+        "id": "0x219",
+        "data": ""
+      },
+      "fields": {}
+    },
+    {
+      "name": "SLAVE_VERIFY_FAIL_REASON response: CRC32",
+      "message": "SLAVE_VERIFY_FAIL_REASON",
+      "layout": "slave_verify_fail_reason_response",
+      "frame": {
+        "id": "0x219",
+        "data": "02"
+      },
+      "fields": {
+        "reason": 2
+      }
+    },
+    {
+      "name": "SLAVE_VERIFY_FAIL_REASON response: 0 bytes is too short",
+      "message": "SLAVE_VERIFY_FAIL_REASON",
+      "layout": "slave_verify_fail_reason_response",
+      "frame": {
+        "id": "0x219",
+        "data": ""
+      },
+      "fields": null
+    },
+    {
+      "name": "SLAVE_VERIFY_FAIL_REASON response: one byte too many is refused when strict",
+      "message": "SLAVE_VERIFY_FAIL_REASON",
+      "layout": "slave_verify_fail_reason_response",
+      "frame": {
+        "id": "0x219",
+        "data": "0200"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "SLAVE_REG_WRITE request: PWM stop channel 1",
+      "message": "SLAVE_REG_WRITE",
+      "layout": "slave_reg_write",
+      "frame": {
+        "id": "0x220",
+        "data": "3201"
+      },
+      "fields": {
+        "register": 50,
+        "payload": "01"
+      }
+    },
+    {
+      "name": "SLAVE_REG_WRITE request: 1 bytes is too short",
+      "message": "SLAVE_REG_WRITE",
+      "layout": "slave_reg_write",
+      "frame": {
+        "id": "0x220",
+        "data": "32"
+      },
+      "fields": null
+    },
+    {
+      "name": "SLAVE_REG_READ request: read two bytes of register 0x22",
+      "message": "SLAVE_REG_READ",
+      "layout": "slave_reg_read_request",
+      "frame": {
+        "id": "0x221",
+        "data": "2202"
+      },
+      "fields": {
+        "register": 34,
+        "length": 2
+      }
+    },
+    {
+      "name": "SLAVE_REG_READ request: 1 bytes is too short",
+      "message": "SLAVE_REG_READ",
+      "layout": "slave_reg_read_request",
+      "frame": {
+        "id": "0x221",
+        "data": "22"
+      },
+      "fields": null
+    },
+    {
+      "name": "SLAVE_REG_READ request: one byte too many is refused when strict",
+      "message": "SLAVE_REG_READ",
+      "layout": "slave_reg_read_request",
+      "frame": {
+        "id": "0x221",
+        "data": "220200"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "SLAVE_REG_READ response: two bytes",
+      "message": "SLAVE_REG_READ",
+      "layout": "slave_reg_read_response",
+      "frame": {
+        "id": "0x221",
+        "data": "1234"
+      },
+      "fields": {
+        "data": "1234"
+      }
+    },
+    {
+      "name": "SLAVE_REG_READ response: 0 bytes is too short",
+      "message": "SLAVE_REG_READ",
+      "layout": "slave_reg_read_response",
+      "frame": {
+        "id": "0x221",
+        "data": ""
+      },
+      "fields": null
+    },
+    {
+      "name": "PASTE_JETTING_CONFIG request: channel 1 at 1 kHz",
+      "message": "PASTE_JETTING_CONFIG",
+      "layout": "paste_jetting_config",
+      "frame": {
+        "id": "0x230",
+        "data": "0103E8"
+      },
+      "fields": {
+        "channel": 1,
+        "frequency_hz": 1000
+      }
+    },
+    {
+      "name": "PASTE_JETTING_CONFIG request: 2 bytes is too short",
+      "message": "PASTE_JETTING_CONFIG",
+      "layout": "paste_jetting_config",
+      "frame": {
+        "id": "0x230",
+        "data": "0103"
+      },
+      "fields": null
+    },
+    {
+      "name": "PASTE_JETTING_CONFIG request: one byte too many is refused when strict",
+      "message": "PASTE_JETTING_CONFIG",
+      "layout": "paste_jetting_config",
+      "frame": {
+        "id": "0x230",
+        "data": "0103E800"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "PASTE_JETTING_PULSE request: 50 percent for 20 ms",
+      "message": "PASTE_JETTING_PULSE",
+      "layout": "paste_jetting_pulse",
+      "frame": {
+        "id": "0x231",
+        "data": "003214"
+      },
+      "fields": {
+        "channel": 0,
+        "duty_percent": 50,
+        "duration_ms": 20
+      }
+    },
+    {
+      "name": "PASTE_JETTING_PULSE request: 2 bytes is too short",
+      "message": "PASTE_JETTING_PULSE",
+      "layout": "paste_jetting_pulse",
+      "frame": {
+        "id": "0x231",
+        "data": "0032"
+      },
+      "fields": null
+    },
+    {
+      "name": "PASTE_JETTING_PULSE request: one byte too many is refused when strict",
+      "message": "PASTE_JETTING_PULSE",
+      "layout": "paste_jetting_pulse",
+      "frame": {
+        "id": "0x231",
+        "data": "00321400"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "ADS1115_CONFIG request: config register",
+      "message": "ADS1115_CONFIG",
+      "layout": "ads1115_config",
+      "frame": {
+        "id": "0x240",
+        "data": "8583"
+      },
+      "fields": {
+        "config": 34179
+      }
+    },
+    {
+      "name": "ADS1115_CONFIG request: 1 bytes is too short",
+      "message": "ADS1115_CONFIG",
+      "layout": "ads1115_config",
+      "frame": {
+        "id": "0x240",
+        "data": "85"
+      },
+      "fields": null
+    },
+    {
+      "name": "ADS1115_CONFIG request: one byte too many is refused when strict",
+      "message": "ADS1115_CONFIG",
+      "layout": "ads1115_config",
+      "frame": {
+        "id": "0x240",
+        "data": "858300"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "ADS1115_TRIGGER request: empty query",
+      "message": "ADS1115_TRIGGER",
+      "layout": "ads1115_trigger",
+      "frame": {
+        "id": "0x241",
+        "data": ""
+      },
+      "fields": {}
+    },
+    {
+      "name": "ADS1115_RESULT request: empty query",
+      "message": "ADS1115_RESULT",
+      "layout": "ads1115_result_request",
+      "frame": {
+        "id": "0x242",
+        "data": ""
+      },
+      "fields": {}
+    },
+    {
+      "name": "ADS1115_RESULT response: negative reading",
+      "message": "ADS1115_RESULT",
+      "layout": "ads1115_result_response",
+      "frame": {
+        "id": "0x242",
+        "data": "FFFE"
+      },
+      "fields": {
+        "raw": -2
+      }
+    },
+    {
+      "name": "ADS1115_RESULT response: 1 bytes is too short",
+      "message": "ADS1115_RESULT",
+      "layout": "ads1115_result_response",
+      "frame": {
+        "id": "0x242",
+        "data": "FF"
+      },
+      "fields": null
+    },
+    {
+      "name": "ADS1115_RESULT response: one byte too many is refused when strict",
+      "message": "ADS1115_RESULT",
+      "layout": "ads1115_result_response",
+      "frame": {
+        "id": "0x242",
+        "data": "FFFE00"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "FLYING_PROBE_BASIC response: mid scale",
+      "message": "FLYING_PROBE_BASIC",
+      "layout": "flying_probe_basic",
+      "frame": {
+        "id": "0x243",
+        "data": "0800"
+      },
+      "fields": {
+        "adc": 2048
+      }
+    },
+    {
+      "name": "FLYING_PROBE_BASIC response: 1 bytes is too short",
+      "message": "FLYING_PROBE_BASIC",
+      "layout": "flying_probe_basic",
+      "frame": {
+        "id": "0x243",
+        "data": "08"
+      },
+      "fields": null
+    },
+    {
+      "name": "FLYING_PROBE_BASIC response: one byte too many is refused when strict",
+      "message": "FLYING_PROBE_BASIC",
+      "layout": "flying_probe_basic",
+      "frame": {
+        "id": "0x243",
+        "data": "080000"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "THERMAL_TRIGGER request: empty query",
+      "message": "THERMAL_TRIGGER",
+      "layout": "thermal_trigger",
+      "frame": {
+        "id": "0x250",
+        "data": ""
+      },
+      "fields": {}
+    },
+    {
+      "name": "THERMAL_STATUS request: empty query",
+      "message": "THERMAL_STATUS",
+      "layout": "thermal_status_request",
+      "frame": {
+        "id": "0x251",
+        "data": ""
+      },
+      "fields": {}
+    },
+    {
+      "name": "THERMAL_STATUS response: ready",
+      "message": "THERMAL_STATUS",
+      "layout": "thermal_status_response",
+      "frame": {
+        "id": "0x251",
+        "data": "02"
+      },
+      "fields": {
+        "status": 2
+      }
+    },
+    {
+      "name": "THERMAL_STATUS response: 0 bytes is too short",
+      "message": "THERMAL_STATUS",
+      "layout": "thermal_status_response",
+      "frame": {
+        "id": "0x251",
+        "data": ""
+      },
+      "fields": null
+    },
+    {
+      "name": "THERMAL_STATUS response: one byte too many is refused when strict",
+      "message": "THERMAL_STATUS",
+      "layout": "thermal_status_response",
+      "frame": {
+        "id": "0x251",
+        "data": "0200"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "THERMAL_RAW_CHUNK_REQ request: chunk 5",
+      "message": "THERMAL_RAW_CHUNK_REQ",
+      "layout": "thermal_raw_chunk_req",
+      "frame": {
+        "id": "0x252",
+        "data": "05"
+      },
+      "fields": {
+        "chunk": 5
+      }
+    },
+    {
+      "name": "THERMAL_RAW_CHUNK_REQ request: 0 bytes is too short",
+      "message": "THERMAL_RAW_CHUNK_REQ",
+      "layout": "thermal_raw_chunk_req",
+      "frame": {
+        "id": "0x252",
+        "data": ""
+      },
+      "fields": null
+    },
+    {
+      "name": "THERMAL_RAW_CHUNK_REQ request: one byte too many is refused when strict",
+      "message": "THERMAL_RAW_CHUNK_REQ",
+      "layout": "thermal_raw_chunk_req",
+      "frame": {
+        "id": "0x252",
+        "data": "0500"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "THERMAL_RAW_CHUNK response: one of the four frames",
+      "message": "THERMAL_RAW_CHUNK",
+      "layout": "thermal_raw_chunk",
+      "frame": {
+        "id": "0x253",
+        "data": "0001000200030004"
+      },
+      "fields": {
+        "data": "0001000200030004"
+      }
+    },
+    {
+      "name": "THERMAL_RAW_CHUNK response: 7 bytes is too short",
+      "message": "THERMAL_RAW_CHUNK",
+      "layout": "thermal_raw_chunk",
+      "frame": {
+        "id": "0x253",
+        "data": "00010002000300"
+      },
+      "fields": null
+    },
+    {
+      "name": "THERMAL_CAL_CHUNK_REQ request: chunk 0",
+      "message": "THERMAL_CAL_CHUNK_REQ",
+      "layout": "thermal_cal_chunk_req",
+      "frame": {
+        "id": "0x254",
+        "data": "00"
+      },
+      "fields": {
+        "chunk": 0
+      }
+    },
+    {
+      "name": "THERMAL_CAL_CHUNK_REQ request: 0 bytes is too short",
+      "message": "THERMAL_CAL_CHUNK_REQ",
+      "layout": "thermal_cal_chunk_req",
+      "frame": {
+        "id": "0x254",
+        "data": ""
+      },
+      "fields": null
+    },
+    {
+      "name": "THERMAL_CAL_CHUNK_REQ request: one byte too many is refused when strict",
+      "message": "THERMAL_CAL_CHUNK_REQ",
+      "layout": "thermal_cal_chunk_req",
+      "frame": {
+        "id": "0x254",
+        "data": "0000"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "THERMAL_CAL_CHUNK response: 2550 and 2600 centi-degrees",
+      "message": "THERMAL_CAL_CHUNK",
+      "layout": "thermal_cal_chunk",
+      "frame": {
+        "id": "0x255",
+        "data": "09F60A2809F60A28"
+      },
+      "fields": {
+        "data": "09F60A2809F60A28"
+      }
+    },
+    {
+      "name": "THERMAL_CAL_CHUNK response: 7 bytes is too short",
+      "message": "THERMAL_CAL_CHUNK",
+      "layout": "thermal_cal_chunk",
+      "frame": {
+        "id": "0x255",
+        "data": "09F60A2809F60A"
+      },
+      "fields": null
+    },
+    {
+      "name": "VERSION_PATCH_RESPONSE response: application patch 5",
+      "message": "VERSION_PATCH_RESPONSE",
+      "layout": "version_patch_response",
+      "frame": {
+        "id": "0x7E9",
+        "data": "000500"
+      },
+      "fields": {
+        "responder": 0,
+        "patch": 5,
+        "flags": 0
+      }
+    },
+    {
+      "name": "VERSION_PATCH_RESPONSE response: bootloader patch 7 accepting the end-update patch",
+      "message": "VERSION_PATCH_RESPONSE",
+      "layout": "version_patch_response",
+      "frame": {
+        "id": "0x7E9",
+        "data": "010701"
+      },
+      "fields": {
+        "responder": 1,
+        "patch": 7,
+        "flags": 1
+      }
+    },
+    {
+      "name": "VERSION_PATCH_RESPONSE response: 2 bytes is too short",
+      "message": "VERSION_PATCH_RESPONSE",
+      "layout": "version_patch_response",
+      "frame": {
+        "id": "0x7E9",
+        "data": "0005"
+      },
+      "fields": null
+    },
+    {
+      "name": "ENTER_BOOTLOADER request: enter",
+      "message": "ENTER_BOOTLOADER",
+      "layout": "enter_bootloader",
+      "frame": {
+        "id": "0x7F0",
+        "data": "B0071D5A"
+      },
+      "fields": {
+        "magic": "B0071D5A"
+      }
+    },
+    {
+      "name": "ENTER_BOOTLOADER request: 3 bytes is too short",
+      "message": "ENTER_BOOTLOADER",
+      "layout": "enter_bootloader",
+      "frame": {
+        "id": "0x7F0",
+        "data": "B0071D"
+      },
+      "fields": null
+    },
+    {
+      "name": "ENTER_BOOTLOADER request: one byte too many is refused when strict",
+      "message": "ENTER_BOOTLOADER",
+      "layout": "enter_bootloader",
+      "frame": {
+        "id": "0x7F0",
+        "data": "B0071D5A00"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "START_UPDATE request: 1 KiB image",
+      "message": "START_UPDATE",
+      "layout": "start_update",
+      "frame": {
+        "id": "0x7F1",
+        "data": "000004000303CC01"
+      },
+      "fields": {
+        "total_size": 1024,
+        "hardware_id": 50580481
+      }
+    },
+    {
+      "name": "START_UPDATE request: 7 bytes is too short",
+      "message": "START_UPDATE",
+      "layout": "start_update",
+      "frame": {
+        "id": "0x7F1",
+        "data": "000004000303CC"
+      },
+      "fields": null
+    },
+    {
+      "name": "DATA request: eight bytes",
+      "message": "DATA",
+      "layout": "data",
+      "frame": {
+        "id": "0x7F2",
+        "data": "0102030405060708"
+      },
+      "fields": {
+        "data": "0102030405060708"
+      }
+    },
+    {
+      "name": "DATA request: 0 bytes is too short",
+      "message": "DATA",
+      "layout": "data",
+      "frame": {
+        "id": "0x7F2",
+        "data": ""
+      },
+      "fields": null
+    },
+    {
+      "name": "PAGE_ACK response: page 3",
+      "message": "PAGE_ACK",
+      "layout": "page_ack",
+      "frame": {
+        "id": "0x7F3",
+        "data": "00000003"
+      },
+      "fields": {
+        "page_index": 3
+      }
+    },
+    {
+      "name": "PAGE_ACK response: 3 bytes is too short",
+      "message": "PAGE_ACK",
+      "layout": "page_ack",
+      "frame": {
+        "id": "0x7F3",
+        "data": "000000"
+      },
+      "fields": null
+    },
+    {
+      "name": "PAGE_ACK response: one byte too many is refused when strict",
+      "message": "PAGE_ACK",
+      "layout": "page_ack",
+      "frame": {
+        "id": "0x7F3",
+        "data": "0000000300"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "END_UPDATE request: legacy 0.3",
+      "message": "END_UPDATE",
+      "layout": "end_update",
+      "frame": {
+        "id": "0x7F4",
+        "data": "DEADBEEF00000003"
+      },
+      "fields": {
+        "crc32": 3735928559,
+        "version_major": 0,
+        "version_minor_field": 3
+      }
+    },
+    {
+      "name": "END_UPDATE request: 0.3.5 with the patch",
+      "message": "END_UPDATE",
+      "layout": "end_update",
+      "frame": {
+        "id": "0x7F4",
+        "data": "DEADBEEF00008503"
+      },
+      "fields": {
+        "crc32": 3735928559,
+        "version_major": 0,
+        "version_minor_field": 34051
+      }
+    },
+    {
+      "name": "END_UPDATE request: 7 bytes is too short",
+      "message": "END_UPDATE",
+      "layout": "end_update",
+      "frame": {
+        "id": "0x7F4",
+        "data": "DEADBEEF000000"
+      },
+      "fields": null
+    },
+    {
+      "name": "STATUS response: receiving",
+      "message": "STATUS",
+      "layout": "status",
+      "frame": {
+        "id": "0x7F5",
+        "data": "03"
+      },
+      "fields": {
+        "status": 3,
+        "reason": null
+      }
+    },
+    {
+      "name": "STATUS response: rollback rejected",
+      "message": "STATUS",
+      "layout": "status",
+      "frame": {
+        "id": "0x7F5",
+        "data": "0505"
+      },
+      "fields": {
+        "status": 5,
+        "reason": 5
+      }
+    },
+    {
+      "name": "STATUS response: 0 bytes is too short",
+      "message": "STATUS",
+      "layout": "status",
+      "frame": {
+        "id": "0x7F5",
+        "data": ""
+      },
+      "fields": null
+    },
+    {
+      "name": "HEARTBEAT response: receiving at 40 percent",
+      "message": "HEARTBEAT",
+      "layout": "heartbeat",
+      "frame": {
+        "id": "0x7F6",
+        "data": "0328"
+      },
+      "fields": {
+        "status": 3,
+        "progress": 40
+      }
+    },
+    {
+      "name": "HEARTBEAT response: 1 bytes is too short",
+      "message": "HEARTBEAT",
+      "layout": "heartbeat",
+      "frame": {
+        "id": "0x7F6",
+        "data": "03"
+      },
+      "fields": null
+    },
+    {
+      "name": "HEARTBEAT response: one byte too many is refused when strict",
+      "message": "HEARTBEAT",
+      "layout": "heartbeat",
+      "frame": {
+        "id": "0x7F6",
+        "data": "032800"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "HMAC_CHUNK request: first of four",
+      "message": "HMAC_CHUNK",
+      "layout": "hmac_chunk",
+      "frame": {
+        "id": "0x7F7",
+        "data": "0001020304050607"
+      },
+      "fields": {
+        "hmac_part": "0001020304050607"
+      }
+    },
+    {
+      "name": "HMAC_CHUNK request: 7 bytes is too short",
+      "message": "HMAC_CHUNK",
+      "layout": "hmac_chunk",
+      "frame": {
+        "id": "0x7F7",
+        "data": "00010203040506"
+      },
+      "fields": null
+    },
+    {
+      "name": "QUERY_VERSION request: empty query",
+      "message": "QUERY_VERSION",
+      "layout": "query_version",
+      "frame": {
+        "id": "0x7F8",
+        "data": ""
+      },
+      "fields": {}
+    },
+    {
+      "name": "VERSION_RESPONSE response: application 0.3",
+      "message": "VERSION_RESPONSE",
+      "layout": "version_response",
+      "frame": {
+        "id": "0x7F9",
+        "data": "000303CC01000003"
+      },
+      "fields": {
+        "responder": 0,
+        "hardware_id": 50580481,
+        "version_major": 0,
+        "version_minor": 3
+      }
+    },
+    {
+      "name": "VERSION_RESPONSE response: 7 bytes is too short",
+      "message": "VERSION_RESPONSE",
+      "layout": "version_response",
+      "frame": {
+        "id": "0x7F9",
+        "data": "000303CC010000"
+      },
+      "fields": null
+    },
+    {
+      "name": "BOOTLOADER_VERSION_RESPONSE response: 0.3.9",
+      "message": "BOOTLOADER_VERSION_RESPONSE",
+      "layout": "bootloader_version_response",
+      "frame": {
+        "id": "0x7FA",
+        "data": "000309"
+      },
+      "fields": {
+        "major": 0,
+        "minor": 3,
+        "patch": 9
+      }
+    },
+    {
+      "name": "BOOTLOADER_VERSION_RESPONSE response: 2 bytes is too short",
+      "message": "BOOTLOADER_VERSION_RESPONSE",
+      "layout": "bootloader_version_response",
+      "frame": {
+        "id": "0x7FA",
+        "data": "0003"
+      },
+      "fields": null
+    },
+    {
+      "name": "BOOTLOADER_VERSION_RESPONSE response: one byte too many is refused when strict",
+      "message": "BOOTLOADER_VERSION_RESPONSE",
+      "layout": "bootloader_version_response",
+      "frame": {
+        "id": "0x7FA",
+        "data": "00030900"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "QUERY_ERROR_COUNTERS request: empty query",
+      "message": "QUERY_ERROR_COUNTERS",
+      "layout": "query_error_counters",
+      "frame": {
+        "id": "0x7FB",
+        "data": ""
+      },
+      "fields": {}
+    },
+    {
+      "name": "ERROR_COUNTERS_RESPONSE response: clean bus",
+      "message": "ERROR_COUNTERS_RESPONSE",
+      "layout": "error_counters_response",
+      "frame": {
+        "id": "0x7FC",
+        "data": "0000"
+      },
+      "fields": {
+        "tec": 0,
+        "rec": 0
+      }
+    },
+    {
+      "name": "ERROR_COUNTERS_RESPONSE response: 1 bytes is too short",
+      "message": "ERROR_COUNTERS_RESPONSE",
+      "layout": "error_counters_response",
+      "frame": {
+        "id": "0x7FC",
+        "data": "00"
+      },
+      "fields": null
+    },
+    {
+      "name": "ERROR_COUNTERS_RESPONSE response: one byte too many is refused when strict",
+      "message": "ERROR_COUNTERS_RESPONSE",
+      "layout": "error_counters_response",
+      "frame": {
+        "id": "0x7FC",
+        "data": "000000"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "AUTHORIZE_DOWNGRADE request: authorise",
+      "message": "AUTHORIZE_DOWNGRADE",
+      "layout": "authorize_downgrade",
+      "frame": {
+        "id": "0x7FD",
+        "data": "D09E12AD"
+      },
+      "fields": {
+        "magic": "D09E12AD"
+      }
+    },
+    {
+      "name": "AUTHORIZE_DOWNGRADE request: 3 bytes is too short",
+      "message": "AUTHORIZE_DOWNGRADE",
+      "layout": "authorize_downgrade",
+      "frame": {
+        "id": "0x7FD",
+        "data": "D09E12"
+      },
+      "fields": null
+    },
+    {
+      "name": "AUTHORIZE_DOWNGRADE request: one byte too many is refused when strict",
+      "message": "AUTHORIZE_DOWNGRADE",
+      "layout": "authorize_downgrade",
+      "frame": {
+        "id": "0x7FD",
+        "data": "D09E12AD00"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "READBACK request: empty query",
+      "message": "READBACK",
+      "layout": "readback_request",
+      "frame": {
+        "id": "0x7FE",
+        "data": ""
+      },
+      "fields": {}
+    },
+    {
+      "name": "READBACK response size: 2 KiB installed",
+      "message": "READBACK",
+      "layout": "readback_response_size",
+      "frame": {
+        "id": "0x7FE",
+        "data": "00000800"
+      },
+      "fields": {
+        "total_size": 2048
+      }
+    },
+    {
+      "name": "READBACK response: 3 bytes is too short",
+      "message": "READBACK",
+      "layout": "readback_response_size",
+      "frame": {
+        "id": "0x7FE",
+        "data": "000008"
+      },
+      "fields": null
+    },
+    {
+      "name": "READBACK response: one byte too many is refused when strict",
+      "message": "READBACK",
+      "layout": "readback_response_size",
+      "frame": {
+        "id": "0x7FE",
+        "data": "0000080000"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "READBACK response data: eight bytes",
+      "message": "READBACK",
+      "layout": "readback_response_data",
+      "frame": {
+        "id": "0x7FE",
+        "data": "0102030405060708"
+      },
+      "fields": {
+        "data": "0102030405060708"
+      }
+    },
+    {
+      "name": "READBACK response: 0 bytes is too short",
+      "message": "READBACK",
+      "layout": "readback_response_data",
+      "frame": {
+        "id": "0x7FE",
+        "data": ""
+      },
+      "fields": null
+    },
+    {
+      "name": "READBACK_PAGE_ACK request: page 0",
+      "message": "READBACK_PAGE_ACK",
+      "layout": "readback_page_ack",
+      "frame": {
+        "id": "0x7FF",
+        "data": "00000000"
+      },
+      "fields": {
+        "page_index": 0
+      }
+    },
+    {
+      "name": "READBACK_PAGE_ACK request: 3 bytes is too short",
+      "message": "READBACK_PAGE_ACK",
+      "layout": "readback_page_ack",
+      "frame": {
+        "id": "0x7FF",
+        "data": "000000"
+      },
+      "fields": null
+    },
+    {
+      "name": "READBACK_PAGE_ACK request: one byte too many is refused when strict",
+      "message": "READBACK_PAGE_ACK",
+      "layout": "readback_page_ack",
+      "frame": {
+        "id": "0x7FF",
+        "data": "0000000000"
+      },
+      "fields": null,
+      "strict": true
+    }
+  ],
+  "frames_rejected": [
+    {
+      "name": "GLOBAL_STATUS: display_mode 2 is not a defined value",
+      "message": "GLOBAL_STATUS",
+      "layout": "global_status",
+      "fields": {
+        "status_r": 0,
+        "status_g": 0,
+        "status_b": 0,
+        "display_mode": 2,
+        "ring_r": 0,
+        "ring_g": 0,
+        "ring_b": 0,
+        "ring_on": 0
+      }
+    },
+    {
+      "name": "GLOBAL_STATUS: ring_on above its maximum",
+      "message": "GLOBAL_STATUS",
+      "layout": "global_status",
+      "fields": {
+        "status_r": 0,
+        "status_g": 0,
+        "status_b": 0,
+        "display_mode": 0,
+        "ring_r": 0,
+        "ring_g": 0,
+        "ring_b": 0,
+        "ring_on": 2
+      }
+    },
+    {
+      "name": "ACTIVE_TOOL_RESP: system_error above its maximum",
+      "message": "ACTIVE_TOOL_RESP",
+      "layout": "active_tool_resp",
+      "fields": {
+        "tool_id": 0,
+        "system_error": 2,
+        "can_error": 0,
+        "booting": 0,
+        "thermal_fault": 0,
+        "reset_cause": 8
+      }
+    },
+    {
+      "name": "ACTIVE_TOOL_RESP: can_error above its maximum",
+      "message": "ACTIVE_TOOL_RESP",
+      "layout": "active_tool_resp",
+      "fields": {
+        "tool_id": 0,
+        "system_error": 0,
+        "can_error": 2,
+        "booting": 0,
+        "thermal_fault": 0,
+        "reset_cause": 8
+      }
+    },
+    {
+      "name": "ACTIVE_TOOL_RESP: booting above its maximum",
+      "message": "ACTIVE_TOOL_RESP",
+      "layout": "active_tool_resp",
+      "fields": {
+        "tool_id": 0,
+        "system_error": 0,
+        "can_error": 0,
+        "booting": 2,
+        "thermal_fault": 0,
+        "reset_cause": 8
+      }
+    },
+    {
+      "name": "MOTION_CMD: direction 2 is not a defined value",
+      "message": "MOTION_CMD",
+      "layout": "motion_cmd",
+      "fields": {
+        "direction": 2,
+        "steps": 1000
+      }
+    },
+    {
+      "name": "SOLDER_SETPOINT: setpoint_c above its maximum",
+      "message": "SOLDER_SETPOINT",
+      "layout": "solder_setpoint",
+      "fields": {
+        "setpoint_c": 446
+      }
+    },
+    {
+      "name": "SOLDER_FEEDER_RESET: a payload that is not the magic one",
+      "message": "SOLDER_FEEDER_RESET",
+      "layout": "solder_feeder_reset",
+      "fields": {
+        "magic": "00000000"
+      }
+    },
+    {
+      "name": "DRILL_CMD: direction 2 is not a defined value",
+      "message": "DRILL_CMD",
+      "layout": "drill_cmd",
+      "fields": {
+        "speed": 128,
+        "direction": 2
+      }
+    },
+    {
+      "name": "VACUUM_TELEMETRY: adc above its maximum",
+      "message": "VACUUM_TELEMETRY",
+      "layout": "vacuum_telemetry",
+      "fields": {
+        "adc": 4096,
+        "detected": 1
+      }
+    },
+    {
+      "name": "VACUUM_TELEMETRY: detected above its maximum",
+      "message": "VACUUM_TELEMETRY",
+      "layout": "vacuum_telemetry",
+      "fields": {
+        "adc": 2048,
+        "detected": 2
+      }
+    },
+    {
+      "name": "DRILL_TELEMETRY: endstop above its maximum",
+      "message": "DRILL_TELEMETRY",
+      "layout": "drill_telemetry",
+      "fields": {
+        "rpm": 3000,
+        "endstop": 2
+      }
+    },
+    {
+      "name": "AOI_CMD: mode 3 is not a defined value",
+      "message": "AOI_CMD",
+      "layout": "aoi_cmd",
+      "fields": {
+        "mode": 3,
+        "strobe_period_ms": 100
+      }
+    },
+    {
+      "name": "AOI_CMD: strobe_period_ms above its maximum",
+      "message": "AOI_CMD",
+      "layout": "aoi_cmd",
+      "fields": {
+        "mode": 1,
+        "strobe_period_ms": 501
+      }
+    },
+    {
+      "name": "AOI_CMD: strobe_period_ms below its minimum",
+      "message": "AOI_CMD",
+      "layout": "aoi_cmd",
+      "fields": {
+        "mode": 1,
+        "strobe_period_ms": 0
+      }
+    },
+    {
+      "name": "AOI_TELEMETRY: endstop above its maximum",
+      "message": "AOI_TELEMETRY",
+      "layout": "aoi_telemetry",
+      "fields": {
+        "endstop": 2
+      }
+    },
+    {
+      "name": "LASER_CMD: interlock above its maximum",
+      "message": "LASER_CMD",
+      "layout": "laser_cmd",
+      "fields": {
+        "power": 100,
+        "interlock": 2
+      }
+    },
+    {
+      "name": "LASER_TELEMETRY: endstop above its maximum",
+      "message": "LASER_TELEMETRY",
+      "layout": "laser_telemetry",
+      "fields": {
+        "endstop": 2
+      }
+    },
+    {
+      "name": "PRINTER_THERMAL_MOTION: nozzle_setpoint_c above its maximum",
+      "message": "PRINTER_THERMAL_MOTION",
+      "layout": "printer_thermal_motion",
+      "fields": {
+        "nozzle_setpoint_c": 301,
+        "extruder_direction": 1,
+        "extruder_steps": 16
+      }
+    },
+    {
+      "name": "PRINTER_THERMAL_MOTION: extruder_direction 2 is not a defined value",
+      "message": "PRINTER_THERMAL_MOTION",
+      "layout": "printer_thermal_motion",
+      "fields": {
+        "nozzle_setpoint_c": 200,
+        "extruder_direction": 2,
+        "extruder_steps": 16
+      }
+    },
+    {
+      "name": "EXPANSION_DIAG0_RESP: level above its maximum",
+      "message": "EXPANSION_DIAG0_RESP",
+      "layout": "expansion_diag0_resp",
+      "fields": {
+        "level": 2
+      }
+    },
+    {
+      "name": "FRAM_STATE_RESP: valid above its maximum",
+      "message": "FRAM_STATE_RESP",
+      "layout": "fram_state_resp",
+      "fields": {
+        "valid": 2,
+        "tool_id": 0,
+        "had_error": 0,
+        "setpoint_c": 350,
+        "speed": 0,
+        "dir_or_interlock": 0,
+        "fan": 0
+      }
+    },
+    {
+      "name": "FRAM_STATE_RESP: had_error above its maximum",
+      "message": "FRAM_STATE_RESP",
+      "layout": "fram_state_resp",
+      "fields": {
+        "valid": 1,
+        "tool_id": 0,
+        "had_error": 2,
+        "setpoint_c": 350,
+        "speed": 0,
+        "dir_or_interlock": 0,
+        "fan": 0
+      }
+    },
+    {
+      "name": "FRAM_STATE_RESP: dir_or_interlock above its maximum",
+      "message": "FRAM_STATE_RESP",
+      "layout": "fram_state_resp",
+      "fields": {
+        "valid": 1,
+        "tool_id": 0,
+        "had_error": 0,
+        "setpoint_c": 350,
+        "speed": 0,
+        "dir_or_interlock": 2,
+        "fan": 0
+      }
+    },
+    {
+      "name": "ERASE_FRAM: a payload that is not the magic one",
+      "message": "ERASE_FRAM",
+      "layout": "erase_fram",
+      "fields": {
+        "magic": "00000000"
+      }
+    },
+    {
+      "name": "SET_EXPANSION_TYPE: board_type 7 is not a defined value",
+      "message": "SET_EXPANSION_TYPE",
+      "layout": "set_expansion_type",
+      "fields": {
+        "board_type": 7
+      }
+    },
+    {
+      "name": "SET_FREE_TOOL: selection above its maximum",
+      "message": "SET_FREE_TOOL",
+      "layout": "set_free_tool",
+      "fields": {
+        "selection": 26
+      }
+    },
+    {
+      "name": "FREE_TOOL_CONFIG_RESP: jumper_reading above its maximum",
+      "message": "FREE_TOOL_CONFIG_RESP",
+      "layout": "free_tool_config_resp_response",
+      "fields": {
+        "jumper_reading": 32,
+        "selection": 4
+      }
+    },
+    {
+      "name": "FREE_TOOL_CONFIG_RESP: selection above its maximum",
+      "message": "FREE_TOOL_CONFIG_RESP",
+      "layout": "free_tool_config_resp_response",
+      "fields": {
+        "jumper_reading": 31,
+        "selection": 26
+      }
+    },
+    {
+      "name": "SET_MLX_VARIANT: variant 4 is not a defined value",
+      "message": "SET_MLX_VARIANT",
+      "layout": "set_mlx_variant",
+      "fields": {
+        "variant": 4
+      }
+    },
+    {
+      "name": "BLACKBOX_QUERY: chunk_index above its maximum",
+      "message": "BLACKBOX_QUERY",
+      "layout": "blackbox_query",
+      "fields": {
+        "chunk_index": 22
+      }
+    },
+    {
+      "name": "THERMAL_STATS_RESP: persisted above its maximum",
+      "message": "THERMAL_STATS_RESP",
+      "layout": "thermal_stats_resp",
+      "fields": {
+        "fault_count": 2,
+        "heater_on_seconds": 3600,
+        "last_fault": 1,
+        "persisted": 2
+      }
+    },
+    {
+      "name": "ELECTROMAGNET_CMD: coil above its maximum",
+      "message": "ELECTROMAGNET_CMD",
+      "layout": "electromagnet_cmd",
+      "fields": {
+        "coil": 2
+      }
+    },
+    {
+      "name": "SPOT_WELD_CMD: fire above its maximum",
+      "message": "SPOT_WELD_CMD",
+      "layout": "spot_weld_cmd",
+      "fields": {
+        "fire": 2,
+        "duration_ms": 100
+      }
+    },
+    {
+      "name": "SPOT_WELD_CMD: fire below its minimum",
+      "message": "SPOT_WELD_CMD",
+      "layout": "spot_weld_cmd",
+      "fields": {
+        "fire": 0,
+        "duration_ms": 100
+      }
+    },
+    {
+      "name": "SPOT_WELD_CMD: duration_ms above its maximum",
+      "message": "SPOT_WELD_CMD",
+      "layout": "spot_weld_cmd",
+      "fields": {
+        "fire": 1,
+        "duration_ms": 2001
+      }
+    },
+    {
+      "name": "SPOT_WELD_CMD: duration_ms below its minimum",
+      "message": "SPOT_WELD_CMD",
+      "layout": "spot_weld_cmd",
+      "fields": {
+        "fire": 1,
+        "duration_ms": 0
+      }
+    },
+    {
+      "name": "HOTAIR_CMD: setpoint_c above its maximum",
+      "message": "HOTAIR_CMD",
+      "layout": "hotair_cmd",
+      "fields": {
+        "setpoint_c": 446,
+        "blower_duty": 200
+      }
+    },
+    {
+      "name": "CRIMPING_CMD: direction 2 is not a defined value",
+      "message": "CRIMPING_CMD",
+      "layout": "crimping_cmd",
+      "fields": {
+        "direction": 2,
+        "steps": 500
+      }
+    },
+    {
+      "name": "ULTRASONIC_WELD_CMD: fire above its maximum",
+      "message": "ULTRASONIC_WELD_CMD",
+      "layout": "ultrasonic_weld_cmd",
+      "fields": {
+        "fire": 2,
+        "duration_ms": 250
+      }
+    },
+    {
+      "name": "ULTRASONIC_WELD_CMD: fire below its minimum",
+      "message": "ULTRASONIC_WELD_CMD",
+      "layout": "ultrasonic_weld_cmd",
+      "fields": {
+        "fire": 0,
+        "duration_ms": 250
+      }
+    },
+    {
+      "name": "ULTRASONIC_WELD_CMD: duration_ms above its maximum",
+      "message": "ULTRASONIC_WELD_CMD",
+      "layout": "ultrasonic_weld_cmd",
+      "fields": {
+        "fire": 1,
+        "duration_ms": 2001
+      }
+    },
+    {
+      "name": "ULTRASONIC_WELD_CMD: duration_ms below its minimum",
+      "message": "ULTRASONIC_WELD_CMD",
+      "layout": "ultrasonic_weld_cmd",
+      "fields": {
+        "fire": 1,
+        "duration_ms": 0
+      }
+    },
+    {
+      "name": "SLAVE_ENTER_BOOTLOADER: a payload that is not the magic one",
+      "message": "SLAVE_ENTER_BOOTLOADER",
+      "layout": "slave_enter_bootloader",
+      "fields": {
+        "magic": "00000000"
+      }
+    },
+    {
+      "name": "SLAVE_REG_READ: length above its maximum",
+      "message": "SLAVE_REG_READ",
+      "layout": "slave_reg_read_request",
+      "fields": {
+        "register": 34,
+        "length": 9
+      }
+    },
+    {
+      "name": "SLAVE_REG_READ: length below its minimum",
+      "message": "SLAVE_REG_READ",
+      "layout": "slave_reg_read_request",
+      "fields": {
+        "register": 34,
+        "length": 0
+      }
+    },
+    {
+      "name": "PASTE_JETTING_CONFIG: channel above its maximum",
+      "message": "PASTE_JETTING_CONFIG",
+      "layout": "paste_jetting_config",
+      "fields": {
+        "channel": 4,
+        "frequency_hz": 1000
+      }
+    },
+    {
+      "name": "PASTE_JETTING_CONFIG: frequency_hz below its minimum",
+      "message": "PASTE_JETTING_CONFIG",
+      "layout": "paste_jetting_config",
+      "fields": {
+        "channel": 1,
+        "frequency_hz": 0
+      }
+    },
+    {
+      "name": "PASTE_JETTING_PULSE: channel above its maximum",
+      "message": "PASTE_JETTING_PULSE",
+      "layout": "paste_jetting_pulse",
+      "fields": {
+        "channel": 4,
+        "duty_percent": 50,
+        "duration_ms": 20
+      }
+    },
+    {
+      "name": "PASTE_JETTING_PULSE: duty_percent above its maximum",
+      "message": "PASTE_JETTING_PULSE",
+      "layout": "paste_jetting_pulse",
+      "fields": {
+        "channel": 0,
+        "duty_percent": 101,
+        "duration_ms": 20
+      }
+    },
+    {
+      "name": "PASTE_JETTING_PULSE: duration_ms below its minimum",
+      "message": "PASTE_JETTING_PULSE",
+      "layout": "paste_jetting_pulse",
+      "fields": {
+        "channel": 0,
+        "duty_percent": 50,
+        "duration_ms": 0
+      }
+    },
+    {
+      "name": "FLYING_PROBE_BASIC: adc above its maximum",
+      "message": "FLYING_PROBE_BASIC",
+      "layout": "flying_probe_basic",
+      "fields": {
+        "adc": 4096
+      }
+    },
+    {
+      "name": "THERMAL_RAW_CHUNK_REQ: chunk above its maximum",
+      "message": "THERMAL_RAW_CHUNK_REQ",
+      "layout": "thermal_raw_chunk_req",
+      "fields": {
+        "chunk": 48
+      }
+    },
+    {
+      "name": "THERMAL_CAL_CHUNK_REQ: chunk above its maximum",
+      "message": "THERMAL_CAL_CHUNK_REQ",
+      "layout": "thermal_cal_chunk_req",
+      "fields": {
+        "chunk": 48
+      }
+    },
+    {
+      "name": "ENTER_BOOTLOADER: a payload that is not the magic one",
+      "message": "ENTER_BOOTLOADER",
+      "layout": "enter_bootloader",
+      "fields": {
+        "magic": "00000000"
+      }
+    },
+    {
+      "name": "AUTHORIZE_DOWNGRADE: a payload that is not the magic one",
+      "message": "AUTHORIZE_DOWNGRADE",
+      "layout": "authorize_downgrade",
+      "fields": {
+        "magic": "00000000"
+      }
+    }
+  ],
+  "slcan_stream": [
+    {
+      "name": "two frames in one chunk",
+      "chunks": [
+        "74313131300D743141363130310D"
+      ],
+      "frames": [
+        {
+          "id": "0x111",
+          "data": ""
+        },
+        {
+          "id": "0x1A6",
+          "data": "01"
+        }
+      ]
+    },
+    {
+      "name": "a line split over three reads",
+      "chunks": [
+        "7437463938",
+        "3030303330334343",
+        "30313030303030330D"
+      ],
+      "frames": [
+        {
+          "id": "0x7F9",
+          "data": "000303CC01000003"
+        }
+      ]
+    },
+    {
+      "name": "a terminator alone and an empty line",
+      "chunks": [
+        "0D0D0D74313030300D"
+      ],
+      "frames": [
+        {
+          "id": "0x100",
+          "data": ""
+        }
+      ]
+    },
+    {
+      "name": "transmit acknowledgements between frames",
+      "chunks": [
+        "7A0D74313030300D5A0D743131303141410D"
+      ],
+      "frames": [
+        {
+          "id": "0x100",
+          "data": ""
+        },
+        {
+          "id": "0x110",
+          "data": "AA"
+        }
+      ]
+    },
+    {
+      "name": "a status character glued to the front of a frame",
+      "chunks": [
+        "7A74313030300D"
+      ],
+      "frames": [
+        {
+          "id": "0x100",
+          "data": ""
+        }
+      ]
+    },
+    {
+      "name": "a bus error bell before a frame",
+      "chunks": [
+        "0774313030300D"
+      ],
+      "frames": [
+        {
+          "id": "0x100",
+          "data": ""
+        }
+      ]
+    },
+    {
+      "name": "an extended frame is skipped",
+      "chunks": [
+        "54303030303031313138303130323033303430353036303730380D74313131300D"
+      ],
+      "frames": [
+        {
+          "id": "0x111",
+          "data": ""
+        }
+      ]
+    },
+    {
+      "name": "remote frames are skipped",
+      "chunks": [
+        "72313131300D523030303030313131300D74313131300D"
+      ],
+      "frames": [
+        {
+          "id": "0x111",
+          "data": ""
+        }
+      ]
+    },
+    {
+      "name": "a line of non-ASCII noise is skipped",
+      "chunks": [
+        "FFFE8074313131300DC3A90D74313030300D"
+      ],
+      "frames": [
+        {
+          "id": "0x100",
+          "data": ""
+        }
+      ]
+    },
+    {
+      "name": "a malformed line does not stop the next one",
+      "chunks": [
+        "7431313134303130320D742B3146300D74314731300D743131303142420D"
+      ],
+      "frames": [
+        {
+          "id": "0x110",
+          "data": "BB"
+        }
+      ]
+    },
+    {
+      "name": "more than 4096 bytes without a terminator are discarded",
+      "chunks": [
+        "4141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141414141",
+        "74313030300D"
+      ],
+      "frames": [
+        {
+          "id": "0x100",
+          "data": ""
+        }
+      ]
+    },
+    {
+      "name": "a frame still unfinished produces nothing",
+      "chunks": [
+        "74313131314141"
+      ],
+      "frames": []
+    }
+  ]
 }
