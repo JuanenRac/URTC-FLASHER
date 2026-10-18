@@ -27,6 +27,10 @@ echo ***************************************************************************
 echo.
 REM HYDRA_UMC_SCRIPT_STANDARD_BANNER_END
 setlocal EnableDelayedExpansion
+rem Keep the window open for people, never in automation (CI / HYDRA_UMC_CI).
+set "KEEP_OPEN=pause"
+if defined CI set "KEEP_OPEN=ver >nul"
+if "%HYDRA_UMC_CI%"=="1" set "KEEP_OPEN=ver >nul"
 echo [1/6] Installing Python dependencies...
 python -m pip install --upgrade pip >nul
 python -m pip install -r requirements.txt
@@ -42,14 +46,14 @@ REM actually gets compiled into this .exe, not the pre-bump value.
 REM HYDRA_UMC_SCRIPT_STANDARD_VERSION_STEP
 echo       Incrementing project version and synchronising its manifest...
 python bump_version.py
-if errorlevel 1 ( echo NATIVE VERSION BUMP FAILED. & pause & exit /b 1 )
+if errorlevel 1 ( echo NATIVE VERSION BUMP FAILED. & %KEEP_OPEN% & exit /b 1 )
 REM HYDRA_UMC_SCRIPT_STANDARD_VERSION_CAPTURE_BEFORE
 for /f "usebackq delims=" %%V in (`python -c "import json; print(json.load(open(r'%~dp0urtc.project.json', encoding='utf-8'))['version'])"`) do set "HYDRA_UMC_VERSION_BEFORE=%%V"
 python "%~dp0bump_manifest_version.py" --sync
-if errorlevel 1 ( echo VERSION SYNCHRONIZATION FAILED. & pause & exit /b 1 )
+if errorlevel 1 ( echo VERSION SYNCHRONIZATION FAILED. & %KEEP_OPEN% & exit /b 1 )
 if errorlevel 1 (
     echo       ERROR: version bump failed - see the output above.
-    pause
+    %KEEP_OPEN%
     exit /b 1
 )
 REM HYDRA_UMC_SCRIPT_STANDARD_VERSION_CAPTURE_AFTER
@@ -79,7 +83,7 @@ if exist dist (
     if exist dist (
         echo       ERROR: couldn't remove dist\ - is URTC_Flasher.exe currently running?
         echo       Close it first, then run this script again.
-        pause
+        %KEEP_OPEN%
         exit /b 1
     )
 )
@@ -123,7 +127,7 @@ python -m PyInstaller --onefile --windowed --noconfirm --name "URTC_Flasher" ^
     urtc_flasher.py
 if not exist dist\URTC_Flasher.exe (
     echo       ERROR: PyInstaller did not produce dist\URTC_Flasher.exe - see the output above.
-    pause
+    %KEEP_OPEN%
     exit /b 1
 )
 echo       Done.
@@ -180,4 +184,4 @@ echo  ===============================================================
 echo   dist\URTC_Flasher.exe is ready to run - no Python needed.
 echo  ===============================================================
 echo.
-pause
+%KEEP_OPEN%
