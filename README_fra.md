@@ -72,6 +72,17 @@ JTAG à portée de main comme solution de repli.
 
 **Vérification d'honnêteté - ce qui fonctionne réellement aujourd'hui :** `tests/` contient 27 fichiers pytest (214 tests : tous réussis ; 4 d'entre eux sont ignorés sans PySide6) - le protocole CAN-OTA face à un vrai transport `MockCAN` (`flasher_transports.py`) qui rejoue une séquence complète de bootloader simulé (démarrage/effacement/réception, données de page + PAGE_ACK, blocs HMAC, fin de mise à jour avec un vrai succès ou un `VERIFY_FAIL_REASON` précis), les règles de signature (signature publiée envoyée sans aucune clé, image non signée refusée, sha256 du manifeste non conforme refusé avant tout trafic sur le bus), les contrôles d'intégrité d'image et le dossier `firmware/` fourni par rapport à ses manifestes. GitHub Actions (`.github/workflows/ci.yml`) exécute cette suite à chaque push, et `tools/build_test.py` l'exécute dans `build-test.sh`/`.bat`. Les deux scripts `verify_qt_*.py` à la racine sont de vrais contrôles de bout en bout hors pytest (ils nécessitent une vraie boucle d'événements Qt ; lancement avec `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`) ; `verify_qt_swd_full_chip_flash.py` construit seulement les commandes `PyOCDCLI`/`CubeProgrammerCLI` avec `dry_run=True`. Rien de tout cela n'a été exécuté sur une vraie carte dans cet environnement. Voir `CHANGELOG.md` pour ce qui a réellement été publié. Le bootloader simulé (`MockCAN`) n'est qu'un modèle écrit à partir de la description du protocole : il reproduit les ACK de page, la dernière page partielle et les trames de relecture, mais ce n'est pas le vrai bootloader, donc une exécution de tests au vert ne remplace pas un essai sur une vraie carte (l'image officielle de 73476 octets ne pouvait pas être installée et la dernière trame d'une sauvegarde était perdue alors que les tests passaient, justement parce que la simulation était plus indulgente que le vrai bootloader).
 
+## 📋 En un coup d'œil
+
+| | |
+|---|---|
+| Version | `0.2.9` |
+| Maturité | Établi |
+| Tests | 214 |
+| Technologie | Python / Tkinter (legacy advanced workflow) / PySide6 / Qt Quick / CAN-OTA |
+| Cible | Le PC de la personne qui l'utilise |
+| Sur matériel réel | Simulé seulement : testé avec des émulateurs, des doubles de test ou des simulateurs ; aucune exécution sur du matériel réel n'est consignée pour cette version |
+
 ## 1. 🔌 Faites parler CAN à votre adaptateur
 Ce dont vous avez besoin dépend de votre plateforme et du transport que
 vous utiliserez :

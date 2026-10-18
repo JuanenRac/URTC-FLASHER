@@ -67,6 +67,17 @@ talking to a bootloader: have JTAG on hand as a fallback.
 
 **Honesty check - what actually runs today:** `tests/` holds 27 pytest files (214 tests: all pass; 4 of them skip without PySide6) - the CAN-OTA protocol against a real `MockCAN` transport (`flasher_transports.py`) that plays back a full simulated bootloader sequence (start/erase/receive, page data + PAGE_ACK, HMAC chunks, end-update with a real success or a specific `VERIFY_FAIL_REASON`), the signature rules (published signature sent without any key, unsigned image refused, manifest sha256 mismatch refused before any bus traffic), the image integrity checks and the bundled `firmware/` against its manifests. GitHub Actions (`.github/workflows/ci.yml`) runs this suite on every push, and `tools/build_test.py` runs it in `build-test.sh`/`.bat`. The two `verify_qt_*.py` scripts at the repo root are real end-to-end checks kept outside pytest (they need a real Qt event loop; run them with `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`); `verify_qt_swd_full_chip_flash.py` only builds the `PyOCDCLI`/`CubeProgrammerCLI` commands with `dry_run=True`. None of this has been run against a real board over real hardware in this environment. See `CHANGELOG.md` for exactly what has shipped so far. The simulated bootloader (`MockCAN`) is only a model written from the protocol description: it reproduces the page acknowledgements, the partial last page and the readback frames, but it is not the real bootloader, so a green test run does not replace a trial on a real board (the official 73476-byte image could not be installed, and the last frame of a backup was dropped, while the tests passed, precisely because the simulation was more forgiving than the real bootloader).
 
+## 📋 At a glance
+
+| | |
+|---|---|
+| Version | `0.2.9` |
+| Maturity | Established |
+| Tests | 214 |
+| Stack | Python / Tkinter (legacy advanced workflow) / PySide6 / Qt Quick / CAN-OTA |
+| Target | The PC of the person using it |
+| On real hardware | Simulated only: tested against emulators, fakes or simulators; no run on real hardware is recorded for this version |
+
 ## 1. 🔌 Get your adapter talking CAN
 
 Which of these you need depends on your platform and which transport

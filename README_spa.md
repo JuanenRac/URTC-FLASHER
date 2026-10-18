@@ -70,6 +70,17 @@ como respaldo.
 
 **Comprobación de honestidad - lo que realmente funciona hoy:** `tests/` contiene 27 archivos de pytest (214 tests: todos pasan; 4 de ellos se omiten sin PySide6) - el protocolo CAN-OTA contra un transporte `MockCAN` real (`flasher_transports.py`) que reproduce una secuencia completa de bootloader simulado (inicio/borrado/recepción, datos de página + PAGE_ACK, trozos HMAC, fin de actualización con un éxito real o un `VERIFY_FAIL_REASON` concreto), las reglas de firma (firma publicada enviada sin ninguna clave, imagen sin firmar rechazada, sha256 del manifiesto que no coincide rechazado antes de cualquier tráfico en el bus), las comprobaciones de integridad de imagen y la carpeta `firmware/` incluida contra sus manifiestos. GitHub Actions (`.github/workflows/ci.yml`) ejecuta esta suite en cada push, y `tools/build_test.py` la ejecuta en `build-test.sh`/`.bat`. Los dos scripts `verify_qt_*.py` de la raíz son comprobaciones de extremo a extremo reales fuera de pytest (necesitan un bucle de eventos Qt real; se ejecutan con `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`); `verify_qt_swd_full_chip_flash.py` solo construye los comandos de `PyOCDCLI`/`CubeProgrammerCLI` con `dry_run=True`. Nada de esto se ha probado contra una placa real en este entorno. Ver `CHANGELOG.md` para saber exactamente qué se ha publicado. El bootloader simulado (`MockCAN`) es solo un modelo escrito a partir de la descripción del protocolo: reproduce los ACK de página, la última página parcial y las tramas de lectura, pero no es el bootloader real, así que una pasada de tests en verde no sustituye una prueba en una placa real (la imagen oficial de 73476 bytes no se podía instalar y la última trama de una copia se perdía mientras los tests pasaban, justamente porque la simulación era más permisiva que el bootloader real).
 
+## 📋 De un vistazo
+
+| | |
+|---|---|
+| Versión | `0.2.9` |
+| Madurez | Establecido |
+| Tests | 214 |
+| Tecnología | Python / Tkinter (legacy advanced workflow) / PySide6 / Qt Quick / CAN-OTA |
+| Destino | El PC de quien lo usa |
+| En hardware real | Solo simulado: probado con emuladores, dobles de prueba o simuladores; no consta ninguna ejecución en hardware real para esta versión |
+
 ## 1. 🔌 Consigue que tu adaptador hable CAN
 Cuál de estos necesitas depende de tu plataforma y de qué transporte
 vayas a usar:
