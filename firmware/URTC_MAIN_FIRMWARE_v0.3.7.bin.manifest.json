@@ -1,0 +1,13 @@
+{
+  "component": "main_application",
+  "chip": "STM32F303CCT6",
+  "hardware_id": "0x0303CC01",
+  "version": "0.3.7",
+  "build_date": "2026-10-18T22:54:50Z",
+  "size_bytes": 73816,
+  "crc32": "0x844B6321",
+  "sha256": "c6bc59d02435bf9777e5f463337ec2c64ae33510451da8af431fb7b21734cd9a",
+  "hmac_sha256": "4daf6745fec6805ff4454eda6bc57c23ba0d3486726b47830669d86586e486ac",
+  "signing_key_kind": "dev",
+  "signing_key_id": "420298f88970c85f"
+}

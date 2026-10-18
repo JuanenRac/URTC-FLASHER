@@ -3,8 +3,8 @@
   "chip": "STM32F303CCT6",
   "hardware_id": "0x0303CC01",
   "version": "0.4.0",
-  "build_date": "2026-10-18T21:39:35Z",
+  "build_date": "2026-10-18T22:54:50Z",
   "size_bytes": 18392,
-  "crc32": "0xE62314F7",
-  "sha256": "c08b5db4d6e1e1a67e17628fb0402b56d4af7c5ef850a853daa72395965803c5"
+  "crc32": "0x834B0875",
+  "sha256": "bcdf3fd79c69838715d8e6e2c3fed148e3361dc0c81601557aabf3aab3bea8a9"
 }
