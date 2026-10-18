@@ -9,3 +9,9 @@
 # Firmware images are binary.
 *.bin binary
 *.elf binary
+
+# Signed release companions keep their exact bytes (a signature covers them).
+firmware/*.sig -text
+firmware/*.sha256 -text
+firmware/*.manifest.json -text
+firmware/firmware_manifest.json -text
