@@ -78,10 +78,10 @@ JTAG als Rückfalloption bereit. Alles Übrige hier Beschriebene wurde nur gegen
 
 | | |
 |---|---|
-| Version | `0.3.5` |
+| Version | `0.3.6` |
 | Reifegrad | Funktionsfähig |
-| Tests | 459 |
-| Technik | Python / PySide6 / Qt Quick / CAN-OTA |
+| Tests | 405 |
+| Technik | Python / PySide6 / Qt Quick / CAN-OTA / SWD/JTAG |
 | Ziel | Der PC der Person, die es benutzt |
 | Auf echter Hardware | Nur simuliert: gegen Emulatoren, Attrappen oder Simulatoren getestet; für diese Version ist kein Lauf auf echter Hardware vermerkt |
 

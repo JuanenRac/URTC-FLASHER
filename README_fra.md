@@ -77,10 +77,10 @@ JTAG à portée de main comme solution de repli. Tout le reste décrit ici n'a �
 
 | | |
 |---|---|
-| Version | `0.3.5` |
+| Version | `0.3.6` |
 | Maturité | Fonctionnel |
-| Tests | 459 |
-| Technologie | Python / PySide6 / Qt Quick / CAN-OTA |
+| Tests | 405 |
+| Technologie | Python / PySide6 / Qt Quick / CAN-OTA / SWD/JTAG |
 | Cible | Le PC de la personne qui l'utilise |
 | Sur matériel réel | Simulé seulement : testé avec des émulateurs, des doubles de test ou des simulateurs ; aucune exécution sur du matériel réel n'est consignée pour cette version |
 
