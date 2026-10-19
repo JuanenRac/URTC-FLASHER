@@ -24,7 +24,7 @@
 </p>
 
 
-**Versão:** 0.3.5 (a versão desta própria ferramenta - mostrada no banner da
+**Versão:** 0.3.6 (a versão desta própria ferramenta - mostrada no banner da
 janela e na barra de título, acompanhada separadamente da versão do firmware
 da placa URTC que escreve. Segue um esquema X.Y.Z em que o número de patch
 sobe automaticamente em cada build real através de build_exe.bat/build_exe.sh

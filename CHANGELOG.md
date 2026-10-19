@@ -20,6 +20,10 @@ increments instead (e.g. `0.1.9` -> `0.2.0`), and the same carry applies
 from `MINOR` into `MAJOR`. Running the tool from source (not through a
 build script) never changes the version - only a real build does.
 
+## [0.3.6] - Follow URTC-COMMON 0.0.5 and the 0.3.8 firmware
+
+- The 0.3.8 firmware images (with the multinode switch, off by default) are bundled, and the shared protocol and widget copies follow URTC-COMMON 0.0.5.
+
 ## [0.3.5] - The Qt Quick deck is the only window, with everything the Tkinter window had
 
 - The Qt Quick deck can flash the expansion slave: a target choice (main board or slave), with the images checked against the slot of the chosen target. The "board is running the application" option (bootloader entry), the F-RAM erase and the downgrade authorisation are for the main board and are switched off for the slave.

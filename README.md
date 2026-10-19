@@ -24,7 +24,7 @@
 </p>
 
 
-**Version:** 0.3.5 (this tool's own version - shown in the window banner and
+**Version:** 0.3.6 (this tool's own version - shown in the window banner and
 title bar, tracked separately from the URTC board firmware version it
 writes. Follows an X.Y.Z scheme where the patch number is raised by the
 explicit `python bump.py` step - building never changes it - see CHANGELOG.md for

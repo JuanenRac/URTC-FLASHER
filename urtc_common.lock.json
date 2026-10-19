@@ -1,10 +1,10 @@
 {
   "format": 1,
-  "urtc_common_version": "0.0.4",
+  "urtc_common_version": "0.0.5",
   "files": {
     "__init__.py": {
       "from": "src/urtc_common/__init__.py",
-      "sha256": "93103a4dfde4f963e3941a52e97b0de3636d3ed6c5a957e1476834b7a9ff93b2"
+      "sha256": "5aded17a863a2f1d1de693ab44a427511cf75493f39b467e346b6d59aea84aeb"
     },
     "conformance.py": {
       "from": "src/urtc_common/conformance.py",
@@ -16,7 +16,7 @@
     },
     "protocol.py": {
       "from": "src/urtc_common/protocol.py",
-      "sha256": "0b1e922f11a68d2dec8957a413201af2178613e68e89a932265c8964449b717e"
+      "sha256": "86279b29de4de1bc709357fcb7c6c953254dbf89ada9832adb0af3d77fcbc268"
     },
     "quick_state.py": {
       "from": "src/urtc_common/quick_state.py",

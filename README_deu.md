@@ -24,7 +24,7 @@
 </p>
 
 
-**Version:** 0.3.5 (die Version dieses Tools selbst - angezeigt im
+**Version:** 0.3.6 (die Version dieses Tools selbst - angezeigt im
 Fenster-Banner und in der Titelleiste, getrennt verfolgt von der
 Firmware-Version der URTC-Platine, die es schreibt. Folgt einem
 X.Y.Z-Schema, bei dem die Patch-Nummer bei jedem echten Build über
