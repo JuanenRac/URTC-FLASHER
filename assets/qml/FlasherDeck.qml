@@ -221,12 +221,18 @@ ApplicationWindow {
                 ComboBox { id: ports; Layout.fillWidth: true; model: flasherBackend.ports; enabled: !flasherBackend.connected && !flasherBackend.busy; onActivated: flasherBackend.selectPort(currentText) }
                 RowLayout {
                     Layout.fillWidth: true
+                    Text { text: flasherBackend.uiText("LBL_BITRATE"); color: "#9fb4c4"; font.pixelSize: 12 }
+                    ComboBox { id: bitrateBox; Layout.fillWidth: true; model: flasherBackend.bitrateLabels; currentIndex: Math.max(0, flasherBackend.bitrateLabels.indexOf(flasherBackend.selectedBitrate)); enabled: !flasherBackend.connected && !flasherBackend.busy; onActivated: flasherBackend.selectBitrate(currentText) }
+                }
+                RowLayout {
+                    Layout.fillWidth: true
                     GameButton { text: flasherBackend.uiText("BTN_REFRESH"); accent: "#24465e"; Layout.fillWidth: true; onClicked: flasherBackend.scanPorts() }
                     GameButton { text: flasherBackend.connected ? flasherBackend.uiText("BTN_DISCONNECT") : flasherBackend.uiText("BTN_CONNECT"); Layout.fillWidth: true; enabled: !flasherBackend.busy; onClicked: flasherBackend.toggleConnection() }
                 }
                 Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
                 Text { text: flasherBackend.uiText("QT_FIRMWARE_INVENTORY"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
                     GameButton { text: flasherBackend.uiText("QT_SCAN_FIRMWARE"); accent: "#24465e"; Layout.fillWidth: true; enabled: !flasherBackend.busy; onClicked: flasherBackend.scanFirmware() }
+                    GameButton { text: flasherBackend.uiText("BTN_DOWNLOAD_FROM_GITHUB"); accent: "#24465e"; Layout.fillWidth: true; enabled: !flasherBackend.busy; onClicked: flasherBackend.downloadLatestRelease() }
                 ListView {
                     id: files
                     Layout.fillWidth: true

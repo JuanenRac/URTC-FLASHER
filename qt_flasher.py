@@ -25,7 +25,7 @@ from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuickControls2 import QQuickStyle
 
 from flasher_config import (
-    APP_FLASH_ADDR, APP_MAX_SIZE, BITRATE_500K_SLCAN_CODE,
+    APP_FLASH_ADDR, APP_MAX_SIZE, BITRATE_500K_SLCAN_CODE, SLCAN_BITRATES,
     BOOTLOADER_FLASH_ADDR, BOOTLOADER_MAX_SIZE,
     CAN_ID_ERROR_COUNTERS_RESPONSE, CAN_ID_EXPANSION_TYPE_RESP,
     CAN_ID_FREE_TOOL_CONFIG_RESP, CAN_ID_MLX_VARIANT_RESP,
@@ -38,6 +38,7 @@ from flasher_config import (
     SLAVE_BOOTLOADER_FLASH_ADDR, SLAVE_BOOTLOADER_MAX_SIZE,
     SLAVE_PYOCD_TARGET_NAME, SLAVE_TOTAL_FLASH_SIZE, TOOL_NAMES, _, _current_language, save_config, translate_log_line,
 )
+from flasher_github import GitHubDownloadError, download_file, fetch_release, is_sidecar
 from flasher_integrity import preflight_image
 from flasher_protocol import FlashError, URTCFlasher, minor_with_patch
 from flasher_swd_tools import CubeProgrammerCLI, PyOCDCLI, SWDFlashError
@@ -64,6 +65,7 @@ class FlasherQtBridge(QObject):
     _flashSpeed = Signal(float)
     _swdProbeResult = Signal("QVariantList")
     _swdFlashResult = Signal(str)
+    _githubResult = Signal(str)
     _swdOptionByteResult = Signal(str, str)
     _snapshotResult = Signal(object, str)
     _logRequested = Signal(str)
@@ -83,6 +85,7 @@ class FlasherQtBridge(QObject):
         self._socketcan_ports: set[str] = set()
         self._firmware: list[dict[str, object]] = []
         self._selected_port = ""
+        self._bitrate_label = "500 kbit/s"
         self._selected_firmware = ""
         self._transport = None
         self._busy = False
@@ -134,6 +137,7 @@ class FlasherQtBridge(QObject):
         self._flashSpeed.connect(self._on_flash_speed)
         self._swdProbeResult.connect(self._on_swd_probe_result)
         self._swdFlashResult.connect(self._on_swd_flash_result)
+        self._githubResult.connect(self._on_github_result)
         self._swdOptionByteResult.connect(self._on_swd_option_byte_result)
         self._snapshotResult.connect(self._on_snapshot_result)
         self._logRequested.connect(self._append_log)
@@ -488,6 +492,60 @@ class FlasherQtBridge(QObject):
         if self._transport is None and not self._busy and port in self._ports:
             self._selected_port = port
             self.changed.emit()
+
+    @Property("QVariantList", constant=True)
+    def bitrateLabels(self) -> list[str]:
+        return [label for label, _code in SLCAN_BITRATES]
+
+    @Property(str, notify=changed)
+    def selectedBitrate(self) -> str:
+        return self._bitrate_label
+
+    @Slot(str)
+    def selectBitrate(self, label: str) -> None:
+        """Bus speed for serial (SLCAN) adapters; SocketCAN takes its speed from the interface."""
+        if self._transport is None and not self._busy and label in self.bitrateLabels:
+            self._bitrate_label = label
+            self.changed.emit()
+
+    def _slcan_bitrate_code(self) -> str:
+        for label, code in SLCAN_BITRATES:
+            if label == self._bitrate_label:
+                return code
+        return BITRATE_500K_SLCAN_CODE
+
+    @Slot()
+    def downloadLatestRelease(self) -> None:
+        """Fetch the images of the newest GitHub release, with the digest and manifest files that travel with them."""
+        if self._busy:
+            self._log("GITHUB_DOWNLOAD_BLOCKED operation in progress")
+            return
+        self._set_state(status=_("LBL_GITHUB_LOADING"), busy=True)
+        threading.Thread(target=self._github_download_worker, daemon=True, name="urtc-qt-github").start()
+
+    def _github_download_worker(self) -> None:
+        try:
+            tag, entries = fetch_release(None, log=self._log)
+            os.makedirs(FIRMWARE_FOLDER, exist_ok=True)
+            count = 0
+            for entry in entries:
+                name = os.path.basename(entry["name"])
+                if name != entry["name"]:
+                    continue  # a file name that tries to leave the firmware folder is never written
+                download_file(entry["download_url"], os.path.join(FIRMWARE_FOLDER, name), log=self._log, expected_size=entry.get("size"))
+                if not is_sidecar(name):
+                    count += 1
+            self._githubResult.emit(_("LBL_GITHUB_LOADED_RELEASE", count=count, tag=tag or "?"))
+        except GitHubDownloadError as exc:
+            self._githubResult.emit("GITHUB_FAILED " + str(exc))
+        except Exception as exc:  # network, disk or unexpected response: show it, never crash the deck
+            self._githubResult.emit("GITHUB_FAILED " + _("ERR_GITHUB_UNEXPECTED", e=exc))
+
+    def _on_github_result(self, message: str) -> None:
+        self._set_state(status=message.removeprefix("GITHUB_FAILED "), busy=False)
+        self._log(message)
+        if not message.startswith("GITHUB_FAILED"):
+            self.scanFirmware()
 
     @Slot()
     def scanFirmware(self) -> None:
@@ -1043,7 +1101,7 @@ class FlasherQtBridge(QObject):
                 transport.open_channel()
             else:
                 transport = SLCAN(self._selected_port, log=self._log)
-                transport.open_channel(BITRATE_500K_SLCAN_CODE)
+                transport.open_channel(self._slcan_bitrate_code())
             self._connectionResult.emit(transport, "")
         except Exception as exc:
             self._connectionResult.emit(None, str(exc))
