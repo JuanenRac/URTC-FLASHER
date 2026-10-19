@@ -24,6 +24,7 @@ build script) never changes the version - only a real build does.
 
 - The Qt Quick deck has a bus-speed (bitrate) selector for serial CAN adapters, from 10 kbit/s to 1 Mbit/s, locked while connected; it was fixed at 500 kbit/s.
 - The Qt Quick deck can download the images of the newest GitHub release together with their digest and manifest files, then rescans the firmware folder; a file name that would leave the firmware folder is never written.
+- The Qt Quick deck can search for the bus speed by listening only: each candidate speed is only listened to, nothing is transmitted, and a silent bus leaves the chosen speed untouched.
 - Tests for both: every listed speed maps to its adapter code, an unknown speed is ignored, the speed cannot change while connected, and the release download covers images, digest files, unsafe names and a failed lookup.
 
 ## [0.3.3] - An explicit bump command: building never changes the version

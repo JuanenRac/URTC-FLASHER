@@ -223,6 +223,7 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     Text { text: flasherBackend.uiText("LBL_BITRATE"); color: "#9fb4c4"; font.pixelSize: 12 }
                     ComboBox { id: bitrateBox; Layout.fillWidth: true; model: flasherBackend.bitrateLabels; currentIndex: Math.max(0, flasherBackend.bitrateLabels.indexOf(flasherBackend.selectedBitrate)); enabled: !flasherBackend.connected && !flasherBackend.busy; onActivated: flasherBackend.selectBitrate(currentText) }
+                    GameButton { text: flasherBackend.uiText("BTN_AUTO_DETECT"); accent: "#24465e"; enabled: !flasherBackend.connected && !flasherBackend.busy; onClicked: flasherBackend.autoDetectBitrate() }
                 }
                 RowLayout {
                     Layout.fillWidth: true

@@ -42,7 +42,7 @@ from flasher_github import GitHubDownloadError, download_file, fetch_release, is
 from flasher_integrity import preflight_image
 from flasher_protocol import FlashError, URTCFlasher, minor_with_patch
 from flasher_swd_tools import CubeProgrammerCLI, PyOCDCLI, SWDFlashError
-from flasher_transports import SLCAN, SocketCAN, list_socketcan_interfaces
+from flasher_transports import SLCAN, SocketCAN, detect_bitrate_listen_only, list_socketcan_interfaces
 from flasher_validation import validate_firmware_file, validate_swd_image_file
 
 try:
@@ -66,6 +66,7 @@ class FlasherQtBridge(QObject):
     _swdProbeResult = Signal("QVariantList")
     _swdFlashResult = Signal(str)
     _githubResult = Signal(str)
+    _bitrateDetected = Signal(str)
     _swdOptionByteResult = Signal(str, str)
     _snapshotResult = Signal(object, str)
     _logRequested = Signal(str)
@@ -138,6 +139,7 @@ class FlasherQtBridge(QObject):
         self._swdProbeResult.connect(self._on_swd_probe_result)
         self._swdFlashResult.connect(self._on_swd_flash_result)
         self._githubResult.connect(self._on_github_result)
+        self._bitrateDetected.connect(self._on_bitrate_detected)
         self._swdOptionByteResult.connect(self._on_swd_option_byte_result)
         self._snapshotResult.connect(self._on_snapshot_result)
         self._logRequested.connect(self._append_log)
@@ -507,6 +509,51 @@ class FlasherQtBridge(QObject):
         if self._transport is None and not self._busy and label in self.bitrateLabels:
             self._bitrate_label = label
             self.changed.emit()
+
+    @Slot()
+    def autoDetectBitrate(self) -> None:
+        """Listen-only search for the bus speed: nothing is transmitted at any speed tried."""
+        if self._transport is not None or self._busy:
+            return
+        if not self._selected_port or self._selected_port in self._socketcan_ports:
+            self._log(_("MSG_SELECT_COM_PORT_FIRST"))
+            return
+        self._set_state(status=_("STATUS_TRYING_EACH_BITRATE"), busy=True)
+        threading.Thread(target=self._autodetect_worker, args=(self._selected_port,), daemon=True, name="urtc-qt-autobaud").start()
+
+    def _autodetect_worker(self, port: str) -> None:
+        found = ""
+        try:
+            # Most likely first: URTC's bus is 500 kbit/s, then its two usual neighbours.
+            order = ["500 kbit/s", "250 kbit/s", "125 kbit/s", "1 Mbit/s", "100 kbit/s", "50 kbit/s", "20 kbit/s", "10 kbit/s", "800 kbit/s"]
+            by_label = dict(SLCAN_BITRATES)
+
+            def open_listen_only(code):
+                trial = SLCAN(port, log=lambda message: None)
+                try:
+                    trial.open_channel(code, listen_only=True)
+                except Exception:
+                    trial.close()
+                    raise
+                return trial
+
+            found = detect_bitrate_listen_only(
+                open_listen_only, [(label, by_label[label]) for label in order],
+                listen_seconds=1.0, on_try=lambda label: self._log(_("LOG_AUTODETECT_TRYING", label=label)),
+            ) or ""
+        except Exception as exc:  # a missing adapter or a busy port must not crash the deck
+            self._log(f"AUTODETECT_FAILED {exc}")
+        finally:
+            self._bitrateDetected.emit(found)
+
+    def _on_bitrate_detected(self, label: str) -> None:
+        if label:
+            self._bitrate_label = label
+            self._set_state(status=_("STATUS_FOUND_BITRATE", label=label), busy=False)
+            self._log(_("LOG_AUTODETECT_RESPONDED", label=label))
+        else:
+            self._set_state(status=_("STATUS_NO_RESPONSE_ANY_BITRATE"), busy=False)
+            self._log(_("LOG_AUTODETECT_NO_RESPONSE"))
 
     def _slcan_bitrate_code(self) -> str:
         for label, code in SLCAN_BITRATES:
