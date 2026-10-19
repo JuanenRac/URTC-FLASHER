@@ -6,17 +6,19 @@
 """Qt Quick front end for the real, safe CAN-OTA workflow.
 
 This is not a second flashing implementation.  It uses the existing SLCAN,
-SocketCAN, firmware validation and URTCFlasher protocol classes.  Tkinter
-remains the default interface; the README lists exactly what the Qt Quick
-deck does and does not do compared with it.
+SocketCAN, firmware validation and URTCFlasher protocol classes.  It is the
+only window of the program (the headless ``--cli`` mode needs no window).
 """
 from __future__ import annotations
 
 import glob
+import logging
 import os
+import platform
 import sys
 import threading
 import time
+import zipfile
 from pathlib import Path
 
 from PySide6.QtCore import QObject, Property, QTimer, QUrl, Signal, Slot
@@ -24,6 +26,7 @@ from PySide6.QtGui import QGuiApplication, QIcon
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuickControls2 import QQuickStyle
 
+import flasher_config
 from flasher_config import (
     APP_FLASH_ADDR, APP_MAX_SIZE, BITRATE_500K_SLCAN_CODE, SLCAN_BITRATES,
     BOOTLOADER_FLASH_ADDR, BOOTLOADER_MAX_SIZE,
@@ -33,23 +36,37 @@ from flasher_config import (
     CAN_ID_SET_DEVICE_SERIAL, CAN_ID_SET_EXPANSION_TYPE,
     CAN_ID_SET_FREE_TOOL, CAN_ID_SET_MLX_VARIANT,
     EXPANSION_BOARD_TYPES, FIRMWARE_FOLDER,
-    AVAILABLE_LANGUAGES, FLASHER_VERSION, ICON_IMAGE_PATH, MLX_SENSOR_VARIANTS,
-    PYOCD_TARGET_NAME, SLAVE_APP_FLASH_ADDR, SLAVE_APP_MAX_SIZE,
+    FLASHER_VERSION, ICON_IMAGE_PATH, MLX_SENSOR_VARIANTS,
+    LOGS_FOLDER, PYOCD_TARGET_NAME, REQUIRE_PRODUCTION_SIGNATURE, SLAVE_APP_FLASH_ADDR, SLAVE_APP_MAX_SIZE,
+    SLAVE_HARDWARE_ID, THIS_HARDWARE_ID,
     SLAVE_BOOTLOADER_FLASH_ADDR, SLAVE_BOOTLOADER_MAX_SIZE,
     SLAVE_PYOCD_TARGET_NAME, SLAVE_TOTAL_FLASH_SIZE, TOOL_NAMES, _, _current_language, save_config, translate_log_line,
 )
-from flasher_github import GitHubDownloadError, download_file, fetch_release, is_sidecar
-from flasher_integrity import preflight_image
+from flasher_github import GitHubDownloadError, download_file, fetch_release, is_sidecar, sidecars_for
+from flasher_integrity import manifest_signing_kind, preflight_image
+from flasher_records import (
+    build_update_report, find_recovery_image, prune_session_logs, writable_logs_folder, write_update_report,
+)
 from flasher_protocol import FlashError, URTCFlasher, minor_with_patch
 from flasher_swd_tools import CubeProgrammerCLI, PyOCDCLI, SWDFlashError
 from flasher_transports import SLCAN, SocketCAN, detect_bitrate_listen_only, list_socketcan_interfaces
 from flasher_validation import validate_firmware_file, validate_swd_image_file
+from urtc_ui import LanguageModel, connection_badge, format_bytes
 
 try:
     import serial.tools.list_ports
     HAVE_SERIAL = True
 except ImportError:
     HAVE_SERIAL = False
+
+
+def _local_path(value: str) -> str:
+    """A path chosen in a QML file dialog arrives as a file: URL; accept both forms."""
+    text = str(value or "")
+    if text.startswith("file:"):
+        local = QUrl(text).toLocalFile()
+        return os.path.normpath(local) if local else text
+    return text
 
 
 class FlasherQtBridge(QObject):
@@ -65,7 +82,11 @@ class FlasherQtBridge(QObject):
     _flashSpeed = Signal(float)
     _swdProbeResult = Signal("QVariantList")
     _swdFlashResult = Signal(str)
-    _githubResult = Signal(str)
+    releaseChanged = Signal()
+    _releaseListed = Signal(str, object, str)
+    _releaseProgressed = Signal(int)
+    _releaseDownloaded = Signal(str, str)
+    _busActivityResult = Signal(int, int)
     _bitrateDetected = Signal(str)
     _swdOptionByteResult = Signal(str, str)
     _snapshotResult = Signal(object, str)
@@ -95,6 +116,27 @@ class FlasherQtBridge(QObject):
         self._logs: list[str] = []
         self._cancel_requested = False
         self._flash_path = ""
+        # CAN-OTA options, with the same safe defaults as the Tk window:
+        # main board, bootloader entry requested, no F-RAM erase and no
+        # downgrade (which also needs its own second confirmation).
+        self._flash_target = "master"
+        self._trigger_bootloader = True
+        self._erase_fram = False
+        self._allow_downgrade = False
+        self._downgrade_confirmed = False
+        self._readback_result = ""
+        self._bus_activity_text = ""
+        self._export_result = ""
+        self._recovery_candidate = ""
+        self._browsed: dict[str, dict[str, object]] = {}   # files picked by hand, kept across rescans
+        self._pending_invalid: dict[str, object] | None = None
+        self._file_logger: logging.Logger | None = None
+        self._release_entries: list[dict] = []
+        self._release_status = ""
+        self._release_loading = False
+        self._release_downloading = False
+        self._release_progress = 0
+        self._release_overwrite = ""
         # Live transfer speed (kB/s, from URTCFlasher's speed_cb) plus a
         # reactive "still waiting" indicator driven by a plain QTimer -
         # deliberately not derived from _flashProgress/_flashSpeed alone,
@@ -111,8 +153,8 @@ class FlasherQtBridge(QObject):
         self._swd_tools: list[dict[str, object]] = []
         self._swd_probes: list[dict[str, str]] = []
         # Full-chip SWD/JTAG programming - real state mirroring the
-        # established Tkinter panel's own swd_target_var/swd_tool_var/
-        # swd_probe_var/swd_dry_run_var/swd_backup_var (flasher_gui.py).
+        # earlier Tk window's own swd_target_var/swd_tool_var/
+        # swd_probe_var/swd_dry_run_var/swd_backup_var (the earlier Tk window).
         # Same real safe defaults: master board, whichever tool is
         # actually installed, dry-run ON, backup OFF.
         self._swd_target = "master"
@@ -138,7 +180,10 @@ class FlasherQtBridge(QObject):
         self._flashSpeed.connect(self._on_flash_speed)
         self._swdProbeResult.connect(self._on_swd_probe_result)
         self._swdFlashResult.connect(self._on_swd_flash_result)
-        self._githubResult.connect(self._on_github_result)
+        self._releaseListed.connect(self._on_release_listed)
+        self._releaseProgressed.connect(self._on_release_progress)
+        self._releaseDownloaded.connect(self._on_release_downloaded)
+        self._busActivityResult.connect(self._on_bus_activity_result)
         self._bitrateDetected.connect(self._on_bitrate_detected)
         self._swdOptionByteResult.connect(self._on_swd_option_byte_result)
         self._snapshotResult.connect(self._on_snapshot_result)
@@ -159,20 +204,17 @@ class FlasherQtBridge(QObject):
     @Property("QStringList", constant=True)
     def languageNames(self) -> list:
         """The names of the interface languages, each in its own language; the choice is saved and applies on the next start."""
-        return [name for _code, name in AVAILABLE_LANGUAGES]
+        return LanguageModel(_current_language).names()
 
     @Property(int, constant=True)
     def languageIndex(self) -> int:
-        codes = [code for code, _name in AVAILABLE_LANGUAGES]
-        return codes.index(_current_language) if _current_language in codes else 0
+        return LanguageModel(_current_language).index()
 
     @Slot(int, result=str)
     def selectLanguage(self, index: int) -> str:
         """Saves the chosen language in the configuration file and returns the (already translated) notice to show."""
-        if not 0 <= index < len(AVAILABLE_LANGUAGES):
-            return ""
-        code = AVAILABLE_LANGUAGES[index][0]
-        if code == _current_language:
+        code = LanguageModel().code_at(index)
+        if code is None or code == _current_language:
             return ""
         if save_config({"language": code}):
             self._log(f"LANGUAGE_SAVED {code}")
@@ -260,6 +302,12 @@ class FlasherQtBridge(QObject):
             return ""
         return _("LBL_TRANSFER_STALLED", secs=self._transfer_idle_seconds)
 
+
+    @Property(str, notify=changed)
+    def statusColor(self) -> str:
+        """Colour of the status line: the shared badge of the connection state (connected or disconnected)."""
+        return connection_badge(True if self.connected else None).colour
+
     @Property(str, notify=changed)
     def status(self) -> str:
         return translate_log_line(self._status)
@@ -271,6 +319,499 @@ class FlasherQtBridge(QObject):
     @Property(bool, notify=changed)
     def canFlash(self) -> bool:
         return self.connected and bool(self._selected_firmware) and not self._busy
+
+    # -- a firmware file chosen by hand, the signing warning, the release tag ---
+    @Slot(str)
+    def addFirmwareFile(self, file_url: str) -> None:
+        """Use a file picked from anywhere. A file that does not look like an image for the chosen slot
+        waits for the operator's explicit confirmation (acceptInvalidFirmware) before it can be selected."""
+        path = _local_path(file_url)
+        if self._busy or not path or not os.path.isfile(path):
+            return
+        valid, reason, size = validate_firmware_file(path, *self._flash_slot())
+        entry = {"name": os.path.basename(path), "path": path, "valid": valid, "reason": reason, "size": size}
+        if valid:
+            self._browsed[path] = entry
+            self._selected_firmware = path
+            self._pending_invalid = None
+            self.scanFirmware()
+            return
+        self._pending_invalid = entry
+        self.changed.emit()
+
+    @Property(str, notify=changed)
+    def invalidFirmwareReason(self) -> str:
+        """Why the file just picked does not look valid; empty when nothing waits for confirmation."""
+        entry = self._pending_invalid
+        return _("MSG_FIRMWARE_FILE_LOOKS_INVALID_REASON", reason=entry["reason"]) if entry else ""
+
+    @Slot()
+    def acceptInvalidFirmware(self) -> None:
+        entry, self._pending_invalid = self._pending_invalid, None
+        if entry is None or self._busy:
+            return
+        self._browsed[str(entry["path"])] = entry
+        self._selected_firmware = str(entry["path"])
+        self._log("FIRMWARE_SELECTED_DESPITE_WARNING")
+        self.scanFirmware()
+
+    @Slot()
+    def rejectInvalidFirmware(self) -> None:
+        self._pending_invalid = None
+        self.changed.emit()
+
+    @Property(str, notify=changed)
+    def signingWarning(self) -> str:
+        """Shown under the selected image when it is signed with the PUBLIC development key."""
+        if not self._selected_firmware:
+            return ""
+        try:
+            kind = manifest_signing_kind(self._selected_firmware)
+        except OSError:
+            return ""
+        if kind != "dev":
+            return ""
+        return _("LBL_DEV_KEY_REFUSED" if REQUIRE_PRODUCTION_SIGNATURE else "LBL_DEV_KEY_WARNING")
+
+    # -- the files of a GitHub release: list them, pick one, download it with its digest and manifest ---
+    @Property("QVariantList", notify=releaseChanged)
+    def releaseImages(self) -> list[dict[str, str]]:
+        return [
+            {"name": str(entry["name"]), "size": format_bytes(int(entry.get("size") or 0))}
+            for entry in self._release_entries
+            if not is_sidecar(str(entry["name"]))
+        ]
+
+    @Property(str, notify=releaseChanged)
+    def releaseStatus(self) -> str:
+        return self._release_status
+
+    @Property(bool, notify=releaseChanged)
+    def releaseBusy(self) -> bool:
+        return self._release_loading or self._release_downloading
+
+    @Property(int, notify=releaseChanged)
+    def releaseProgress(self) -> int:
+        return self._release_progress
+
+    @Property(str, notify=releaseChanged)
+    def releaseOverwriteName(self) -> str:
+        """The file that already exists in firmware/ and waits for the operator's yes before it is replaced."""
+        return self._release_overwrite
+
+    @Property(str, notify=releaseChanged)
+    def releaseOverwriteQuestion(self) -> str:
+        return _("MSG_GITHUB_FILE_EXISTS_OVERWRITE", name=self._release_overwrite) if self._release_overwrite else ""
+
+    @Slot(str)
+    def loadRelease(self, tag: str) -> None:
+        """List the files of a release (the newest when the tag is empty)."""
+        if self.releaseBusy:
+            self._log("GITHUB_DOWNLOAD_BLOCKED")
+            return
+        self._release_loading = True
+        self._release_status = _("LBL_GITHUB_LOADING")
+        self.releaseChanged.emit()
+        threading.Thread(target=self._release_list_worker, args=(tag.strip() or None,), daemon=True, name="urtc-qt-github-list").start()
+
+    def _release_list_worker(self, tag: str | None) -> None:
+        try:
+            release_tag, entries = fetch_release(tag, log=self._log)
+            self._releaseListed.emit(release_tag or "?", entries, "")
+        except GitHubDownloadError as exc:
+            self._releaseListed.emit("", [], str(exc))
+        except Exception as exc:  # network or unexpected response: show it, never crash the deck
+            self._releaseListed.emit("", [], _("ERR_GITHUB_UNEXPECTED", e=exc))
+
+    @Slot(str, object, str)
+    def _on_release_listed(self, tag: str, entries: object, error: str) -> None:
+        self._release_loading = False
+        self._release_entries = [] if error else list(entries)  # type: ignore[call-overload]
+        images = self.releaseImages
+        if error:
+            self._release_status = error
+            self._log(f"GITHUB_FAILED {error}")
+        elif not images:
+            self._release_status = _("LBL_GITHUB_EMPTY")
+        else:
+            self._release_status = _("LBL_GITHUB_LOADED_RELEASE", count=len(images), tag=tag)
+        self.releaseChanged.emit()
+
+    @Slot(str)
+    def downloadReleaseFile(self, name: str) -> None:
+        """Download one listed image and the digest and manifest files published with it into firmware/."""
+        if self.releaseBusy:
+            return
+        entry = next((e for e in self._release_entries if e["name"] == name and not is_sidecar(name)), None)
+        if entry is None or os.path.basename(name) != name:
+            return  # unknown, or a name that tries to leave the firmware folder: never written
+        try:
+            os.makedirs(FIRMWARE_FOLDER, exist_ok=True)
+        except OSError as exc:
+            self._release_status = _("ERR_GITHUB_WRITE_FAILED", reason=exc)
+            self.releaseChanged.emit()
+            return
+        if os.path.isfile(os.path.join(FIRMWARE_FOLDER, name)) and self._release_overwrite != name:
+            self._release_overwrite = name
+            self.releaseChanged.emit()
+            return
+        self._release_overwrite = ""
+        self._release_downloading = True
+        self._release_progress = 0
+        self._release_status = _("LBL_GITHUB_DOWNLOADING_NAME", name=name)
+        self.releaseChanged.emit()
+        threading.Thread(target=self._release_download_worker, args=(entry,), daemon=True, name="urtc-qt-github-download").start()
+
+    @Slot()
+    def confirmReleaseOverwrite(self) -> None:
+        name = self._release_overwrite
+        if name:
+            self.downloadReleaseFile(name)
+
+    @Slot()
+    def cancelReleaseOverwrite(self) -> None:
+        self._release_overwrite = ""
+        self.releaseChanged.emit()
+
+    def _release_download_worker(self, entry: dict) -> None:
+        name = str(entry["name"])
+        try:
+            download_file(
+                entry["download_url"], os.path.join(FIRMWARE_FOLDER, name), log=self._log, expected_size=entry.get("size"),
+                progress_cb=self._releaseProgressed.emit,
+            )
+            # The published digest and manifest (with the signature the bootloader expects) travel with the image.
+            for sidecar in sidecars_for(self._release_entries, name):
+                side = str(sidecar["name"])
+                if os.path.basename(side) == side:
+                    download_file(sidecar["download_url"], os.path.join(FIRMWARE_FOLDER, side), log=self._log, expected_size=sidecar.get("size"))
+            self._releaseDownloaded.emit(name, "")
+        except GitHubDownloadError as exc:
+            self._releaseDownloaded.emit(name, str(exc))
+        except Exception as exc:
+            self._releaseDownloaded.emit(name, _("ERR_GITHUB_UNEXPECTED", e=exc))
+
+    @Slot(int)
+    def _on_release_progress(self, percent: int) -> None:
+        self._release_progress = max(0, min(100, percent))
+        self.releaseChanged.emit()
+
+    @Slot(str, str)
+    def _on_release_downloaded(self, name: str, error: str) -> None:
+        self._release_downloading = False
+        if error:
+            self._release_status = error
+            self._log(f"GITHUB_FAILED {error}")
+        else:
+            self._release_status = _("LBL_GITHUB_DOWNLOAD_DONE", name=name)
+            self._release_progress = 100
+            self._log(f"GITHUB_DOWNLOADED {name}")
+            self.scanFirmware()
+        self.releaseChanged.emit()
+
+    # -- closing and the session log file -------------------------------------
+    def start_session_log(self) -> None:
+        """Write every log line also to logs/urtc_flasher_<time>.log (only the program itself calls this, not the tests)."""
+        try:
+            folder = writable_logs_folder(LOGS_FOLDER)
+            if folder is None:
+                return
+            prune_session_logs(folder)
+            handler = logging.FileHandler(os.path.join(folder, f"urtc_flasher_{time.strftime('%Y%m%d_%H%M%S')}.log"), encoding="utf-8")
+        except OSError:
+            return
+        handler.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
+        self._file_logger = logging.getLogger(f"urtc_flasher_qt_{id(self)}")
+        self._file_logger.setLevel(logging.INFO)
+        self._file_logger.addHandler(handler)
+        self._file_logger.info("=== URTC Flasher v%s session started ===", FLASHER_VERSION)
+
+    @Property(str, constant=True)
+    def closeWhileBusyTitle(self) -> str:
+        return _("TITLE_FLASH_IN_PROGRESS")
+
+    @Property(str, constant=True)
+    def closeWhileBusyBody(self) -> str:
+        return _("MSG_FLASH_IN_PROGRESS_CLOSE_CONFIRM")
+
+    @Slot()
+    def prepareToQuit(self) -> None:
+        """Stop a transfer and release the adapter before the window goes away."""
+        self._cancel_requested = True
+        transport, self._transport = self._transport, None
+        if transport is not None:
+            try:
+                transport.close()
+            except Exception:
+                pass
+        handlers = list(self._file_logger.handlers) if self._file_logger is not None else []
+        for handler in handlers:
+            handler.close()
+            self._file_logger.removeHandler(handler)
+
+    # -- CAN-OTA options (target, bootloader entry, F-RAM erase, downgrade) --
+    def _flash_slot(self) -> tuple[int, int]:
+        """Flash address and size the images are validated against for the chosen target."""
+        if self._flash_target == "slave":
+            return SLAVE_APP_FLASH_ADDR, SLAVE_APP_MAX_SIZE
+        return APP_FLASH_ADDR, APP_MAX_SIZE
+
+    @Property(str, notify=changed)
+    def flashTarget(self) -> str:
+        return self._flash_target
+
+    @Property(bool, notify=changed)
+    def triggerBootloader(self) -> bool:
+        return self._trigger_bootloader
+
+    @Property(bool, notify=changed)
+    def eraseFram(self) -> bool:
+        return self._erase_fram
+
+    @Property(bool, notify=changed)
+    def allowDowngrade(self) -> bool:
+        return self._allow_downgrade
+
+    @Property(bool, notify=changed)
+    def downgradeOptionsAvailable(self) -> bool:
+        """F-RAM erase, the downgrade authorisation and the CAN backup exist for the main board only."""
+        return self._flash_target == "master"
+
+    @Property(bool, notify=changed)
+    def canReadback(self) -> bool:
+        return self.connected and not self._busy and self._flash_target == "master"
+
+    @Property(str, notify=changed)
+    def readbackResult(self) -> str:
+        return self._readback_result
+
+    @Property(str, notify=changed)
+    def flashConfirmTitle(self) -> str:
+        return _("TITLE_CONFIRM_FLASH")
+
+    @Property(str, notify=changed)
+    def flashConfirmBody(self) -> str:
+        label = _("OPT_TARGET_SLAVE") if self._flash_target == "slave" else _("OPT_TARGET_MASTER")
+        return _("MSG_CONFIRM_FLASH_TARGET", target=label)
+
+    @Property(str, constant=True)
+    def downgradeConfirmTitle(self) -> str:
+        return _("TITLE_CONFIRM_DOWNGRADE")
+
+    @Property(str, constant=True)
+    def downgradeConfirmBody(self) -> str:
+        return _("MSG_CONFIRM_DOWNGRADE")
+
+    @Slot(str)
+    def setFlashTarget(self, target: str) -> None:
+        """Main board or expansion slave. Switching drops the options that do not exist for the slave
+        and the selected image (it was validated for the other slot), then rescans."""
+        if self._busy or target not in ("master", "slave") or target == self._flash_target:
+            return
+        self._flash_target = target
+        if target == "slave":
+            self._erase_fram = False
+            self._allow_downgrade = False
+        self._downgrade_confirmed = False
+        self._selected_firmware = ""
+        self.scanFirmware()
+
+    # -- help texts: README (in the interface language when a translation exists), licence, project page, plain log ---
+    README_SUFFIXES = {
+        "spanish": "_spa", "italian": "_ita", "french": "_fra", "german": "_deu",
+        "chinese": "_zho", "japanese": "_jpn", "portuguese": "_por",
+    }
+
+    @Slot(result=str)
+    def readmeText(self) -> str:
+        folder = flasher_config.base_dir
+        candidate = os.path.join(folder, f"README{self.README_SUFFIXES.get(_current_language, '')}.md")
+        path = candidate if os.path.isfile(candidate) else os.path.join(folder, "README.md")
+        try:
+            with open(path, encoding="utf-8") as stream:
+                return stream.read()
+        except OSError as exc:
+            return f"{_('TITLE_EXPORT_FAILED')}: {exc}"
+
+    @Slot(result=str)
+    def licenseText(self) -> str:
+        try:
+            with open(os.path.join(flasher_config.base_dir, "LICENSE"), encoding="utf-8") as stream:
+                return stream.read()
+        except OSError:
+            return _("MSG_LICENSE_FALLBACK")
+
+    @Property(str, constant=True)
+    def githubUrl(self) -> str:
+        return "https://github.com/JuanenRac/URTC-FLASHER"
+
+    @Slot(str, result=bool)
+    def saveLogText(self, save_path: str) -> bool:
+        """Save the on-screen log as plain text (the lighter counterpart of the debug bundle)."""
+        path = QUrl(save_path).toLocalFile() if save_path.startswith("file:") else save_path
+        try:
+            with open(path, "w", encoding="utf-8") as stream:
+                stream.write("\n".join(self._logs) + "\n")
+        except OSError as exc:
+            self._log(f"LOG_SAVE_FAILED {exc}")
+            return False
+        self._log(f"LOG_SAVED {path}")
+        return True
+
+    @Slot(bool)
+    def setTriggerBootloader(self, enabled: bool) -> None:
+        if not self._busy:
+            self._trigger_bootloader = bool(enabled)
+            self.changed.emit()
+
+    @Slot(bool)
+    def setEraseFram(self, enabled: bool) -> None:
+        if not self._busy and self._flash_target == "master":
+            self._erase_fram = bool(enabled)
+            self.changed.emit()
+
+    @Slot(bool)
+    def setAllowDowngrade(self, enabled: bool) -> None:
+        """Ticking this only arms the option: the flash still needs the separate downgrade confirmation."""
+        if self._busy or self._flash_target != "master":
+            return
+        self._allow_downgrade = bool(enabled)
+        self._downgrade_confirmed = False
+        self.changed.emit()
+
+    @Slot()
+    def confirmDowngrade(self) -> None:
+        """The operator accepted the extra downgrade prompt (asked after the routine target prompt)."""
+        if self._allow_downgrade and self._flash_target == "master":
+            self._downgrade_confirmed = True
+
+    @Slot(str)
+    def startReadback(self, save_path: str) -> None:
+        """Back up the firmware installed on the main board over CAN (the file name comes from a save dialog)."""
+        path = _local_path(save_path)
+        if not self.canReadback:
+            self._log("READBACK_BLOCKED")
+            return
+        if not path:
+            return
+        self._cancel_requested = False
+        self._progress = 0
+        self._transfer_speed_kbps = 0.0
+        self._transfer_idle_seconds = 0
+        self._transfer_last_update = time.monotonic()
+        self._transfer_liveness_timer.start()
+        self._readback_result = ""
+        self._set_state(status="READBACK IN PROGRESS", busy=True)
+        self._log("READBACK_STARTED")
+        threading.Thread(target=self._readback_worker, args=(path,), daemon=True, name="urtc-qt-readback").start()
+
+    def _readback_worker(self, save_path: str) -> None:
+        try:
+            flasher = URTCFlasher(
+                self._transport, log=self._log, progress_cb=self._flashProgress.emit,
+                stop_flag=lambda: self._cancel_requested, speed_cb=self._flashSpeed.emit,
+            )
+            size = flasher.read_back_flash(save_path)
+            self._flashResult.emit(f"READBACK_COMPLETE {size} {save_path}")
+        except FlashError as exc:
+            self._flashResult.emit(f"READBACK_FAILED {exc}")
+        except Exception as exc:
+            self._flashResult.emit(f"READBACK_UNEXPECTED {exc}")
+
+    @Property(str, notify=changed)
+    def busActivityText(self) -> str:
+        return self._bus_activity_text
+
+    @Slot()
+    def checkBusActivity(self) -> None:
+        """Count the frames seen on the bus for two seconds (nothing is transmitted)."""
+        if self._transport is None or self._busy:
+            self._log("BUS_ACTIVITY_BLOCKED")
+            return
+        self._bus_activity_text = ""
+        self._set_state(status="BUS ACTIVITY CHECK", busy=True)
+        threading.Thread(target=self._bus_activity_worker, args=(self._transport,), daemon=True, name="urtc-qt-bus-activity").start()
+
+    def _bus_activity_worker(self, transport) -> None:
+        count = 0
+        before = after = None
+        is_socketcan = isinstance(transport, SocketCAN)
+        try:
+            if is_socketcan:
+                before = SocketCAN.read_interface_stats(transport.interface)
+            deadline = time.time() + 2.0
+            while time.time() < deadline:
+                if transport.read_frame(timeout=0.1) is not None:
+                    count += 1
+            if is_socketcan:
+                after = SocketCAN.read_interface_stats(transport.interface)
+        except Exception as exc:
+            self._log(f"BUS_ACTIVITY_FAILED {exc}")
+        errors = 0
+        if before is not None and after is not None:
+            errors = sum(
+                max(0, after[key] - before[key])
+                for key in ("rx_errors", "tx_errors", "rx_dropped", "tx_dropped")
+                if key in after and key in before
+            )
+        self._busActivityResult.emit(count, errors)
+
+    @Slot(int, int)
+    def _on_bus_activity_result(self, count: int, errors: int) -> None:
+        text = _("LBL_FRAMES_IN_2S", count=count, rate=count / 2.0)
+        if errors:
+            text += f" / {errors} err"
+        self._bus_activity_text = text
+        self._set_state(status="READY", busy=False)
+        self._log(f"BUS_ACTIVITY {text}")
+
+    @Slot(str)
+    def exportDebugBundle(self, save_path: str) -> None:
+        """Write the on-screen log, a diagnostics summary and the selected image to a .zip."""
+        path = _local_path(save_path)
+        if not path:
+            return
+        try:
+            with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as bundle:
+                bundle.writestr("session_log.txt", "\n".join(self._logs) + "\n")
+                diagnostics = [
+                    f"URTC Flasher version: {FLASHER_VERSION}",
+                    f"Python: {sys.version}",
+                    f"Platform: {platform.platform()}",
+                    f"pyserial available: {HAVE_SERIAL}",
+                    f"pyOCD found: {PyOCDCLI.available()}",
+                    f"STM32CubeProgrammer found: {CubeProgrammerCLI.available()}",
+                    f"Current port/interface: {self._selected_port}",
+                    f"Current bitrate (Serial/SLCAN): {self._bitrate_label}",
+                    f"Connected: {self._transport is not None}",
+                    f"Flash target: {self._flash_target}",
+                    f"Selected CAN firmware file: {self._selected_firmware or '(none)'}",
+                    f"Selected SWD bootloader file: {self._swd_bootloader_path or '(none)'}",
+                    f"Selected SWD application file: {self._swd_app_path or '(none)'}",
+                ]
+                bundle.writestr("system_diagnostics.txt", "\n".join(diagnostics))
+                if self._selected_firmware and os.path.isfile(self._selected_firmware):
+                    bundle.write(self._selected_firmware, "firmware/" + os.path.basename(self._selected_firmware))
+        except OSError as exc:
+            self._export_result = _("TITLE_EXPORT_FAILED") + ": " + str(exc)
+            self._log(f"DEBUG_BUNDLE_FAILED {exc}")
+        else:
+            self._export_result = _("MSG_SAVED_TO", path=path)
+            self._log(f"DEBUG_BUNDLE_EXPORTED {path}")
+        self.changed.emit()
+
+    @Property(str, notify=changed)
+    def exportResult(self) -> str:
+        return self._export_result
+
+    @Property(str, constant=True)
+    def aboutText(self) -> str:
+        return (
+            f"URTC Flasher v{FLASHER_VERSION}\n"
+            "JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>\n"
+            "GNU General Public License v3.0 or later (GPL-3.0-or-later)"
+        )
+
 
     @Property("QVariantList", notify=changed)
     def swdTools(self) -> list[dict[str, object]]:
@@ -285,7 +826,7 @@ class FlasherQtBridge(QObject):
         return self._swd_scanning
 
     # -- Full-chip SWD/JTAG programming - real state mirroring
-    # flasher_gui.py's own swd_target_var/swd_tool_var/swd_probe_var/
+    # the earlier Tk window's own swd_target_var/swd_tool_var/swd_probe_var/
     # swd_dry_run_var/swd_backup_var. This talks to the target directly
     # over the debug probe, NOT the CAN transport - every gate below is
     # deliberately independent of self.connected. --
@@ -365,7 +906,7 @@ class FlasherQtBridge(QObject):
 
     @Property(bool, notify=changed)
     def canFullChipFlash(self) -> bool:
-        """Same real preconditions as flasher_gui.py's own
+        """Same real preconditions as the earlier Tk window's own
         start_swd_flash(): a supported tool actually installed, both
         real image files selected, and - if more than one probe answers
         to the selected tool - one of them explicitly chosen rather
@@ -391,7 +932,7 @@ class FlasherQtBridge(QObject):
 
     @Slot(str, result=str)
     def buildSwdFlashConfirmBody(self, backup_path: str) -> str:
-        """Real message assembly, matching flasher_gui.py's own
+        """Real message assembly, matching the earlier Tk window's own
         start_swd_flash() probe_line/backup_line construction exactly -
         kept here rather than chained QML .replace() calls since
         MSG_CONFIRM_FULL_CHIP alone carries 5 real placeholders, more
@@ -438,7 +979,7 @@ class FlasherQtBridge(QObject):
     def freeToolOptions(self) -> list[str]:
         """Real display labels, index-aligned with the real selection
         value each one writes (0 = none, matching
-        flasher_gui.py's own _free_tool_display_to_selection)."""
+        the earlier Tk window's own _free_tool_display_to_selection)."""
         return [_("OPT_FREE_TOOL_NONE")] + [f"{tool_id + 1} - {name}" for tool_id, name in TOOL_NAMES.items()]
 
     @Property(str, notify=changed)
@@ -463,7 +1004,10 @@ class FlasherQtBridge(QObject):
 
     @Slot(str)
     def _append_log(self, message: str) -> None:
-        self._logs.append(translate_log_line(message))
+        line = translate_log_line(message)
+        self._logs.append(line)
+        if self._file_logger is not None:
+            self._file_logger.info(line)
         if len(self._logs) > self.MAX_LOG_LINES:
             del self._logs[: len(self._logs) - self.MAX_LOG_LINES]
         self.logChanged.emit()
@@ -562,39 +1106,6 @@ class FlasherQtBridge(QObject):
         return BITRATE_500K_SLCAN_CODE
 
     @Slot()
-    def downloadLatestRelease(self) -> None:
-        """Fetch the images of the newest GitHub release, with the digest and manifest files that travel with them."""
-        if self._busy:
-            self._log("GITHUB_DOWNLOAD_BLOCKED operation in progress")
-            return
-        self._set_state(status=_("LBL_GITHUB_LOADING"), busy=True)
-        threading.Thread(target=self._github_download_worker, daemon=True, name="urtc-qt-github").start()
-
-    def _github_download_worker(self) -> None:
-        try:
-            tag, entries = fetch_release(None, log=self._log)
-            os.makedirs(FIRMWARE_FOLDER, exist_ok=True)
-            count = 0
-            for entry in entries:
-                name = os.path.basename(entry["name"])
-                if name != entry["name"]:
-                    continue  # a file name that tries to leave the firmware folder is never written
-                download_file(entry["download_url"], os.path.join(FIRMWARE_FOLDER, name), log=self._log, expected_size=entry.get("size"))
-                if not is_sidecar(name):
-                    count += 1
-            self._githubResult.emit(_("LBL_GITHUB_LOADED_RELEASE", count=count, tag=tag or "?"))
-        except GitHubDownloadError as exc:
-            self._githubResult.emit("GITHUB_FAILED " + str(exc))
-        except Exception as exc:  # network, disk or unexpected response: show it, never crash the deck
-            self._githubResult.emit("GITHUB_FAILED " + _("ERR_GITHUB_UNEXPECTED", e=exc))
-
-    def _on_github_result(self, message: str) -> None:
-        self._set_state(status=message.removeprefix("GITHUB_FAILED "), busy=False)
-        self._log(message)
-        if not message.startswith("GITHUB_FAILED"):
-            self.scanFirmware()
-
-    @Slot()
     def scanFirmware(self) -> None:
         if self._busy:
             self._log("FIRMWARE_SCAN_BLOCKED operation in progress")
@@ -606,8 +1117,15 @@ class FlasherQtBridge(QObject):
                 path = Path(raw_path)
                 if "BOOTLOADER" in path.name.upper():
                     continue
-                valid, reason, size = validate_firmware_file(path, APP_FLASH_ADDR, APP_MAX_SIZE)
+                valid, reason, size = validate_firmware_file(path, *self._flash_slot())
                 entries.append({"name": path.name, "path": str(path), "valid": valid, "reason": reason, "size": size})
+        for path, browsed in list(self._browsed.items()):
+            if not os.path.isfile(path):
+                del self._browsed[path]
+            elif not any(item["path"] == path for item in entries):
+                valid, reason, size = validate_firmware_file(path, *self._flash_slot())
+                browsed.update(valid=valid, reason=reason, size=size)
+                entries.append(dict(browsed))
         self._firmware = entries
         valid_paths = [str(item["path"]) for item in entries if item["valid"]]
         if self._selected_firmware not in {str(item["path"]) for item in entries}:
@@ -703,7 +1221,7 @@ class FlasherQtBridge(QObject):
     def _swd_target_addrs(self) -> tuple[int, int, int, int]:
         """(bootloader_addr, bootloader_max_size, app_addr, app_max_size)
         for the currently selected target - same real per-chip table as
-        flasher_gui.py's own browse_swd_bootloader/browse_swd_app."""
+        the earlier Tk window's own browse_swd_bootloader/browse_swd_app."""
         if self._swd_target == "slave":
             return SLAVE_BOOTLOADER_FLASH_ADDR, SLAVE_BOOTLOADER_MAX_SIZE, SLAVE_APP_FLASH_ADDR, SLAVE_APP_MAX_SIZE
         return BOOTLOADER_FLASH_ADDR, BOOTLOADER_MAX_SIZE, APP_FLASH_ADDR, APP_MAX_SIZE
@@ -755,7 +1273,7 @@ class FlasherQtBridge(QObject):
         from setSwdTarget above, or a manually typed/pasted TextField
         value) or a file:// URL (QML's own FileDialog.selectedFile) -
         both normalized to a plain path here, same real re-validate-on
-        every-entry-point discipline flasher_gui.py's own
+        every-entry-point discipline the earlier Tk window's own
         browse_swd_bootloader has (its own docstring: "the path fields
         are plain text entries, so a manually typed or pasted path
         would otherwise skip the check entirely")."""
@@ -794,7 +1312,7 @@ class FlasherQtBridge(QObject):
         fullChipFlashButton handler) - backup_path is "" whenever no
         backup was requested (or this is a dry run, which never
         actually needs a real file). This is the one real destructive
-        action this whole method migrates from flasher_gui.py's own
+        action this whole method migrates from the earlier Tk window's own
         start_swd_flash()/_swd_flash_worker - full_chip_flash() itself
         (flasher_swd_tools.py) is reused completely unchanged."""
         if not self.canFullChipFlash:
@@ -927,6 +1445,13 @@ class FlasherQtBridge(QObject):
         items: list[dict[str, object]] = []
         try:
             version = URTCFlasher(transport, log=self._log).query_version()
+            self._recovery_candidate = ""
+            if (
+                version is not None and version["responder"] == "bootloader" and version["hardware_id"] == 0
+                and self._flash_target == "master" and not self._selected_firmware
+            ):
+                # The board sits in its bootloader with no valid application: offer the newest official image.
+                self._recovery_candidate = find_recovery_image(FIRMWARE_FOLDER, THIS_HARDWARE_ID) or ""
             if version is None:
                 items.append({"label": "Version", "value": "No response", "ok": False})
             else:
@@ -1008,6 +1533,10 @@ class FlasherQtBridge(QObject):
     @Slot(object, str)
     def _on_snapshot_result(self, items: list[dict[str, object]], error: str) -> None:
         self._board_snapshot = items
+        candidate, self._recovery_candidate = self._recovery_candidate, ""
+        if candidate and not self._selected_firmware and self._flash_target == "master":
+            self._selected_firmware = candidate
+            self._log(f"RECOVERY_IMAGE_SELECTED {os.path.basename(candidate)}")
         if error:
             self._set_state(status="BOARD STATE FAILED", busy=False)
             self._log(f"BOARD_SNAPSHOT_FAILED {error}")
@@ -1043,7 +1572,7 @@ class FlasherQtBridge(QObject):
         threading.Thread(target=_worker, daemon=True, name=f"urtc-qt-config-write-{key}").start()
 
     # Real, pre-existing per-field i18n keys (already used by the
-    # established Tkinter panel for this exact same real confirmation) -
+    # earlier Tk window for this exact same real confirmation) -
     # reused here verbatim rather than inventing generic ones, so both
     # UIs show identical, already-translated wording for the same event.
     _CONFIG_WRITE_LABELS = {
@@ -1104,7 +1633,7 @@ class FlasherQtBridge(QObject):
     def saveFreeToolConfig(self, selection: int) -> None:
         """selection is the real value already resolved by QML from
         freeToolOptions' own index (0 = none, matching
-        flasher_gui.py's own _free_tool_display_to_selection), not a
+        the earlier Tk window's own _free_tool_display_to_selection), not a
         raw combo index - see that Property's own docstring."""
         if not self.canWriteDeviceConfig or not 0 <= selection <= len(TOOL_NAMES):
             self._log("FREE_TOOL_SAVE_BLOCKED not connected, busy, or selection out of range")
@@ -1166,6 +1695,16 @@ class FlasherQtBridge(QObject):
     def confirmCanOtaFlash(self) -> None:
         if not self.canFlash:
             return
+        if self._allow_downgrade and not self._downgrade_confirmed:
+            self._log("DOWNGRADE_NOT_CONFIRMED")
+            return
+        options = {
+            "target": self._flash_target,
+            "trigger": self._trigger_bootloader,
+            "erase_fram": self._erase_fram,
+            "allow_downgrade": self._allow_downgrade and self._flash_target == "master",
+        }
+        self._downgrade_confirmed = False  # every flash asks again
         self._cancel_requested = False
         self._progress = 0
         self._transfer_speed_kbps = 0.0
@@ -1177,7 +1716,7 @@ class FlasherQtBridge(QObject):
         self._log(f"FLASH_STARTED {Path(self._flash_path).name}")
         threading.Thread(
             target=self._flash_worker,
-            args=(self._flash_path,),
+            args=(self._flash_path, options),
             daemon=True,
             name="urtc-qt-flash",
         ).start()
@@ -1188,7 +1727,8 @@ class FlasherQtBridge(QObject):
             self._cancel_requested = True
             self._log("CANCEL_REQUESTED")
 
-    def _flash_worker(self, firmware_path: str) -> None:
+    def _flash_worker(self, firmware_path: str, options: dict | None = None) -> None:
+        options = {"target": "master", "trigger": True, "erase_fram": False, "allow_downgrade": False, **(options or {})}
         try:
             # A digest published next to the image (<image>.sha256) must match it;
             # without one the digest is only logged so it can be recorded.
@@ -1205,14 +1745,44 @@ class FlasherQtBridge(QObject):
                 stop_flag=lambda: self._cancel_requested,
                 speed_cb=self._flashSpeed.emit,
             )
-            flasher.report_version_change(firmware_path)
-            flasher.trigger_bootloader_entry()
-            flasher.flash(firmware_path)
+            versions = flasher.report_version_change(firmware_path, options["target"])
+            if options["target"] == "slave":
+                if options["trigger"]:
+                    flasher.trigger_slave_bootloader_entry()
+                flasher.flash_slave(firmware_path)
+            else:
+                if options["erase_fram"]:
+                    if not options["trigger"]:
+                        self._log("FRAM_ERASE_SKIPPED")
+                    else:
+                        flasher.erase_fram()
+                if options["trigger"]:
+                    flasher.trigger_bootloader_entry()
+                flasher.flash(firmware_path, allow_downgrade=options["allow_downgrade"])
+            self._write_update_report(firmware_path, options, check, versions)
             self._flashResult.emit("FLASH_COMPLETE")
         except FlashError as exc:
             self._flashResult.emit(f"FLASH_FAILED {exc}")
         except Exception as exc:
             self._flashResult.emit(f"FLASH_UNEXPECTED {exc}")
+
+    def _write_update_report(self, firmware_path: str, options: dict, check, versions) -> None:
+        """Record a finished update next to the session logs (worker thread; a failure never fails the update)."""
+        try:
+            folder = writable_logs_folder(LOGS_FOLDER)
+            if not folder or not versions:
+                return
+            slave = options["target"] == "slave"
+            report = build_update_report(
+                tool_version=FLASHER_VERSION, image_path=firmware_path, image_sha256=check.sha256,
+                image_size=os.path.getsize(firmware_path), target=options["target"],
+                installed=versions["installed"], new=versions["new"],
+                hardware_id=SLAVE_HARDWARE_ID if slave else THIS_HARDWARE_ID,
+                signing_key_kind=manifest_signing_kind(firmware_path), result="success",
+            )
+            self._log(f"UPDATE_REPORT_WRITTEN {write_update_report(report, folder)}")
+        except (OSError, TypeError, KeyError) as exc:
+            self._log(f"UPDATE_REPORT_FAILED {exc}")
 
     def _on_flash_progress(self, progress: int) -> None:
         self._progress = max(0, min(100, progress))
@@ -1235,12 +1805,19 @@ class FlasherQtBridge(QObject):
     def _on_flash_result(self, result: str) -> None:
         self._transfer_liveness_timer.stop()
         self._transfer_last_update = None
+        if result.startswith("READBACK_"):
+            token, _sep, detail = result.partition(" ")
+            if token == "READBACK_COMPLETE":
+                size, _sep, path = detail.partition(" ")
+                self._readback_result = _("MSG_READBACK_COMPLETE", size=size, path=path)
+            else:
+                self._readback_result = detail
         self._set_state(status=result, busy=False)
         self._log(result)
 
 
 def run_qtquick() -> int:
-    """Run the QML command deck explicitly selected through ``--qtquick``."""
+    """Run the QML command deck (the program's only window)."""
     # Basic is a portable Qt Quick Controls style with fully customizable
     # QML backgrounds. The platform-native Windows style ignores rounded
     # Rectangle backgrounds, which would undermine the shared Updater look.
@@ -1251,6 +1828,8 @@ def run_qtquick() -> int:
     if not icon.isNull():
         app.setWindowIcon(icon)
     bridge = FlasherQtBridge()
+    bridge.start_session_log()
+    app.aboutToQuit.connect(bridge.prepareToQuit)
     engine = QQmlApplicationEngine()
     engine.rootContext().setContextProperty("flasherBackend", bridge)
     qml_path = Path(__file__).resolve().parent / "assets" / "qml" / "FlasherDeck.qml"

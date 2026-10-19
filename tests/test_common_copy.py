@@ -16,7 +16,11 @@ from urtc_can import protocol
 
 ROOT = Path(__file__).resolve().parent.parent
 COMMON = ROOT.parent / "URTC-COMMON"
-LOCKS = (ROOT / "urtc_can" / "urtc_common.lock.json", ROOT / "tests" / "fixtures" / "urtc_common.lock.json")
+LOCKS = (
+    ROOT / "urtc_can" / "urtc_common.lock.json",
+    ROOT / "tests" / "fixtures" / "urtc_common.lock.json",
+    ROOT / "urtc_ui" / "urtc_common.lock.json",
+)
 
 
 def _digest(path: Path) -> str:
@@ -36,6 +40,9 @@ def test_the_copies_have_not_fallen_behind_the_shared_repository():
         pytest.skip("URTC-COMMON is not next to this repository")
     assert _digest(ROOT / "urtc_can" / "protocol.py") == _digest(COMMON / "src" / "urtc_common" / "protocol.py")
     assert _digest(ROOT / "tests" / "fixtures" / "can_conformance_vectors.json") == _digest(COMMON / "conformance" / "can_vectors.json")
+    lock = json.loads((ROOT / "urtc_ui" / "urtc_common.lock.json").read_text(encoding="utf-8"))
+    for name, entry in lock["files"].items():
+        assert _digest(ROOT / "urtc_ui" / name) == _digest(COMMON / entry["from"]), f"urtc_ui/{name} fell behind URTC-COMMON: run vendor_copy.py sync again"
 
 
 def test_every_identifier_this_program_defines_is_the_generated_one():

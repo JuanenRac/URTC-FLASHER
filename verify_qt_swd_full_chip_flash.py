@@ -78,7 +78,7 @@ def _run() -> None:
 
     bridge = FlasherQtBridge()
 
-    # --- real safe defaults, matching flasher_gui.py's own ---
+    # --- real safe defaults, matching the earlier Tk window's own ---
     assert bridge.swdTarget == "master"
     assert bridge.swdDryRun is True
     assert bridge.swdBackup is False
@@ -94,7 +94,7 @@ def _run() -> None:
     # --- a garbage file must be rejected, not silently accepted ---
     bridge.setSwdBootloaderPath(str(garbage))
     assert bridge.swdBootloaderValid is False
-    assert bridge.canFullChipFlash is True, "an invalid file is a warning, not a hard block - matches flasher_gui.py's own askyesno override"
+    assert bridge.canFullChipFlash is True, "an invalid file is a warning, not a hard block - matches the earlier Tk window's own askyesno override"
     bridge.setSwdBootloaderPath(str(master_boot))  # restore for the rest of the run
 
     # --- switching target re-validates both files against the new real addr/size table ---

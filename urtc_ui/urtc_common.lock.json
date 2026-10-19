@@ -1,0 +1,22 @@
+{
+  "format": 1,
+  "urtc_common_version": "0.0.4",
+  "files": {
+    "__init__.py": {
+      "from": "src/urtc_ui/__init__.py",
+      "sha256": "cc1c60ea1a2e35858ce36a53aa1a12739927898170fccc6d20ee88e651b866bd"
+    },
+    "formatting.py": {
+      "from": "src/urtc_ui/formatting.py",
+      "sha256": "650bf3eefcca1fc0484d8cbc08459cf4c079a94d10100e19d5ea324dd60d353a"
+    },
+    "languages.py": {
+      "from": "src/urtc_ui/languages.py",
+      "sha256": "bbd38527f979664427d3e67277f7afd4fb81f462339443415beee50273b68e3f"
+    },
+    "status.py": {
+      "from": "src/urtc_ui/status.py",
+      "sha256": "d8c8ab3f9e5d798719dda00d87d58846a56207106bfdeaef36df9235be2b55a5"
+    }
+  }
+}

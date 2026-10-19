@@ -18,6 +18,14 @@ ApplicationWindow {
     visible: true
     title: "URTC Flasher"
     color: "#07111e"
+    property bool closeApproved: false
+    onClosing: function(close) {
+        // A transfer in progress is never abandoned by accident.
+        if (flasherBackend.busy && !closeApproved) {
+            close.accepted = false
+            closeConfirm.open()
+        }
+    }
 
     property color panel: "#101d30"
     property color panelAlt: "#14253b"
@@ -33,7 +41,7 @@ ApplicationWindow {
     // (separate from the CAN-OTA `confirm` dialog below, which stays
     // dedicated to that one real flow) - each real write persists a
     // real EEPROM field, so every one of them asks first, same as the
-    // established Tkinter panel's own messagebox.askyesno.
+    // earlier Tk window's own messagebox.askyesno.
     function requestConfigWrite(title, body, action) {
         if (!flasherBackend.canWriteDeviceConfig)
             return
@@ -134,7 +142,7 @@ ApplicationWindow {
                     Text { text: "CAN-OTA • REAL FIRMWARE CONTROL"; color: muted; font.family: "Bahnschrift"; font.pixelSize: 8 }
                 }
                 Item { Layout.fillWidth: true }
-                Text { text: flasherBackend.status; color: flasherBackend.connected ? "#43db9b" : muted; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 11 }
+                Text { text: flasherBackend.status; color: flasherBackend.statusColor; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 11 }
                 ComboBox {
                     id: languageBox
                     model: flasherBackend.languageNames
@@ -154,14 +162,235 @@ ApplicationWindow {
         anchors.centerIn: parent
         modal: true
         width: 440
-        title: flasherBackend.uiText("QT_CONFIRM_CAN_OTA")
+        title: flasherBackend.flashConfirmTitle
         standardButtons: Dialog.Cancel
         background: Rectangle { color: window.panel; radius: 16; border.width: 1; border.color: window.panelBorder }
         contentItem: ColumnLayout {
             spacing: 14
-            Text { text: flasherBackend.uiText("QT_CONFIRM_CAN_OTA_BODY"); color: window.textPrimary; wrapMode: Text.WordWrap; Layout.preferredWidth: 380 }
-            GameButton { text: flasherBackend.uiText("QT_CONFIRM_FLASH"); Layout.fillWidth: true; onClicked: { confirm.close(); flasherBackend.confirmCanOtaFlash() } }
+            Text { text: flasherBackend.flashConfirmBody; color: window.textPrimary; wrapMode: Text.WordWrap; Layout.preferredWidth: 380 }
+            GameButton {
+                text: flasherBackend.uiText("QT_CONFIRM_FLASH")
+                Layout.fillWidth: true
+                onClicked: {
+                    confirm.close()
+                    // The anti-rollback bypass always gets its own, second prompt.
+                    if (flasherBackend.allowDowngrade)
+                        downgradeConfirm.open()
+                    else
+                        flasherBackend.confirmCanOtaFlash()
+                }
+            }
         }
+    }
+
+    Dialog {
+        id: downgradeConfirm
+        anchors.centerIn: parent
+        modal: true
+        width: 440
+        title: flasherBackend.downgradeConfirmTitle
+        standardButtons: Dialog.Cancel
+        background: Rectangle { color: window.panel; radius: 16; border.width: 1; border.color: "#b86a35" }
+        contentItem: ColumnLayout {
+            spacing: 14
+            Text { text: flasherBackend.downgradeConfirmBody; color: window.textPrimary; wrapMode: Text.WordWrap; Layout.preferredWidth: 380 }
+            GameButton {
+                text: flasherBackend.uiText("QT_CONFIRM_FLASH")
+                accent: "#b86a35"
+                Layout.fillWidth: true
+                onClicked: { downgradeConfirm.close(); flasherBackend.confirmDowngrade(); flasherBackend.confirmCanOtaFlash() }
+            }
+        }
+    }
+
+    Dialog {
+        id: aboutDialog
+        anchors.centerIn: parent
+        modal: true
+        width: Math.min(parent.width - 48, 640)
+        height: Math.min(parent.height - 48, 560)
+        title: flasherBackend.uiText("TITLE_ABOUT")
+        standardButtons: Dialog.Close
+        property string shownText: ""
+        onOpened: shownText = ""
+        background: Rectangle { color: window.panel; radius: 16; border.width: 1; border.color: window.panelBorder }
+        contentItem: ColumnLayout {
+            spacing: 10
+            Text { text: flasherBackend.aboutText; color: window.textPrimary; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+            RowLayout {
+                Layout.fillWidth: true
+                GameButton { text: flasherBackend.uiText("MENU_README"); accent: "#24465e"; Layout.fillWidth: true; onClicked: aboutDialog.shownText = flasherBackend.readmeText() }
+                GameButton { text: flasherBackend.uiText("MENU_LICENSE"); accent: "#24465e"; Layout.fillWidth: true; onClicked: aboutDialog.shownText = flasherBackend.licenseText() }
+                GameButton { text: flasherBackend.uiText("MENU_GITHUB"); accent: "#24465e"; Layout.fillWidth: true; onClicked: Qt.openUrlExternally(flasherBackend.githubUrl) }
+            }
+            ScrollView {
+                visible: aboutDialog.shownText.length > 0
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                TextArea {
+                    text: aboutDialog.shownText
+                    readOnly: true
+                    wrapMode: Text.WordWrap
+                    color: window.textPrimary
+                    font.family: "Cascadia Mono"
+                    font.pixelSize: 10
+                    background: Rectangle { color: window.panelAlt; radius: 8 }
+                }
+            }
+        }
+    }
+
+    FileDialog {
+        id: readbackDialog
+        title: flasherBackend.uiText("TITLE_SAVE_READBACK")
+        fileMode: FileDialog.SaveFile
+        nameFilters: ["Binary files (*.bin)"]
+        onAccepted: flasherBackend.startReadback(selectedFile.toString())
+    }
+    FileDialog {
+        id: saveLogDialog
+        title: flasherBackend.uiText("MENU_SAVE_LOGS")
+        fileMode: FileDialog.SaveFile
+        nameFilters: ["Text (*.txt)"]
+        onAccepted: flasherBackend.saveLogText(selectedFile.toString())
+    }
+    FileDialog {
+        id: debugBundleDialog
+        title: flasherBackend.uiText("TITLE_SAVE_DEBUG_BUNDLE")
+        fileMode: FileDialog.SaveFile
+        nameFilters: ["ZIP (*.zip)"]
+        onAccepted: flasherBackend.exportDebugBundle(selectedFile.toString())
+    }
+
+    Dialog {
+        id: githubDialog
+        anchors.centerIn: parent
+        modal: true
+        width: Math.min(parent.width - 48, 620)
+        height: Math.min(parent.height - 48, 480)
+        title: flasherBackend.uiText("TITLE_DOWNLOAD_FROM_GITHUB")
+        standardButtons: Dialog.Close
+        background: Rectangle { color: window.panel; radius: 16; border.width: 1; border.color: window.panelBorder }
+        onOpened: flasherBackend.loadRelease("")
+        contentItem: ColumnLayout {
+            spacing: 8
+            RowLayout {
+                Layout.fillWidth: true
+                Text { text: flasherBackend.uiText("LBL_GITHUB_RELEASE_TAG"); color: muted; font.pixelSize: 11 }
+                TextField { id: releaseTag; color: textPrimary; Layout.preferredWidth: 120; font.pixelSize: 11; onAccepted: flasherBackend.loadRelease(text); background: Rectangle { radius: 8; color: panelAlt; border.width: 1; border.color: panelBorder } }
+                GameButton { text: flasherBackend.uiText("BTN_GITHUB_LOAD"); accent: "#24465e"; enabled: !flasherBackend.releaseBusy; onClicked: flasherBackend.loadRelease(releaseTag.text) }
+            }
+            Text { text: flasherBackend.releaseStatus; color: muted; font.pixelSize: 10; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+            ListView {
+                id: releaseList
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                spacing: 4
+                model: flasherBackend.releaseImages
+                currentIndex: -1
+                delegate: Rectangle {
+                    required property int index
+                    required property var modelData
+                    width: releaseList.width
+                    height: 34
+                    radius: 8
+                    color: releaseList.currentIndex === index ? "#1a4967" : panelAlt
+                    border.width: 1
+                    border.color: panelBorder
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.margins: 8
+                        Text { text: modelData.name; color: textPrimary; elide: Text.ElideRight; Layout.fillWidth: true; font.pixelSize: 11 }
+                        Text { text: modelData.size; color: muted; font.pixelSize: 10 }
+                    }
+                    MouseArea { anchors.fill: parent; onClicked: releaseList.currentIndex = index }
+                }
+            }
+            ProgressBar {
+                Layout.fillWidth: true
+                value: flasherBackend.releaseProgress / 100
+                background: Rectangle { radius: 5; color: "#07111e"; border.width: 1; border.color: panelBorder }
+                contentItem: Item { implicitHeight: 8; Rectangle { width: parent.width * flasherBackend.releaseProgress / 100; height: parent.height; radius: 5; color: cyan } }
+            }
+            GameButton {
+                text: flasherBackend.uiText("BTN_DOWNLOAD_SELECTED")
+                Layout.fillWidth: true
+                enabled: releaseList.currentIndex >= 0 && !flasherBackend.releaseBusy
+                onClicked: flasherBackend.downloadReleaseFile(releaseList.model[releaseList.currentIndex].name)
+            }
+        }
+    }
+
+    Dialog {
+        id: releaseOverwriteConfirm
+        anchors.centerIn: parent
+        modal: true
+        width: 440
+        visible: flasherBackend.releaseOverwriteName.length > 0
+        title: flasherBackend.uiText("TITLE_FILE_EXISTS")
+        standardButtons: Dialog.NoButton
+        closePolicy: Popup.NoAutoClose
+        background: Rectangle { color: window.panel; radius: 16; border.width: 1; border.color: "#b86a35" }
+        contentItem: ColumnLayout {
+            spacing: 14
+            Text { text: flasherBackend.releaseOverwriteQuestion; color: window.textPrimary; wrapMode: Text.WordWrap; Layout.preferredWidth: 380 }
+            RowLayout {
+                Layout.fillWidth: true
+                GameButton { text: flasherBackend.uiText("BTN_CANCEL"); accent: "#24465e"; Layout.fillWidth: true; onClicked: flasherBackend.cancelReleaseOverwrite() }
+                GameButton { text: flasherBackend.uiText("BTN_ACCEPT"); accent: "#b86a35"; Layout.fillWidth: true; onClicked: flasherBackend.confirmReleaseOverwrite() }
+            }
+        }
+    }
+
+    Dialog {
+        id: closeConfirm
+        anchors.centerIn: parent
+        modal: true
+        width: 440
+        title: flasherBackend.closeWhileBusyTitle
+        standardButtons: Dialog.Cancel
+        background: Rectangle { color: window.panel; radius: 16; border.width: 1; border.color: "#b86a35" }
+        contentItem: ColumnLayout {
+            spacing: 14
+            Text { text: flasherBackend.closeWhileBusyBody; color: window.textPrimary; wrapMode: Text.WordWrap; Layout.preferredWidth: 380 }
+            GameButton {
+                text: flasherBackend.uiText("BTN_CLOSE")
+                accent: "#b86a35"
+                Layout.fillWidth: true
+                onClicked: { closeConfirm.close(); window.closeApproved = true; flasherBackend.prepareToQuit(); window.close() }
+            }
+        }
+    }
+
+    Dialog {
+        id: invalidFirmwareConfirm
+        anchors.centerIn: parent
+        modal: true
+        width: 440
+        visible: flasherBackend.invalidFirmwareReason.length > 0
+        title: flasherBackend.uiText("TITLE_FILE_LOOKS_INVALID")
+        standardButtons: Dialog.NoButton
+        closePolicy: Popup.NoAutoClose
+        background: Rectangle { color: window.panel; radius: 16; border.width: 1; border.color: "#b86a35" }
+        contentItem: ColumnLayout {
+            spacing: 14
+            Text { text: flasherBackend.invalidFirmwareReason; color: window.textPrimary; wrapMode: Text.WordWrap; Layout.preferredWidth: 380 }
+            RowLayout {
+                Layout.fillWidth: true
+                GameButton { text: flasherBackend.uiText("BTN_CANCEL"); accent: "#24465e"; Layout.fillWidth: true; onClicked: flasherBackend.rejectInvalidFirmware() }
+                GameButton { text: flasherBackend.uiText("BTN_ACCEPT"); accent: "#b86a35"; Layout.fillWidth: true; onClicked: flasherBackend.acceptInvalidFirmware() }
+            }
+        }
+    }
+
+    FileDialog {
+        id: firmwareBrowseDialog
+        title: flasherBackend.uiText("TITLE_SELECT_URTC_FIRMWARE")
+        fileMode: FileDialog.OpenFile
+        nameFilters: ["Firmware (*.bin)", "All files (*)"]
+        onAccepted: flasherBackend.addFirmwareFile(selectedFile.toString())
     }
 
     Dialog {
@@ -232,8 +461,13 @@ ApplicationWindow {
                 }
                 Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
                 Text { text: flasherBackend.uiText("QT_FIRMWARE_INVENTORY"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
+                RowLayout {
+                    Layout.fillWidth: true
                     GameButton { text: flasherBackend.uiText("QT_SCAN_FIRMWARE"); accent: "#24465e"; Layout.fillWidth: true; enabled: !flasherBackend.busy; onClicked: flasherBackend.scanFirmware() }
-                    GameButton { text: flasherBackend.uiText("BTN_DOWNLOAD_FROM_GITHUB"); accent: "#24465e"; Layout.fillWidth: true; enabled: !flasherBackend.busy; onClicked: flasherBackend.downloadLatestRelease() }
+                    GameButton { text: flasherBackend.uiText("BTN_BROWSE_BIN"); accent: "#24465e"; Layout.fillWidth: true; enabled: !flasherBackend.busy; onClicked: firmwareBrowseDialog.open() }
+                }
+                GameButton { text: flasherBackend.uiText("BTN_DOWNLOAD_FROM_GITHUB"); accent: "#24465e"; Layout.fillWidth: true; enabled: !flasherBackend.busy; onClicked: githubDialog.open() }
+                Text { visible: flasherBackend.signingWarning.length > 0; text: flasherBackend.signingWarning; color: "#ee6b80"; font.pixelSize: 10; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                 ListView {
                     id: files
                     Layout.fillWidth: true
@@ -298,6 +532,29 @@ ApplicationWindow {
                     font.family: "Cascadia Mono"
                     font.pixelSize: 11
                 }
+                // Which chip is flashed, and the options that only exist for the main board.
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    Text { text: flasherBackend.uiText("LBL_FLASH_TARGET"); color: muted; font.pixelSize: 12 }
+                    RadioButton { text: flasherBackend.uiText("OPT_TARGET_MASTER"); checked: flasherBackend.flashTarget === "master"; enabled: !flasherBackend.busy; onClicked: flasherBackend.setFlashTarget("master"); palette.windowText: textPrimary }
+                    RadioButton { text: flasherBackend.uiText("OPT_TARGET_SLAVE"); checked: flasherBackend.flashTarget === "slave"; enabled: !flasherBackend.busy; onClicked: flasherBackend.setFlashTarget("slave"); palette.windowText: textPrimary }
+                }
+                Text { text: flasherBackend.uiText("HELP_FLASH_TARGET_SLAVE"); color: muted; font.pixelSize: 9; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                RowLayout {
+                    Layout.fillWidth: true
+                    CheckBox { text: flasherBackend.uiText("CHK_BOARD_RUNNING_APP"); checked: flasherBackend.triggerBootloader; enabled: !flasherBackend.busy; onToggled: flasherBackend.setTriggerBootloader(checked); palette.windowText: textPrimary }
+                    CheckBox { text: flasherBackend.uiText("CHK_ERASE_FRAM_BEFORE_FLASHING"); checked: flasherBackend.eraseFram; enabled: !flasherBackend.busy && flasherBackend.downgradeOptionsAvailable; onToggled: flasherBackend.setEraseFram(checked); palette.windowText: textPrimary }
+                }
+                Text { text: flasherBackend.uiText("HELP_UNCHECK_IF_IN_BOOTLOADER"); color: muted; font.pixelSize: 9; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                RowLayout {
+                    Layout.fillWidth: true
+                    CheckBox { text: flasherBackend.uiText("CHK_ALLOW_DOWNGRADE"); checked: flasherBackend.allowDowngrade; enabled: !flasherBackend.busy && flasherBackend.downgradeOptionsAvailable; onToggled: flasherBackend.setAllowDowngrade(checked); palette.windowText: textPrimary }
+                    GameButton { text: flasherBackend.uiText("BTN_BACKUP_FIRMWARE_CAN"); accent: "#24465e"; Layout.fillWidth: true; enabled: flasherBackend.canReadback; onClicked: readbackDialog.open() }
+                }
+                Text { text: flasherBackend.uiText("HELP_ALLOW_DOWNGRADE"); color: "#e0a030"; font.pixelSize: 9; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                Text { text: flasherBackend.uiText("HELP_BACKUP_FIRMWARE_CAN"); color: muted; font.pixelSize: 9; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                Text { visible: flasherBackend.readbackResult.length > 0; text: flasherBackend.readbackResult; color: "#43db9b"; font.pixelSize: 10; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                 RowLayout {
                     Layout.fillWidth: true
                     GameButton { text: flasherBackend.uiText("QT_START_CAN_OTA"); Layout.fillWidth: true; enabled: flasherBackend.canFlash; onClicked: confirm.open() }
@@ -307,6 +564,19 @@ ApplicationWindow {
                 Text { text: flasherBackend.uiText("QT_BOARD_SNAPSHOT"); color: cyan; font.family: "Bahnschrift"; font.bold: true; font.pixelSize: 13 }
                 Text { text: flasherBackend.uiText("QT_BOARD_SNAPSHOT_HELP"); color: muted; font.pixelSize: 9; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                 GameButton { text: flasherBackend.uiText("QT_READ_BOARD_STATE"); accent: "#24465e"; Layout.fillWidth: true; enabled: flasherBackend.canReadBoardSnapshot; onClicked: flasherBackend.readBoardSnapshot() }
+                RowLayout {
+                    Layout.fillWidth: true
+                    Text { text: flasherBackend.uiText("LBL_BUS_ACTIVITY"); color: muted; font.pixelSize: 11 }
+                    GameButton { text: flasherBackend.uiText("BTN_CHECK_2S"); accent: "#24465e"; enabled: flasherBackend.connected && !flasherBackend.busy; onClicked: flasherBackend.checkBusActivity() }
+                    Text { text: flasherBackend.busActivityText; color: "#43db9b"; font.family: "Cascadia Mono"; font.pixelSize: 10; Layout.fillWidth: true; elide: Text.ElideRight }
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    GameButton { text: flasherBackend.uiText("TITLE_SAVE_DEBUG_BUNDLE"); accent: "#24465e"; Layout.fillWidth: true; onClicked: debugBundleDialog.open() }
+                    GameButton { text: flasherBackend.uiText("MENU_SAVE_LOGS"); accent: "#24465e"; Layout.fillWidth: true; onClicked: saveLogDialog.open() }
+                    GameButton { text: flasherBackend.uiText("TITLE_ABOUT"); accent: "#24465e"; Layout.fillWidth: true; onClicked: aboutDialog.open() }
+                }
+                Text { visible: flasherBackend.exportResult.length > 0; text: flasherBackend.exportResult; color: muted; font.pixelSize: 9; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                 Text { visible: flasherBackend.boardSnapshot.length === 0; text: flasherBackend.uiText("QT_NO_BOARD_SNAPSHOT"); color: muted; font.pixelSize: 9 }
                 ListView {
                     Layout.fillWidth: true
@@ -331,8 +601,8 @@ ApplicationWindow {
                 // EEPROM fields only this tool ever writes (every other
                 // real app, including URTC-TESTER's own Qt Quick deck,
                 // only reads them). Each Save asks for the same real
-                // confirmation the established Tkinter panel already
-                // does (see flasher_gui.py's own save_expansion_board_
+                // confirmation the earlier Tk window already
+                // does (see the earlier Tk window's own save_expansion_board_
                 // type/save_mlx_sensor_variant/program_free_tool_config/
                 // program_device_serial) via the one shared configConfirm
                 // dialog below.
@@ -502,7 +772,7 @@ ApplicationWindow {
                 Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
                 // -- Full-chip SWD/JTAG programming - the one real
                 // destructive action this deck migrates from
-                // flasher_gui.py's own start_swd_flash()/_swd_flash_worker.
+                // the earlier Tk window's own start_swd_flash()/_swd_flash_worker.
                 // flasher_swd_tools.py's PyOCDCLI/CubeProgrammerCLI are
                 // reused completely unchanged; only the UI is new. See
                 // startFullChipFlash's own docstring in qt_flasher.py.
@@ -685,7 +955,7 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     enabled: flasherBackend.canFullChipFlash
                     onClicked: {
-                        // Same real condition as flasher_gui.py's own
+                        // Same real condition as the earlier Tk window's own
                         // start_swd_flash(): a backup is only ever taken
                         // for a real (non-dry-run) flash - matches
                         // startFullChipFlash's own dry_run short-circuit.

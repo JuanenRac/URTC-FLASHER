@@ -19,12 +19,12 @@
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
-  <img src="https://img.shields.io/badge/UI-Tkinter%20%7C%20Qt%20Quick-38d4e6.svg" alt="Tkinter and Qt Quick">
+  <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
   <img src="https://img.shields.io/badge/Protocol-CAN--OTA-orange.svg" alt="CAN-OTA">
 </p>
 
 
-**バージョン：** 0.3.4（本ツール自身のバージョン——ウィンドウのバナーと
+**バージョン：** 0.3.5（本ツール自身のバージョン——ウィンドウのバナーと
 タイトルバーに表示され、書き込み先の URTC ボードファームウェアのバージョン
 とは別に管理されます。X.Y.Z 方式に従い、パッチ番号は build_exe.bat/
 build_exe.sh による実際のビルドのたびに自動的に加算されます——バージョン
@@ -70,7 +70,7 @@ CAN バス経由で URTC ボードファームウェアを更新するための�
 最初の実際のフラッシュ試行に臨んでください：フォールバックとして手元に
 JTAG を用意しておいてください。 ここで説明するその他の機能は、シミュレートされたブートローダーである `MockCAN` に対してのみ試されており、実機のボードに対して試したことはありません。
 
-**正直な現状確認 - 実際に今動くもの:** `tests/` には 35 個の pytest ファイル（405 件のテスト：すべて成功、うち 4 件は PySide6 がない場合スキップ）があります——完全なブートローダーシーケンス（開始／消去／受信、ページデータ + PAGE_ACK、HMAC チャンク、本当の成功または特定の `VERIFY_FAIL_REASON` による更新終了）を再現する実際の `MockCAN` トランスポート（`flasher_transports.py`）に対する CAN-OTA プロトコル、署名ルール（公開署名は鍵なしで送信、未署名イメージは拒否、マニフェストの sha256 不一致はバス通信前に拒否）、イメージ整合性チェック、同梱の `firmware/` とそのマニフェストの照合です。GitHub Actions（`.github/workflows/ci.yml`）が push のたびにこのスイートを実行し、`tools/build_test.py` も `build-test.sh`/`.bat` で実行します。ルートにある 2 つの `verify_qt_*.py` スクリプトは pytest の外にある本物のエンドツーエンドチェックです（本物の Qt イベントループが必要。`QT_QPA_PLATFORM=offscreen python verify_qt_*.py` で実行）。`verify_qt_swd_full_chip_flash.py` は `dry_run=True` で `PyOCDCLI`/`CubeProgrammerCLI` のコマンドを組み立てるだけです。この環境では実機ボードに対しては一切実行していません。何がリリースされたかは `CHANGELOG.md` を参照してください。 シミュレートされたブートローダー（`MockCAN`）はプロトコルの記述から作ったモデルにすぎません。ページ ACK、部分的な最後のページ、読み戻しフレームは再現しますが、本物のブートローダーではないため、テストがすべて成功しても実機での試験の代わりにはなりません（公式の 73476 バイトのイメージがインストールできず、バックアップの最後のフレームが失われていたのに、シミュレーションが本物のブートローダーより寛容だったためにテストは成功していました）。
+**正直な現状確認 - 実際に今動くもの:** `tests/` には 38 個の pytest ファイル（459 件のテスト：すべて成功、うち 66 件は PySide6 がない場合スキップ）があります——完全なブートローダーシーケンス（開始／消去／受信、ページデータ + PAGE_ACK、HMAC チャンク、本当の成功または特定の `VERIFY_FAIL_REASON` による更新終了）を再現する実際の `MockCAN` トランスポート（`flasher_transports.py`）に対する CAN-OTA プロトコル、署名ルール（公開署名は鍵なしで送信、未署名イメージは拒否、マニフェストの sha256 不一致はバス通信前に拒否）、イメージ整合性チェック、同梱の `firmware/` とそのマニフェストの照合です。GitHub Actions（`.github/workflows/ci.yml`）が push のたびにこのスイートを実行し、`tools/build_test.py` も `build-test.sh`/`.bat` で実行します。ルートにある 2 つの `verify_qt_*.py` スクリプトは pytest の外にある本物のエンドツーエンドチェックです（本物の Qt イベントループが必要。`QT_QPA_PLATFORM=offscreen python verify_qt_*.py` で実行）。`verify_qt_swd_full_chip_flash.py` は `dry_run=True` で `PyOCDCLI`/`CubeProgrammerCLI` のコマンドを組み立てるだけです。この環境では実機ボードに対しては一切実行していません。何がリリースされたかは `CHANGELOG.md` を参照してください。 シミュレートされたブートローダー（`MockCAN`）はプロトコルの記述から作ったモデルにすぎません。ページ ACK、部分的な最後のページ、読み戻しフレームは再現しますが、本物のブートローダーではないため、テストがすべて成功しても実機での試験の代わりにはなりません（公式の 73476 バイトのイメージがインストールできず、バックアップの最後のフレームが失われていたのに、シミュレーションが本物のブートローダーより寛容だったためにテストは成功していました）。
 
 > **安全性とセキュリティの現状:** このエコシステムは認証された安全システムではなく、実装済みの URTC 基板もまだ存在しません。ブートローダーはファームウェアイメージを CRC32 と共有鍵の HMAC-SHA256 で検査しており、非対称署名ではありません(予定)。公開されているアプリケーションイメージは公開の開発用鍵(`signing_key_kind: dev`)で署名されているため、誰でもブートローダーが受け入れるイメージを作れます。実際の基板には何も送信されていません。ここに書かれた内容を人の安全のために頼る前に、[セキュリティベースライン](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md)と[脅威モデル](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md)をお読みください。
 
@@ -78,10 +78,10 @@ JTAG を用意しておいてください。 ここで説明するその他の�
 
 | | |
 |---|---|
-| バージョン | `0.3.3` |
+| バージョン | `0.3.5` |
 | 成熟度 | 機能する |
-| テスト | 405 |
-| 技術 | Python / Tkinter (legacy advanced workflow) / PySide6 / Qt Quick / CAN-OTA |
+| テスト | 459 |
+| 技術 | Python / PySide6 / Qt Quick / CAN-OTA |
 | 対象 | 利用者の PC |
 | 実機での確認 | シミュレーションのみ：エミュレーター、模擬部品、シミュレーターで試験済み。このバージョンについて実機での動作記録はありません |
 
@@ -158,48 +158,22 @@ python3 urtc_flasher.py
 やすい「置き換えますか？」というプロンプトを待つのではなく、直接それを
 置き換えます。
 
-接続パネルには、公式 HYDRA-UMC マークのアニメーションも表示されます。
-管理対象の SVG ソースは `assets/HYDRA_UMC_ICON.svg` です。付属する 12 枚の
-PNG フレームにより、追加の GUI 実行時依存関係なしで Tkinter と単体実行形式の
-両方でアニメーションを維持します。ネイティブ URTC のウィンドウ/タスクバー
-アイコンは設計上、静的なままです。
-
 ### ビジュアル・コマンドデッキ
 
-共有の **Qt Quick** コマンドデッキは、同じ通信・検証・書き込みコードの上に載った第二のフロントエンドです（シミュレーターに対してのみテスト済み。イメージの検査には共有鍵の HMAC-SHA256 を使用）：
+**Qt Quick** コマンドデッキがこのプログラム唯一のウィンドウです（シミュレーターに対してのみテスト済み。イメージの検証には共有鍵の HMAC-SHA256 を使用します）。次で起動します：
 ~~~
-python urtc_flasher.py --qtquick
+python urtc_flasher.py
 ~~~
-提供されるのは、メインボードの CAN-OTA 更新（ブートローダー進入トリガーは常に最初に送信されます）、読み取り専用の SWD/JTAG 検出、Board Snapshot、4 つのデバイス設定書き込み、そして SWD/JTAG によるチップ全体のプログラミング（消去/書き込み、ドライラン、消去前のバックアップ、RDP チェック）です。Tkinter ウィンドウにある機能が**すべて**あるわけではありません：拡張スレーブのターゲット、「ボードはすでにブートローダー内」オプション、F-RAM 消去オプション、ダウングレードの許可、CAN によるファームウェアバックアップ、GitHub からのダウンロード、ビットレートの選択や自動検出（Serial/SLCAN は 500 kbit/s で開きます）、専用のバス動作チェックはありません。これらには既定の Tkinter インターフェースを使用してください。
+暗いネイビー/シアンの画面に接続カード、読みやすいファームウェア表、暗い検証ログ、見やすい進捗バーを備え、作業全体をカバーします：メイン基板または拡張スレーブへの CAN-OTA 更新（ターゲットの選択。「基板がアプリケーションを実行中」オプション、F-RAM の消去、ダウングレードの許可はメイン基板のみ）、インストール済みファームウェアの CAN 経由バックアップ、リッスン専用検索付きのバス速度セレクター、GitHub リリースのダウンロード、任意の `.bin` を選ぶファイルピッカー、バス動作の確認、Board Snapshot、4 つのデバイス設定書き込み、読み取り専用の SWD/JTAG 検出、SWD/JTAG によるチップ全体のプログラム（消去/書き込み、ドライラン、消去前のバックアップ、RDP チェック）。基板に書き込む操作はすべて先に確認を求め、ダウングレードの許可はさらに 2 回目の確認を求め、転送中にウィンドウを閉じようとしても再度確認します。実際の基板では何も試していません。`python urtc_flasher.py --cli` はヘッドレスモードです（セクション 7）。
 
-Qt Quick ウィンドウのヘッダーに言語セレクターがあります。選択は保存され、次回の起動から有効になります。
+### ヘッダーとツール
 
-既存の CAN-OTA および SWD/JTAG ワークフローは維持したまま、ダークネイビー/シアンの操作面に刷新しました。製品ヘッダー、高コントラストの接続カード、読みやすいファームウェア表、暗色の検証ログ、見やすい進捗表示を備えます。これは視覚性とアクセシビリティの変更だけで、ブートローダープロトコルは変更しません。実機のボードで試したことはありません。
-
-### メニューバー
-
-- **ファイル** —— ログを保存（画面上のログをプレーンテキストとして；
-  システム診断情報と現在選択されているファームウェアファイルを含む、
-  より完全なバンドルについては、代わりに下記の「診断」を参照）、そして
-  終了。
-- **言語** —— 8 つの利用可能な言語を切り替えます（翻訳の仕組みについては
-  下の「言語」を参照）。
-- **ヘルプ** —— Readme（本ファイルを読み取り専用のビューアーウィンドウで
-  開きます；現在の言語向けの翻訳版が存在すれば自動的にそれを使用します）、
-  URTC GitHub（プロジェクトのリポジトリをブラウザで開きます）、ライセンス
-  （本ツールの GPL-3.0-or-later ライセンス、リポジトリ自身の `LICENSE` ファイル
-  から読み込まれます）、そしてこのアプリについて（バージョンと作者）。
-
-**起動時**、バナーはメインウィンドウが表示される前に 5 秒間画面中央に
-表示されます——それはメインウィンドウ自体の一部ではありません（これが、
-実際に行っていることの量に対してウィンドウがかなりコンパクトである理由
-です）。ウィンドウとタスクバーのアイコンは小さな独立したデザインです
-（`assets/urtc_icon.png` / `.ico`）、縮小されたバナーではありません——
-完全なバナーのアートワークは 16-32px では崩れてしまいます。
+- **ヘッダー** - 接続状態、言語セレクター（選択は保存され、次回起動時に適用されます）、バージョン。
+- **ログを保存...** と **デバッグバンドルを保存** - 画面のログをプレーンテキストで、またはシステム診断と選択中のファームウェアファイルを含むより詳しい zip を保存します（下の「診断」を参照）。各セッションは `logs/` にも書き込まれ、新しいものが保持されます。
+- **URTC Flasher について** - バージョンと作者。**README**（翻訳があればインターフェースの言語で）、**ライセンス**、プロジェクトの **URTC GitHub** ページのボタンがあります。
 
 **言語**：デフォルトは英語です。
-メインウィンドウ内のドロップダウンではなく、（ウィンドウ上部のメニュー
-バー内の）**言語**メニューから切り替えます——即座に `urtc_config.json`
+ウィンドウ上部の言語セレクターから切り替えます——即座に `urtc_config.json`
 に保存され（技術的なハードウェアオーバーライドに使用されるのと同じ
 ファイルです——言語設定はそれらと一緒に置かれているだけです）、次回起動
 時に適用されます。翻訳は `language/` 下のプレーンテキストファイル
@@ -217,15 +191,6 @@ Qt Quick ウィンドウのヘッダーに言語セレクターがあります�
 編集、間違ったファイル名）は、インターフェース全体を英語にフォール
 バックします——いずれの場合も、不一致が解決されるまでツールは使用可能な
 ままです。
-
-Tkinter（GUI ツールキット）は Windows では Python に同梱されていますが、
-Debian/Ubuntu 系ディストリビューションでは別個の OS パッケージです：
-```
-sudo apt install python3-tk
-```
-（Fedora：`sudo dnf install python3-tkinter`。Arch：
-`sudo pacman -S tk`。）`build_exe.sh` はこれを自身でチェックし、途中で
-失敗するのではなく、不足している場合は教えてくれます。
 
 **Linux のシリアル権限：** シリアル/SLCAN パスを使用していて、接続が
 「Permission denied」で失敗する場合、ユーザーがシリアルデバイスを所有
@@ -256,22 +221,19 @@ SocketCAN にはこの特定の落とし穴はありません——`can0` のよ
 
 ```
 ├── assets/
-│   ├── URTC_LOGO_FLASHER.svg      <- バナーのソース（ベクター）
-│   └── urtc_banner.png            <- ウィンドウ上部に表示、上記 .svg からレンダリング
+│   └── URTC_LOGO_FLASHER.svg      <- バナーのソース（ベクター）
 ├── firmware/
 │   ├── URTC_MAIN_FIRMWARE_v<version>.bin  <- 新しい .bin ファイルをここに置く
 │   └── URTC_*  <- tools/sync_firmware.py はこのフォルダーの URTC_* ファイルを 1 つのリリースの内容に置き換えます。他のファイルは残ります
 ├── logs/                          <- 自動作成、セッションごとに 1 ファイル
 ├── urtc_config.json               <- 任意、デフォルトでは含まれない（下記「HMAC キーの変更」参照）
-├── urtc_flasher.py                <- エントリポイント：CLI 引数、スプラッシュ画面、メインウィンドウ設定
+├── urtc_flasher.py                <- エントリーポイント：CLI 引数と Qt Quick ウィンドウの起動
 ├── flasher_config.py              <- 設定ファイル I/O、言語読み込み、プロトコル定数
 ├── flasher_transports.py          <- SLCAN、SocketCAN、MockCAN
 ├── flasher_swd_tools.py           <- STM32CubeProgrammer / pyOCD ラッパー
 ├── flasher_validation.py          <- ファームウェアファイル検証（.bin/.hex/.elf）
 ├── flasher_protocol.py            <- CAN OTA ステートマシン本体
 ├── flasher_github.py               <- URTC の GitHub リリースのアセットを一覧表示してダウンロード
-├── flasher_gui.py                 <- メインウィンドウ（FlasherGUI）とそのメニューバー
-├── flasher_uithread.py            <- ワーカースレッドから Tk メインスレッドへの受け渡し
 ├── flasher_records.py             <- セッションログ（保存場所・保持）と更新レポート
 ├── pytest.ini / ruff.toml          <- pytest と ruff（静的チェック）の設定
 ├── requirements.txt
@@ -283,14 +245,6 @@ SocketCAN にはこの特定の落とし穴はありません——`can0` のよ
 本ツールは可読性のためだけに、上記のモジュールに責務ごとに整理されて
 います——それらを別々のファイルとして持つことと、1 つの大きなファイル
 として持つこととの間に、機能的な違いはありません。
-
-`assets/urtc_banner.png` は任意です——存在しない場合、ツールは失敗する
-のではなく、単にバナーなしで起動します。それは Pillow ではなく tkinter
-自身のネイティブ PNG サポート（Tk 8.6+、現在のすべての Python に同梱）
-を通じて読み込まれるため、新しい依存関係を追加しません。`build_exe.bat`
-と `build_exe.sh` はどちらもすでに PyInstaller の `--add-data` を通じて
-`assets/` を独立実行ファイルにバンドルしているため、ソースから実行しても、
-ビルド済みバイナリから実行しても、これは同じように動作します。
 
 これは意図的なものです：このリポジトリ全体が自己完結型です。単にボードを
 フラッシュしたいだけなら——工場のフロアの PC 上で、USB スティックから、
@@ -372,6 +326,8 @@ HMAC キーの変更を参照してください。
 クリックするだけです——再起動は不要です。
 
 ## 4. 🔍 現在インストールされているものの確認
+
+> Qt Quick デッキでは、両方のトランスポートのポート（シリアルアダプターと、Linux では SocketCAN インターフェース）が 1 つのリストにまとまっており、このセクションの問い合わせは **ボード状態を読む** が行います。バージョン、CAN エラーカウンター、拡張基板の種類、MLX9064x のバリアント、周辺機器情報をまとめて問い合わせ、ボードスナップショットに表示します。デバイス設定セクションの保存は値を書き込みます。
 
 Linux 上で SocketCAN が利用可能な場合、上部に**トランスポート**の選択肢
 が表示されます——接続する前にシリアル/SLCAN か SocketCAN を選んで
@@ -944,20 +900,13 @@ JSON 数値（`50580689`）のどちらも受け付けます——ファイル�
 
 ## 📂 リポジトリ構成
 
-`assets/` ディレクトリには `HYDRA_UMC_ICON.svg`（維持されているアニメーション
-ベクターソース）と `hydra_umc_icon_frames/`（同梱の 12 枚の Tkinter 用 PNG
-フレーム）も含まれます。`tools/render_hydra_umc_icon_frames.py` は開発中に
-これらを SVG から再生成します。アプリケーションの実行には不要です。
-
 ```
 ├── assets/
 │   ├── URTC_APP_ICON.svg          <- 共有アプリ/タスクバーアイコンのソース（ベクター）
-│   ├── URTC_LOGO_FLASHER.svg      <- バナーのソース（ベクター）、起動時に 5 秒間中央表示
+│   ├── URTC_LOGO_FLASHER.svg      <- バナーのソース（ベクター）
 │   ├── HYDRA_UMC_ICON.svg         <- 維持されているアニメーション HYDRA-UMC ベクターソース
-│   ├── hydra_umc_icon_frames/     <- 上記の SVG からレンダリングされた 12 枚の Tkinter 用 PNG フレーム
 │   ├── qml/
-│   │   └── FlasherDeck.qml        <- `--qtquick` CAN-OTA コマンドデッキの Qt Quick UI
-│   ├── urtc_banner.png            <- 上記 .svg からレンダリング、ウィンドウ上部に表示
+│   │   └── FlasherDeck.qml        <- CAN-OTA コマンドデッキの Qt Quick UI
 │   ├── urtc_icon.ico              <- Windows タスクバー/ウィンドウアイコン
 │   └── urtc_icon.png              <- Linux タスクバー/ウィンドウアイコン
 ├── firmware/
@@ -985,23 +934,19 @@ JSON 数値（`50580689`）のどちらも受け付けます——ファイル�
 │                                       テンプレート（上記「HMAC キー / HardwareID の変更」
 │                                       参照）——ゼロから始めるのではなく、これを
 │                                       urtc_config.json にコピーして編集してください
-├── urtc_flasher.py                <- エントリポイント：CLI 引数、スプラッシュ画面、メインウィンドウ設定
-├── qt_flasher.py                  <- Qt Quick フロントエンド——実際の `--qtquick` CAN-OTA
+├── urtc_flasher.py                <- エントリーポイント：CLI 引数と Qt Quick ウィンドウの起動
+├── qt_flasher.py                  <- Qt Quick フロントエンド——実際の CAN-OTA
 │                                       コマンドデッキ、下記と同じ transport/validation/protocol クラスを再利用
-├── hydra_umc_animation.py         <- Tkinter 用のアニメーション HYDRA-UMC アイデンティティウィジェット
-├── hydra_umc_deck_widgets.py      <- ライブ診断画面が共有する丸みを帯びた HYDRA-UMC
-│                                       コマンドデッキウィジェット
 ├── flasher_config.py              <- 設定ファイル I/O、言語読み込み、プロトコル定数
 ├── flasher_transports.py          <- SLCAN、SocketCAN、MockCAN
 ├── flasher_swd_tools.py           <- STM32CubeProgrammer / pyOCD ラッパー
 ├── flasher_validation.py          <- ファームウェアファイル検証（.bin/.hex/.elf）
 ├── flasher_protocol.py            <- CAN OTA ステートマシン本体
 ├── flasher_github.py              <- URTC の GitHub リリースのアセットを一覧表示してダウンロード
-├── flasher_gui.py                 <- メインウィンドウ（FlasherGUI）とそのメニューバー
-├── flasher_uithread.py            <- ワーカースレッドから Tk メインスレッドへの受け渡し
 ├── flasher_records.py             <- セッションログ（保存場所・保持）と更新レポート
 ├── verify_qt_device_config.py     <- Qt Quick の設定書き込みに対する、意図的に pytest の外に置かれた本物のエンドツーエンド検証（本物の Qt イベントループが必要）
 ├── verify_qt_swd_full_chip_flash.py <- Qt Quick のフルチップ SWD/JTAG パネルに対する、意図的に pytest の外に置かれた本物のエンドツーエンド検証（dry-run のみ）
+├── verify_qt_can_options.py       <- pytest の外に置かれた、Qt Quick デッキの読み込みと CAN-OTA オプション（ターゲット、ダウングレード、バックアップ）の動作確認
 ├── tests/
 │   ├── conftest.py                 <- プロトコルテストにベンチ用署名鍵を与える
 │   ├── test_firmware_signature.py  <- 7件：公開署名、未署名イメージの拒否、ダイジェスト、同梱 firmware/
@@ -1014,7 +959,6 @@ JSON 数値（`50580689`）のどちらも受け付けます——ファイル�
 │   ├── test_bootloader_entry.py
 │   ├── test_can_conformance.py   <- shared CAN vectors (tests/fixtures/can_conformance_vectors.json)
 │   ├── test_github_download.py
-│   ├── test_gui_threading.py
 │   ├── test_language_files.py
 │   ├── test_manifest_target.py
 │   ├── test_mock_readback.py
@@ -1022,6 +966,9 @@ JSON 数値（`50580689`）のどちらも受け付けます——ファイル�
 │   ├── test_patch_number.py
 │   ├── test_python_can_transport.py
 │   ├── test_qt_bridge_log.py
+│   ├── test_qt_connection.py
+│   ├── test_qt_firmware_files.py
+│   ├── test_qt_flash_options.py
 │   ├── test_qt_log_translation.py
 │   ├── test_readback_odd_size.py
 │   ├── test_records.py
@@ -1030,11 +977,10 @@ JSON 数値（`50580689`）のどちらも受け付けます——ファイル�
 │   ├── test_slave_flash.py
 │   ├── test_swd_tools.py
 │   ├── test_sync_firmware.py
-│   ├── test_ui_mailbox.py
 │   ├── test_validation_ccm_stack.py
 │   ├── test_validation_formats.py
 │   └── test_version_report.py
-├── requirements.txt                <- pyserial>=3.5（Tkinter テスター）+ PySide6>=6.8,<7（`--qtquick` デッキ）
+├── requirements.txt                <- pyserial>=3.5 + PySide6>=6.8,<7
 ├── build_exe.bat                  <- Windows 独立ビルド
 ├── build_exe.sh                   <- Linux 独立ビルド
 ├── build-test.bat                 <- バージョンを更新しないビルド/コンパイル確認
@@ -1047,8 +993,7 @@ JSON 数値（`50580689`）のどちらも受け付けます——ファイル�
 ├── tools/
 │   ├── build_test.py                     <- バージョンを更新しないコンパイル確認 + Qt Quick デッキのソース検証
 │   ├── ci_validate.py                    <- CI が使用する manifest/CHANGELOG/docs の検証
-│   ├── sync_firmware.py                  <- URTC リリースのアセットまたはローカルフォルダから firmware/ を更新（ダイジェスト確認、--check で検証）
-│   └── render_hydra_umc_icon_frames.py   <- assets/hydra_umc_icon_frames/ を SVG から再生成（開発専用）
+│   └── sync_firmware.py                  <- URTC リリースのアセットまたはローカルフォルダから firmware/ を更新（ダイジェスト確認、--check で検証）
 ├── README.md                      <- 英語版
 ├── README_jpn.md / README_por.md                  <- 本ファイル
 ├── README_spa.md / README_ita.md / README_fra.md / README_deu.md / README_zho.md  <- 他の翻訳

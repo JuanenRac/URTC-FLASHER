@@ -29,28 +29,17 @@ See this file's own "SLCAN FIRMWARE NOTE" and "SOCKETCAN NOTE" comments
 (in flasher_transports.py) and the README's tool section, for setup
 details on each path.
 
-This is the entry point only - CLI argument handling, the splash screen,
-and main-window setup. Everything else lives in its own module:
+This is the entry point only - CLI argument handling and the start of the
+Qt Quick deck. Everything else lives in its own module:
 flasher_config.py (config/language/constants), flasher_transports.py
 (SLCAN/SocketCAN/MockCAN), flasher_swd_tools.py (CubeProgrammer/pyOCD),
 flasher_validation.py (firmware file validation), flasher_protocol.py
-(the CAN OTA state machine), and flasher_gui.py (the main window).
+(the CAN OTA state machine), and qt_flasher.py with assets/qml/FlasherDeck.qml
+(the window).
 """
 
 import sys
 import argparse
-
-# tkinter (and, with it, flasher_gui.py, which imports tkinter itself) is
-# only imported when NOT running in --cli mode - an unconditional
-# module-level import would mean ModuleNotFoundError on a genuinely
-# headless system (a CI runner, a server, a Raspberry Pi with no
-# python3-tk installed) even when --cli is explicitly requested, defeating
-# the entire point of having a CLI mode, since that path never touches
-# tkinter at all. Checking sys.argv directly here (rather than waiting for
-# argparse further down) is deliberate: this has to happen before the
-# import is ever attempted.
-if "--cli" not in sys.argv and "--qtquick" not in sys.argv:
-    import tkinter as tk
 
 try:
     import serial
@@ -84,7 +73,7 @@ elif not HAVE_SERIAL:
     print("    pip install pyserial")
 
 from flasher_integrity import preflight_image
-from flasher_config import _CONFIG_LOADED, BANNER_IMAGE_PATH, _center_geometry, _load_config_overrides
+from flasher_config import _CONFIG_LOADED, _load_config_overrides
 from flasher_transports import SLCAN, SLCANError, SocketCAN, SocketCANError, PythonCAN, PythonCANError, MockCAN
 from flasher_protocol import URTCFlasher, FlashError
 from flasher_validation import validate_firmware_file
@@ -94,7 +83,7 @@ def _cli_log(msg):
 
 
 def run_cli(argv):
-    """Headless CAN OTA update, no GUI/tkinter involved - for CI pipelines,
+    """Headless CAN OTA update, no GUI involved - for CI pipelines,
     test benches, or production-line scripting where there's no display.
     Only covers the CAN update path (section 1-3 of the GUI); the SWD/JTAG
     full-chip path is deliberately GUI-only for now, given how much more
@@ -206,45 +195,6 @@ def run_cli(argv):
 
 
 
-def _show_splash_then(root, on_done):
-    """Shows the banner centered on screen for 5s, then calls on_done() and
-    closes the splash. Built as a borderless Toplevel rather than the
-    banner being part of the main window itself, so the main window can
-    stay smaller - the banner only needs screen space for those first 5
-    seconds, not for the entire session. Skipped straight to on_done() if
-    the banner image can't be loaded for any reason (missing file, etc.) -
-    a missing splash was never worth blocking startup over.
-    """
-    try:
-        banner_img = tk.PhotoImage(file=BANNER_IMAGE_PATH)
-    except (tk.TclError, OSError):
-        on_done()
-        return
-
-    splash = tk.Toplevel(root)
-    splash.withdraw()  # stays hidden until correctly positioned below - see the note above
-    splash.overrideredirect(True)  # no title bar/border - a splash isn't a normal window
-    splash.configure(bg="#14171C")
-    label = tk.Label(splash, image=banner_img, bg="#14171C", borderwidth=0)
-    label.image = banner_img  # keep a reference - PhotoImage is garbage-collected otherwise, a classic Tkinter gotcha
-    label.pack()
-
-    # banner_img.width()/height() are known immediately from the loaded
-    # image itself - not dependent on the label/splash having already
-    # been drawn, unlike winfo_width()/height() on the widget.
-    splash.geometry(_center_geometry(splash, banner_img.width(), banner_img.height()))
-    splash.attributes("-topmost", True)
-    splash.deiconify()  # only shown now that it's already correctly positioned - avoids
-                        # ever actually appearing at the default (often top-left) position
-                        # first, a real Tkinter/Windows quirk with overrideredirect windows
-
-    def _finish():
-        splash.destroy()
-        on_done()
-
-    splash.after(5000, _finish)
-
-
 def main():
     if "--cli" in sys.argv and "--qtquick" in sys.argv:
         print("ERROR: --cli and --qtquick are mutually exclusive modes.", file=sys.stderr)
@@ -252,69 +202,18 @@ def main():
     if "--cli" in sys.argv:
         argv = [a for a in sys.argv[1:] if a != "--cli"]
         return run_cli(argv)
-    if "--qtquick" in sys.argv:
-        # The Qt Quick surface is deliberately selected explicitly until its
-        # SWD/JTAG and advanced-board pages reach parity with the established
-        # Tk tool. Its CAN-OTA workflow is real, never a mock-up.
-        try:
-            from qt_flasher import run_qtquick
-        except ImportError as exc:
-            print(
-                "ERROR: Qt Quick mode requires PySide6. "
-                "Install this repository's requirements.txt first. "
-                f"Details: {exc}",
-                file=sys.stderr,
-            )
-            return 2
-        return run_qtquick()
-    from flasher_gui import FlasherGUI  # deferred: only needed once --cli is ruled out above, matching the tkinter import's own reasoning at the top of this file
-
-    # Windows-only DPI awareness, requested before any Tk window exists -
-    # a process that never declares itself DPI-aware gets DPI-virtualized
-    # by Windows on a scaled display (125%/150%/etc.): Tk's own
-    # winfo_screenwidth()/height() (used by _center_geometry below to fit
-    # this window on screen) then report a shrunk *virtual* resolution
-    # instead of the real physical one, so a fixed 1235x1040 window can
-    # end up taller than what the OS claims is available and get placed
-    # partly off-screen - the same failure mode regardless of how
-    # generously the window itself is sized. PROCESS_SYSTEM_DPI_AWARE (1)
-    # is enough to fix that (PROCESS_PER_MONITOR_DPI_AWARE (2) would also
-    # need active handling of DPI-change events when the window is
-    # dragged between differently-scaled monitors, which this simple
-    # single-window app doesn't do). shcore is Windows 8.1+; the
-    # user32 fallback covers Windows Vista/7/8. Both are best-effort:
-    # silently skipped on any failure (missing DLL, older Windows,
-    # non-Windows platform) since a blurry-but-correctly-placed window is
-    # far better than a crash on startup.
-    if sys.platform == "win32":
-        try:
-            import ctypes
-            try:
-                ctypes.windll.shcore.SetProcessDpiAwareness(1)
-            except (AttributeError, OSError):
-                ctypes.windll.user32.SetProcessDPIAware()
-        except Exception:
-            pass
-
-    root = tk.Tk()
-    root.withdraw()  # hidden until the splash finishes, rather than flashing empty then populated
-    # Sized from actual measured content across all 5 supported languages
-    # (root.winfo_reqwidth/reqheight after building the real GUI, not a
-    # guess) - re-measured after redesigning the CAN-OTA tab into 2
-    # columns (firmware selection + flashing on the left, free tool
-    # config + peripheral info on the right) instead of everything
-    # stacked in one column. Much closer to square now: 1221x1022
-    # measured (worst case: Spanish for width, German for height),
-    # down from 914x1235 when everything was stacked vertically. A
-    # small margin above those worst-case measurements.
-    root.geometry(_center_geometry(root, 1235, 1040))
-    root.flasher_window = FlasherGUI(root)  # keeps the window object referenced for the lifetime of the main loop
-
-    def _reveal_main():
-        root.deiconify()
-
-    _show_splash_then(root, _reveal_main)
-    root.mainloop()
+    # The Qt Quick deck is the only window; --qtquick is still accepted so older shortcuts keep working.
+    try:
+        from qt_flasher import run_qtquick
+    except ImportError as exc:
+        print(
+            "ERROR: the window needs PySide6 (Qt Quick). "
+            "Install this repository's requirements.txt first, or use --cli for the headless update. "
+            f"Details: {exc}",
+            file=sys.stderr,
+        )
+        return 2
+    return run_qtquick()
 
 
 if __name__ == "__main__":

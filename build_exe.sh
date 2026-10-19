@@ -53,19 +53,12 @@ set -euo pipefail
 # because `read -p` alone still needs somewhere to put its input.
 trap 'if [ -t 0 ] && [ "${URTC_CI:-}" != "1" ] && [ -z "${CI:-}" ]; then read -r -p "Press Enter to close..." _ || true; fi' EXIT
 
-echo "[1/6] Checking for Python 3 and tkinter..."
+echo "[1/6] Checking for Python 3..."
 if ! command -v python3 >/dev/null 2>&1; then
     echo "      python3 was not found on PATH."
-    echo "      On Debian/Ubuntu:  sudo apt install python3 python3-pip python3-tk"
-    echo "      On Fedora:         sudo dnf install python3 python3-pip python3-tkinter"
-    echo "      On Arch:           sudo pacman -S python python-pip tk"
-    exit 1
-fi
-if ! python3 -c "import tkinter" 2>/dev/null; then
-    echo "      tkinter isn't available for this Python install."
-    echo "      On Debian/Ubuntu:  sudo apt install python3-tk"
-    echo "      On Fedora:         sudo dnf install python3-tkinter"
-    echo "      On Arch:           sudo pacman -S tk"
+    echo "      On Debian/Ubuntu:  sudo apt install python3 python3-pip"
+    echo "      On Fedora:         sudo dnf install python3 python3-pip"
+    echo "      On Arch:           sudo pacman -S python python-pip"
     exit 1
 fi
 echo "      Found."
@@ -115,7 +108,7 @@ echo "[5/6] Compiling URTC_Flasher with PyInstaller..."
 # split from one large urtc_flasher.py into several (flasher_config.py,
 # flasher_transports.py, etc.) for readability. PyInstaller's static
 # analyzer normally finds these on its own by walking the import tree, but
-# flasher_gui is imported deferred (inside main(), only once --cli mode is
+# qt_flasher is imported deferred (inside main(), only once --cli mode is
 # ruled out, matching the reasoning already in that function) rather than
 # at module level - listing every one explicitly here removes any doubt
 # about whether the analyzer's own import-tree walk catches that case.
@@ -127,7 +120,9 @@ python3 -m PyInstaller --onefile --noconfirm --name "URTC_Flasher" \
     --hidden-import flasher_validation \
     --hidden-import flasher_protocol \
     --hidden-import flasher_github \
-    --hidden-import flasher_gui \
+    --hidden-import flasher_records \
+    --hidden-import flasher_integrity \
+    --hidden-import urtc_ui \
     --hidden-import qt_flasher \
     --hidden-import PySide6.QtQml \
     --hidden-import PySide6.QtQuick \

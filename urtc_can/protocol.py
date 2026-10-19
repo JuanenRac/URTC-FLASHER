@@ -626,6 +626,13 @@ LAYOUTS = {
     'readback_response_size': {'id': 2046, 'role': 'response', 'dlc': {'exact': 4}, 'fields': [{'name': 'total_size', 'type': 'u32', 'offset': 0, 'width': 4}]},
     'readback_response_data': {'id': 2046, 'role': 'response', 'dlc': {'min': 1, 'max': 8}, 'fields': [{'name': 'data', 'type': 'bytes', 'offset': 0, 'rest': True}]},
     'readback_page_ack': {'id': 2047, 'role': 'request', 'dlc': {'exact': 4}, 'fields': [{'name': 'page_index', 'type': 'u32', 'offset': 0, 'width': 4}]},
+    'mn_discover': {'id': 1024, 'role': 'request', 'dlc': {'exact': 2}, 'fields': [{'name': 'mn_version', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'slot_ms', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [1, 50]}]},
+    'mn_select': {'id': 1025, 'role': 'request', 'dlc': {'exact': 3}, 'fields': [{'name': 'action', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 1]}, {'name': 'node', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 31]}, {'name': 'seq', 'type': 'u8', 'offset': 2, 'width': 1}]},
+    'mn_safe_stop': {'id': 1026, 'role': 'request', 'dlc': {'exact': 1}, 'fields': [{'name': 'reason', 'type': 'u8', 'offset': 0, 'width': 1}]},
+    'mn_node_info': {'id': 1056, 'role': 'response', 'dlc': {'exact': 8}, 'fields': [{'name': 'tool', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'state', 'type': 'u8', 'offset': 1, 'width': 1}, {'name': 'instance', 'type': 'u8', 'offset': 2, 'width': 1}, {'name': 'mn_version', 'type': 'u8', 'offset': 3, 'width': 1}, {'name': 'serial', 'type': 'u32', 'offset': 4, 'width': 4}]},
+    'mn_node_status': {'id': 1088, 'role': 'response', 'dlc': {'exact': 4}, 'fields': [{'name': 'state', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'error', 'type': 'u8', 'offset': 1, 'width': 1}, {'name': 'uptime_s', 'type': 'u16', 'offset': 2, 'width': 2}]},
+    'mn_node_cmd': {'id': 1120, 'role': 'request', 'dlc': {'min': 2, 'max': 8}, 'fields': [{'name': 'func', 'type': 'u16', 'offset': 0, 'width': 2}, {'name': 'args', 'type': 'bytes', 'offset': 2, 'rest': True}]},
+    'mn_node_resp': {'id': 1152, 'role': 'response', 'dlc': {'min': 2, 'max': 8}, 'fields': [{'name': 'func', 'type': 'u16', 'offset': 0, 'width': 2}, {'name': 'data', 'type': 'bytes', 'offset': 2, 'rest': True}]},
 }
 
 # ---------------------------------------------------------------------------
@@ -1841,3 +1848,132 @@ def encode_readback_page_ack(page_index: int) -> tuple[int, bytes]:
 def decode_readback_page_ack(data: bytes, strict: bool = False) -> dict | None:
     """Fields of 0x7FF (request), or None when the payload is too short."""
     return decode("readback_page_ack", data, strict)
+
+
+# ---------------------------------------------------------------------------
+# multinode extension (designed not implemented in firmware): see docs/MULTINODE.md
+# ---------------------------------------------------------------------------
+MN_VERSION = 1  # Multinode extension version carried by the discovery frames
+MN_ADDRESS_BITS = 5  # Bits of the node address
+MN_ADDRESS_MASK = 0x1F  # Mask of the node address
+MN_NODE_MAX = 0x20  # Highest number of nodes on one bus
+MN_STATUS_PERIOD_MS = 0x3E8  # Period of the per-node status frame (ms)
+MN_DISCOVER_SLOT_MS = 2  # Default spacing of the discovery answers: a node answers after its address times this (ms)
+MN_NODE_TIMEOUT_MS = 0xDAC  # A node that sent no status frame for this long is treated as gone (ms)
+MN_SELECT_TIMEOUT_MS = 0x7D0  # A selection lapses unless the host repeats it within this time (ms)
+MN_CMD_ARGS_MAX = 6  # Argument bytes that fit in a node-addressed command (bytes)
+MN_STATE_SELECTED = 0x01  # This node is the selected (active) node
+MN_STATE_FAULT = 0x02  # A fault is latched on this node
+MN_STATE_CONFLICT = 0x04  # Another node answered with the same address: this node ignores commands
+MN_STATE_BOOTLOADER = 0x08  # The node runs its bootloader
+MN_SELECT_DESELECT_ALL = 0  # No node is selected
+MN_SELECT_SELECT = 1  # Select one node
+MN_ID_DISCOVER = 0x400  # Ask every node to announce itself
+MN_ID_SELECT = 0x401  # Select the one node that the single-head frames address
+MN_ID_SAFE_STOP = 0x402  # Ask every node to enter its safe state
+MN_ID_NODE_INFO_BASE = 0x420  # A node announces itself (identifier plus the node address) (+ node address, 32 identifiers)
+MN_ID_NODE_STATUS_BASE = 0x440  # Periodic status of one node (+ node address, 32 identifiers)
+MN_ID_NODE_CMD_BASE = 0x460  # One command to one node without selecting it (+ node address, 32 identifiers)
+MN_ID_NODE_RESP_BASE = 0x480  # The answer of one node to NODE_CMD (+ node address, 32 identifiers)
+MN_RANGES = {1024: 1, 1025: 1, 1026: 1, 1056: 32, 1088: 32, 1120: 32, 1152: 32}
+MN_NAMES = {1024: 'DISCOVER',
+ 1025: 'SELECT',
+ 1026: 'SAFE_STOP',
+ 1056: 'NODE_INFO',
+ 1088: 'NODE_STATUS',
+ 1120: 'NODE_CMD',
+ 1152: 'NODE_RESP'}
+
+
+def mn_node_id(base: int, node: int) -> int:
+    """The identifier of a node-addressed frame: the base of its range plus the node address."""
+    if MN_RANGES.get(base, 1) == 1:
+        raise ValueError(f"0x{base:03X} is not the base of an addressed range")
+    if not isinstance(node, int) or isinstance(node, bool) or not 0 <= node <= MN_ADDRESS_MASK:
+        raise ValueError(f"node address {node!r} is outside 0..{MN_ADDRESS_MASK}")
+    return base + node
+
+
+def mn_split_id(can_id: int):
+    """(name, node) for an identifier of the extension (node is None for a broadcast frame), or None for any other identifier."""
+    for base, span in MN_RANGES.items():
+        if base <= can_id < base + span:
+            return MN_NAMES[base], (can_id - base if span > 1 else None)
+    return None
+
+
+def encode_mn_discover(mn_version: int, slot_ms: int) -> tuple[int, bytes]:
+    """Ask every node to announce itself (0x400, request)."""
+    can_id, data = encode("mn_discover", mn_version=mn_version, slot_ms=slot_ms)
+    return can_id, data
+
+
+def decode_mn_discover(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x400, or None when the payload is too short."""
+    return decode("mn_discover", data, strict)
+
+
+def encode_mn_select(action: int, node: int, seq: int) -> tuple[int, bytes]:
+    """Select the one node that the single-head frames address (0x401, request)."""
+    can_id, data = encode("mn_select", action=action, node=node, seq=seq)
+    return can_id, data
+
+
+def decode_mn_select(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x401, or None when the payload is too short."""
+    return decode("mn_select", data, strict)
+
+
+def encode_mn_safe_stop(reason: int) -> tuple[int, bytes]:
+    """Ask every node to enter its safe state (0x402, request)."""
+    can_id, data = encode("mn_safe_stop", reason=reason)
+    return can_id, data
+
+
+def decode_mn_safe_stop(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x402, or None when the payload is too short."""
+    return decode("mn_safe_stop", data, strict)
+
+
+def encode_mn_node_info(node: int, tool: int, state: int, instance: int, mn_version: int, serial: int) -> tuple[int, bytes]:
+    """A node announces itself (identifier plus the node address) (0x420 + node, response)."""
+    can_id, data = encode("mn_node_info", tool=tool, state=state, instance=instance, mn_version=mn_version, serial=serial)
+    return mn_node_id(can_id, node), data
+
+
+def decode_mn_node_info(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x420, or None when the payload is too short."""
+    return decode("mn_node_info", data, strict)
+
+
+def encode_mn_node_status(node: int, state: int, error: int, uptime_s: int) -> tuple[int, bytes]:
+    """Periodic status of one node (0x440 + node, response)."""
+    can_id, data = encode("mn_node_status", state=state, error=error, uptime_s=uptime_s)
+    return mn_node_id(can_id, node), data
+
+
+def decode_mn_node_status(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x440, or None when the payload is too short."""
+    return decode("mn_node_status", data, strict)
+
+
+def encode_mn_node_cmd(node: int, func: int, args: bytes) -> tuple[int, bytes]:
+    """One command to one node without selecting it (0x460 + node, request)."""
+    can_id, data = encode("mn_node_cmd", func=func, args=args)
+    return mn_node_id(can_id, node), data
+
+
+def decode_mn_node_cmd(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x460, or None when the payload is too short."""
+    return decode("mn_node_cmd", data, strict)
+
+
+def encode_mn_node_resp(node: int, func: int, data: bytes) -> tuple[int, bytes]:
+    """The answer of one node to NODE_CMD (0x480 + node, response)."""
+    can_id, data = encode("mn_node_resp", func=func, data=data)
+    return mn_node_id(can_id, node), data
+
+
+def decode_mn_node_resp(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x480, or None when the payload is too short."""
+    return decode("mn_node_resp", data, strict)

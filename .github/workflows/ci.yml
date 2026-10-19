@@ -72,3 +72,4 @@ jobs:
           python -m pytest -q tests
           python verify_qt_device_config.py
           python verify_qt_swd_full_chip_flash.py
+          python verify_qt_can_options.py

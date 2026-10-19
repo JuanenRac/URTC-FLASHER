@@ -20,6 +20,20 @@ increments instead (e.g. `0.1.9` -> `0.2.0`), and the same carry applies
 from `MINOR` into `MAJOR`. Running the tool from source (not through a
 build script) never changes the version - only a real build does.
 
+## [0.3.5] - The Qt Quick deck is the only window, with everything the Tkinter window had
+
+- The Qt Quick deck can flash the expansion slave: a target choice (main board or slave), with the images checked against the slot of the chosen target. The "board is running the application" option (bootloader entry), the F-RAM erase and the downgrade authorisation are for the main board and are switched off for the slave.
+- The downgrade authorisation asks for its own second confirmation after the routine one, and that confirmation is used up by one flash; the backend refuses the flash without it.
+- New backup of the installed firmware over CAN (main board only) to a file chosen in a save dialog, with progress and cancel.
+- A firmware file can be picked from anywhere; a file that does not look like an image for the chosen slot waits for an explicit yes. A red warning shows when the selected image is signed with the public development key.
+- The GitHub download is a dialog again: a release tag box with Load, the images of the release with their size, download of the selected one together with its digest and manifest, and a question before an existing file is replaced (the earlier one-button download replaced files without asking).
+- New bus-activity check (frames seen in two seconds and, on SocketCAN, the counter deltas), Save Logs, Save Debug Bundle and an About dialog with the Readme, the License and the GitHub page. Every session is also written to `logs/`, a report is written after each successful update, and the newest official image is offered when the board sits in its bootloader with no application.
+- Closing the window during a transfer asks first, and the adapter is released when the program exits.
+- The Tkinter window is retired: `urtc_flasher.py` starts the Qt Quick deck (`--cli` stays for headless updates, `--qtquick` is still accepted). `flasher_gui.py`, `flasher_uithread.py`, the animated-mark widgets, their frames and the startup banner are removed, and the build scripts, the documentation and the language files follow.
+- The language list and selector, the colour of the connection state and the size formatting come from the `urtc_ui` copy of URTC-COMMON; the protocol copies follow URTC-COMMON 0.0.4, and the test that compares them with the shared repository passes with it next to this one.
+- Fix: three log labels (bit-rate search failed, GitHub failure, GitHub download blocked) were stored as one dictionary of all eight languages and showed that text; each language file now holds its own text.
+- New tests for the target choice, the downgrade confirmation, the backup, the files picked by hand, the release dialog, the session log and closing, plus an offscreen check that loads the deck with the options.
+
 ## [0.3.4] - The Qt Quick deck gains a bus-speed selector and a release download
 
 - The Qt Quick deck has a bus-speed (bitrate) selector for serial CAN adapters, from 10 kbit/s to 1 Mbit/s, locked while connected; it was fixed at 500 kbit/s.

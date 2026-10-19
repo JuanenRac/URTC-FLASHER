@@ -19,12 +19,12 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Licence-GPL%203.0-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Langage-Python-3776AB.svg" alt="Python">
-  <img src="https://img.shields.io/badge/UI-Tkinter%20%7C%20Qt%20Quick-38d4e6.svg" alt="Tkinter and Qt Quick">
+  <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
   <img src="https://img.shields.io/badge/Protocole-CAN--OTA-orange.svg" alt="CAN-OTA">
 </p>
 
 
-**Version :** 0.3.4 (la version de cet outil - affichée dans la bannière
+**Version :** 0.3.5 (la version de cet outil - affichée dans la bannière
 de la fenêtre et la barre de titre, suivie séparément de la version du
 firmware de la carte URTC qu'il écrit. Suit un schéma X.Y.Z où le numéro
 de patch augmente automatiquement à chaque build réel via
@@ -69,7 +69,7 @@ traitez la première vraie tentative de flash avec la même prudence que
 vous accorderiez à tout nouvel outil parlant à un bootloader : gardez le
 JTAG à portée de main comme solution de repli. Tout le reste décrit ici n'a été exercé que contre `MockCAN`, un bootloader simulé, jamais contre une vraie carte.
 
-**Vérification d'honnêteté - ce qui fonctionne réellement aujourd'hui :** `tests/` contient 35 fichiers pytest (405 tests : tous réussis ; 4 d'entre eux sont ignorés sans PySide6) - le protocole CAN-OTA face à un vrai transport `MockCAN` (`flasher_transports.py`) qui rejoue une séquence complète de bootloader simulé (démarrage/effacement/réception, données de page + PAGE_ACK, blocs HMAC, fin de mise à jour avec un vrai succès ou un `VERIFY_FAIL_REASON` précis), les règles de signature (signature publiée envoyée sans aucune clé, image non signée refusée, sha256 du manifeste non conforme refusé avant tout trafic sur le bus), les contrôles d'intégrité d'image et le dossier `firmware/` fourni par rapport à ses manifestes. GitHub Actions (`.github/workflows/ci.yml`) exécute cette suite à chaque push, et `tools/build_test.py` l'exécute dans `build-test.sh`/`.bat`. Les deux scripts `verify_qt_*.py` à la racine sont de vrais contrôles de bout en bout hors pytest (ils nécessitent une vraie boucle d'événements Qt ; lancement avec `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`) ; `verify_qt_swd_full_chip_flash.py` construit seulement les commandes `PyOCDCLI`/`CubeProgrammerCLI` avec `dry_run=True`. Rien de tout cela n'a été exécuté sur une vraie carte dans cet environnement. Voir `CHANGELOG.md` pour ce qui a réellement été publié. Le bootloader simulé (`MockCAN`) n'est qu'un modèle écrit à partir de la description du protocole : il reproduit les ACK de page, la dernière page partielle et les trames de relecture, mais ce n'est pas le vrai bootloader, donc une exécution de tests au vert ne remplace pas un essai sur une vraie carte (l'image officielle de 73476 octets ne pouvait pas être installée et la dernière trame d'une sauvegarde était perdue alors que les tests passaient, justement parce que la simulation était plus indulgente que le vrai bootloader).
+**Vérification d'honnêteté - ce qui fonctionne réellement aujourd'hui :** `tests/` contient 38 fichiers pytest (459 tests : tous réussis ; 66 d'entre eux sont ignorés sans PySide6) - le protocole CAN-OTA face à un vrai transport `MockCAN` (`flasher_transports.py`) qui rejoue une séquence complète de bootloader simulé (démarrage/effacement/réception, données de page + PAGE_ACK, blocs HMAC, fin de mise à jour avec un vrai succès ou un `VERIFY_FAIL_REASON` précis), les règles de signature (signature publiée envoyée sans aucune clé, image non signée refusée, sha256 du manifeste non conforme refusé avant tout trafic sur le bus), les contrôles d'intégrité d'image et le dossier `firmware/` fourni par rapport à ses manifestes. GitHub Actions (`.github/workflows/ci.yml`) exécute cette suite à chaque push, et `tools/build_test.py` l'exécute dans `build-test.sh`/`.bat`. Les deux scripts `verify_qt_*.py` à la racine sont de vrais contrôles de bout en bout hors pytest (ils nécessitent une vraie boucle d'événements Qt ; lancement avec `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`) ; `verify_qt_swd_full_chip_flash.py` construit seulement les commandes `PyOCDCLI`/`CubeProgrammerCLI` avec `dry_run=True`. Rien de tout cela n'a été exécuté sur une vraie carte dans cet environnement. Voir `CHANGELOG.md` pour ce qui a réellement été publié. Le bootloader simulé (`MockCAN`) n'est qu'un modèle écrit à partir de la description du protocole : il reproduit les ACK de page, la dernière page partielle et les trames de relecture, mais ce n'est pas le vrai bootloader, donc une exécution de tests au vert ne remplace pas un essai sur une vraie carte (l'image officielle de 73476 octets ne pouvait pas être installée et la dernière trame d'une sauvegarde était perdue alors que les tests passaient, justement parce que la simulation était plus indulgente que le vrai bootloader).
 
 > **État de la sûreté et de la cybersécurité :** cet écosystème n'est pas un système de sécurité certifié et aucune carte URTC assemblée n'existe encore. Les bootloaders contrôlent les images de firmware par CRC32 et un HMAC-SHA256 à clé partagée, pas par une signature asymétrique (prévue) ; les images d'application publiées sont signées avec la clé publique de développement (`signing_key_kind: dev`), si bien que n'importe qui peut produire une image acceptée par le bootloader ; rien n'a été transmis à une carte réelle. Lisez la [base de sécurité](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md) et le [modèle de menaces](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md) avant de vous fier à une affirmation d'ici pour la sécurité d'une personne.
 
@@ -77,10 +77,10 @@ JTAG à portée de main comme solution de repli. Tout le reste décrit ici n'a �
 
 | | |
 |---|---|
-| Version | `0.3.3` |
+| Version | `0.3.5` |
 | Maturité | Fonctionnel |
-| Tests | 405 |
-| Technologie | Python / Tkinter (legacy advanced workflow) / PySide6 / Qt Quick / CAN-OTA |
+| Tests | 459 |
+| Technologie | Python / PySide6 / Qt Quick / CAN-OTA |
 | Cible | Le PC de la personne qui l'utilise |
 | Sur matériel réel | Simulé seulement : testé avec des émulateurs, des doubles de test ou des simulateurs ; aucune exécution sur du matériel réel n'est consignée pour cette version |
 
@@ -159,51 +159,22 @@ par-dessus un `dist/URTC_Flasher` déjà existant le remplace directement
 au lieu d'attendre une invite "remplacer ?" facile à manquer dans la
 sortie d'un script.
 
-Le panneau de connexion affiche également la marque officielle HYDRA-UMC
-animée. Sa source SVG maintenue est `assets/HYDRA_UMC_ICON.svg` ; douze
-images PNG incluses conservent l’animation dans Tkinter et dans l’exécutable
-autonome sans ajouter de dépendance graphique à l’exécution. L’icône native
-URTC de fenêtre/barre des tâches reste volontairement statique.
-
 ### Console visuelle de contrôle
 
-Le panneau de commande partagé **Qt Quick** est une seconde interface sur le même code de transport, de validation et de flashage (testé uniquement contre le simulateur ; la vérification des images utilise un HMAC-SHA256 à clé partagée) :
+La console **Qt Quick** est la seule fenêtre du programme (testée uniquement contre le simulateur ; les vérifications d'image utilisent un HMAC-SHA256 à clé partagée). On la lance avec :
 ~~~
-python urtc_flasher.py --qtquick
+python urtc_flasher.py
 ~~~
-Il offre la mise à jour CAN-OTA de la carte principale (le déclencheur d'entrée dans le bootloader est toujours envoyé en premier), la découverte SWD/JTAG en lecture seule, Board Snapshot, les 4 écritures de configuration de l'appareil et la programmation complète de la puce par SWD/JTAG (effacement/écriture, simulation, sauvegarde avant effacement, contrôle RDP). Il n'a **pas** tout ce qu'a la fenêtre Tkinter : pas de cible esclave d'extension, pas d'option « la carte est déjà dans le bootloader », pas d'option d'effacement de la F-RAM, pas d'autorisation de downgrade, pas de sauvegarde du firmware par CAN, pas de téléchargement GitHub, pas de choix ni de détection du débit (Serial/SLCAN s'ouvre à 500 kbit/s) et pas de contrôle dédié de l'activité du bus. Pour cela, utilisez l'interface Tkinter par défaut.
+Elle a une surface sombre bleu marine/cyan avec une carte de connexion, des tableaux de firmware lisibles, un journal de vérification sombre et un canal de progression visible, et couvre tout le flux : la mise à jour CAN-OTA de la carte principale ou de l'esclave d'extension (le choix de la cible ; l'option « la carte exécute l'application », l'effacement de la F-RAM et l'autorisation de retour à une version antérieure ne concernent que la carte principale), une sauvegarde du firmware installé via CAN, le sélecteur de débit du bus avec la recherche en écoute seule, le téléchargement d'une release GitHub, un sélecteur de fichier pour n'importe quel `.bin`, le contrôle de l'activité du bus, le Board Snapshot, les 4 écritures de configuration de l'appareil, la découverte SWD/JTAG en lecture seule et la programmation de la puce complète via SWD/JTAG (effacement/écriture, essai à blanc, sauvegarde avant effacement, contrôle RDP). Toute action qui écrit dans la carte demande d'abord une confirmation, l'autorisation de retour à une version antérieure en demande une seconde, et fermer la fenêtre pendant un transfert redemande. Rien de tout cela n'a été essayé sur une vraie carte. `python urtc_flasher.py --cli` est le mode sans interface (section 7).
 
-L'en-tête de la fenêtre Qt Quick a un sélecteur de langue ; le choix est enregistré et s'applique au prochain démarrage.
+### En-tête et outils
 
-Le flux CAN-OTA et SWD/JTAG existant est conservé sur une surface de contrôle bleu nuit/cyan : en-tête produit, carte de connexion contrastée, tableaux de firmware lisibles, journal de vérification sombre et progression visible. Il s'agit seulement d'un changement visuel et d'accessibilité ; le protocole du bootloader n'est pas modifié, et rien de tout cela n'a été essayé sur une vraie carte.
-
-### Barre de menu
-
-- **Fichier** - Enregistrer les journaux (le journal à l'écran en texte
-  brut ; pour un paquet plus complet incluant les diagnostics système et
-  le fichier de firmware actuellement sélectionné, voir "Diagnostics"
-  plus bas), et Quitter.
-- **Langue** - basculer entre les 8 langues disponibles (voir "Langue"
-  plus bas pour savoir comment fonctionnent les traductions).
-- **Aide** - Lisez-moi (ouvre ce fichier dans une fenêtre visualiseur en
-  lecture seule ; récupère automatiquement une version traduite dès
-  qu'il en existe une pour la langue actuelle), GitHub d'URTC (ouvre le
-  dépôt du projet dans votre navigateur), Licence (la licence GPL-3.0-or-later de
-  cet outil, lue depuis le fichier `LICENSE` du dépôt lui-même), et À
-  propos (version et auteur).
-
-**Au démarrage**, la bannière s'affiche centrée à l'écran pendant 5
-secondes avant que la fenêtre principale n'apparaisse - elle ne fait pas
-partie de la fenêtre principale elle-même (c'est pourquoi la fenêtre
-est plutôt compacte pour tout ce qu'elle fait réellement). L'icône de
-fenêtre/barre des tâches est un petit design autonome
-(`assets/urtc_icon.png`/`.ico`), pas la bannière rétrécie - l'illustration
-complète de la bannière ne tient pas bien à 16-32px.
+- **En-tête** - l'état de la connexion, le sélecteur de langue (le choix est enregistré et s'applique au prochain démarrage) et la version.
+- **Enregistrer les journaux...** et **Enregistrer le paquet de débogage** - le journal affiché en texte brut, ou un zip plus complet avec les diagnostics système et le fichier de firmware sélectionné (voir « Diagnostics » plus bas). Chaque session est aussi écrite dans `logs/`, et les plus récentes sont conservées.
+- **À propos d'URTC Flasher** - version et auteur, avec des boutons pour **Lisez-moi** (dans la langue de l'interface si une traduction existe), **Licence** et la page **GitHub d'URTC** du projet.
 
 **Langue** : anglais par défaut.
-Se change via le menu **Langue** (dans la barre de menu en haut de la
-fenêtre) plutôt qu'une liste déroulante dans la fenêtre principale -
-enregistre immédiatement dans `urtc_config.json` (le même fichier
+Se change avec le sélecteur de langue de l'en-tête de la fenêtre - enregistre immédiatement dans `urtc_config.json` (le même fichier
 utilisé pour les remplacements techniques du matériel — la préférence
 de langue vit simplement à côté de ceux-ci), appliqué au prochain
 démarrage. Les traductions vivent dans des fichiers texte brut sous
@@ -221,16 +192,6 @@ sur l'affichage du nom de cette clé même plutôt que de planter, et un
 fichier de langue manquant ou illisible (mauvaise modification, mauvais
 nom de fichier) retombe sur l'anglais pour toute l'interface - dans les
 deux cas l'outil reste utilisable pendant que le décalage se règle.
-
-Tkinter (la boîte à outils graphique) est fourni avec Python sous
-Windows, mais sur les distributions de la famille Debian/Ubuntu c'est un
-paquet système séparé :
-```
-sudo apt install python3-tk
-```
-(Fedora : `sudo dnf install python3-tkinter`. Arch : `sudo pacman -S
-tk`.) `build_exe.sh` vérifie cela lui-même et vous prévient si c'est
-manquant plutôt que d'échouer à mi-chemin.
 
 **Permissions série sous Linux :** si vous utilisez le chemin
 Série/SLCAN et que la connexion échoue avec "Permission denied", votre
@@ -260,23 +221,20 @@ Cet outil s'attend à un dossier `firmware/` juste à côté de
 
 ```
 ├── assets/
-│   ├── URTC_LOGO_FLASHER.svg      <- source de la banniere (vectorielle)
-│   └── urtc_banner.png            <- affichee en haut de la fenetre, rendue depuis le .svg ci-dessus
+│   └── URTC_LOGO_FLASHER.svg      <- source de la banniere (vectorielle)
 ├── firmware/
 │   ├── URTC_MAIN_FIRMWARE_v<version>.bin  <- placez les nouveaux fichiers .bin ici
 │   ├── URTC_*  <- tools/sync_firmware.py remplace les fichiers URTC_* de ce dossier par ceux d'une release ; les autres fichiers restent
 │   └── URTC_SLAVE_FIRMWARE_v0.1.9.bin        <- application du chip esclave d'extension, le cas echeant
 ├── logs/                          <- cree automatiquement, un fichier par session
 ├── urtc_config.json               <- optionnel, non inclus par defaut (voir "Changer la cle HMAC" ci-dessous)
-├── urtc_flasher.py                <- point d'entree : arguments CLI, ecran de demarrage, configuration de la fenetre principale
+├── urtc_flasher.py                <- point d'entrée : arguments CLI et démarrage de la fenêtre Qt Quick
 ├── flasher_config.py              <- E/S du fichier de configuration, chargement de la langue, constantes du protocole
 ├── flasher_transports.py          <- SLCAN, SocketCAN, MockCAN
 ├── flasher_swd_tools.py           <- wrappers STM32CubeProgrammer / pyOCD
 ├── flasher_validation.py          <- validation des fichiers firmware (.bin/.hex/.elf)
 ├── flasher_protocol.py            <- la machine a etats CAN OTA elle-meme, tant pour la carte principale que (relayee via son propre pont I2C) l'esclave d'extension
 ├── flasher_github.py               <- liste et télécharge les assets d'une release GitHub d'URTC
-├── flasher_gui.py                 <- la fenetre principale (FlasherGUI) et sa barre de menu
-├── flasher_uithread.py            <- transmission des threads de travail au thread principal de Tk
 ├── flasher_records.py             <- journaux de session (emplacement, conservation) et rapports de mise à jour
 ├── pytest.ini / ruff.toml          <- réglages de pytest et ruff (contrôles statiques)
 ├── requirements.txt
@@ -291,15 +249,6 @@ entre les avoir comme fichiers séparés ou comme un seul gros fichier, et
 il n'existe pas de forme monolithique à garder synchronisée comme c'est
 le cas pour le firmware (ceci est un outil PC, pas quelque chose de
 flashé sur la carte, donc il n'y a jamais qu'une seule forme).
-
-`assets/urtc_banner.png` est optionnel - s'il manque, l'outil démarre
-simplement sans bannière plutôt que d'échouer. Il est chargé via le
-support PNG natif de tkinter (Tk 8.6+, inclus avec chaque version
-actuelle de Python), pas Pillow, donc cela n'ajoute pas de nouvelle
-dépendance. `build_exe.bat` et `build_exe.sh` empaquettent déjà
-`assets/` dans l'exécutable autonome via le `--add-data` de
-PyInstaller, donc cela fonctionne de la même manière que vous exécutiez
-depuis la source ou depuis un binaire construit.
 
 Ceci est délibéré : ce dépôt entier est autonome. Si vous voulez juste
 flasher une carte — sur un PC d'atelier, depuis une clé USB, n'importe
@@ -387,6 +336,8 @@ Ajouter une nouvelle build plus tard : déposez-la simplement dans
 nécessaire.
 
 ## 4. 🔍 Vérifier ce qui est actuellement installé
+
+> Dans la console Qt Quick, les ports des deux transports (adaptateurs série et, sous Linux, interfaces SocketCAN) sont dans une seule liste, et les interrogations de cette section sont faites par **LIRE L'ETAT DE LA CARTE**, qui demande d'un coup la version, les compteurs d'erreurs CAN, le type de carte d'extension, la variante MLX9064x et les infos du périphérique, et les affiche dans l'instantané de la carte. Les enregistrements de la section de configuration de l'appareil écrivent les valeurs.
 Si vous êtes sous Linux et que SocketCAN est disponible, vous verrez un
 choix de **Transport** en haut - choisissez Série/SLCAN ou SocketCAN
 avant de vous connecter. Sous Windows cette ligne n'apparaît pas du
@@ -1008,21 +959,13 @@ partition différent.
 
 ## 📂 Structure du dépôt
 
-Le répertoire `assets/` contient aussi `HYDRA_UMC_ICON.svg`, la source
-vectorielle animée maintenue, et `hydra_umc_icon_frames/`, ses douze
-images PNG groupées pour Tkinter. `tools/render_hydra_umc_icon_frames.py`
-les régénère depuis le SVG pendant le développement ; ce n'est pas requis
-pour exécuter l'application.
-
 ```
 ├── assets/
 │   ├── URTC_APP_ICON.svg          <- icône partagée app/barre des tâches (vectorielle)
-│   ├── URTC_LOGO_FLASHER.svg      <- source de la bannière (vectorielle), affichée centrée 5s au démarrage
+│   ├── URTC_LOGO_FLASHER.svg      <- source de la bannière (vectorielle)
 │   ├── HYDRA_UMC_ICON.svg         <- source vectorielle animée HYDRA-UMC maintenue
-│   ├── hydra_umc_icon_frames/     <- douze images PNG pour Tkinter rendues depuis le SVG ci-dessus
 │   ├── qml/
-│   │   └── FlasherDeck.qml        <- UI Qt Quick du command deck CAN-OTA `--qtquick`
-│   ├── urtc_banner.png            <- rendue à partir du .svg ci-dessus, affichée en haut de la fenêtre
+│   │   └── FlasherDeck.qml        <- UI Qt Quick du command deck CAN-OTA
 │   ├── urtc_icon.ico              <- icône barre des tâches/fenêtre sous Windows
 │   └── urtc_icon.png              <- icône barre des tâches/fenêtre sous Linux
 ├── firmware/
@@ -1048,23 +991,19 @@ pour exécuter l'application.
 ├── urtc_config.json.example        <- modèle pour le fichier optionnel de surcharge urtc_config.json
 │                                       (voir "Changer la clé HMAC / le HardwareID" ci-dessus) - copiez-le
 │                                       en urtc_config.json et modifiez-le, plutôt que de repartir de zéro
-├── urtc_flasher.py                <- point d'entrée : arguments CLI, écran de démarrage, configuration de la fenêtre principale
-├── qt_flasher.py                  <- front end Qt Quick - command deck CAN-OTA `--qtquick` réel,
+├── urtc_flasher.py                <- point d'entrée : arguments CLI et démarrage de la fenêtre Qt Quick
+├── qt_flasher.py                  <- front end Qt Quick - command deck CAN-OTA réel,
 │                                       réutilise les mêmes classes de transport/validation/protocole ci-dessous
-├── hydra_umc_animation.py         <- widget d'identité HYDRA-UMC animé pour Tkinter
-├── hydra_umc_deck_widgets.py      <- widgets arrondis du command deck HYDRA-UMC partagés par les
-│                                       surfaces de diagnostic en direct
 ├── flasher_config.py              <- E/S du fichier de configuration, chargement de la langue, constantes du protocole
 ├── flasher_transports.py          <- SLCAN, SocketCAN, MockCAN
 ├── flasher_swd_tools.py           <- wrappers STM32CubeProgrammer / pyOCD
 ├── flasher_validation.py          <- validation des fichiers firmware (.bin/.hex/.elf)
 ├── flasher_protocol.py            <- la machine à états CAN OTA elle-même
 ├── flasher_github.py              <- liste et télécharge les assets d'une release GitHub d'URTC
-├── flasher_gui.py                 <- la fenêtre principale (FlasherGUI) et sa barre de menus
-├── flasher_uithread.py            <- transmission des threads de travail au thread principal de Tk
 ├── flasher_records.py             <- journaux de session (emplacement, conservation) et rapports de mise à jour
 ├── verify_qt_device_config.py     <- vraie vérification de bout en bout, délibérément hors pytest, des écritures de configuration Qt Quick (a besoin d'une vraie boucle d'événements Qt)
 ├── verify_qt_swd_full_chip_flash.py <- vraie vérification de bout en bout, délibérément hors pytest, du panneau Qt Quick de programmation complète SWD/JTAG (dry-run uniquement)
+├── verify_qt_can_options.py       <- vraie vérification, hors pytest, que la console Qt Quick se charge et que les options CAN-OTA se comportent (cible, retour arrière, sauvegarde)
 ├── tests/
 │   ├── conftest.py                 <- donne aux tests du protocole une clé de signature de banc
 │   ├── test_firmware_signature.py  <- 7 tests : signature publiée, image non signée refusée, empreintes, firmware/
@@ -1077,7 +1016,6 @@ pour exécuter l'application.
 │   ├── test_bootloader_entry.py
 │   ├── test_can_conformance.py   <- shared CAN vectors (tests/fixtures/can_conformance_vectors.json)
 │   ├── test_github_download.py
-│   ├── test_gui_threading.py
 │   ├── test_language_files.py
 │   ├── test_manifest_target.py
 │   ├── test_mock_readback.py
@@ -1085,6 +1023,9 @@ pour exécuter l'application.
 │   ├── test_patch_number.py
 │   ├── test_python_can_transport.py
 │   ├── test_qt_bridge_log.py
+│   ├── test_qt_connection.py
+│   ├── test_qt_firmware_files.py
+│   ├── test_qt_flash_options.py
 │   ├── test_qt_log_translation.py
 │   ├── test_readback_odd_size.py
 │   ├── test_records.py
@@ -1093,11 +1034,10 @@ pour exécuter l'application.
 │   ├── test_slave_flash.py
 │   ├── test_swd_tools.py
 │   ├── test_sync_firmware.py
-│   ├── test_ui_mailbox.py
 │   ├── test_validation_ccm_stack.py
 │   ├── test_validation_formats.py
 │   └── test_version_report.py
-├── requirements.txt                <- pyserial>=3.5 (tester Tkinter) + PySide6>=6.8,<7 (deck `--qtquick`)
+├── requirements.txt                <- pyserial>=3.5 + PySide6>=6.8,<7
 ├── build_exe.bat                  <- build autonome pour Windows
 ├── build_exe.sh                   <- build autonome pour Linux
 ├── build-test.bat                 <- contrôle build/compilation sans gestion de version
@@ -1110,8 +1050,7 @@ pour exécuter l'application.
 ├── tools/
 │   ├── build_test.py                     <- contrôle de compilation sans gestion de version + validation des sources du deck Qt Quick
 │   ├── ci_validate.py                    <- validation manifest/CHANGELOG/docs utilisée par la CI
-│   ├── sync_firmware.py                  <- met à jour firmware/ depuis les assets d'une release URTC ou un dossier local (empreintes vérifiées ; --check vérifie)
-│   └── render_hydra_umc_icon_frames.py   <- régénère assets/hydra_umc_icon_frames/ depuis le SVG (développement uniquement)
+│   └── sync_firmware.py                  <- met à jour firmware/ depuis les assets d'une release URTC ou un dossier local (empreintes vérifiées ; --check vérifie)
 ├── README.md                      <- (version anglaise)
 ├── README_fra.md                  <- ce fichier
 ├── README_spa.md / README_ita.md / README_deu.md / README_zho.md / README_jpn.md / README_por.md  <- autres traductions

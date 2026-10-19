@@ -1,11 +1,11 @@
 # URTC-FLASHER — CLI Reference
 
-`urtc_flasher.py` defaults to a windowed Tkinter GUI (double-click, or
+`urtc_flasher.py` defaults to the windowed Qt Quick deck (double-click, or
 run with no arguments). Passing `--cli` switches to the headless
-argparse fallback documented here — checked directly against `sys.argv`
-*before* `tkinter` is ever imported, so `--cli` mode works on a genuinely
+argparse mode documented here — checked directly against `sys.argv`
+*before* any window code is imported, so `--cli` mode works on a genuinely
 headless machine (CI runner, production-line bench, a Linux box with no
-`python3-tk`) with no display and no Tk dependency at all. The CLI only
+display) with no Qt dependency at all. The CLI only
 covers the CAN-OTA update path (sections 1-3 of the GUI: trigger the
 bootloader, HMAC-sign and transfer a firmware image, verify); the
 SWD/JTAG full-chip programming path is deliberately GUI-only. Every
@@ -14,12 +14,12 @@ written from memory.
 
 ## Qt Quick diagnostic surface
 
-The command python urtc_flasher.py --qtquick opens the optional Qt Quick command deck.
+Running `python urtc_flasher.py` with no arguments opens the Qt Quick command deck.
 Its **Advanced diagnostics** card can detect whether `pyOCD` and
 `STM32CubeProgrammer` are installed and can enumerate USB debug probes using
 their existing read-only listing commands. This is deliberately not an SWD
 programming interface: the scan neither connects to a target chip nor erases,
-writes or resets one. Full-chip programming is a separate panel of the deck (and of the Tkinter window).
+writes or resets one. Full-chip programming is a separate panel of the deck.
 
 After a normal active CAN connection, the deck's **Board snapshot** action
 uses only documented query frames to collect the board version, CAN error
@@ -267,7 +267,6 @@ Documented directly in `run_cli()`'s own docstring in `urtc_flasher.py`:
 ## GUI
 
 Running `urtc_flasher.py` with no arguments (or double-clicking it) opens
-the default windowed Tkinter GUI instead — a 5-second splash, then the
-main window covering both the CAN-OTA update flow shown above and the
+the Qt Quick deck instead — the main window covering both the CAN-OTA update flow shown above and the
 GUI-only SWD/JTAG full-chip programming section, with a language
 selector (the CLI itself stays English-only).

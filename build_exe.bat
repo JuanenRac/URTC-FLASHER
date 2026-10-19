@@ -96,7 +96,7 @@ REM --hidden-import for each of this project's own modules: this file was
 REM split from one large urtc_flasher.py into several (flasher_config.py,
 REM flasher_transports.py, etc.) for readability. PyInstaller's static
 REM analyzer normally finds these on its own by walking the import tree,
-REM but flasher_gui is imported deferred (inside main(), only once --cli
+REM but qt_flasher is imported deferred (inside main(), only once --cli
 REM mode is ruled out) rather than at module level - listing every one
 REM explicitly here removes any doubt about whether that's caught.
 python -m PyInstaller --onefile --windowed --noconfirm --name "URTC_Flasher" ^
@@ -108,7 +108,9 @@ python -m PyInstaller --onefile --windowed --noconfirm --name "URTC_Flasher" ^
     --hidden-import flasher_validation ^
     --hidden-import flasher_protocol ^
     --hidden-import flasher_github ^
-    --hidden-import flasher_gui ^
+    --hidden-import flasher_records ^
+    --hidden-import flasher_integrity ^
+    --hidden-import urtc_ui ^
     --hidden-import qt_flasher ^
     --hidden-import PySide6.QtQml ^
     --hidden-import PySide6.QtQuick ^

@@ -42,8 +42,8 @@ def validate_firmware_file(path, expected_base_addr=None, max_size=None):
     """Returns (is_valid, reason_string, size_bytes). expected_base_addr/
     max_size default to the main board's own APP_FLASH_ADDR/APP_MAX_SIZE -
     pass the expansion slave's own SLAVE_APP_FLASH_ADDR/SLAVE_APP_MAX_SIZE
-    when the CAN-OTA target is the slave (see flash_target_var in
-    flasher_gui.py), otherwise a real URTC_SLAVE_APP.bin - which
+    when the CAN-OTA target is the slave (see flashTarget in
+    qt_flasher.py), otherwise a real URTC_SLAVE_APP.bin - which
     genuinely links at a different address (0x08005000, not this board's
     own 0x08008000, see flasher_config.py's own SLAVE_APP_FLASH_ADDR) -
     fails the reset-handler check below even though it's a perfectly

@@ -66,7 +66,7 @@ class URTCFlasher:
         # independent from progress_cb (rather than adding a second
         # positional/keyword argument to it) so every existing progress_cb
         # caller - including the ones already wired as single-argument
-        # `lambda pct: ...` in both the Tkinter panel and the Qt Quick deck -
+        # `lambda pct: ...` in the Qt Quick deck and the headless CLI -
         # keeps working unchanged; only callers that want the speed figure
         # need to pass this new callback.
         self.speed_cb = speed_cb or (lambda kbps: None)

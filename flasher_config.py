@@ -4,6 +4,7 @@
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 # GPL-3.0-or-later - see LICENSE
 # =============================================================================
+from urtc_ui import DEFAULT_LANGUAGE, LANGUAGES
 import sys
 import os
 import json
@@ -129,7 +130,7 @@ SLAVE_HARDWARE_ID = protocol.HARDWARE_ID_SLAVE  # STM32F303CBT6, expansion slave
 # --version given, or the file name), never a default - an invented one made every later official image look older to the anti-rollback check.
 
 # This tool's OWN version (shown in the banner and window title) - about the flasher script itself.
-FLASHER_VERSION = "0.3.4"
+FLASHER_VERSION = "0.3.5"
 FLASHER_AUTHOR = "JuanenRac"
 
 # --- HMAC signing keys: none by default ---
@@ -212,17 +213,7 @@ FIRMWARE_FOLDER = os.path.normpath(os.path.join(base_dir, "firmware"))
 LOGS_FOLDER = os.path.normpath(os.path.join(base_dir, "logs"))
 CONFIG_FILE_PATH = os.path.normpath(os.path.join(base_dir, "urtc_config.json"))
 LANGUAGE_FOLDER = os.path.normpath(os.path.join(base_dir, "language"))
-DEFAULT_LANGUAGE = "english"
-AVAILABLE_LANGUAGES = [
-    ("english", "English"),
-    ("spanish", "Español"),
-    ("italian", "Italiano"),
-    ("french", "Français"),
-    ("german", "Deutsch"),
-    ("chinese", "简体中文"),
-    ("japanese", "日本語"),
-    ("portuguese", "Português"),
-]
+AVAILABLE_LANGUAGES = list(LANGUAGES)  # the list every URTC program shares (urtc_ui)
 
 
 def load_config():
@@ -514,35 +505,8 @@ if getattr(sys, "frozen", False):
     _assets_base = getattr(sys, "_MEIPASS", base_dir)
 else:
     _assets_base = os.path.dirname(os.path.abspath(__file__))
-BANNER_IMAGE_PATH = os.path.normpath(os.path.join(_assets_base, "assets", "urtc_banner.png"))
 ICON_IMAGE_PATH = os.path.normpath(os.path.join(_assets_base, "assets", "urtc_icon.png"))
-HYDRA_UMC_ICON_FRAMES_DIR = os.path.normpath(
-    os.path.join(_assets_base, "assets", "hydra_umc_icon_frames")
-)
 
-
-def _center_geometry(win, width, height):
-    """Returns a "WxH+X+Y" geometry string centered on the screen - shared
-    by the splash, main window, and any popup (About/License) that wants
-    to be centered rather than placed wherever the window manager's
-    default happens to be. Uses the caller's own known target width/
-    height rather than winfo_width()/height(), which depend on the
-    window having already been fully realized/mapped by the window
-    manager - a real source of "it isn't actually centered" bugs if
-    queried too early, since those can still report a stale placeholder
-    size at that point. On a multi-monitor system, winfo_screenwidth()/
-    height() report the full virtual desktop Tkinter sees, not
-    necessarily one physical monitor - which is a Tkinter/Tk limitation
-    this can't fully work around without a platform-specific dependency,
-    but it's still correctly centered on that combined canvas, matching
-    what plain Tkinter apps generally do.
-    """
-    win.update_idletasks()
-    ws = win.winfo_screenwidth()
-    hs = win.winfo_screenheight()
-    x = max(0, (ws - width) // 2)
-    y = max(0, (hs - height) // 2)
-    return f"{width}x{height}+{x}+{y}"
 
 # Same 25 tool profiles as tester_config.py's own TOOL_NAMES - kept as a
 # separate copy rather than a shared import between the two tools' own
