@@ -1328,6 +1328,14 @@
       "name": "THERMAL_STATS_RESP"
     },
     {
+      "id": "0x1AC",
+      "name": "SET_MULTINODE"
+    },
+    {
+      "id": "0x1AD",
+      "name": "MULTINODE_CONFIG_RESP"
+    },
+    {
       "id": "0x1B0",
       "name": "ELECTROMAGNET_CMD"
     },
@@ -2151,6 +2159,59 @@
       "frame": {
         "id": "0x1AB",
         "data": "000200000E100101"
+      }
+    },
+    {
+      "name": "SET_MULTINODE request: switch on, instance 0",
+      "message": "SET_MULTINODE",
+      "layout": "set_multinode",
+      "fields": {
+        "magic": "4D4E4F44",
+        "enable": 1,
+        "instance": 0
+      },
+      "frame": {
+        "id": "0x1AC",
+        "data": "4D4E4F440100"
+      }
+    },
+    {
+      "name": "SET_MULTINODE request: switch off",
+      "message": "SET_MULTINODE",
+      "layout": "set_multinode",
+      "fields": {
+        "magic": "4D4E4F44",
+        "enable": 0,
+        "instance": 0
+      },
+      "frame": {
+        "id": "0x1AC",
+        "data": "4D4E4F440000"
+      }
+    },
+    {
+      "name": "MULTINODE_CONFIG_RESP request: empty query",
+      "message": "MULTINODE_CONFIG_RESP",
+      "layout": "multinode_config_resp_request",
+      "fields": {},
+      "frame": {
+        "id": "0x1AD",
+        "data": ""
+      }
+    },
+    {
+      "name": "MULTINODE_CONFIG_RESP response: stored on, not yet running, address 5",
+      "message": "MULTINODE_CONFIG_RESP",
+      "layout": "multinode_config_resp_response",
+      "fields": {
+        "stored": 1,
+        "running": 0,
+        "instance": 0,
+        "address": 5
+      },
+      "frame": {
+        "id": "0x1AD",
+        "data": "01000005"
       }
     },
     {
@@ -4208,6 +4269,101 @@
       "fields": null
     },
     {
+      "name": "SET_MULTINODE request: switch on, instance 0",
+      "message": "SET_MULTINODE",
+      "layout": "set_multinode",
+      "frame": {
+        "id": "0x1AC",
+        "data": "4D4E4F440100"
+      },
+      "fields": {
+        "magic": "4D4E4F44",
+        "enable": 1,
+        "instance": 0
+      }
+    },
+    {
+      "name": "SET_MULTINODE request: switch off",
+      "message": "SET_MULTINODE",
+      "layout": "set_multinode",
+      "frame": {
+        "id": "0x1AC",
+        "data": "4D4E4F440000"
+      },
+      "fields": {
+        "magic": "4D4E4F44",
+        "enable": 0,
+        "instance": 0
+      }
+    },
+    {
+      "name": "SET_MULTINODE request: 5 bytes is too short",
+      "message": "SET_MULTINODE",
+      "layout": "set_multinode",
+      "frame": {
+        "id": "0x1AC",
+        "data": "4D4E4F4401"
+      },
+      "fields": null
+    },
+    {
+      "name": "SET_MULTINODE request: one byte too many is refused when strict",
+      "message": "SET_MULTINODE",
+      "layout": "set_multinode",
+      "frame": {
+        "id": "0x1AC",
+        "data": "4D4E4F44010000"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "MULTINODE_CONFIG_RESP request: empty query",
+      "message": "MULTINODE_CONFIG_RESP",
+      "layout": "multinode_config_resp_request",
+      "frame": {
+        "id": "0x1AD",
+        "data": ""
+      },
+      "fields": {}
+    },
+    {
+      "name": "MULTINODE_CONFIG_RESP response: stored on, not yet running, address 5",
+      "message": "MULTINODE_CONFIG_RESP",
+      "layout": "multinode_config_resp_response",
+      "frame": {
+        "id": "0x1AD",
+        "data": "01000005"
+      },
+      "fields": {
+        "stored": 1,
+        "running": 0,
+        "instance": 0,
+        "address": 5
+      }
+    },
+    {
+      "name": "MULTINODE_CONFIG_RESP response: 3 bytes is too short",
+      "message": "MULTINODE_CONFIG_RESP",
+      "layout": "multinode_config_resp_response",
+      "frame": {
+        "id": "0x1AD",
+        "data": "010000"
+      },
+      "fields": null
+    },
+    {
+      "name": "MULTINODE_CONFIG_RESP response: one byte too many is refused when strict",
+      "message": "MULTINODE_CONFIG_RESP",
+      "layout": "multinode_config_resp_response",
+      "frame": {
+        "id": "0x1AD",
+        "data": "0100000500"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
       "name": "ELECTROMAGNET_CMD request: energise",
       "message": "ELECTROMAGNET_CMD",
       "layout": "electromagnet_cmd",
@@ -6014,6 +6170,59 @@
         "heater_on_seconds": 3600,
         "last_fault": 1,
         "persisted": 2
+      }
+    },
+    {
+      "name": "SET_MULTINODE: a payload that is not the magic one",
+      "message": "SET_MULTINODE",
+      "layout": "set_multinode",
+      "fields": {
+        "magic": "00000000",
+        "enable": 1,
+        "instance": 0
+      }
+    },
+    {
+      "name": "SET_MULTINODE: enable above its maximum",
+      "message": "SET_MULTINODE",
+      "layout": "set_multinode",
+      "fields": {
+        "magic": "4D4E4F44",
+        "enable": 2,
+        "instance": 0
+      }
+    },
+    {
+      "name": "MULTINODE_CONFIG_RESP: stored above its maximum",
+      "message": "MULTINODE_CONFIG_RESP",
+      "layout": "multinode_config_resp_response",
+      "fields": {
+        "stored": 2,
+        "running": 0,
+        "instance": 0,
+        "address": 5
+      }
+    },
+    {
+      "name": "MULTINODE_CONFIG_RESP: running above its maximum",
+      "message": "MULTINODE_CONFIG_RESP",
+      "layout": "multinode_config_resp_response",
+      "fields": {
+        "stored": 1,
+        "running": 2,
+        "instance": 0,
+        "address": 5
+      }
+    },
+    {
+      "name": "MULTINODE_CONFIG_RESP: address above its maximum",
+      "message": "MULTINODE_CONFIG_RESP",
+      "layout": "multinode_config_resp_response",
+      "fields": {
+        "stored": 1,
+        "running": 0,
+        "instance": 0,
+        "address": 32
       }
     },
     {

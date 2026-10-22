@@ -1,10 +1,10 @@
 {
   "format": 1,
-  "urtc_common_version": "0.0.2",
+  "urtc_common_version": "0.0.5",
   "files": {
     "can_conformance_vectors.json": {
       "from": "conformance/can_vectors.json",
-      "sha256": "e96c317d123176038bc316ab3cab61a42702c9f93e2320836c064541948c3d1c"
+      "sha256": "24a7fb121e03475defd0de3ca48b54193f0481ef7e6c3c6f674d1660f6d07d8f"
     }
   }
 }

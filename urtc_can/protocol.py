@@ -94,6 +94,8 @@ CAN_ID_BLACKBOX_QUERY = 0x1A8  # Request one chunk of the fault recorder
 CAN_ID_BLACKBOX_CHUNK = 0x1A9  # One chunk of the fault recorder
 CAN_ID_THERMAL_STATS_QUERY = 0x1AA  # Query the lifetime thermal counters
 CAN_ID_THERMAL_STATS_RESP = 0x1AB  # Lifetime thermal counters
+CAN_ID_SET_MULTINODE = 0x1AC  # Switch the multinode extension on or off (persistent, acts after the next power-up)
+CAN_ID_MULTINODE_CONFIG_RESP = 0x1AD  # The multinode switch: stored value, value in force, instance and node address
 CAN_ID_ELECTROMAGNET_CMD = 0x1B0  # Electromagnet coil
 CAN_ID_SPOT_WELD_CMD = 0x1C0  # Spot welder timed pulse
 CAN_ID_UV_CURING_CMD = 0x1D0  # UV curing LED duty
@@ -473,6 +475,8 @@ MESSAGES = {
     425: {'name': 'BLACKBOX_CHUNK', 'group': 'diagnostics', 'direction': 'board_to_host', 'handled_by': 'application', 'tools': None},
     426: {'name': 'THERMAL_STATS_QUERY', 'group': 'diagnostics', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': False}},
     427: {'name': 'THERMAL_STATS_RESP', 'group': 'diagnostics', 'direction': 'board_to_host', 'handled_by': 'application', 'tools': None},
+    428: {'name': 'SET_MULTINODE', 'group': 'configuration', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
+    429: {'name': 'MULTINODE_CONFIG_RESP', 'group': 'configuration', 'direction': 'both', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
     432: {'name': 'ELECTROMAGNET_CMD', 'group': 'electromagnet', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': [13], 'gates': {'blocked_by_critical_error': True, 'blocked_during_boot_sequence': True}},
     448: {'name': 'SPOT_WELD_CMD', 'group': 'welding', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': [14], 'gates': {'blocked_by_critical_error': True, 'blocked_during_boot_sequence': True}},
     464: {'name': 'UV_CURING_CMD', 'group': 'uv', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': [18], 'gates': {'blocked_by_critical_error': True, 'blocked_during_boot_sequence': True}, 'timing': {'watchdog_ms': 250}},
@@ -570,6 +574,9 @@ LAYOUTS = {
     'blackbox_chunk': {'id': 425, 'role': 'response', 'dlc': {'exact': 8}, 'fields': [{'name': 'data', 'type': 'bytes', 'offset': 0, 'length': 8}]},
     'thermal_stats_query': {'id': 426, 'role': 'request', 'dlc': {'any': True}, 'fields': []},
     'thermal_stats_resp': {'id': 427, 'role': 'response', 'dlc': {'exact': 8}, 'fields': [{'name': 'fault_count', 'type': 'u16', 'offset': 0, 'width': 2}, {'name': 'heater_on_seconds', 'type': 'u32', 'offset': 2, 'width': 4}, {'name': 'last_fault', 'type': 'u8', 'offset': 6, 'width': 1}, {'name': 'persisted', 'type': 'u8', 'offset': 7, 'width': 1, 'range': [0, 1]}]},
+    'set_multinode': {'id': 428, 'role': 'request', 'dlc': {'exact': 6}, 'fields': [{'name': 'magic', 'type': 'bytes', 'offset': 0, 'fixed': '4D4E4F44', 'length': 4}, {'name': 'enable', 'type': 'u8', 'offset': 4, 'width': 1, 'range': [0, 1]}, {'name': 'instance', 'type': 'u8', 'offset': 5, 'width': 1}]},
+    'multinode_config_resp_request': {'id': 429, 'role': 'request', 'dlc': {'any': True}, 'fields': []},
+    'multinode_config_resp_response': {'id': 429, 'role': 'response', 'dlc': {'exact': 4}, 'fields': [{'name': 'stored', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 1]}, {'name': 'running', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 1]}, {'name': 'instance', 'type': 'u8', 'offset': 2, 'width': 1}, {'name': 'address', 'type': 'u8', 'offset': 3, 'width': 1, 'range': [0, 31]}]},
     'electromagnet_cmd': {'id': 432, 'role': 'request', 'dlc': {'exact': 1}, 'fields': [{'name': 'coil', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 1]}]},
     'spot_weld_cmd': {'id': 448, 'role': 'request', 'dlc': {'exact': 3}, 'fields': [{'name': 'fire', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [1, 1]}, {'name': 'duration_ms', 'type': 'u16', 'offset': 1, 'width': 2, 'range': [1, 2000]}]},
     'uv_curing_cmd': {'id': 464, 'role': 'request', 'dlc': {'exact': 1}, 'fields': [{'name': 'duty', 'type': 'u8', 'offset': 0, 'width': 1}]},
@@ -1285,6 +1292,37 @@ def decode_thermal_stats_resp(data: bytes, strict: bool = False) -> dict | None:
     return decode("thermal_stats_resp", data, strict)
 
 
+def encode_set_multinode(enable: int, instance: int, magic: bytes | None = None) -> tuple[int, bytes]:
+    """Switch the multinode extension on or off (persistent, acts after the next power-up) (0x1AC, request)."""
+    values = {k: v for k, v in dict(enable=enable, instance=instance, magic=magic).items() if v is not None}
+    return encode("set_multinode", **values)
+
+
+def decode_set_multinode(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x1AC (request), or None when the payload is too short."""
+    return decode("set_multinode", data, strict)
+
+
+def encode_multinode_config_resp_request() -> tuple[int, bytes]:
+    """The multinode switch: stored value, value in force, instance and node address: the frame the host sends (0x1AD)."""
+    return encode("multinode_config_resp_request")
+
+
+def decode_multinode_config_resp_request(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x1AD (request), or None when the payload is too short."""
+    return decode("multinode_config_resp_request", data, strict)
+
+
+def encode_multinode_config_resp_response(stored: int, running: int, instance: int, address: int) -> tuple[int, bytes]:
+    """The multinode switch: stored value, value in force, instance and node address (0x1AD, response)."""
+    return encode("multinode_config_resp_response", stored=stored, running=running, instance=instance, address=address)
+
+
+def decode_multinode_config_resp_response(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x1AD (response), or None when the payload is too short."""
+    return decode("multinode_config_resp_response", data, strict)
+
+
 def encode_electromagnet_cmd(coil: int) -> tuple[int, bytes]:
     """Electromagnet coil (0x1B0, request)."""
     return encode("electromagnet_cmd", coil=coil)
@@ -1851,7 +1889,7 @@ def decode_readback_page_ack(data: bytes, strict: bool = False) -> dict | None:
 
 
 # ---------------------------------------------------------------------------
-# multinode extension (designed not implemented in firmware): see docs/MULTINODE.md
+# multinode extension (implemented in the firmware behind a switch that is off by default, tested on the host only): see docs/MULTINODE.md
 # ---------------------------------------------------------------------------
 MN_VERSION = 1  # Multinode extension version carried by the discovery frames
 MN_ADDRESS_BITS = 5  # Bits of the node address
@@ -1861,6 +1899,7 @@ MN_STATUS_PERIOD_MS = 0x3E8  # Period of the per-node status frame (ms)
 MN_DISCOVER_SLOT_MS = 2  # Default spacing of the discovery answers: a node answers after its address times this (ms)
 MN_NODE_TIMEOUT_MS = 0xDAC  # A node that sent no status frame for this long is treated as gone (ms)
 MN_SELECT_TIMEOUT_MS = 0x7D0  # A selection lapses unless the host repeats it within this time (ms)
+MN_LEGACY_LISTEN_MS = 0x5DC  # A node listens this long after start for other nodes before it behaves as the one head on the bus (ms)
 MN_CMD_ARGS_MAX = 6  # Argument bytes that fit in a node-addressed command (bytes)
 MN_STATE_SELECTED = 0x01  # This node is the selected (active) node
 MN_STATE_FAULT = 0x02  # A fault is latched on this node

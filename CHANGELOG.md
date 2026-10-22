@@ -20,6 +20,10 @@ increments instead (e.g. `0.1.9` -> `0.2.0`), and the same carry applies
 from `MINOR` into `MAJOR`. Running the tool from source (not through a
 build script) never changes the version - only a real build does.
 
+## [Unreleased]
+
+- The copies of the CAN protocol module and of the conformance vectors follow URTC-COMMON 0.0.5, so the tool carries the multinode extension of the protocol that the firmware already speaks.
+
 ## [0.3.6] - Follow URTC-COMMON 0.0.5 and the 0.3.8 firmware
 
 - The 0.3.8 firmware images (with the multinode switch, off by default) are bundled, and the shared protocol and widget copies follow URTC-COMMON 0.0.5.
