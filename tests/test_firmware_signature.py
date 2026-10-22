@@ -28,13 +28,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 class _RecordingCAN(MockCAN):
-    def __init__(self):
-        super().__init__()
-        self.sent = []
-
-    def send_frame(self, can_id, data):
-        self.sent.append((can_id, bytes(data)))
-        return super().send_frame(can_id, data)
+    """The simulated board already records every frame it is sent, in ``sent``."""
 
 
 class _ExplodingCAN:

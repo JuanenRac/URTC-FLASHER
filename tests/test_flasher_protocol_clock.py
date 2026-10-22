@@ -48,7 +48,7 @@ def test_wait_for_timeout_never_reads_the_civil_clock(monkeypatch):
 def test_wait_for_success_path_never_reads_the_civil_clock(monkeypatch):
     _time_time_forbidden(monkeypatch)
     can = MockCAN()
-    can._response_queue.append((0x321, b"\x01\x02"))
+    can._queue.append((0x321, b"\x01\x02"))
     flasher = URTCFlasher(can, log=lambda msg: None)
 
     data = flasher._wait_for(0x321, timeout=1.0)

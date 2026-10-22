@@ -23,6 +23,10 @@ build script) never changes the version - only a real build does.
 ## [Unreleased]
 
 - The banner follows the animated style of the ecosystem banners, with the name, the kind and the technologies of the project.
+- **The CAN transports (SLCAN, SocketCAN, python-can, the simulated board and the bitrate listen-only detection) now come from the shared module** copied into `urtc_can/` (with the framing, SLCAN codec, versioning, quick-state and conformance helpers), so a fix made once in URTC-COMMON applies here too. `flasher_transports.py` keeps its name and only adds what is specific to this program: SocketCAN warnings said in the language of the window and the serial port taken from this module's `serial`. The shared SLCAN keeps writes from two threads apart, clears stale input when the channel opens and turns a failed serial write into a typed error; a channel opened listen-only refuses to transmit.
+- The eight copies of shared modules that sat unused at the top of the repository (they could not be imported there) are gone; the one lock file for the shared modules is `urtc_can/urtc_common.lock.json`, and the test that checks the copies are not behind URTC-COMMON now covers every file in it.
+- The tests that built an SLCAN object by hand or read the simulated board's internals now go through the public classes (`serial_module` for a fake port, the board's own `sent` list).
+- The test count in the README matches the test suite.
 ## [0.3.7] - Follow URTC-COMMON 0.0.5 and keep only the language entries the Qt window uses
 
 - The copies of the CAN protocol module and of the conformance vectors follow URTC-COMMON 0.0.5, so the tool carries the multinode extension of the protocol that the firmware already speaks.

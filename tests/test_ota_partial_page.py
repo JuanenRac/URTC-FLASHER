@@ -37,11 +37,11 @@ class _Recorder(MockCAN):
         self.events = []
 
     def send_frame(self, can_id, data):
-        before = len(self._response_queue)
+        before = len(self._queue)
         super().send_frame(can_id, data)
         if can_id == CAN_ID_END_UPDATE:
             self.events.append("end_update_sent")
-        for can_id_out, payload in self._response_queue[before:]:
+        for can_id_out, payload in self._queue[before:]:
             if can_id_out == CAN_ID_PAGE_ACK:
                 self.events.append(("ack", struct.unpack(">I", payload[:4])[0]))
 
@@ -65,8 +65,8 @@ def test_an_image_of_any_size_is_flashed_against_a_bootloader_that_acknowledges_
 def test_the_simulated_bootloader_does_not_acknowledge_a_partial_page_before_the_end():
     can = MockCAN()
     can.send_frame(0x7F1, struct.pack(">II", FLASH_PAGE_SIZE + 10, 0))
-    queued_before = len(can._response_queue)
+    queued_before = len(can._queue)
     for _ in range((FLASH_PAGE_SIZE + 10 + 7) // 8):
         can.send_frame(0x7F2, b"\x01" * 8)
-    acked = [struct.unpack(">I", payload[:4])[0] for can_id, payload in can._response_queue[queued_before:] if can_id == CAN_ID_PAGE_ACK]
+    acked = [struct.unpack(">I", payload[:4])[0] for can_id, payload in can._queue[queued_before:] if can_id == CAN_ID_PAGE_ACK]
     assert acked == [0], "only the full page 0 is acknowledged while the data arrives"
