@@ -1,24 +1,6 @@
 # Changelog
 
-All notable changes to URTC Flasher are summarized here. This file tracks
-**this tool's own version** (`FLASHER_VERSION` in `flasher_config.py`, shown
-in the window title bar and the Help > About dialog) - it is tracked
-separately from the URTC board firmware version this tool writes to a
-connected board.
-
-This is a condensed summary of real development history.
-
-## Versioning scheme
-
-Starting with this entry, `FLASHER_VERSION` follows an ecosystem-wide
-`MAJOR.MINOR.PATCH` scheme (three parts, always). `PATCH` increments by 1
-automatically on every real packaged build (`build_exe.bat` on Windows,
-`build_exe.sh` on Linux) via `bump_version.py`, which both scripts now run
-right before invoking PyInstaller. The increment is an odometer-style
-base-10 carry: if `PATCH` would go past 9 it resets to 0 and `MINOR`
-increments instead (e.g. `0.1.9` -> `0.2.0`), and the same carry applies
-from `MINOR` into `MAJOR`. Running the tool from source (not through a
-build script) never changes the version - only a real build does.
+All notable changes to this project are documented here.
 
 ## [0.3.8] - Firmware from the signed release, shared CAN transports and the safe-side settings
 
@@ -499,8 +481,7 @@ PASS) and `python -m pytest tests/` (4/4 PASS).
 ### Added
 - Ecosystem-wide build-versioning policy: `FLASHER_VERSION` normalized from
   the old two-part `"0.1"` to the three-part `"0.1.0"`, and `bump_version.py`
-  added to auto-increment it on every real build (see "Versioning scheme"
-  above). Wired into both `build_exe.bat` and `build_exe.sh` as a new step
+  added to auto-increment it on every real build. Wired into both `build_exe.bat` and `build_exe.sh` as a new step
   right before compiling.
 - This CHANGELOG.md.
 
