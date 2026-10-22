@@ -14,10 +14,11 @@
   ],
   "deployment_target": "user-pc",
   "maturity": "functional",
+  "evidence": "simulator",
   "family": "URTC Tool Platform",
   "parent": "URTC",
   "build": "Standalone Python desktop tool. pip install -r requirements.txt; the Qt Quick deck starts with no arguments, --cli is the headless update.",
-  "notes": "GUI flashing tool (CAN-OTA + full-chip SWD/JTAG), exercised only against a simulated bootloader (MockCAN), never against a real board. The Qt Quick deck is the only window: CAN-OTA update of the main board or the expansion slave (with the downgrade authorisation, F-RAM erase and CAN backup of the running firmware), bit-rate selector and listen-only search, GitHub release download, bus-activity check, Board Snapshot, the 4 device-configuration writes, read-only SWD/JTAG discovery and full-chip SWD/JTAG programming. flasher_protocol.py's deadline/duration math uses time.monotonic() throughout, not the civil clock, so an NTP sync or manual clock change mid-flash can never shorten or lengthen a real timeout.",
+  "notes": "GUI flashing tool (CAN-OTA + full-chip SWD/JTAG), exercised only against a simulated bootloader (MockCAN), never against a real board. The Qt Quick deck is the only window: CAN-OTA update of the main board or the expansion slave (with the downgrade authorisation, F-RAM erase and CAN backup of the running firmware), bit-rate selector and listen-only search, GitHub release download, bus-activity check, Board Snapshot, the device-configuration writes, read-only SWD/JTAG discovery and full-chip SWD/JTAG programming. Deadlines use time.monotonic(), not the civil clock, so a clock change mid-flash cannot shorten or lengthen a timeout.",
   "native_version": {
     "file": "flasher_config.py",
     "pattern": "FLASHER_VERSION\\s*=\\s*\"(\\d+)\\.(\\d+)\\.(\\d+)\""

@@ -23,6 +23,9 @@ build script) never changes the version - only a real build does.
 ## [Unreleased]
 
 - The copies of the CAN protocol module and of the conformance vectors follow URTC-COMMON 0.0.5, so the tool carries the multinode extension of the protocol that the firmware already speaks.
+- The language files no longer carry the entries that only the retired window used (160 per language); the entries the code builds from a prefix are kept.
+- The manifest declares how far the project has been shown to work (`evidence`: simulator) and `tools/ci_validate.py` checks the value.
+- The manifest notes are shorter.
 
 ## [0.3.6] - Follow URTC-COMMON 0.0.5 and the 0.3.8 firmware
 
