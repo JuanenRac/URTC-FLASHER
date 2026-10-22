@@ -96,7 +96,12 @@ CAN_ID_THERMAL_STATS_QUERY = 0x1AA  # Query the lifetime thermal counters
 CAN_ID_THERMAL_STATS_RESP = 0x1AB  # Lifetime thermal counters
 CAN_ID_SET_MULTINODE = 0x1AC  # Switch the multinode extension on or off (persistent, acts after the next power-up)
 CAN_ID_MULTINODE_CONFIG_RESP = 0x1AD  # The multinode switch: stored value, value in force, instance and node address
+CAN_ID_SET_FEATURES = 0x1AE  # Switch the optional firmware features on or off (persistent, acts after the next power-up)
+CAN_ID_FEATURES_RESP = 0x1AF  # The optional firmware features: stored mask, mask in force and supported mask
 CAN_ID_ELECTROMAGNET_CMD = 0x1B0  # Electromagnet coil
+CAN_ID_HEALTH_PROFILE = 0x1B8  # Periodic health frame of the board (only while the health feature runs)
+CAN_ID_PID_CONFIG = 0x1B9  # Gains of the heater PID and start of its relay autotune
+CAN_ID_PID_STATE_RESP = 0x1BA  # The heater PID: gains in force, state and output
 CAN_ID_SPOT_WELD_CMD = 0x1C0  # Spot welder timed pulse
 CAN_ID_UV_CURING_CMD = 0x1D0  # UV curing LED duty
 CAN_ID_HOTAIR_CMD = 0x1E0  # Hot-air nozzle setpoint and blower duty
@@ -258,6 +263,30 @@ VERSION_FLAG_END_UPDATE_PATCH = 0x01
 # Impact register
 IMPACT_IMPACT = 0x01
 
+# Optional firmware features (each one is off until switched on)
+FEATURE_MOTION_RAMPS = 0x01
+FEATURE_HEALTH_PROFILE = 0x02
+FEATURE_HSI_AUTOTRIM = 0x04
+FEATURE_THERMAL_PID = 0x08
+
+# Speed profile of a stepper move
+MOTION_PROFILE_CONSTANT = 0x00
+MOTION_PROFILE_TRAPEZOID = 0x01
+MOTION_PROFILE_S_CURVE = 0x02
+
+# What a PID configuration frame asks
+PID_ACTION_SET_GAINS = 0x00
+PID_ACTION_AUTOTUNE_START = 0x01
+PID_ACTION_AUTOTUNE_ABORT = 0x02
+PID_ACTION_QUERY = 0x03
+
+# State of the heater PID
+PID_STATE_OFF = 0x00
+PID_STATE_RUNNING = 0x01
+PID_STATE_AUTOTUNING = 0x02
+PID_STATE_AUTOTUNE_DONE = 0x03
+PID_STATE_AUTOTUNE_FAILED = 0x04
+
 ENUM_NAMES = {'tool': {0: 'SOLDERING_IRON',
           1: 'PASTE_DISPENSER',
           2: 'LIQUID_DISPENSER',
@@ -311,7 +340,11 @@ ENUM_NAMES = {'tool': {0: 'SOLDERING_IRON',
  'drill_direction': {1: 'COUNTER_CLOCKWISE', 0: 'CLOCKWISE'},
  'extruder_direction': {1: 'FORWARD', 0: 'RETRACT'},
  'version_flags': {1: 'END_UPDATE_PATCH'},
- 'impact_event': {1: 'IMPACT'}}
+ 'impact_event': {1: 'IMPACT'},
+ 'firmware_feature': {1: 'MOTION_RAMPS', 2: 'HEALTH_PROFILE', 4: 'HSI_AUTOTRIM', 8: 'THERMAL_PID'},
+ 'motion_profile': {0: 'CONSTANT', 1: 'TRAPEZOID', 2: 'S_CURVE'},
+ 'pid_action': {0: 'SET_GAINS', 1: 'AUTOTUNE_START', 2: 'AUTOTUNE_ABORT', 3: 'QUERY'},
+ 'pid_state': {0: 'OFF', 1: 'RUNNING', 2: 'AUTOTUNING', 3: 'AUTOTUNE_DONE', 4: 'AUTOTUNE_FAILED'}}
 ENUM_TITLES = {'tool': {0: 'Soldering Iron',
           1: 'Paste Dispenser',
           2: 'Liquid Dispenser',
@@ -381,7 +414,23 @@ ENUM_TITLES = {'tool': {0: 'Soldering Iron',
  'drill_direction': {1: 'Counter-clockwise (FRIN high)', 0: 'Clockwise (FRIN low)'},
  'extruder_direction': {1: 'Forward', 0: 'Retract'},
  'version_flags': {1: 'This bootloader reads the patch from the minor field of the end-of-update frame'},
- 'impact_event': {1: 'Impact detected'}}
+ 'impact_event': {1: 'Impact detected'},
+ 'firmware_feature': {1: 'Trapezoidal and S-curve ramps for the stepper',
+                      2: 'Periodic health frame of the board',
+                      4: 'Trim of the internal oscillator against the CAN bit time',
+                      8: 'PID with anti-windup and relay autotune for the heaters'},
+ 'motion_profile': {0: 'Constant speed (the behaviour without the ramps feature)',
+                    1: 'Trapezoidal: constant acceleration, cruise, constant deceleration',
+                    2: 'S-curve: the acceleration itself ramps up and down'},
+ 'pid_action': {0: 'Store the gains in the frame',
+                1: 'Start the relay autotune around the current setpoint',
+                2: 'Abort a running autotune',
+                3: 'Change nothing, answer with the state'},
+ 'pid_state': {0: 'The feature is not running (bang-bang control)',
+               1: 'PID control',
+               2: 'Relay autotune in progress',
+               3: 'Autotune finished and the gains were stored',
+               4: 'Autotune gave up; the previous gains are kept'}}
 TOOL_NAMES = ENUM_TITLES["tool"]
 
 # --- magic payloads: a destructive or one-shot command is only obeyed with exactly these four bytes ---
@@ -477,7 +526,12 @@ MESSAGES = {
     427: {'name': 'THERMAL_STATS_RESP', 'group': 'diagnostics', 'direction': 'board_to_host', 'handled_by': 'application', 'tools': None},
     428: {'name': 'SET_MULTINODE', 'group': 'configuration', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
     429: {'name': 'MULTINODE_CONFIG_RESP', 'group': 'configuration', 'direction': 'both', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
+    430: {'name': 'SET_FEATURES', 'group': 'configuration', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
+    431: {'name': 'FEATURES_RESP', 'group': 'configuration', 'direction': 'both', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
     432: {'name': 'ELECTROMAGNET_CMD', 'group': 'electromagnet', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': [13], 'gates': {'blocked_by_critical_error': True, 'blocked_during_boot_sequence': True}},
+    440: {'name': 'HEALTH_PROFILE', 'group': 'diagnostics', 'direction': 'board_to_host', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': False}, 'timing': {'period_ms': 1000}},
+    441: {'name': 'PID_CONFIG', 'group': 'configuration', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
+    442: {'name': 'PID_STATE_RESP', 'group': 'configuration', 'direction': 'both', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
     448: {'name': 'SPOT_WELD_CMD', 'group': 'welding', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': [14], 'gates': {'blocked_by_critical_error': True, 'blocked_during_boot_sequence': True}},
     464: {'name': 'UV_CURING_CMD', 'group': 'uv', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': [18], 'gates': {'blocked_by_critical_error': True, 'blocked_during_boot_sequence': True}, 'timing': {'watchdog_ms': 250}},
     480: {'name': 'HOTAIR_CMD', 'group': 'hotair', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': [19], 'gates': {'blocked_by_critical_error': True, 'blocked_during_boot_sequence': True}, 'timing': {'watchdog_ms': 250}},
@@ -532,7 +586,7 @@ LAYOUTS = {
     'global_status': {'id': 256, 'role': 'request', 'dlc': {'exact': 8}, 'fields': [{'name': 'status_r', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'status_g', 'type': 'u8', 'offset': 1, 'width': 1}, {'name': 'status_b', 'type': 'u8', 'offset': 2, 'width': 1}, {'name': 'display_mode', 'type': 'u8', 'offset': 3, 'width': 1, 'allowed': [0, 1, 15]}, {'name': 'ring_r', 'type': 'u8', 'offset': 4, 'width': 1}, {'name': 'ring_g', 'type': 'u8', 'offset': 5, 'width': 1}, {'name': 'ring_b', 'type': 'u8', 'offset': 6, 'width': 1}, {'name': 'ring_on', 'type': 'u8', 'offset': 7, 'width': 1, 'range': [0, 1]}]},
     'query_active_tool': {'id': 272, 'role': 'request', 'dlc': {'any': True}, 'fields': []},
     'active_tool_resp': {'id': 273, 'role': 'response', 'dlc': {'min': 4, 'max': 6}, 'fields': [{'name': 'tool_id', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'system_error', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 1]}, {'name': 'can_error', 'type': 'u8', 'offset': 2, 'width': 1, 'range': [0, 1]}, {'name': 'booting', 'type': 'u8', 'offset': 3, 'width': 1, 'range': [0, 1]}, {'name': 'thermal_fault', 'type': 'u8', 'offset': 4, 'width': 1, 'optional': True}, {'name': 'reset_cause', 'type': 'u8', 'offset': 5, 'width': 1, 'optional': True}]},
-    'motion_cmd': {'id': 288, 'role': 'request', 'dlc': {'exact': 5}, 'fields': [{'name': 'direction', 'type': 'u8', 'offset': 0, 'width': 1, 'allowed': [1, 0]}, {'name': 'steps', 'type': 'u32', 'offset': 1, 'width': 4}]},
+    'motion_cmd': {'id': 288, 'role': 'request', 'dlc': {'min': 5, 'max': 8}, 'fields': [{'name': 'direction', 'type': 'u8', 'offset': 0, 'width': 1, 'allowed': [1, 0]}, {'name': 'steps', 'type': 'u32', 'offset': 1, 'width': 4}, {'name': 'speed', 'type': 'u16', 'offset': 5, 'width': 2, 'optional': True, 'present_from_dlc': 8}, {'name': 'profile', 'type': 'u8', 'offset': 7, 'width': 1, 'optional': True, 'present_from_dlc': 8}]},
     'solder_setpoint': {'id': 304, 'role': 'request', 'dlc': {'exact': 2}, 'fields': [{'name': 'setpoint_c', 'type': 'u16', 'offset': 0, 'width': 2, 'range': [0, 445]}]},
     'solder_feeder_reset': {'id': 305, 'role': 'request', 'dlc': {'exact': 4}, 'fields': [{'name': 'magic', 'type': 'bytes', 'offset': 0, 'fixed': '52535030', 'length': 4}]},
     'solder_feeder_pos_request': {'id': 306, 'role': 'request', 'dlc': {'any': True}, 'fields': []},
@@ -577,7 +631,14 @@ LAYOUTS = {
     'set_multinode': {'id': 428, 'role': 'request', 'dlc': {'exact': 6}, 'fields': [{'name': 'magic', 'type': 'bytes', 'offset': 0, 'fixed': '4D4E4F44', 'length': 4}, {'name': 'enable', 'type': 'u8', 'offset': 4, 'width': 1, 'range': [0, 1]}, {'name': 'instance', 'type': 'u8', 'offset': 5, 'width': 1}]},
     'multinode_config_resp_request': {'id': 429, 'role': 'request', 'dlc': {'any': True}, 'fields': []},
     'multinode_config_resp_response': {'id': 429, 'role': 'response', 'dlc': {'exact': 4}, 'fields': [{'name': 'stored', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 1]}, {'name': 'running', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 1]}, {'name': 'instance', 'type': 'u8', 'offset': 2, 'width': 1}, {'name': 'address', 'type': 'u8', 'offset': 3, 'width': 1, 'range': [0, 31]}]},
+    'set_features': {'id': 430, 'role': 'request', 'dlc': {'exact': 5}, 'fields': [{'name': 'magic', 'type': 'bytes', 'offset': 0, 'fixed': '46454154', 'length': 4}, {'name': 'features', 'type': 'u8', 'offset': 4, 'width': 1, 'range': [0, 15]}]},
+    'features_resp_request': {'id': 431, 'role': 'request', 'dlc': {'any': True}, 'fields': []},
+    'features_resp_response': {'id': 431, 'role': 'response', 'dlc': {'exact': 3}, 'fields': [{'name': 'stored', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 15]}, {'name': 'running', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 15]}, {'name': 'supported', 'type': 'u8', 'offset': 2, 'width': 1, 'range': [0, 15]}]},
     'electromagnet_cmd': {'id': 432, 'role': 'request', 'dlc': {'exact': 1}, 'fields': [{'name': 'coil', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 1]}]},
+    'health_profile': {'id': 440, 'role': 'response', 'dlc': {'exact': 8}, 'fields': [{'name': 'tec', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'rec', 'type': 'u8', 'offset': 1, 'width': 1}, {'name': 'bus_off_count', 'type': 'u8', 'offset': 2, 'width': 1}, {'name': 'hsi_trim', 'type': 'u8', 'offset': 3, 'width': 1}, {'name': 'loop_max_ms', 'type': 'u8', 'offset': 4, 'width': 1}, {'name': 'mcu_temp_plus_40', 'type': 'u8', 'offset': 5, 'width': 1}, {'name': 'vdda_mv', 'type': 'u16', 'offset': 6, 'width': 2}]},
+    'pid_config': {'id': 441, 'role': 'request', 'dlc': {'exact': 7}, 'fields': [{'name': 'kp_x100', 'type': 'u16', 'offset': 0, 'width': 2}, {'name': 'ki_x100', 'type': 'u16', 'offset': 2, 'width': 2}, {'name': 'kd_x100', 'type': 'u16', 'offset': 4, 'width': 2}, {'name': 'action', 'type': 'u8', 'offset': 6, 'width': 1, 'allowed': [0, 1, 2, 3]}]},
+    'pid_state_resp_request': {'id': 442, 'role': 'request', 'dlc': {'any': True}, 'fields': []},
+    'pid_state_resp_response': {'id': 442, 'role': 'response', 'dlc': {'exact': 8}, 'fields': [{'name': 'kp_x100', 'type': 'u16', 'offset': 0, 'width': 2}, {'name': 'ki_x100', 'type': 'u16', 'offset': 2, 'width': 2}, {'name': 'kd_x100', 'type': 'u16', 'offset': 4, 'width': 2}, {'name': 'state', 'type': 'u8', 'offset': 6, 'width': 1}, {'name': 'duty_percent', 'type': 'u8', 'offset': 7, 'width': 1, 'range': [0, 100]}]},
     'spot_weld_cmd': {'id': 448, 'role': 'request', 'dlc': {'exact': 3}, 'fields': [{'name': 'fire', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [1, 1]}, {'name': 'duration_ms', 'type': 'u16', 'offset': 1, 'width': 2, 'range': [1, 2000]}]},
     'uv_curing_cmd': {'id': 464, 'role': 'request', 'dlc': {'exact': 1}, 'fields': [{'name': 'duty', 'type': 'u8', 'offset': 0, 'width': 1}]},
     'hotair_cmd': {'id': 480, 'role': 'request', 'dlc': {'exact': 3}, 'fields': [{'name': 'setpoint_c', 'type': 'u16', 'offset': 0, 'width': 2, 'range': [0, 445]}, {'name': 'blower_duty', 'type': 'u8', 'offset': 2, 'width': 1}]},
@@ -870,9 +931,10 @@ def decode_active_tool_resp(data: bytes, strict: bool = False) -> dict | None:
     return decode("active_tool_resp", data, strict)
 
 
-def encode_motion_cmd(direction: int, steps: int) -> tuple[int, bytes]:
+def encode_motion_cmd(direction: int, steps: int, speed: int | None = None, profile: int | None = None) -> tuple[int, bytes]:
     """Plain stepper move (direction and step count) (0x120, request)."""
-    return encode("motion_cmd", direction=direction, steps=steps)
+    values = {k: v for k, v in dict(direction=direction, steps=steps, speed=speed, profile=profile).items() if v is not None}
+    return encode("motion_cmd", **values)
 
 
 def decode_motion_cmd(data: bytes, strict: bool = False) -> dict | None:
@@ -1323,6 +1385,37 @@ def decode_multinode_config_resp_response(data: bytes, strict: bool = False) -> 
     return decode("multinode_config_resp_response", data, strict)
 
 
+def encode_set_features(features: int, magic: bytes | None = None) -> tuple[int, bytes]:
+    """Switch the optional firmware features on or off (persistent, acts after the next power-up) (0x1AE, request)."""
+    values = {k: v for k, v in dict(features=features, magic=magic).items() if v is not None}
+    return encode("set_features", **values)
+
+
+def decode_set_features(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x1AE (request), or None when the payload is too short."""
+    return decode("set_features", data, strict)
+
+
+def encode_features_resp_request() -> tuple[int, bytes]:
+    """The optional firmware features: stored mask, mask in force and supported mask: the frame the host sends (0x1AF)."""
+    return encode("features_resp_request")
+
+
+def decode_features_resp_request(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x1AF (request), or None when the payload is too short."""
+    return decode("features_resp_request", data, strict)
+
+
+def encode_features_resp_response(stored: int, running: int, supported: int) -> tuple[int, bytes]:
+    """The optional firmware features: stored mask, mask in force and supported mask (0x1AF, response)."""
+    return encode("features_resp_response", stored=stored, running=running, supported=supported)
+
+
+def decode_features_resp_response(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x1AF (response), or None when the payload is too short."""
+    return decode("features_resp_response", data, strict)
+
+
 def encode_electromagnet_cmd(coil: int) -> tuple[int, bytes]:
     """Electromagnet coil (0x1B0, request)."""
     return encode("electromagnet_cmd", coil=coil)
@@ -1331,6 +1424,46 @@ def encode_electromagnet_cmd(coil: int) -> tuple[int, bytes]:
 def decode_electromagnet_cmd(data: bytes, strict: bool = False) -> dict | None:
     """Fields of 0x1B0 (request), or None when the payload is too short."""
     return decode("electromagnet_cmd", data, strict)
+
+
+def encode_health_profile(tec: int, rec: int, bus_off_count: int, hsi_trim: int, loop_max_ms: int, mcu_temp_plus_40: int, vdda_mv: int) -> tuple[int, bytes]:
+    """Periodic health frame of the board (only while the health feature runs) (0x1B8, response)."""
+    return encode("health_profile", tec=tec, rec=rec, bus_off_count=bus_off_count, hsi_trim=hsi_trim, loop_max_ms=loop_max_ms, mcu_temp_plus_40=mcu_temp_plus_40, vdda_mv=vdda_mv)
+
+
+def decode_health_profile(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x1B8 (response), or None when the payload is too short."""
+    return decode("health_profile", data, strict)
+
+
+def encode_pid_config(kp_x100: int, ki_x100: int, kd_x100: int, action: int) -> tuple[int, bytes]:
+    """Gains of the heater PID and start of its relay autotune (0x1B9, request)."""
+    return encode("pid_config", kp_x100=kp_x100, ki_x100=ki_x100, kd_x100=kd_x100, action=action)
+
+
+def decode_pid_config(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x1B9 (request), or None when the payload is too short."""
+    return decode("pid_config", data, strict)
+
+
+def encode_pid_state_resp_request() -> tuple[int, bytes]:
+    """The heater PID: gains in force, state and output: the frame the host sends (0x1BA)."""
+    return encode("pid_state_resp_request")
+
+
+def decode_pid_state_resp_request(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x1BA (request), or None when the payload is too short."""
+    return decode("pid_state_resp_request", data, strict)
+
+
+def encode_pid_state_resp_response(kp_x100: int, ki_x100: int, kd_x100: int, state: int, duty_percent: int) -> tuple[int, bytes]:
+    """The heater PID: gains in force, state and output (0x1BA, response)."""
+    return encode("pid_state_resp_response", kp_x100=kp_x100, ki_x100=ki_x100, kd_x100=kd_x100, state=state, duty_percent=duty_percent)
+
+
+def decode_pid_state_resp_response(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x1BA (response), or None when the payload is too short."""
+    return decode("pid_state_resp_response", data, strict)
 
 
 def encode_spot_weld_cmd(fire: int, duration_ms: int) -> tuple[int, bytes]:

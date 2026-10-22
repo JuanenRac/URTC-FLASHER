@@ -1336,8 +1336,28 @@
       "name": "MULTINODE_CONFIG_RESP"
     },
     {
+      "id": "0x1AE",
+      "name": "SET_FEATURES"
+    },
+    {
+      "id": "0x1AF",
+      "name": "FEATURES_RESP"
+    },
+    {
       "id": "0x1B0",
       "name": "ELECTROMAGNET_CMD"
+    },
+    {
+      "id": "0x1B8",
+      "name": "HEALTH_PROFILE"
+    },
+    {
+      "id": "0x1B9",
+      "name": "PID_CONFIG"
+    },
+    {
+      "id": "0x1BA",
+      "name": "PID_STATE_RESP"
     },
     {
       "id": "0x1C0",
@@ -1626,6 +1646,21 @@
       "frame": {
         "id": "0x120",
         "data": "0000000000"
+      }
+    },
+    {
+      "name": "MOTION_CMD request: forward 1000 steps, 800 steps/s, S-curve",
+      "message": "MOTION_CMD",
+      "layout": "motion_cmd",
+      "fields": {
+        "direction": 1,
+        "steps": 1000,
+        "speed": 800,
+        "profile": 2
+      },
+      "frame": {
+        "id": "0x120",
+        "data": "01000003E8032002"
       }
     },
     {
@@ -2215,6 +2250,56 @@
       }
     },
     {
+      "name": "SET_FEATURES request: all off",
+      "message": "SET_FEATURES",
+      "layout": "set_features",
+      "fields": {
+        "magic": "46454154",
+        "features": 0
+      },
+      "frame": {
+        "id": "0x1AE",
+        "data": "4645415400"
+      }
+    },
+    {
+      "name": "SET_FEATURES request: health frame and PID on",
+      "message": "SET_FEATURES",
+      "layout": "set_features",
+      "fields": {
+        "magic": "46454154",
+        "features": 10
+      },
+      "frame": {
+        "id": "0x1AE",
+        "data": "464541540A"
+      }
+    },
+    {
+      "name": "FEATURES_RESP request: empty query",
+      "message": "FEATURES_RESP",
+      "layout": "features_resp_request",
+      "fields": {},
+      "frame": {
+        "id": "0x1AF",
+        "data": ""
+      }
+    },
+    {
+      "name": "FEATURES_RESP response: health on, stored but not yet running",
+      "message": "FEATURES_RESP",
+      "layout": "features_resp_response",
+      "fields": {
+        "stored": 2,
+        "running": 0,
+        "supported": 15
+      },
+      "frame": {
+        "id": "0x1AF",
+        "data": "02000F"
+      }
+    },
+    {
       "name": "ELECTROMAGNET_CMD request: energise",
       "message": "ELECTROMAGNET_CMD",
       "layout": "electromagnet_cmd",
@@ -2224,6 +2309,80 @@
       "frame": {
         "id": "0x1B0",
         "data": "01"
+      }
+    },
+    {
+      "name": "HEALTH_PROFILE response: healthy board",
+      "message": "HEALTH_PROFILE",
+      "layout": "health_profile",
+      "fields": {
+        "tec": 0,
+        "rec": 0,
+        "bus_off_count": 0,
+        "hsi_trim": 16,
+        "loop_max_ms": 7,
+        "mcu_temp_plus_40": 65,
+        "vdda_mv": 3300
+      },
+      "frame": {
+        "id": "0x1B8",
+        "data": "0000001007410CE4"
+      }
+    },
+    {
+      "name": "PID_CONFIG request: set the gains",
+      "message": "PID_CONFIG",
+      "layout": "pid_config",
+      "fields": {
+        "kp_x100": 800,
+        "ki_x100": 20,
+        "kd_x100": 150,
+        "action": 0
+      },
+      "frame": {
+        "id": "0x1B9",
+        "data": "03200014009600"
+      }
+    },
+    {
+      "name": "PID_CONFIG request: start the autotune",
+      "message": "PID_CONFIG",
+      "layout": "pid_config",
+      "fields": {
+        "kp_x100": 0,
+        "ki_x100": 0,
+        "kd_x100": 0,
+        "action": 1
+      },
+      "frame": {
+        "id": "0x1B9",
+        "data": "00000000000001"
+      }
+    },
+    {
+      "name": "PID_STATE_RESP request: empty query",
+      "message": "PID_STATE_RESP",
+      "layout": "pid_state_resp_request",
+      "fields": {},
+      "frame": {
+        "id": "0x1BA",
+        "data": ""
+      }
+    },
+    {
+      "name": "PID_STATE_RESP response: running",
+      "message": "PID_STATE_RESP",
+      "layout": "pid_state_resp_response",
+      "fields": {
+        "kp_x100": 800,
+        "ki_x100": 20,
+        "kd_x100": 150,
+        "state": 1,
+        "duty_percent": 37
+      },
+      "frame": {
+        "id": "0x1BA",
+        "data": "0320001400960125"
       }
     },
     {
@@ -3113,7 +3272,9 @@
       },
       "fields": {
         "direction": 1,
-        "steps": 1000
+        "steps": 1000,
+        "speed": null,
+        "profile": null
       }
     },
     {
@@ -3126,7 +3287,24 @@
       },
       "fields": {
         "direction": 0,
-        "steps": 0
+        "steps": 0,
+        "speed": null,
+        "profile": null
+      }
+    },
+    {
+      "name": "MOTION_CMD request: forward 1000 steps, 800 steps/s, S-curve",
+      "message": "MOTION_CMD",
+      "layout": "motion_cmd",
+      "frame": {
+        "id": "0x120",
+        "data": "01000003E8032002"
+      },
+      "fields": {
+        "direction": 1,
+        "steps": 1000,
+        "speed": 800,
+        "profile": 2
       }
     },
     {
@@ -3138,17 +3316,6 @@
         "data": "01000003"
       },
       "fields": null
-    },
-    {
-      "name": "MOTION_CMD request: one byte too many is refused when strict",
-      "message": "MOTION_CMD",
-      "layout": "motion_cmd",
-      "frame": {
-        "id": "0x120",
-        "data": "01000003E800"
-      },
-      "fields": null,
-      "strict": true
     },
     {
       "name": "SOLDER_SETPOINT request: 350 C",
@@ -4364,6 +4531,98 @@
       "strict": true
     },
     {
+      "name": "SET_FEATURES request: all off",
+      "message": "SET_FEATURES",
+      "layout": "set_features",
+      "frame": {
+        "id": "0x1AE",
+        "data": "4645415400"
+      },
+      "fields": {
+        "magic": "46454154",
+        "features": 0
+      }
+    },
+    {
+      "name": "SET_FEATURES request: health frame and PID on",
+      "message": "SET_FEATURES",
+      "layout": "set_features",
+      "frame": {
+        "id": "0x1AE",
+        "data": "464541540A"
+      },
+      "fields": {
+        "magic": "46454154",
+        "features": 10
+      }
+    },
+    {
+      "name": "SET_FEATURES request: 4 bytes is too short",
+      "message": "SET_FEATURES",
+      "layout": "set_features",
+      "frame": {
+        "id": "0x1AE",
+        "data": "46454154"
+      },
+      "fields": null
+    },
+    {
+      "name": "SET_FEATURES request: one byte too many is refused when strict",
+      "message": "SET_FEATURES",
+      "layout": "set_features",
+      "frame": {
+        "id": "0x1AE",
+        "data": "464541540000"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "FEATURES_RESP request: empty query",
+      "message": "FEATURES_RESP",
+      "layout": "features_resp_request",
+      "frame": {
+        "id": "0x1AF",
+        "data": ""
+      },
+      "fields": {}
+    },
+    {
+      "name": "FEATURES_RESP response: health on, stored but not yet running",
+      "message": "FEATURES_RESP",
+      "layout": "features_resp_response",
+      "frame": {
+        "id": "0x1AF",
+        "data": "02000F"
+      },
+      "fields": {
+        "stored": 2,
+        "running": 0,
+        "supported": 15
+      }
+    },
+    {
+      "name": "FEATURES_RESP response: 2 bytes is too short",
+      "message": "FEATURES_RESP",
+      "layout": "features_resp_response",
+      "frame": {
+        "id": "0x1AF",
+        "data": "0200"
+      },
+      "fields": null
+    },
+    {
+      "name": "FEATURES_RESP response: one byte too many is refused when strict",
+      "message": "FEATURES_RESP",
+      "layout": "features_resp_response",
+      "frame": {
+        "id": "0x1AF",
+        "data": "02000F00"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
       "name": "ELECTROMAGNET_CMD request: energise",
       "message": "ELECTROMAGNET_CMD",
       "layout": "electromagnet_cmd",
@@ -4395,6 +4654,121 @@
       },
       "fields": null,
       "strict": true
+    },
+    {
+      "name": "HEALTH_PROFILE response: healthy board",
+      "message": "HEALTH_PROFILE",
+      "layout": "health_profile",
+      "frame": {
+        "id": "0x1B8",
+        "data": "0000001007410CE4"
+      },
+      "fields": {
+        "tec": 0,
+        "rec": 0,
+        "bus_off_count": 0,
+        "hsi_trim": 16,
+        "loop_max_ms": 7,
+        "mcu_temp_plus_40": 65,
+        "vdda_mv": 3300
+      }
+    },
+    {
+      "name": "HEALTH_PROFILE response: 7 bytes is too short",
+      "message": "HEALTH_PROFILE",
+      "layout": "health_profile",
+      "frame": {
+        "id": "0x1B8",
+        "data": "0000001007410C"
+      },
+      "fields": null
+    },
+    {
+      "name": "PID_CONFIG request: set the gains",
+      "message": "PID_CONFIG",
+      "layout": "pid_config",
+      "frame": {
+        "id": "0x1B9",
+        "data": "03200014009600"
+      },
+      "fields": {
+        "kp_x100": 800,
+        "ki_x100": 20,
+        "kd_x100": 150,
+        "action": 0
+      }
+    },
+    {
+      "name": "PID_CONFIG request: start the autotune",
+      "message": "PID_CONFIG",
+      "layout": "pid_config",
+      "frame": {
+        "id": "0x1B9",
+        "data": "00000000000001"
+      },
+      "fields": {
+        "kp_x100": 0,
+        "ki_x100": 0,
+        "kd_x100": 0,
+        "action": 1
+      }
+    },
+    {
+      "name": "PID_CONFIG request: 6 bytes is too short",
+      "message": "PID_CONFIG",
+      "layout": "pid_config",
+      "frame": {
+        "id": "0x1B9",
+        "data": "032000140096"
+      },
+      "fields": null
+    },
+    {
+      "name": "PID_CONFIG request: one byte too many is refused when strict",
+      "message": "PID_CONFIG",
+      "layout": "pid_config",
+      "frame": {
+        "id": "0x1B9",
+        "data": "0320001400960000"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "PID_STATE_RESP request: empty query",
+      "message": "PID_STATE_RESP",
+      "layout": "pid_state_resp_request",
+      "frame": {
+        "id": "0x1BA",
+        "data": ""
+      },
+      "fields": {}
+    },
+    {
+      "name": "PID_STATE_RESP response: running",
+      "message": "PID_STATE_RESP",
+      "layout": "pid_state_resp_response",
+      "frame": {
+        "id": "0x1BA",
+        "data": "0320001400960125"
+      },
+      "fields": {
+        "kp_x100": 800,
+        "ki_x100": 20,
+        "kd_x100": 150,
+        "state": 1,
+        "duty_percent": 37
+      }
+    },
+    {
+      "name": "PID_STATE_RESP response: 7 bytes is too short",
+      "message": "PID_STATE_RESP",
+      "layout": "pid_state_resp_response",
+      "frame": {
+        "id": "0x1BA",
+        "data": "03200014009601"
+      },
+      "fields": null
     },
     {
       "name": "SPOT_WELD_CMD request: 100 ms pulse",
@@ -6226,11 +6600,82 @@
       }
     },
     {
+      "name": "SET_FEATURES: a payload that is not the magic one",
+      "message": "SET_FEATURES",
+      "layout": "set_features",
+      "fields": {
+        "magic": "00000000",
+        "features": 0
+      }
+    },
+    {
+      "name": "SET_FEATURES: features above its maximum",
+      "message": "SET_FEATURES",
+      "layout": "set_features",
+      "fields": {
+        "magic": "46454154",
+        "features": 16
+      }
+    },
+    {
+      "name": "FEATURES_RESP: stored above its maximum",
+      "message": "FEATURES_RESP",
+      "layout": "features_resp_response",
+      "fields": {
+        "stored": 16,
+        "running": 0,
+        "supported": 15
+      }
+    },
+    {
+      "name": "FEATURES_RESP: running above its maximum",
+      "message": "FEATURES_RESP",
+      "layout": "features_resp_response",
+      "fields": {
+        "stored": 2,
+        "running": 16,
+        "supported": 15
+      }
+    },
+    {
+      "name": "FEATURES_RESP: supported above its maximum",
+      "message": "FEATURES_RESP",
+      "layout": "features_resp_response",
+      "fields": {
+        "stored": 2,
+        "running": 0,
+        "supported": 16
+      }
+    },
+    {
       "name": "ELECTROMAGNET_CMD: coil above its maximum",
       "message": "ELECTROMAGNET_CMD",
       "layout": "electromagnet_cmd",
       "fields": {
         "coil": 2
+      }
+    },
+    {
+      "name": "PID_CONFIG: action 4 is not a defined value",
+      "message": "PID_CONFIG",
+      "layout": "pid_config",
+      "fields": {
+        "kp_x100": 800,
+        "ki_x100": 20,
+        "kd_x100": 150,
+        "action": 4
+      }
+    },
+    {
+      "name": "PID_STATE_RESP: duty_percent above its maximum",
+      "message": "PID_STATE_RESP",
+      "layout": "pid_state_resp_response",
+      "fields": {
+        "kp_x100": 800,
+        "ki_x100": 20,
+        "kd_x100": 150,
+        "state": 1,
+        "duty_percent": 101
       }
     },
     {
