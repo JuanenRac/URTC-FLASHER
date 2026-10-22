@@ -504,7 +504,7 @@ Ambas as strings de alvo acima são a melhor estimativa do próprio projeto para
 o nome real do alvo pyOCD de cada chip, não confirmadas contra uma instalação
 pyOCD real enquanto isto foi escrito (a cobertura STM32 no pyOCD vem em grande
 parte através de CMSIS-Packs em vez de alvos incorporados) - se a gravação
-falhar com um erro do tipo "target not found", execute você mesmo `pyocd list
+falhar com um erro do tipo "target not found", execute manualmente `pyocd list
 --targets --name stm32f303` e `pyocd pack install <the real name>` obtém o
 CMSIS-Pack certo.
 
@@ -667,7 +667,7 @@ set <iface> up type can bitrate 500000 restart-ms 100`). Esta ferramenta não
 executa esse comando por si - limpar um bus-off real precisa de a interface
 ser desligada e voltar a ligar ao nível do kernel, o que precisa de root e
 conta como alterar a configuração de rede do sistema, não algo a fazer
-silenciosamente em seu nome.
+silenciosamente no seu nome.
 
 **Contadores de erro (TEC/REC)** (ao lado de Bus activity): ao contrário dos
 contadores do lado do adaptador acima, isto pergunta à **própria placa** pelo
