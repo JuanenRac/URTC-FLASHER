@@ -195,7 +195,6 @@ All notable changes to this project are documented here.
 
 ## [0.1.8] - Live transfer speed and a reactive stall indicator during CAN-OTA
 
-### Added
 - **Live transfer speed (kB/s)** during a CAN-OTA update/readback, in both
   the established Tkinter panel and the Qt Quick deck. `flasher_protocol.py`
   already computed per-page and overall kB/s for its own log lines; a new,
@@ -215,7 +214,6 @@ All notable changes to this project are documented here.
 
 ## [0.1.7] - Full-chip SWD/JTAG programming in the Qt Quick deck, real About window
 
-### Added
 - **Full-chip SWD/JTAG programming** is now available in the Qt Quick
   deck, completing its migration - the one real gap left after CAN-OTA,
   read-only SWD/JTAG discovery, Board Snapshot and device-configuration
@@ -249,7 +247,6 @@ All notable changes to this project are documented here.
   languages, replacing the old `LBL_ABOUT_AUTHOR` - full key parity
   verified across every language file.
 
-### Fixed
 - The Qt Quick deck's own header `ToolBar` relied on the Basic style's
   implicit sizing, which collapsed to 0 height for this specific window -
   the branding/status text all overlapped at the top-left corner instead
@@ -275,7 +272,6 @@ All notable changes to this project are documented here.
   already used correctly elsewhere in this file (see the `_connect_worker`
   comment).
 
-### Added
 - The Qt Quick deck now includes a **Board snapshot** action after an active
   CAN connection. It performs only the existing documented version, counter
   and peripheral read queries and renders their responses in the deck; it
@@ -339,12 +335,10 @@ All notable changes to this project are documented here.
   project's own versioning convention only advances it on a real
   `build_exe.bat`/`build_exe.sh` packaged build.
 
-### Fixed
 - SLCAN reception now rejects impossible CAN 2.0 DLC values (`9`-`F`) before
   they can be exposed to the flashing protocol. Valid standard and extended
   frames remain parsed exactly as before.
 
-### Tests
 - `flash()`'s own verify-failure reporting is now exercised end-to-end for
   real, not just reachable by hand via `--mock-fail`: a simulated
   bootloader (`MockCAN(simulate_failure=...)`) accepts every real page of
@@ -478,14 +472,15 @@ PASS) and `python -m pytest tests/` (4/4 PASS).
 
 ## [0.1.0]
 
-### Added
 - Ecosystem-wide build-versioning policy: `FLASHER_VERSION` normalized from
   the old two-part `"0.1"` to the three-part `"0.1.0"`, and `bump_version.py`
   added to auto-increment it on every real build. Wired into both `build_exe.bat` and `build_exe.sh` as a new step
   right before compiling.
 - This CHANGELOG.md.
 
-## [0.1]
+## Earlier history
+
+### [0.1]
 
 Visual/text version bump (banner SVGs, splash text) from v0.0 to v0.1,
 plus a full pass fixing every leftover "v0.0"/"0.0" reference across the
@@ -493,7 +488,6 @@ project (build banners, README screenshots and examples, `/images/` gallery
 duplicates) that earlier passes had missed - including some caught only
 after the user reported still seeing "v0.0" post-migration.
 
-### Added
 - Full README documentation for the Flasher, in all 5 supported languages
   (English, Spanish, Italian, French, German).
 - 2-column redesign of the CAN-OTA tab (firmware/flashing on the left,
@@ -518,7 +512,6 @@ after the user reported still seeing "v0.0" post-migration.
 - Full Help menu (Readme / GitHub / License / About), replacing scattered
   entries, with per-language README selection.
 
-### Fixed
 - **Critical**: SWD backup-before-flash used the `-r32` STM32CubeProgrammer
   flag, which (confirmed against official ST documentation) only ever
   dumps to screen and never accepts an output file - full-chip SWD backups
@@ -553,11 +546,10 @@ after the user reported still seeing "v0.0" post-migration.
   rejected the 2 newest expansion board types, an uncaught `AttributeError`
   on a malformed `manifest.json`.
 
-### Changed
 - Split the single 3603-line `urtc_flasher.py` into 7 focused modules plus
   a thin entry point, purely for readability.
 
-## Earlier history (pre-1.1, no formal version tags)
+### Earlier history (pre-1.1, no formal version tags)
 
 - Standalone-binary packaging via PyInstaller (`build_exe.bat`/`build_exe.sh`)
   for Windows and Linux.
