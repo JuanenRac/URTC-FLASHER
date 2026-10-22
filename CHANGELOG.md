@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here.
 
-## [Unreleased]
+## [0.3.9] - Shared protocol copies follow the optional functions
 
 - The copies of the shared protocol follow URTC-COMMON (the new identifiers of the optional functions).
 - The README lists URTC-GATEWAY, the new gateway in front of the CAN bus, among the related projects.
