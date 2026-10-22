@@ -20,7 +20,7 @@ increments instead (e.g. `0.1.9` -> `0.2.0`), and the same carry applies
 from `MINOR` into `MAJOR`. Running the tool from source (not through a
 build script) never changes the version - only a real build does.
 
-## [Unreleased]
+## [0.3.8] - Firmware from the signed release, shared CAN transports and the safe-side settings
 
 - `tools/ci_validate.py` fails when a versioned file has the name of a Windows path (a colon, the character a file system uses to store one, or a first folder named like a drive or a user profile): a path handed to WSL without translation once put build output inside a repository. The same check (`tools/_tracked_names.py`) is in every URTC repository.
 - **The firmware images are no longer kept in git.** The `firmware/` folder starts empty (only a `.gitkeep` is tracked) and is filled from the assets of the URTC releases: the window downloads them, and `python tools/sync_firmware.py` takes them from the newest official release, checking every file against the release signature (Ed25519) and its digests. The CI downloads them the same way before the tests.

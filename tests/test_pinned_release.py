@@ -8,6 +8,7 @@ used instead, and only then - a tag the person typed is never replaced, and any 
 from __future__ import annotations
 
 import json
+import os
 
 import pytest
 
@@ -46,8 +47,9 @@ def test_the_pin_file_is_read_and_checked(tmp_path):
         assert pinned_release_tag(str(path)) is None, bad
 
 
-def test_the_repository_pin_names_a_tag():
-    assert pinned_release_tag() is not None
+def test_the_repository_pin_names_a_tag_only_while_the_file_exists():
+    """Once there is an official release the file is deleted and nothing is pinned; while it exists it must name a tag."""
+    assert (pinned_release_tag() is not None) == os.path.exists(flasher_github.PINNED_RELEASE_FILE)
 
 
 def test_the_newest_release_is_used_when_there_is_one():
