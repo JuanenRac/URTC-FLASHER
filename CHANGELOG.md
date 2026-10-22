@@ -22,6 +22,7 @@ build script) never changes the version - only a real build does.
 
 ## [Unreleased]
 
+- The banner follows the animated style of the ecosystem banners, with the name, the kind and the technologies of the project.
 ## [0.3.7] - Follow URTC-COMMON 0.0.5 and keep only the language entries the Qt window uses
 
 - The copies of the CAN protocol module and of the conformance vectors follow URTC-COMMON 0.0.5, so the tool carries the multinode extension of the protocol that the firmware already speaks.
