@@ -29,7 +29,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from flasher_config import _
+from flasher_config import _, base_dir
 
 GITHUB_REPO = "JuanenRac/URTC"
 GITHUB_API_BASE = "https://api.github.com/repos/" + GITHUB_REPO + "/releases"
@@ -49,7 +49,8 @@ _TAG_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 
 
 class GitHubDownloadError(Exception):
-    pass
+    #: True when GitHub answered 404 (no such release): the one failure that the pinned fallback below may answer.
+    not_found = False
 
 
 def _check_download_host(url):
@@ -117,7 +118,9 @@ def fetch_release(tag=None, log=None, only_firmware=True):
         if e.code == 429:
             raise GitHubDownloadError(_("ERR_GITHUB_RATE_LIMITED")) from e
         if e.code == 404:
-            raise GitHubDownloadError(_("ERR_GITHUB_NOT_FOUND")) from e
+            error = GitHubDownloadError(_("ERR_GITHUB_NOT_FOUND"))
+            error.not_found = True
+            raise error from e
         raise GitHubDownloadError(_("ERR_GITHUB_HTTP_ERROR", code=e.code)) from e
     except urllib.error.URLError as e:
         raise GitHubDownloadError(_("ERR_GITHUB_NETWORK", reason=e.reason)) from e
@@ -159,6 +162,39 @@ def fetch_release(tag=None, log=None, only_firmware=True):
         log(_("LOG_GITHUB_RELEASE_TAG", tag=tag_name or "?"))
         log(_("LOG_GITHUB_LIST_COUNT", count=len(results)))
     return tag_name, results
+
+
+#: Names the release to use while the project has no official release yet ("latest" then answers 404, because GitHub does not count a pre-release).
+#: Delete the file, or change its tag, when an official release exists.
+PINNED_RELEASE_FILE = os.path.join(base_dir, "firmware_release.json")
+
+
+def pinned_release_tag(path=None):
+    """The `fallback_tag` of firmware_release.json, or None when the file is missing, unreadable or names something that is not a tag."""
+    try:
+        with open(path or PINNED_RELEASE_FILE, encoding="utf-8") as handle:
+            tag = json.load(handle).get("fallback_tag")
+    except (OSError, ValueError, AttributeError):
+        return None
+    return tag if isinstance(tag, str) and _TAG_PATTERN.match(tag) else None
+
+
+def fetch_release_or_pinned(tag=None, log=None, only_firmware=True, pinned=None, fetch=None):
+    """fetch_release() (or `fetch`, a function with the same arguments), except that when the newest release was asked for and there is none (404) the release named in firmware_release.json is used instead,
+    and the log says so. A named tag is never replaced, and any other failure is the caller's."""
+    fetch = fetch or fetch_release
+    options = {"only_firmware": only_firmware}
+    if log:
+        options["log"] = log
+    try:
+        return fetch(tag, **options)
+    except GitHubDownloadError as error:
+        fallback = pinned if pinned is not None else pinned_release_tag()
+        if tag or not error.not_found or not fallback:
+            raise
+        if log:
+            log(_("LOG_GITHUB_PINNED_FALLBACK", tag=fallback))
+        return fetch(fallback, **options)
 
 
 def list_firmware_files(log=None, tag=None):

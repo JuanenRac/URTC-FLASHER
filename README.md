@@ -65,7 +65,7 @@ either platform is a real board over real hardware — treat a first
 real-world flash attempt with the same caution you'd give any new tool
 talking to a bootloader: have JTAG on hand as a fallback. Everything else described here was exercised only against `MockCAN`, a simulated bootloader, never against a real board.
 
-**Honesty check - what actually runs today:** `tests/` holds 39 pytest files (463 tests: all pass; 67 of them skip without PySide6) - the CAN-OTA protocol against a real `MockCAN` transport (`flasher_transports.py`) that plays back a full simulated bootloader sequence (start/erase/receive, page data + PAGE_ACK, HMAC chunks, end-update with a real success or a specific `VERIFY_FAIL_REASON`), the signature rules (published signature sent without any key, unsigned image refused, manifest sha256 mismatch refused before any bus traffic), the image integrity checks and the bundled `firmware/` against its manifests. GitHub Actions (`.github/workflows/ci.yml`) runs this suite on every push, and `tools/build_test.py` runs it in `build-test.sh`/`.bat`. The two `verify_qt_*.py` scripts at the repo root are real end-to-end checks kept outside pytest (they need a real Qt event loop; run them with `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`); `verify_qt_swd_full_chip_flash.py` only builds the `PyOCDCLI`/`CubeProgrammerCLI` commands with `dry_run=True`. None of this has been run against a real board over real hardware in this environment. See `CHANGELOG.md` for exactly what has shipped so far. The simulated bootloader (`MockCAN`) is only a model written from the protocol description: it reproduces the page acknowledgements, the partial last page and the readback frames, but it is not the real bootloader, so a green test run does not replace a trial on a real board (the official 73476-byte image could not be installed, and the last frame of a backup was dropped, while the tests passed, precisely because the simulation was more forgiving than the real bootloader).
+**Honesty check - what actually runs today:** `tests/` holds 40 pytest files (471 tests: all pass; 74 of them skip without PySide6) - the CAN-OTA protocol against a real `MockCAN` transport (`flasher_transports.py`) that plays back a full simulated bootloader sequence (start/erase/receive, page data + PAGE_ACK, HMAC chunks, end-update with a real success or a specific `VERIFY_FAIL_REASON`), the signature rules (published signature sent without any key, unsigned image refused, manifest sha256 mismatch refused before any bus traffic), the image integrity checks and the bundled `firmware/` against its manifests. GitHub Actions (`.github/workflows/ci.yml`) runs this suite on every push, and `tools/build_test.py` runs it in `build-test.sh`/`.bat`. The two `verify_qt_*.py` scripts at the repo root are real end-to-end checks kept outside pytest (they need a real Qt event loop; run them with `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`); `verify_qt_swd_full_chip_flash.py` only builds the `PyOCDCLI`/`CubeProgrammerCLI` commands with `dry_run=True`. None of this has been run against a real board over real hardware in this environment. See `CHANGELOG.md` for exactly what has shipped so far. The simulated bootloader (`MockCAN`) is only a model written from the protocol description: it reproduces the page acknowledgements, the partial last page and the readback frames, but it is not the real bootloader, so a green test run does not replace a trial on a real board (the official 73476-byte image could not be installed, and the last frame of a backup was dropped, while the tests passed, precisely because the simulation was more forgiving than the real bootloader).
 
 > **Safety and security status:** this ecosystem is not a certified safety system, and no populated URTC board exists yet. The bootloaders check firmware images with CRC32 and a shared-key HMAC-SHA256, not with an asymmetric signature (planned); the published application images are signed with the public development key (`signing_key_kind: dev`), so anyone can produce an image the bootloader accepts; nothing has been transmitted to a real board. Read the [security baseline](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md) and the [threat model](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md) before relying on any statement here for the safety of a person.
 
@@ -197,6 +197,8 @@ PATH even right after a successful install, while `-m pip` finds the
 installed module directly.
 
 ## 3. 📁 Where firmware files go
+
+**The folder starts empty.** The firmware images are not kept in this repository: they are the assets of the releases of [URTC](https://github.com/JuanenRac/URTC). The window downloads them from the release you choose, and `python tools/sync_firmware.py` fills the folder from the newest official release (or `--release TAG`). Every file is checked against the release signature (`.sig`, Ed25519) and its digests before it is used. While no official release exists, GitHub's "latest" answers 404 and `firmware_release.json` names the release used instead (today the bench pre-release); delete the file, or change its tag, when an official one is published.
 
 This tool expects a `firmware/` folder right next to `urtc_flasher.py`,
 at this repository's own root:
@@ -793,7 +795,7 @@ image and publishes the signature next to it, in `<image>.manifest.json`
 (`hmac_sha256`, plus `<image>.sha256`); the flasher sends that published
 signature and refuses an image whose sha256 does not match its manifest.
 Downloading an image from GitHub also downloads both files, and
-`python tools/sync_firmware.py` refreshes the bundled `firmware/` folder
+`python tools/sync_firmware.py` fills the `firmware/` folder
 from the URTC build (`--check` verifies it). By default it takes the set from the assets of the latest URTC release (`--release TAG` picks another one); a local folder, such as a local URTC build, can be given as an argument instead. Only a self-built image with
 no manifest, on a bench board, needs a key: set `hmac_key_hex` /
 `slave_hmac_key_hex` in `urtc_config.json` below - without one such an image
@@ -901,6 +903,7 @@ partition scheme.
 │   ├── test_bootloader_entry.py
 │   ├── test_can_conformance.py   <- shared CAN vectors (tests/fixtures/can_conformance_vectors.json)
 │   ├── test_github_download.py
+│   ├── test_pinned_release.py
 │   ├── test_language_files.py
 │   ├── test_manifest_target.py
 │   ├── test_mock_readback.py

@@ -107,7 +107,7 @@ def download_release(target: Path, tag: str | None = None, fetch=None, download=
     if fetch is None or download is None:
         sys.path.insert(0, str(ROOT))
         import flasher_github
-        fetch = fetch or flasher_github.fetch_release
+        fetch = fetch or flasher_github.fetch_release_or_pinned
         download = download or flasher_github.download_file
     tag_name, assets = fetch(tag, only_firmware=False)
     by_name = {asset["name"]: asset for asset in assets}

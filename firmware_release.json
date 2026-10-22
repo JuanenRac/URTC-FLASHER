@@ -1,0 +1,4 @@
+{
+  "fallback_tag": "v0.3.8",
+  "note": "Used only while the project has no official release (GitHub's latest ignores pre-releases). Delete this file or change the tag when one exists."
+}

@@ -42,7 +42,7 @@ from flasher_config import (
     SLAVE_BOOTLOADER_FLASH_ADDR, SLAVE_BOOTLOADER_MAX_SIZE,
     SLAVE_PYOCD_TARGET_NAME, SLAVE_TOTAL_FLASH_SIZE, TOOL_NAMES, _, _current_language, save_config, translate_log_line,
 )
-from flasher_github import GitHubDownloadError, download_file, fetch_release, is_sidecar, sidecars_for
+from flasher_github import GitHubDownloadError, download_file, fetch_release, fetch_release_or_pinned, is_sidecar, sidecars_for
 from flasher_integrity import manifest_signing_kind, preflight_image
 from flasher_records import (
     build_update_report, find_recovery_image, prune_session_logs, writable_logs_folder, write_update_report,
@@ -416,7 +416,7 @@ class FlasherQtBridge(QObject):
 
     def _release_list_worker(self, tag: str | None) -> None:
         try:
-            release_tag, entries = fetch_release(tag, log=self._log)
+            release_tag, entries = fetch_release_or_pinned(tag, log=self._log, fetch=fetch_release)
             self._releaseListed.emit(release_tag or "?", entries, "")
         except GitHubDownloadError as exc:
             self._releaseListed.emit("", [], str(exc))

@@ -16,3 +16,8 @@ urtc_config.json
 .env
 .env.*
 !.env.example
+
+# The firmware images are not kept in git: they are the assets of the releases of URTC
+# (python tools/sync_firmware.py downloads them, or the window does). Only the folder is kept.
+firmware/*
+!firmware/.gitkeep
