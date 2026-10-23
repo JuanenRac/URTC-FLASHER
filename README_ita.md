@@ -82,7 +82,7 @@ portata di mano il JTAG come ripiego. Tutto il resto descritto qui è stato prov
 |---|---|
 | Versione | `0.4.0` |
 | Maturità | Funzionale |
-| Test | 478 |
+| Test | 488 |
 | Tecnologia | Python / PySide6 / Qt Quick / CAN-OTA / SWD/JTAG |
 | Destinazione | Il PC di chi lo usa |
 | Su hardware reale | Solo simulato: provato con emulatori, test double o simulatori; per questa versione non risulta alcuna esecuzione su hardware reale |

@@ -81,7 +81,7 @@ mão como alternativa. Tudo o resto descrito aqui foi exercitado apenas contra `
 |---|---|
 | Versão | `0.4.0` |
 | Maturidade | Funcional |
-| Testes | 478 |
+| Testes | 488 |
 | Tecnologia | Python / PySide6 / Qt Quick / CAN-OTA / SWD/JTAG |
 | Destino | O PC de quem o usa |
 | Em hardware real | Só simulado: testado com emuladores, dublês de teste ou simuladores; não há registo de execução em hardware real para esta versão |

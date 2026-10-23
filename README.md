@@ -78,7 +78,7 @@ talking to a bootloader: have JTAG on hand as a fallback. Everything else descri
 |---|---|
 | Version | `0.4.0` |
 | Maturity | Functional |
-| Tests | 478 |
+| Tests | 488 |
 | Stack | Python / PySide6 / Qt Quick / CAN-OTA / SWD/JTAG |
 | Target | The PC of the person using it |
 | On real hardware | Simulated only: tested against emulators, fakes or simulators; no run on real hardware is recorded for this version |

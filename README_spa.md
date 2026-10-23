@@ -79,7 +79,7 @@ como respaldo. Todo lo demás descrito aquí se ha ejercitado solo contra `MockC
 |---|---|
 | Versión | `0.4.0` |
 | Madurez | Funcional |
-| Tests | 478 |
+| Tests | 488 |
 | Tecnología | Python / PySide6 / Qt Quick / CAN-OTA / SWD/JTAG |
 | Destino | El PC de quien lo usa |
 | En hardware real | Solo simulado: probado con emuladores, dobles de prueba o simuladores; no consta ninguna ejecución en hardware real para esta versión |
