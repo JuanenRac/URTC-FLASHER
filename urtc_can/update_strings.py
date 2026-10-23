@@ -49,6 +49,7 @@ STRINGS: dict[str, dict[str, str]] = {
         "UPD_ERR_CONFIRMATION": "Confirm the installation first.",
         "UPD_ERR_NOTHING_BACK": "There is no earlier version to go back to.",
         "UPD_ERR_PLATFORM": "There is no package for this system.",
+        "UPD_ERR_NOT_NEWER": "This version is not newer than the one installed.",
     },
     "spanish": {
         "UPD_TITLE": "Buscar actualización",
@@ -83,6 +84,7 @@ STRINGS: dict[str, dict[str, str]] = {
         "UPD_ERR_CONFIRMATION": "Confirma primero la instalación.",
         "UPD_ERR_NOTHING_BACK": "No hay una versión anterior a la que volver.",
         "UPD_ERR_PLATFORM": "No hay paquete para este sistema.",
+        "UPD_ERR_NOT_NEWER": "Esta versión no es más nueva que la instalada.",
     },
     "italian": {
         "UPD_TITLE": "Cerca aggiornamenti",
@@ -117,6 +119,7 @@ STRINGS: dict[str, dict[str, str]] = {
         "UPD_ERR_CONFIRMATION": "Conferma prima l'installazione.",
         "UPD_ERR_NOTHING_BACK": "Non c'è una versione precedente a cui tornare.",
         "UPD_ERR_PLATFORM": "Non esiste un pacchetto per questo sistema.",
+        "UPD_ERR_NOT_NEWER": "Questa versione non è più recente di quella installata.",
     },
     "french": {
         "UPD_TITLE": "Rechercher une mise à jour",
@@ -151,6 +154,7 @@ STRINGS: dict[str, dict[str, str]] = {
         "UPD_ERR_CONFIRMATION": "Confirmez d'abord l'installation.",
         "UPD_ERR_NOTHING_BACK": "Il n'y a pas de version antérieure à laquelle revenir.",
         "UPD_ERR_PLATFORM": "Il n'existe pas de paquet pour ce système.",
+        "UPD_ERR_NOT_NEWER": "Cette version n'est pas plus récente que celle qui est installée.",
     },
     "german": {
         "UPD_TITLE": "Nach Updates suchen",
@@ -185,6 +189,7 @@ STRINGS: dict[str, dict[str, str]] = {
         "UPD_ERR_CONFIRMATION": "Bestätigen Sie zuerst die Installation.",
         "UPD_ERR_NOTHING_BACK": "Es gibt keine frühere Version, zu der man zurückkehren könnte.",
         "UPD_ERR_PLATFORM": "Für dieses System gibt es kein Paket.",
+        "UPD_ERR_NOT_NEWER": "Diese Version ist nicht neuer als die installierte.",
     },
     "chinese": {
         "UPD_TITLE": "检查更新",
@@ -219,6 +224,7 @@ STRINGS: dict[str, dict[str, str]] = {
         "UPD_ERR_CONFIRMATION": "请先确认安装。",
         "UPD_ERR_NOTHING_BACK": "没有可退回的更早版本。",
         "UPD_ERR_PLATFORM": "没有适用于此系统的包。",
+        "UPD_ERR_NOT_NEWER": "此版本不比已安装的版本更新。",
     },
     "japanese": {
         "UPD_TITLE": "更新を確認",
@@ -253,6 +259,7 @@ STRINGS: dict[str, dict[str, str]] = {
         "UPD_ERR_CONFIRMATION": "先にインストールを確認してください。",
         "UPD_ERR_NOTHING_BACK": "戻れる以前のバージョンがありません。",
         "UPD_ERR_PLATFORM": "このシステム用のパッケージがありません。",
+        "UPD_ERR_NOT_NEWER": "このバージョンはインストール済みのものより新しくありません。",
     },
     "portuguese": {
         "UPD_TITLE": "Procurar atualizações",
@@ -287,6 +294,7 @@ STRINGS: dict[str, dict[str, str]] = {
         "UPD_ERR_CONFIRMATION": "Confirme primeiro a instalação.",
         "UPD_ERR_NOTHING_BACK": "Não há uma versão anterior para onde voltar.",
         "UPD_ERR_PLATFORM": "Não existe pacote para este sistema.",
+        "UPD_ERR_NOT_NEWER": "Esta versão não é mais recente do que a instalada.",
     },
 }
 
@@ -294,7 +302,7 @@ _ERROR_KEYS = {
     "bad_version": "UPD_ERR_RELEASE", "bad_app": "UPD_ERR_RELEASE", "bad_host": "UPD_ERR_RELEASE", "incomplete_release": "UPD_ERR_RELEASE",
     "bad_release_listing": "UPD_ERR_RELEASE",
     "too_big": "UPD_ERR_CORRUPT", "size_mismatch": "UPD_ERR_CORRUPT", "sha256_mismatch": "UPD_ERR_CORRUPT",
-    "bad_checksum_file": "UPD_ERR_CORRUPT", "bad_signature_file": "UPD_ERR_CORRUPT",
+    "bad_checksum_file": "UPD_ERR_CORRUPT", "bad_signature_file": "UPD_ERR_CORRUPT", "bad_package_name": "UPD_ERR_WRONG_PACKAGE", "not_newer": "UPD_ERR_NOT_NEWER",
     "bad_signature": "UPD_ERR_SIGNATURE", "bad_key": "UPD_ERR_SIGNATURE", "key_mismatch": "UPD_ERR_SIGNATURE",
     "unsafe_member": "UPD_ERR_UNSAFE", "unsafe_path": "UPD_ERR_UNSAFE", "unknown_archive": "UPD_ERR_UNSAFE",
     "app_info_missing": "UPD_ERR_WRONG_PACKAGE", "app_info_mismatch": "UPD_ERR_WRONG_PACKAGE",

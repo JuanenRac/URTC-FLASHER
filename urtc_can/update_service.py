@@ -30,6 +30,7 @@ import hashlib
 import json
 import os
 import platform as _platform
+import re
 import urllib.request
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
@@ -42,6 +43,7 @@ RELEASE_KEY_ID = hashlib.sha256(bytes.fromhex(RELEASE_PUBLIC_KEY_HEX)).hexdigest
 GITHUB_OWNER = "JuanenRac"
 USER_AGENT = "urtc-self-update/1"
 PENDING_FILE = "first_start_pending.txt"
+_PACKAGE_NAME = re.compile(r"^(?P<app>[a-z][a-z0-9-]*?)-(?P<version>\d{1,4}(?:\.\d{1,4}){2,3})-(?P<platform>(?:windows|linux|macos)-(?:x64|arm64))\.(?:zip|tar\.gz)$")
 
 ENV_AUTO_CHECK = "URTC_UPDATE_AUTO_CHECK"
 ENV_REQUIRE_CONFIRMATION = "URTC_UPDATE_REQUIRE_CONFIRMATION"
@@ -199,6 +201,32 @@ class UpdateService:
         self._note(event="verify", result="ok", offered=offer.version, sha256=sha)
         return Prepared(offer, path, sha)
 
+    def prepare_local(self, package: str | Path) -> Prepared:
+        """Verifies a package file the person has on disk, next to its ``.sha256`` and ``.sig`` (for a machine without network). The name must be
+        ``<app>-<version>-<platform>.zip`` / ``.tar.gz`` for this program and this system, and the version strictly higher than the installed one;
+        the checksum and the signature are held to the same pinned key as a download."""
+        path = Path(package)
+        match = _PACKAGE_NAME.match(path.name)
+        if match is None:
+            raise su.UpdateError("bad_package_name", path.name)
+        app, version, platform = match.group("app"), match.group("version"), match.group("platform")
+        if app != self.app:
+            raise su.UpdateError("app_info_mismatch", f"{path.name} is for {app}, not for {self.app}")
+        if platform != self.platform:
+            raise su.UpdateError("unsupported_platform", f"{path.name} is for {platform}, this system is {self.platform}")
+        if not su.is_newer(self.installed, version):
+            raise su.UpdateError("not_newer", f"{version} is not higher than the installed {self.installed}")
+        try:
+            sha = path.with_name(path.name + ".sha256").read_text(encoding="ascii").split()[0].lower()
+            signature = bytes.fromhex(path.with_name(path.name + ".sig").read_text(encoding="ascii").strip())
+        except (OSError, IndexError, ValueError) as error:
+            raise su.UpdateError("incomplete_release", f"{path.name} needs its .sha256 and .sig next to it") from error
+        asset = su.Asset(path.name, "", path.stat().st_size)
+        offer = su.Offer(app, version, platform, "v" + version, "", "", asset, asset, asset, "")
+        su.verify_package(offer, path, sha, signature, self.public_key_hex, self.key_id)
+        self._note(event="verify", result="ok", offered=version, sha256=sha, source="file")
+        return Prepared(offer, path, sha)
+
     def install(self, prepared: Prepared, confirmed: bool = False) -> Path:
         """Installs a prepared package. Without ``confirmed`` (and while the policy asks for it) nothing is touched."""
         if self.policy.require_confirmation and not confirmed:
@@ -206,10 +234,11 @@ class UpdateService:
         reason = self.busy() if self.busy else None
         final = su.install_package(prepared.path, self.root, prepared.offer, reason, prepared.sha256)
         (self.root / PENDING_FILE).write_text(prepared.offer.version + "\n", encoding="utf-8")
-        try:
-            prepared.path.unlink()
-        except OSError:
-            pass
+        if prepared.path.parent == self.root / "downloads":  # a package picked by hand from another folder is the person's file: it stays
+            try:
+                prepared.path.unlink()
+            except OSError:
+                pass
         return final
 
     def rollback(self) -> str:

@@ -48,11 +48,11 @@
     },
     "update_service.py": {
       "from": "src/urtc_common/update_service.py",
-      "sha256": "80be17e73465cfa82ed7e2a8f1cbc3b26689af716555ac04cc1ab6b62d1ac261"
+      "sha256": "965764d3fed0dfa3ea725929694f869647e29e5aae0280d15af6d79808167356"
     },
     "update_strings.py": {
       "from": "src/urtc_common/update_strings.py",
-      "sha256": "4fb8091f13a40ce4065cb7b6d95954e7ba7bf1919908ebf3f507d6355bcc6d2b"
+      "sha256": "82269d46a2b48dc0576fa0e305e3c26d9bd6d87889b0667305f6c7bd49734584"
     },
     "versioning.py": {
       "from": "src/urtc_common/versioning.py",
