@@ -185,8 +185,6 @@ HELP_FLASH_TARGET_SLAVE=Erreicht nur etwas auf einer Advanced-Erweiterungsplatin
 MSG_CONFIRM_FLASH_TARGET=Im Begriff zu flashen: {target}.
 MSG_CONFIRM_DOWNGRADE=Dies umgeht den eigenen Anti-Rollback-Schutz des Bootloaders für dieses Update. Fahren Sie nur fort, wenn Sie absichtlich eine ältere, vertrauenswürdige Version installieren. Fortfahren?
 MSG_READBACK_COMPLETE={size} Bytes zurückgelesen und gespeichert unter:\n{path}
-
-Dies überschreibt die derzeit laufende Firmware. Stellen Sie sicher, dass Sie die richtige Datei für dieses spezifische Ziel ausgewählt haben. Fortfahren?
 LOG_SENDING_SLAVE_BOOTLOADER_TRIGGER=Sende Bootloader-Auslöser an Erweiterungs-Slave (0x210, über I2C weitergeleitet)...
 LOG_SENDING_SLAVE_START_UPDATE=Sende Update-Start an Erweiterungs-Slave (0x211)...
 LOG_SLAVE_FIRMWARE_HARDWAREID=Erweiterungs-Slave HardwareID: 0x{hw_id:08X}

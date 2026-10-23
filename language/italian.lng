@@ -51,6 +51,12 @@ MSG_FIRMWARE_FILE_LOOKS_INVALID=Questo file non sembra un'immagine firmware URTC
 MSG_FIRMWARE_FILE_LOOKS_INVALID_REASON=Questo file non sembra un'immagine firmware URTC valida:\n\n{reason}\n\nSelezionarlo comunque?
 TITLE_BOOTLOADER_FILE_LOOKS_INVALID=Il file bootloader sembra non valido
 TITLE_APPLICATION_FILE_LOOKS_INVALID=Il file applicazione sembra non valido
+TITLE_CONFIRM_EXPANSION_BOARD_TYPE=Conferma tipo di scheda di espansione
+MSG_CONFIRM_EXPANSION_BOARD_TYPE=Imposta e salva il tipo di scheda di espansione di questa scheda a:\n\n  {type}\n\nQuesta e un'impostazione di configurazione hardware una tantum, non qualcosa da cambiare con leggerezza - persiste tra i cicli di alimentazione finche non viene esplicitamente cambiata di nuovo. Procedere?
+TITLE_CONFIRM_FLASH=Conferma programmazione
+TITLE_CONFIRM_DOWNGRADE=Conferma downgrade
+TITLE_SAVE_READBACK=Salva Backup Firmware
+MSG_CONFIRM_FLASH=Questo cancellera lo slot di backup e, una volta verificato, sostituira lo slot dell'applicazione principale con questo firmware.\n\nIl firmware attualmente in esecuzione rimane intatto finche la nuova immagine non e completamente verificata, quindi e sicuro riprovare in caso di fallimento - ma controlla bene di aver selezionato il file giusto.\n\nProcedere?
 MSG_RDP_LEVEL_2_DETAIL=La protezione di lettura di questo chip e impostata a Livello 2.\n\nA differenza di ogni altro rischio segnalato da questo strumento, RDP2 e permanente e irreversibile per progettazione di ST - la porta di debug rimane bloccata per sempre, senza percorso di recupero via SWD/JTAG o altro. Se non era questa l'intenzione, fermati qui invece di procedere con qualsiasi operazione sul chip completo.
 MSG_RDP_LEVEL_1_DETAIL=La protezione di lettura di questo chip e impostata a Livello 1.\n\nQuesto e reversibile (il -rdu / Read Unprotect di STM32CubeProgrammer), ma cosi facendo si cancella l'intero chip come parte della rimozione della protezione - non qualcosa che questo strumento fa automaticamente. Se una programmazione del chip completo fallisce poi con un errore relativo a RDP, e per questo motivo.
 MSG_RDP_UNPARSEABLE_DETAIL=Il dump degli Option Bytes non corrisponde a uno schema riconosciuto - vedi il registro per l'output grezzo stampato da STM32CubeProgrammer.
@@ -133,12 +139,6 @@ LBL_FRAMES_IN_2S={count} frame in 2s (~{rate:.1f}/s)
 LOG_EXPANSION_TYPE_SAVED_CONFIRMED=Tipo di scheda di espansione salvato e confermato: {type}
 LOG_EXPANSION_TYPE_MISMATCH=Tipo di scheda di espansione impostato a {value}, ma la scheda riporta {confirmed} - la scrittura potrebbe non essere andata a buon fine. Interroga di nuovo per verificare.
 LOG_EXPANSION_TYPE_NO_CONFIRMATION=Tipo di scheda di espansione: inviato, ma nessuna conferma ricevuta (firmware datato, o scheda non connessa).
-TITLE_CONFIRM_EXPANSION_BOARD_TYPE=Conferma tipo di scheda di espansione
-MSG_CONFIRM_EXPANSION_BOARD_TYPE=Imposta e salva il tipo di scheda di espansione di questa scheda a:\n\n  {type}\n\nQuesta e un'impostazione di configurazione hardware una tantum, non qualcosa da cambiare con leggerezza - persiste tra i cicli di alimentazione finche non viene esplicitamente cambiata di nuovo. Procedere?
-TITLE_CONFIRM_FLASH=Conferma programmazione
-TITLE_CONFIRM_DOWNGRADE=Conferma downgrade
-TITLE_SAVE_READBACK=Salva Backup Firmware
-MSG_CONFIRM_FLASH=Questo cancellera lo slot di backup e, una volta verificato, sostituira lo slot dell'applicazione principale con questo firmware.\n\nIl firmware attualmente in esecuzione rimane intatto finche la nuova immagine non e completamente verificata, quindi e sicuro riprovare in caso di fallimento - ma controlla bene di aver selezionato il file giusto.\n\nProcedere?
 
 # --- Barra dei menu ---
 MENU_SAVE_LOGS=Salva registri...
@@ -185,8 +185,6 @@ HELP_FLASH_TARGET_SLAVE=Raggiunge qualcosa solo su una variante di scheda di esp
 MSG_CONFIRM_FLASH_TARGET=Stai per flashare: {target}.
 MSG_CONFIRM_DOWNGRADE=Questo bypassa la protezione anti-rollback del bootloader per questo aggiornamento. Procedi solo se stai installando deliberatamente una versione precedente di cui ti fidi. Continuare?
 MSG_READBACK_COMPLETE=Letti {size} byte e salvati in:\n{path}
-
-Questo sovrascrivera il firmware attualmente in esecuzione. Assicurati di aver selezionato il file corretto per questa specifica destinazione. Continuare?
 LOG_SENDING_SLAVE_BOOTLOADER_TRIGGER=Invio trigger bootloader allo slave di espansione (0x210, inoltrato via I2C)...
 LOG_SENDING_SLAVE_START_UPDATE=Invio avvio aggiornamento allo slave di espansione (0x211)...
 LOG_SLAVE_FIRMWARE_HARDWAREID=HardwareID dello slave di espansione: 0x{hw_id:08X}

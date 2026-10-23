@@ -182,9 +182,7 @@ traduzioni vivono in file di testo semplice sotto `language/`
 `german.lng`, `japanese.lng`, `chinese.lng`, `portuguese.lng`) come semplici coppie `CHIAVE=Valore`, una per riga - le
 righe che iniziano con `#` e le righe vuote vengono ignorate, e un `\n`
 letterale dentro un valore diventa un vero a capo (usato dalla manciata
-di messaggi di dialogo multi-riga). Modificabile direttamente se una
-traduzione necessita correzione, o come punto di partenza per un'altra
-lingua (aggiungi `language/<nome>.lng`, aggiungi `("<nome>", "Nome
+di messaggi di dialogo multi-riga). Generati dal catalogo di URTC-COMMON (una traduzione si corregge lì e i file vengono riscritti, mai modificati a mano), o come punto di partenza per un'altra lingua (aggiungi `language/<nome>.lng`, aggiungi `("<nome>", "Nome
 Nativo")` a `AVAILABLE_LANGUAGES` vicino all'inizio di
 `flasher_config.py`, e imposta `"language": "<nome>"` in
 `urtc_config.json`). Una chiave mancante da un file di lingua ricade nel

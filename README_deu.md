@@ -187,9 +187,7 @@ leben in reinen Textdateien unter `language/` (`english.lng`,
 `SCHLÜSSEL=Wert`-Paare, eines pro Zeile - Zeilen, die mit `#` beginnen,
 und leere Zeilen werden ignoriert, und ein wörtliches `\n` innerhalb
 eines Werts wird zu einem echten Zeilenumbruch (verwendet von der
-Handvoll mehrzeiliger Dialognachrichten). Direkt editierbar, wenn eine
-Übersetzung korrigiert werden muss, oder als Ausgangspunkt für eine
-andere Sprache (fügen Sie `language/<name>.lng` hinzu, fügen Sie
+Handvoll mehrzeiliger Dialognachrichten). Aus dem Katalog von URTC-COMMON erzeugt (eine Übersetzung wird dort korrigiert und die Dateien werden neu geschrieben, nie von Hand bearbeitet), oder als Ausgangspunkt für eine andere Sprache (fügen Sie `language/<name>.lng` hinzu, fügen Sie
 `("<name>", "Eigener Name")` zu `AVAILABLE_LANGUAGES` nahe dem Anfang
 von `flasher_config.py` hinzu, und setzen Sie `"language": "<name>"` in
 `urtc_config.json`). Ein fehlender Schlüssel aus einer Sprachdatei fällt

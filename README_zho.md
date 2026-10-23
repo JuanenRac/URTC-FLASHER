@@ -153,8 +153,7 @@ python urtc_flasher.py
 `language/` 下（`english.lng`、`spanish.lng`、`italian.lng`、`french.lng`、
 `german.lng`, `japanese.lng`, `chinese.lng`, `portuguese.lng`），采用简单的 `KEY=Value` 键值对，一行一个——以 `#` 开头的行
 和空行会被忽略，值内部的字面 `\n` 会变成真正的换行符（用于少数几个多行
-对话框消息）。如果某个翻译需要修正，可以直接编辑，也可以将其作为新增另一种
-语言的起点（添加 `language/<name>.lng`，在 `flasher_config.py` 顶部附近的
+对话框消息）。这些文件由 URTC-COMMON 的目录生成（翻译在那里修正后重新写入文件，从不手工编辑），也可以将其作为新增另一种语言的起点（添加 `language/<name>.lng`，在 `flasher_config.py` 顶部附近的
 `AVAILABLE_LANGUAGES` 中添加 `("<name>", "本地语言名称")`，并在
 `urtc_config.json` 中设置 `"language": "<name>"`）。语言文件中缺失的键会
 回退为显示该键自身的名称而不是崩溃，缺失或无法读取的语言文件（编辑错误、

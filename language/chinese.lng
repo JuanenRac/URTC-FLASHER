@@ -184,8 +184,6 @@ HELP_FLASH_TARGET_SLAVE=仅在高级扩展板变体（TMC2209+STM32F303CBT6 或 
 MSG_CONFIRM_FLASH_TARGET=即将刷写：{target}。
 MSG_CONFIRM_DOWNGRADE=这将为本次更新绕过引导程序自身的防回滚保护。仅在你确实要安装一个你信任的旧版本时才继续。是否继续？
 MSG_READBACK_COMPLETE=已读回 {size} 字节，并保存至：\n{path}
-
-这将覆盖当前正在运行的固件。请确认你为此特定目标选择了正确的文件。是否继续？
 LOG_SENDING_SLAVE_BOOTLOADER_TRIGGER=正在发送扩展从属引导程序触发指令（0x210，经 I2C 中继）…
 LOG_SENDING_SLAVE_START_UPDATE=正在向扩展从属发送开始更新指令（0x211）…
 LOG_SLAVE_FIRMWARE_HARDWAREID=扩展从属 HardwareID：0x{hw_id:08X}

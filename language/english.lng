@@ -184,8 +184,6 @@ HELP_FLASH_TARGET_SLAVE=Only reaches anything on an Advanced expansion board var
 MSG_CONFIRM_FLASH_TARGET=About to flash: {target}.
 MSG_CONFIRM_DOWNGRADE=This bypasses the bootloader's own anti-rollback protection for this update. Only proceed if you're intentionally installing an older, still-trusted release. Continue?
 MSG_READBACK_COMPLETE=Read back {size} bytes and saved them to:\n{path}
-
-This will overwrite the currently-running firmware. Make sure you selected the right file for this specific target. Continue?
 LOG_SENDING_SLAVE_BOOTLOADER_TRIGGER=Sending expansion slave bootloader trigger (0x210, relayed over I2C)...
 LOG_SENDING_SLAVE_START_UPDATE=Sending start update to expansion slave (0x211)...
 LOG_SLAVE_FIRMWARE_HARDWAREID=Expansion slave HardwareID: 0x{hw_id:08X}

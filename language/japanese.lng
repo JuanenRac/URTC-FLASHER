@@ -184,8 +184,6 @@ HELP_FLASH_TARGET_SLAVE=Advanced 拡張ボードバリアント（TMC2209+STM32F
 MSG_CONFIRM_FLASH_TARGET=書き込み対象：{target}。
 MSG_CONFIRM_DOWNGRADE=これは、今回の更新についてブートローダー自身の防ロールバック保護を回避します。信頼できる古いリリースを意図的にインストールする場合にのみ続行してください。続行しますか？
 MSG_READBACK_COMPLETE={size} バイトを読み戻し、以下に保存しました：\n{path}
-
-これは現在実行中のファームウェアを上書きします。この特定のターゲットに対して正しいファイルを選択したことを確認してください。続行しますか？
 LOG_SENDING_SLAVE_BOOTLOADER_TRIGGER=拡張スレーブのブートローダートリガーを送信中（0x210、I2C 経由で中継）…
 LOG_SENDING_SLAVE_START_UPDATE=拡張スレーブへ更新開始を送信中（0x211）…
 LOG_SLAVE_FIRMWARE_HARDWAREID=拡張スレーブ HardwareID：0x{hw_id:08X}

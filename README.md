@@ -169,8 +169,7 @@ files under `language/` (`english.lng`, `spanish.lng`, `italian.lng`,
 `french.lng`, `german.lng`, `japanese.lng`, `chinese.lng`, `portuguese.lng`) as simple `KEY=Value` pairs, one per line -
 lines starting with `#` and blank lines are ignored, and a literal `\n`
 inside a value becomes a real line break (used by the handful of
-multi-line dialog messages). Editable directly if a translation needs
-correcting, or as a starting point for another language (add
+multi-line dialog messages). Generated from the catalog of URTC-COMMON (a translation is corrected there and the files are written again, never edited by hand), or a starting point for another language (add
 `language/<name>.lng`, add `("<name>", "Native Name")` to
 `AVAILABLE_LANGUAGES` near the top of `flasher_config.py`, and set
 `"language": "<name>"` in `urtc_config.json`). A key missing from a

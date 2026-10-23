@@ -184,8 +184,7 @@ python urtc_flasher.py
 `german.lng`, `japanese.lng`, `chinese.lng`, `portuguese.lng`）として、シンプルな `KEY=Value` ペア、1 行に 1 つの形式で
 存在します——`#` で始まる行と空行は無視され、値の中のリテラルな `\n`
 は実際の改行になります（数個の複数行ダイアログメッセージで使用されて
-います）。翻訳の修正が必要な場合は直接編集できますし、他の言語を追加
-する際の出発点としても使えます（`language/<name>.lng` を追加し、
+います）。URTC-COMMON のカタログから生成されます（翻訳はそこで修正してファイルを書き直し、手では編集しません）。他の言語を追加する際の出発点としても使えます（`language/<name>.lng` を追加し、
 `flasher_config.py` の先頭付近の `AVAILABLE_LANGUAGES` に
 `("<name>", "現地語名")` を追加し、`urtc_config.json` に
 `"language": "<name>"` を設定します）。言語ファイルに存在しないキーは、

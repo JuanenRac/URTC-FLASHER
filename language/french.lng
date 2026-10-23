@@ -185,8 +185,6 @@ HELP_FLASH_TARGET_SLAVE=N'atteint quelque chose que sur une variante de carte d'
 MSG_CONFIRM_FLASH_TARGET=Sur le point de flasher : {target}.
 MSG_CONFIRM_DOWNGRADE=Ceci contourne la propre protection anti-rollback du bootloader pour cette mise à jour. Ne continuez que si vous installez délibérément une version antérieure en laquelle vous avez confiance. Continuer ?
 MSG_READBACK_COMPLETE=Lu {size} octets et enregistrés dans :\n{path}
-
-Ceci ecrasera le firmware actuellement en cours d'execution. Assurez-vous d'avoir selectionne le bon fichier pour cette cible specifique. Continuer ?
 LOG_SENDING_SLAVE_BOOTLOADER_TRIGGER=Envoi du declencheur de bootloader a l'esclave d'extension (0x210, relaye via I2C)...
 LOG_SENDING_SLAVE_START_UPDATE=Envoi du demarrage de mise a jour a l'esclave d'extension (0x211)...
 LOG_SLAVE_FIRMWARE_HARDWAREID=HardwareID de l'esclave d'extension : 0x{hw_id:08X}
