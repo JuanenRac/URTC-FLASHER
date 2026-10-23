@@ -14,6 +14,10 @@
       "from": "src/urtc_common/framing.py",
       "sha256": "7317394a709a4e2683b5534bae161ea5298b0c45829df05eb30a4046b884344d"
     },
+    "launcher.py": {
+      "from": "src/urtc_common/launcher.py",
+      "sha256": "dbd8ebc1767b4af82cc651b23a78565d59c5b8c2f831296b7d3befa5688bde13"
+    },
     "protocol.py": {
       "from": "src/urtc_common/protocol.py",
       "sha256": "eb3a32db6996db180464b9ca19d64d1bf8274c10aab1d7b3668e6cc75ff3de93"
@@ -22,6 +26,10 @@
       "from": "src/urtc_common/quick_state.py",
       "sha256": "0cc476a92ae2285c728a3499976b9c65610f754961d722e7a5fff9fa3faaab18"
     },
+    "self_update.py": {
+      "from": "src/urtc_common/self_update.py",
+      "sha256": "6a741d838069c61398da9a0c367e19a23b4020e4b54e8c86f3fcb0cd03ba5746"
+    },
     "slcan.py": {
       "from": "src/urtc_common/slcan.py",
       "sha256": "a3a0d3d9037a5cbf227351f382cdca6de22c6915ebbba15400f872f94310f9ef"
@@ -29,6 +37,22 @@
     "transports.py": {
       "from": "src/urtc_common/transports.py",
       "sha256": "3fb0d9a6db95de1131e5a26919695817ad0ccd277e00c269b74ec234c6b8d1ce"
+    },
+    "update_controller.py": {
+      "from": "src/urtc_common/update_controller.py",
+      "sha256": "48eeb961739ed4d89c9e5456adbbce48b338f14b13d04a417cb01c3656304b33"
+    },
+    "update_qt.py": {
+      "from": "src/urtc_common/update_qt.py",
+      "sha256": "9a54d99da00da043f72056773c1522be6cd4e2d3dbfcccc72af9b424f00880df"
+    },
+    "update_service.py": {
+      "from": "src/urtc_common/update_service.py",
+      "sha256": "80be17e73465cfa82ed7e2a8f1cbc3b26689af716555ac04cc1ab6b62d1ac261"
+    },
+    "update_strings.py": {
+      "from": "src/urtc_common/update_strings.py",
+      "sha256": "4fb8091f13a40ce4065cb7b6d95954e7ba7bf1919908ebf3f507d6355bcc6d2b"
     },
     "versioning.py": {
       "from": "src/urtc_common/versioning.py",

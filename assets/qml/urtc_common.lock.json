@@ -1,0 +1,10 @@
+{
+  "format": 1,
+  "urtc_common_version": "0.0.7",
+  "files": {
+    "UpdateDialog.qml": {
+      "from": "qml/UpdateDialog.qml",
+      "sha256": "d93664a9117796b320814c3d95b96cede75071a91429105d4270f84189d08215"
+    }
+  }
+}

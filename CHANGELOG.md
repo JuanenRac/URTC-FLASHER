@@ -5,6 +5,7 @@ All notable changes to this project are documented here.
 ## [Unreleased]
 
 - **A virtual board stands in for the hardware:** the program uses `urtc_can/virtual_board.py` from URTC-COMMON (a SLCAN server over TCP with a model of the board, application and bootloader), opens `socket://host:port` serial URLs, and the window lists the URLs named in `URTC_VIRTUAL_PORT` next to the real ports; a test flashes an image end to end through it. 6 new tests.
+- **Check for updates:** a button of the window opens the update dialog of URTC-COMMON (`urtc_can/update_*.py`, `assets/qml/UpdateDialog.qml`, texts in the eight languages). It asks GitHub once for the latest release and offers a package only if it is for this system and strictly newer; the download must match its SHA-256 and the Ed25519 signature of the key of the releases pinned in the program, is installed only after the person confirms, never while a transfer or a flash runs, keeps the previous release and goes back to it by itself if the new one does not start. The check when the program opens (`update_auto_check`) and the confirmation (`update_require_confirmation`) are options saved in `urtc_config.json`; the defaults are no automatic check and always ask, and the window warns before lowering either.
 - The CI holds the tests to a coverage floor of 61 percent (measured 69; `pytest-cov` is in `requirements-dev.txt`).
 
 ## [0.4.0] - Official images listed for a bare board and a development requirements file

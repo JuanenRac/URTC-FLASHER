@@ -203,6 +203,16 @@ ApplicationWindow {
         }
     }
 
+    UpdateDialog {
+        id: updateDialog
+        model: flasherBackend.updates
+        panelColor: window.panel
+        borderColor: window.panelBorder
+        textColor: window.textPrimary
+        mutedColor: window.muted
+        accentColor: window.cyan
+    }
+
     Dialog {
         id: aboutDialog
         anchors.centerIn: parent
@@ -574,6 +584,7 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     GameButton { text: flasherBackend.uiText("TITLE_SAVE_DEBUG_BUNDLE"); accent: "#24465e"; Layout.fillWidth: true; onClicked: debugBundleDialog.open() }
                     GameButton { text: flasherBackend.uiText("MENU_SAVE_LOGS"); accent: "#24465e"; Layout.fillWidth: true; onClicked: saveLogDialog.open() }
+                    GameButton { text: flasherBackend.updates.t("UPD_BTN_CHECK"); accent: "#24465e"; Layout.fillWidth: true; onClicked: updateDialog.open() }
                     GameButton { text: flasherBackend.uiText("TITLE_ABOUT"); accent: "#24465e"; Layout.fillWidth: true; onClicked: aboutDialog.open() }
                 }
                 Text { visible: flasherBackend.exportResult.length > 0; text: flasherBackend.exportResult; color: muted; font.pixelSize: 9; wrapMode: Text.WordWrap; Layout.fillWidth: true }

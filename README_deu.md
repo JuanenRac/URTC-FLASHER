@@ -46,6 +46,8 @@ Bootloader dieser Platine über CAN meldet), damit Sie sehen können, was
 aktuell installiert ist, bevor Sie entscheiden, was geflasht werden
 soll.
 
+**Nach Updates suchen.** Die Schaltfläche „Nach Updates suchen“ fragt GitHub einmal nach dem neuesten Release und bietet den Download nur an, wenn es ein Paket für dieses System enthält, das neuer als die installierte Version ist. Das Paket wird nur akzeptiert, wenn SHA-256 und Ed25519-Signatur (der im Programm angeheftete Schlüssel der Releases) gültig sind; es wird erst nach Ihrer Bestätigung installiert, nie während einer Übertragung, und die vorherige Version bleibt zum Zurückgehen erhalten (und wird von selbst wiederhergestellt, wenn die neue nicht startet). Nichts wird von selbst geprüft oder installiert: die Prüfung beim Start ist eine Option, standardmäßig aus, und die Bestätigung lässt sich nur im selben Fenster nach einer Warnung abschalten.
+
 Zwei Wege, mit der Platine zu sprechen, beide sprechen darunter dasselbe
 Protokoll:
 

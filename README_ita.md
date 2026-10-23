@@ -46,6 +46,8 @@ l'applicazione *o* il bootloader di questa scheda si annuncia via CAN)
 così puoi vedere cosa è attualmente installato prima di decidere cosa
 flashare.
 
+**Cerca aggiornamenti.** Il pulsante «Cerca aggiornamenti» interroga GitHub una volta sull'ultima release e propone il download solo se contiene un pacchetto per questo sistema più recente della versione installata. Il pacchetto è accettato solo se SHA-256 e firma Ed25519 (la chiave delle release, fissata nel programma) sono validi; viene installato solo dopo la tua conferma, mai durante un trasferimento, e la versione precedente è conservata per tornare indietro (e ripristinata da sola se la nuova non si avvia). Nulla viene mai controllato o installato da solo: il controllo all'avvio è un'opzione, spenta per impostazione predefinita, e la conferma si disattiva solo nella stessa finestra dopo un avviso.
+
 Due modi per parlare con la scheda, entrambi usando lo stesso protocollo
 sottostante:
 

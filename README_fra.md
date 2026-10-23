@@ -46,6 +46,8 @@ l'application *ou* le bootloader de cette carte s'annonce via CAN) pour
 que vous puissiez voir ce qui est actuellement installé avant de
 décider quoi flasher.
 
+**Rechercher une mise à jour.** Le bouton « Rechercher une mise à jour » interroge GitHub une fois sur la dernière release et ne propose le téléchargement que si elle contient un paquet pour ce système plus récent que la version installée. Le paquet n'est accepté que si son SHA-256 et sa signature Ed25519 (la clé des releases, épinglée dans le programme) sont valides ; il n'est installé qu'après votre confirmation, jamais pendant un transfert, et la version précédente est conservée pour revenir en arrière (et rétablie d'elle-même si la nouvelle ne démarre pas). Rien n'est jamais vérifié ni installé tout seul : la vérification à l'ouverture est une option, désactivée par défaut, et la confirmation ne se désactive que dans la même fenêtre, après un avertissement.
+
 Deux façons de parler à la carte, toutes deux utilisant le même
 protocole en dessous :
 

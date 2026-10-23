@@ -49,6 +49,8 @@ mensagens de heartbeat do bootloader, e uma consulta de versão (se a aplicaçã
 *ou* o bootloader desta placa se identifica através do CAN) para que possa ver
 o que está atualmente instalado antes de decidir o que escrever.
 
+**Procurar atualizações.** O botão «Procurar atualizações» pergunta ao GitHub uma vez pela versão mais recente e só propõe a transferência se esta tiver um pacote para este sistema mais recente do que a versão instalada. O pacote só é aceite se o SHA-256 e a assinatura Ed25519 (a chave das versões, fixada no programa) forem válidos; só é instalado depois de o confirmar, nunca durante uma transferência, e a versão anterior é guardada para poder voltar atrás (e é reposta sozinha se a nova não arrancar). Nada é verificado nem instalado por si só: a verificação ao abrir é uma opção, desligada por defeito, e a confirmação só se desliga na mesma janela, depois de um aviso.
+
 Duas formas de comunicar com a placa, ambas a falar o mesmo protocolo por baixo:
 
 - **Serial / SLCAN** — funciona em Windows e Linux. Precisa de um adaptador

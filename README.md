@@ -47,6 +47,8 @@ version-query (does this board's application *or* bootloader identify
 itself over CAN) so you can see what's currently installed before deciding
 what to flash.
 
+**Check for updates.** The button "Check for updates" asks GitHub once for the latest release and, only if it carries a package for this system that is newer than the installed version, offers to download it. The package is accepted only if its SHA-256 and its Ed25519 signature (the key of the releases, pinned in the program) are valid; it is installed only after you confirm it, never while a transfer is running, and the previous version is kept so you can go back (and is restored by itself if the new one does not start). Nothing is ever checked or installed on its own: the check when the program opens is an option, off by default, and the confirmation can only be turned off in the same window after a warning.
+
 Two ways to talk to the board, both speaking the same protocol underneath:
 
 - **Serial / SLCAN** — works on Windows and Linux. Needs a USB-CAN adapter

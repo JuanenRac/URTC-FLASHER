@@ -51,6 +51,8 @@ from flasher_protocol import FlashError, URTCFlasher, minor_with_patch
 from flasher_swd_tools import CubeProgrammerCLI, PyOCDCLI, SWDFlashError
 from flasher_transports import SLCAN, SocketCAN, detect_bitrate_listen_only, list_socketcan_interfaces, virtual_ports
 from flasher_validation import validate_firmware_file, validate_swd_image_file
+from urtc_can import update_service as update_service
+from urtc_can.update_qt import UpdateModel
 from urtc_ui import LanguageModel, connection_badge, format_bytes
 
 try:
@@ -133,6 +135,7 @@ class FlasherQtBridge(QObject):
         self._pending_invalid: dict[str, object] | None = None
         self._file_logger: logging.Logger | None = None
         self._release_entries: list[dict] = []
+        self._update_model: UpdateModel | None = None
         self._release_status = ""
         self._release_loading = False
         self._release_downloading = False
@@ -193,6 +196,23 @@ class FlasherQtBridge(QObject):
         self.scanPorts()
         self.scanFirmware()
         self.scanSwdCapabilities()
+
+    @Property(QObject, constant=True)
+    def updates(self) -> QObject:
+        """The "Check for updates" model of the dialog. Nothing is checked, downloaded or installed until the person asks (the automatic
+        check at start is an option, off by default), and an update cannot start while a transfer is running."""
+        if self._update_model is None:
+            def busy() -> str | None:
+                return "CAN-OTA / SWD" if self._busy else None
+
+            def save(auto_check: bool, require_confirmation: bool) -> None:
+                save_config({"update_auto_check": auto_check, "update_require_confirmation": require_confirmation})
+
+            service = update_service.UpdateService(
+                "urtc-flasher", FLASHER_VERSION, policy=update_service.policy_from(flasher_config.load_config()), busy=busy,
+            )
+            self._update_model = UpdateModel(service, language=lambda: _current_language, save_options=save, parent=self)
+        return self._update_model
 
     @Property(str, constant=True)
     def title(self) -> str:
@@ -1845,4 +1865,7 @@ def run_qtquick() -> int:
     engine.load(QUrl.fromLocalFile(str(qml_path)))
     if not engine.rootObjects():
         return 1
+    # The window is up: a release that was just installed has started, and the automatic check (off unless the person turned it on) may run.
+    update_service.mark_started(bridge.updates.controller.service.root)
+    bridge.updates.startupCheck()
     return app.exec()
