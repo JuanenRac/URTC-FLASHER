@@ -27,8 +27,7 @@
 **Versión:** 0.4.0 (la versión de esta herramienta - se muestra en el banner
 de la ventana y en la barra de título, se controla por separado de la
 versión del firmware de la placa URTC que escribe. Sigue un esquema X.Y.Z
-donde el número de parche sube automáticamente en cada build real via
-build_exe.bat/build_exe.sh - ver CHANGELOG.md para el historial de
+donde el número de parche lo sube el paso explícito `python bump.py` (compilar nunca lo cambia) - ver CHANGELOG.md para el historial de
 versiones y bump_version.py para la regla exacta de acarreo)
 
 **Autor:** JuanenRac (Electro Hobby 3D) &lt;electrohobby3d@gmail.com&gt;
@@ -39,7 +38,7 @@ documentación - ver `LICENSE` en este repositorio, o la sección
 
 Una pequeña herramienta GUI multiplataforma para actualizar el firmware
 de la placa URTC por bus CAN. Implementa exactamente el protocolo del
-bootloader de `docs/CANBUS.TXT`: la verificación de HardwareID, el HMAC-SHA256 de clave compartida (no una firma asimétrica), el flujo de actualización con slot de respaldo de imagen
+bootloader de `docs/CANBUS.TXT` (en el repositorio hermano [URTC](https://github.com/JuanenRac/URTC) contra el que implementa esta herramienta - ver «Proyectos Relacionados» cerca del final de este documento; cualquier otra referencia a `docs/*.TXT` en este README apunta allí también): la verificación de HardwareID, el HMAC-SHA256 de clave compartida (no una firma asimétrica), el flujo de actualización con slot de respaldo de imagen
 dorada, el progreso en vivo mediante los mensajes de latido del
 bootloader, y una consulta de versión (identifica si la aplicación *o*
 el bootloader de esta placa se anuncia por CAN) para que puedas ver qué

@@ -27,7 +27,7 @@
 **Versão:** 0.4.0 (a versão desta própria ferramenta - mostrada no banner da
 janela e na barra de título, acompanhada separadamente da versão do firmware
 da placa URTC que escreve. Segue um esquema X.Y.Z em que o número de patch
-sobe automaticamente em cada build real através de build_exe.bat/build_exe.sh
+é subido pelo passo explícito `python bump.py` (compilar nunca o altera)
 - consulte CHANGELOG.md para o histórico de versões e bump_version.py para a
 regra exata de transporte)
 
@@ -974,7 +974,7 @@ adaptada a uma variante de chip ou esquema de partições diferente.
 ├── build-test.bat                 <- non-versioning build/compile check
 ├── build-test.sh                  <- same, for Linux
 ├── bump.py                        <- Comando explícito para subir a versão (compilar nunca a sobe)
-├── bump_version.py                <- odometer-style version bump, run by the build scripts
+├── bump_version.py                <- odometer-style version bump, called by bump.py
 ├── bump_manifest_version.py       <- syncs urtc.project.json's version to the native one (--sync)
 ├── docs/
 │   └── CLI_REFERENCE.md           <- command-line flags reference

@@ -39,7 +39,7 @@ documentazione - vedi `LICENSE` in questo repository, o la sezione
 
 Un piccolo strumento GUI multipiattaforma per aggiornare il firmware
 della scheda URTC via bus CAN. Implementa esattamente il protocollo del
-bootloader di `docs/CANBUS.TXT`: la verifica dell'HardwareID, l'HMAC-SHA256 a chiave condivisa (non una firma asimmetrica), il flusso di aggiornamento con slot di backup a immagine
+bootloader di `docs/CANBUS.TXT` (nel repository gemello [URTC](https://github.com/JuanenRac/URTC) rispetto al quale questo strumento è implementato - vedi «Progetti Correlati» verso la fine di questo documento; ogni altro riferimento a `docs/*.TXT` in questo README punta lì): la verifica dell'HardwareID, l'HMAC-SHA256 a chiave condivisa (non una firma asimmetrica), il flusso di aggiornamento con slot di backup a immagine
 dorata, il progresso in tempo reale tramite i messaggi di heartbeat del
 bootloader, e un'interrogazione di versione (identifica se
 l'applicazione *o* il bootloader di questa scheda si annuncia via CAN)

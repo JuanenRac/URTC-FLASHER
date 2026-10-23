@@ -39,7 +39,7 @@ Abschnitt „Lizenz und Urheberrechtshinweise" am Ende dieses Dokuments.
 
 Ein kleines plattformübergreifendes GUI-Tool zum Aktualisieren der
 URTC-Platinen-Firmware über den CAN-Bus. Es implementiert genau das
-Bootloader-Protokoll aus `docs/CANBUS.TXT`: die HardwareID-Prüfung, das HMAC-SHA256 mit gemeinsamem Schlüssel (keine asymmetrische Signatur), den Golden-Image-Backup-Slot-Update-Ablauf, den
+Bootloader-Protokoll aus `docs/CANBUS.TXT` (im Schwester-Repository [URTC](https://github.com/JuanenRac/URTC), gegen das dieses Werkzeug implementiert ist - siehe «Verwandte Projekte» gegen Ende dieses Dokuments; jeder andere Verweis auf `docs/*.TXT` in diesem README zeigt ebenfalls dorthin): die HardwareID-Prüfung, das HMAC-SHA256 mit gemeinsamem Schlüssel (keine asymmetrische Signatur), den Golden-Image-Backup-Slot-Update-Ablauf, den
 Live-Fortschritt über die Heartbeat-Nachrichten des Bootloaders, und
 eine Versionsabfrage (identifiziert, ob sich die Anwendung *oder* der
 Bootloader dieser Platine über CAN meldet), damit Sie sehen können, was

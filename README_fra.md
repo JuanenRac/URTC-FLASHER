@@ -39,7 +39,7 @@ et Avis de Copyright » à la fin de ce document.
 
 Un petit outil graphique multiplateforme pour mettre à jour le firmware
 de la carte URTC via le bus CAN. Il implémente exactement le protocole
-du bootloader de `docs/CANBUS.TXT` : la vérification du HardwareID, le HMAC-SHA256 à clé partagée (pas une signature asymétrique), le flux de mise à jour avec emplacement de
+du bootloader de `docs/CANBUS.TXT` (dans le dépôt frère [URTC](https://github.com/JuanenRac/URTC) auquel cet outil se conforme - voir « Projets Liés » vers la fin de ce document ; toute autre référence à `docs/*.TXT` dans ce README y renvoie aussi) : la vérification du HardwareID, le HMAC-SHA256 à clé partagée (pas une signature asymétrique), le flux de mise à jour avec emplacement de
 sauvegarde à image dorée, la progression en direct via les messages de
 battement de cœur du bootloader, et une requête de version (identifie si
 l'application *ou* le bootloader de cette carte s'annonce via CAN) pour
