@@ -3,9 +3,9 @@
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 # GPL-3.0-or-later - see LICENSE
 # =============================================================================
-"""The quick guide inside the programs ("Help"): a few short steps for the flasher and for the tester, in the eight languages.
+"""The quick guide inside the programs ("Help"): a few short steps for the flasher, the tester and the updater, in the eight languages.
 
-Written once here and shown by ``help_qt.HelpModel`` through ``HelpDialog.qml``; the README of each program keeps the long version. A guide is a
+Written once here (one guide for the flasher, one for the tester and one for the updater) and shown by ``help_qt.HelpModel`` through ``HelpDialog.qml``; the README of each program keeps the long version. A guide is a
 list of ``(title, text)`` pairs. The same sections, in the same order, exist in every language (a test holds it), and a section never promises
 more than the program does: nothing here has run on a board.
 """
@@ -129,6 +129,64 @@ GUIDES: dict[str, dict[str, tuple[tuple[str, str], ...]]] = {
             ("Mover ou aquecer com cuidado", "Tudo o que move ou aquece precisa do modo ativo, do perfil da ferramenta e de uma segunda confirmação. Os aquecedores e os motores desligam-se se o programa deixar de lhes falar, e Parar está sempre a um toque."),
             ("Caixa negra e reprodução", "Depois de um erro, leia a caixa negra ou abra um registo guardado: o gráfico mostra a temperatura antes do erro. A reprodução passa um rastreio do barramento guardado numa lista própria; nunca transmite e fica em pausa enquanto houver uma placa ligada."),
             ("Sem placa", "Sem cabeça? Execute python -m urtc_can.virtual_board, defina URTC_VIRTUAL_PORT=socket://127.0.0.1:7777 e arranque o programa: a placa virtual aparece na lista de portas. Procurar atualizações pergunta uma vez ao GitHub e só instala um pacote assinado depois de o confirmar."),
+        ),
+    },
+    "updater": {
+        "english": (
+            ("The list", "The window shows every URTC program that the manifests of your workspace describe, with the version on your disk and the one on GitHub. Refresh asks GitHub again; Offline skips that and only reads your disk. Looking never changes anything."),
+            ("Install or update", "Select a project and press Install selected or Update selected; Preview update shows first what would change. Every action asks you to confirm, runs the project's own build and test, and never touches more than the project you chose."),
+            ("Go back", "Restore previous version puts the newest kept previous installation back. The installation in use is kept too, so the restore can be undone."),
+            ("Packages", "Packages lists the signed packages of FLASHER, TESTER and this updater. Check for updates asks GitHub once; Download and verify checks the size, the SHA-256 and the signature; Install asks you first and keeps the previous version; Go back to the previous version restores it. A package that fails a check is deleted."),
+            ("Security and updates", "Security holds the protections of the updater and Check for updates does the same for this program. Neither contacts the network until you ask, the signature of the key of the releases is always required, and lowering a protection asks you first."),
+        ),
+        "spanish": (
+            ("La lista", "La ventana muestra cada programa URTC que describen los manifiestos de tu espacio de trabajo, con la versión que tienes en el disco y la de GitHub. Actualizar vuelve a preguntar a GitHub; Sin conexión lo omite y solo lee tu disco. Mirar nunca cambia nada."),
+            ("Instalar o actualizar", "Selecciona un proyecto y pulsa Instalar seleccionado o Actualizar seleccionado; Vista previa de la actualización muestra antes qué cambiaría. Cada acción te pide confirmar, ejecuta el build y las pruebas del propio proyecto y nunca toca más que el proyecto elegido."),
+            ("Volver atrás", "Restaurar versión anterior devuelve su sitio a la instalación anterior más reciente que se conserva. La instalación en uso también se conserva, así que la restauración se puede deshacer."),
+            ("Paquetes", "Paquetes lista los paquetes firmados de FLASHER, TESTER y de este actualizador. Buscar actualización pregunta una vez a GitHub; Descargar y verificar comprueba el tamaño, el SHA-256 y la firma; Instalar te pregunta antes y conserva la versión anterior; Volver a la versión anterior la restaura. Un paquete que falla una comprobación se borra."),
+            ("Seguridad y actualizaciones", "Seguridad reúne las protecciones del actualizador y Buscar actualización hace lo mismo con este programa. Ninguna contacta con la red hasta que lo pidas, la firma de la clave de las versiones es siempre obligatoria y bajar una protección te lo pregunta antes."),
+        ),
+        "italian": (
+            ("L'elenco", "La finestra mostra ogni programma URTC descritto dai manifest del tuo spazio di lavoro, con la versione sul disco e quella su GitHub. Aggiorna interroga di nuovo GitHub; Offline lo salta e legge solo il disco. Guardare non cambia mai nulla."),
+            ("Installare o aggiornare", "Seleziona un progetto e premi Installa selezionato o Aggiorna selezionato; Anteprima dell'aggiornamento mostra prima cosa cambierebbe. Ogni azione chiede conferma, esegue il build e i test del progetto stesso e non tocca mai più del progetto scelto."),
+            ("Tornare indietro", "Ripristina la versione precedente rimette a posto l'installazione precedente conservata più recente. Anche l'installazione in uso viene conservata, quindi il ripristino si può annullare."),
+            ("Pacchetti", "Pacchetti elenca i pacchetti firmati di FLASHER, TESTER e di questo updater. Cerca aggiornamenti interroga GitHub una sola volta; Scarica e verifica controlla dimensione, SHA-256 e firma; Installa chiede prima conferma e conserva la versione precedente; Torna alla versione precedente la ripristina. Un pacchetto che non supera un controllo viene eliminato."),
+            ("Sicurezza e aggiornamenti", "Sicurezza raccoglie le protezioni dell'updater e Cerca aggiornamenti fa lo stesso per questo programma. Nessuna contatta la rete finché non lo chiedi, la firma con la chiave delle versioni è sempre obbligatoria e abbassare una protezione chiede prima conferma."),
+        ),
+        "french": (
+            ("La liste", "La fenêtre montre chaque programme URTC décrit par les manifestes de votre espace de travail, avec la version sur votre disque et celle de GitHub. Actualiser interroge de nouveau GitHub ; Hors ligne l'ignore et ne lit que votre disque. Regarder ne change jamais rien."),
+            ("Installer ou mettre à jour", "Sélectionnez un projet et appuyez sur Installer la sélection ou Mettre à jour la sélection ; Aperçu de la mise à jour montre d'abord ce qui changerait. Chaque action demande une confirmation, lance le build et les tests du projet lui-même et ne touche jamais plus que le projet choisi."),
+            ("Revenir en arrière", "Restaurer la version précédente remet en place l'installation précédente conservée la plus récente. L'installation en cours est conservée aussi : la restauration peut donc être annulée."),
+            ("Paquets", "Paquets liste les paquets signés de FLASHER, TESTER et de cet outil de mise à jour. Rechercher une mise à jour interroge GitHub une seule fois ; Télécharger et vérifier contrôle la taille, le SHA-256 et la signature ; Installer demande d'abord confirmation et conserve la version précédente ; Revenir à la version précédente la restaure. Un paquet qui échoue à un contrôle est supprimé."),
+            ("Sécurité et mises à jour", "Sécurité regroupe les protections de l'outil et Rechercher une mise à jour fait de même pour ce programme. Aucune ne contacte le réseau avant que vous le demandiez, la signature de la clé des versions est toujours exigée et abaisser une protection demande d'abord confirmation."),
+        ),
+        "german": (
+            ("Die Liste", "Das Fenster zeigt jedes URTC-Programm, das die Manifeste Ihres Arbeitsbereichs beschreiben, mit der Version auf Ihrer Platte und der auf GitHub. Aktualisieren fragt GitHub erneut; Offline überspringt das und liest nur Ihre Platte. Ansehen ändert nie etwas."),
+            ("Installieren oder aktualisieren", "Wählen Sie ein Projekt und drücken Sie Auswahl installieren oder Auswahl aktualisieren; Vorschau des Updates zeigt vorher, was sich ändern würde. Jede Aktion verlangt eine Bestätigung, führt Build und Tests des Projekts selbst aus und berührt nie mehr als das gewählte Projekt."),
+            ("Zurückgehen", "Vorherige Version wiederherstellen stellt die jüngste aufbewahrte frühere Installation wieder her. Die genutzte Installation bleibt ebenfalls erhalten, die Wiederherstellung lässt sich also rückgängig machen."),
+            ("Pakete", "Pakete listet die signierten Pakete von FLASHER, TESTER und diesem Updater. Nach Updates suchen fragt GitHub einmal; Herunterladen und prüfen kontrolliert Größe, SHA-256 und Signatur; Installieren fragt vorher und behält die vorherige Version; Zur vorherigen Version zurückkehren stellt sie wieder her. Ein Paket, das eine Prüfung nicht besteht, wird gelöscht."),
+            ("Sicherheit und Updates", "Sicherheit fasst die Schutzfunktionen des Updaters zusammen, Nach Updates suchen tut dasselbe für dieses Programm. Keines greift auf das Netz zu, bevor Sie es verlangen, die Signatur mit dem Schlüssel der Versionen ist immer Pflicht und das Senken eines Schutzes fragt vorher nach."),
+        ),
+        "chinese": (
+            ("列表", "窗口显示工作区清单所描述的每个 URTC 程序，以及磁盘上的版本和 GitHub 上的版本。刷新会再次询问 GitHub；离线会跳过这一步，只读取磁盘。查看永远不会改变任何东西。"),
+            ("安装或更新", "选择一个项目，按安装所选项或更新所选项；更新预览会先显示将发生的变化。每个操作都会请你确认，运行该项目自己的构建和测试，并且绝不会触及你所选项目之外的内容。"),
+            ("退回", "恢复上一个版本会把保留的最近一次旧安装放回原位。正在使用的安装也会保留，因此这次恢复可以撤销。"),
+            ("软件包", "软件包列出 FLASHER、TESTER 和本更新器的已签名软件包。检查更新只询问 GitHub 一次；下载并验证会检查大小、SHA-256 和签名；安装会先征求你的同意并保留上一个版本；退回上一版本会恢复它。未通过任何检查的软件包会被删除。"),
+            ("安全与更新", "安全集中了更新器的各项保护，检查更新对本程序也是如此。两者都要等你提出请求才会联网，必须始终带有发布密钥的签名，降低任何保护都会先询问你。"),
+        ),
+        "japanese": (
+            ("一覧", "ワークスペースのマニフェストが記述するすべての URTC プログラムを、ディスク上のバージョンと GitHub のバージョンとともに表示します。更新は GitHub にもう一度問い合わせ、オフラインはそれを省いてディスクだけを読みます。見るだけでは何も変わりません。"),
+            ("インストールと更新", "プロジェクトを選んで選択項目をインストールまたは選択項目を更新を押します。更新のプレビューは、何が変わるかを先に示します。どの操作も確認を求め、そのプロジェクト自身のビルドとテストを実行し、選んだプロジェクト以外には触れません。"),
+            ("元に戻す", "前のバージョンに戻すは、保存されている直前の旧インストールのうち最新のものを元の場所に戻します。使用中のインストールも保存されるので、この復元は取り消せます。"),
+            ("パッケージ", "パッケージは FLASHER、TESTER、およびこの更新ツールの署名付きパッケージを一覧にします。更新を確認は GitHub に一度だけ問い合わせ、ダウンロードして検証はサイズ、SHA-256、署名を調べ、インストールは先に確認を求めて前のバージョンを残し、前のバージョンに戻すはそれを復元します。検査に通らないパッケージは削除されます。"),
+            ("セキュリティと更新", "セキュリティは更新ツールの保護をまとめ、更新を確認はこのプログラムについて同じことをします。どちらも要求するまでネットワークに接続せず、リリース鍵による署名は常に必須で、保護を下げるときは先に確認します。"),
+        ),
+        "portuguese": (
+            ("A lista", "A janela mostra cada programa URTC que os manifestos do seu espaço de trabalho descrevem, com a versão que tem no disco e a do GitHub. Atualizar volta a perguntar ao GitHub; Offline ignora isso e só lê o seu disco. Olhar nunca altera nada."),
+            ("Instalar ou atualizar", "Selecione um projeto e carregue em Instalar selecionado ou Atualizar selecionado; Pré-visualizar a atualização mostra primeiro o que mudaria. Cada ação pede-lhe confirmação, executa o build e os testes do próprio projeto e nunca toca em mais do que o projeto escolhido."),
+            ("Voltar atrás", "Restaurar a versão anterior repõe a instalação anterior guardada mais recente. A instalação em uso também é guardada, por isso a reposição pode ser desfeita."),
+            ("Pacotes", "Pacotes lista os pacotes assinados do FLASHER, do TESTER e deste atualizador. Procurar atualizações pergunta uma vez ao GitHub; Transferir e verificar confere o tamanho, o SHA-256 e a assinatura; Instalar pergunta-lhe primeiro e guarda a versão anterior; Voltar à versão anterior repõe-na. Um pacote que falhe uma verificação é apagado."),
+            ("Segurança e atualizações", "Segurança reúne as proteções do atualizador e Procurar atualizações faz o mesmo para este programa. Nenhuma contacta a rede até o pedir, a assinatura da chave das versões é sempre obrigatória e baixar uma proteção pergunta-lhe primeiro."),
         ),
     },
 }
