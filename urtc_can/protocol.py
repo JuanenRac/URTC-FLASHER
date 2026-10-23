@@ -119,6 +119,7 @@ CAN_ID_SLAVE_VERSION_RESP_2 = 0x218  # Slave bootloader version, part 2
 CAN_ID_SLAVE_VERIFY_FAIL_REASON = 0x219  # Slave verify-fail reason
 CAN_ID_SLAVE_REG_WRITE = 0x220  # Write a slave application register (generic)
 CAN_ID_SLAVE_REG_READ = 0x221  # Read a slave application register (generic)
+CAN_ID_SLAVE_APP_PATCH = 0x222  # Patch number of the slave application (companion of 0x221)
 CAN_ID_PASTE_JETTING_CONFIG = 0x230  # Local PWM configuration
 CAN_ID_PASTE_JETTING_PULSE = 0x231  # Local PWM pulse
 CAN_ID_ADS1115_CONFIG = 0x240  # ADS1115 configuration
@@ -549,6 +550,7 @@ MESSAGES = {
     537: {'name': 'SLAVE_VERIFY_FAIL_REASON', 'group': 'slave_bridge', 'direction': 'both', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
     544: {'name': 'SLAVE_REG_WRITE', 'group': 'slave_bridge', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
     545: {'name': 'SLAVE_REG_READ', 'group': 'slave_bridge', 'direction': 'both', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
+    546: {'name': 'SLAVE_APP_PATCH', 'group': 'slave_bridge', 'direction': 'board_to_host', 'handled_by': 'application', 'tools': None},
     560: {'name': 'PASTE_JETTING_CONFIG', 'group': 'pastejetting', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': [23], 'gates': {'blocked_by_critical_error': True, 'blocked_during_boot_sequence': True}},
     561: {'name': 'PASTE_JETTING_PULSE', 'group': 'pastejetting', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': [23], 'gates': {'blocked_by_critical_error': True, 'blocked_during_boot_sequence': True}},
     576: {'name': 'ADS1115_CONFIG', 'group': 'functionaltest', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': [17], 'gates': {'blocked_by_critical_error': True, 'blocked_during_boot_sequence': True}},
@@ -661,6 +663,7 @@ LAYOUTS = {
     'slave_reg_write': {'id': 544, 'role': 'request', 'dlc': {'min': 2, 'max': 8}, 'fields': [{'name': 'register', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'payload', 'type': 'bytes', 'offset': 1, 'rest': True}]},
     'slave_reg_read_request': {'id': 545, 'role': 'request', 'dlc': {'exact': 2}, 'fields': [{'name': 'register', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'length', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [1, 8]}]},
     'slave_reg_read_response': {'id': 545, 'role': 'response', 'dlc': {'min': 1, 'max': 8}, 'fields': [{'name': 'data', 'type': 'bytes', 'offset': 0, 'rest': True}]},
+    'slave_app_patch': {'id': 546, 'role': 'response', 'dlc': {'exact': 2}, 'fields': [{'name': 'register', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'patch', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [1, 127]}]},
     'paste_jetting_config': {'id': 560, 'role': 'request', 'dlc': {'exact': 3}, 'fields': [{'name': 'channel', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 3]}, {'name': 'frequency_hz', 'type': 'u16', 'offset': 1, 'width': 2, 'range': [1, 65535]}]},
     'paste_jetting_pulse': {'id': 561, 'role': 'request', 'dlc': {'exact': 3}, 'fields': [{'name': 'channel', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 3]}, {'name': 'duty_percent', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 100]}, {'name': 'duration_ms', 'type': 'u8', 'offset': 2, 'width': 1, 'range': [1, 255]}]},
     'ads1115_config': {'id': 576, 'role': 'request', 'dlc': {'exact': 2}, 'fields': [{'name': 'config', 'type': 'u16', 'offset': 0, 'width': 2}]},
@@ -1686,6 +1689,16 @@ def encode_slave_reg_read_response(data: bytes) -> tuple[int, bytes]:
 def decode_slave_reg_read_response(data: bytes, strict: bool = False) -> dict | None:
     """Fields of 0x221 (response), or None when the payload is too short."""
     return decode("slave_reg_read_response", data, strict)
+
+
+def encode_slave_app_patch(register: int, patch: int) -> tuple[int, bytes]:
+    """Patch number of the slave application (companion of 0x221) (0x222, response)."""
+    return encode("slave_app_patch", register=register, patch=patch)
+
+
+def decode_slave_app_patch(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x222 (response), or None when the payload is too short."""
+    return decode("slave_app_patch", data, strict)
 
 
 def encode_paste_jetting_config(channel: int, frequency_hz: int) -> tuple[int, bytes]:

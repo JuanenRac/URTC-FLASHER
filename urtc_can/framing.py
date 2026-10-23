@@ -6,6 +6,8 @@
 """A classic CAN frame as this protocol uses it: a standard 11-bit identifier and up to eight bytes."""
 from __future__ import annotations
 
+from typing import Any
+
 from dataclasses import dataclass
 
 from . import protocol
@@ -58,12 +60,13 @@ class CanFrame:
 
     def name(self) -> str | None:
         """The canonical name of the identifier, or None for one the protocol does not define."""
-        info = protocol.MESSAGES.get(self.id)
+        info: Any = protocol.MESSAGES.get(self.id)
         return info["name"] if info else None
 
 
 def is_magic(can_id: int, data: bytes) -> str | None:
     """The name of the magic payload this frame carries (identifier and four bytes both right), else None."""
+    magic: Any
     for name, magic in protocol.MAGIC_PAYLOADS.items():
         if can_id == magic["id"] and bytes(data) == bytes.fromhex(magic["data"]):
             return name

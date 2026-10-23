@@ -1428,6 +1428,10 @@
       "name": "SLAVE_REG_READ"
     },
     {
+      "id": "0x222",
+      "name": "SLAVE_APP_PATCH"
+    },
+    {
       "id": "0x230",
       "name": "PASTE_JETTING_CONFIG"
     },
@@ -2668,6 +2672,19 @@
       "frame": {
         "id": "0x221",
         "data": "1234"
+      }
+    },
+    {
+      "name": "SLAVE_APP_PATCH response: patch 4",
+      "message": "SLAVE_APP_PATCH",
+      "layout": "slave_app_patch",
+      "fields": {
+        "register": 1,
+        "patch": 4
+      },
+      "frame": {
+        "id": "0x222",
+        "data": "0104"
       }
     },
     {
@@ -5349,6 +5366,40 @@
       "fields": null
     },
     {
+      "name": "SLAVE_APP_PATCH response: patch 4",
+      "message": "SLAVE_APP_PATCH",
+      "layout": "slave_app_patch",
+      "frame": {
+        "id": "0x222",
+        "data": "0104"
+      },
+      "fields": {
+        "register": 1,
+        "patch": 4
+      }
+    },
+    {
+      "name": "SLAVE_APP_PATCH response: 1 bytes is too short",
+      "message": "SLAVE_APP_PATCH",
+      "layout": "slave_app_patch",
+      "frame": {
+        "id": "0x222",
+        "data": "01"
+      },
+      "fields": null
+    },
+    {
+      "name": "SLAVE_APP_PATCH response: one byte too many is refused when strict",
+      "message": "SLAVE_APP_PATCH",
+      "layout": "slave_app_patch",
+      "frame": {
+        "id": "0x222",
+        "data": "010400"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
       "name": "PASTE_JETTING_CONFIG request: channel 1 at 1 kHz",
       "message": "PASTE_JETTING_CONFIG",
       "layout": "paste_jetting_config",
@@ -6792,6 +6843,24 @@
       "fields": {
         "register": 34,
         "length": 0
+      }
+    },
+    {
+      "name": "SLAVE_APP_PATCH: patch above its maximum",
+      "message": "SLAVE_APP_PATCH",
+      "layout": "slave_app_patch",
+      "fields": {
+        "register": 1,
+        "patch": 128
+      }
+    },
+    {
+      "name": "SLAVE_APP_PATCH: patch below its minimum",
+      "message": "SLAVE_APP_PATCH",
+      "layout": "slave_app_patch",
+      "fields": {
+        "register": 1,
+        "patch": 0
       }
     },
     {

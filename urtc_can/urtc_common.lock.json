@@ -8,11 +8,11 @@
     },
     "conformance.py": {
       "from": "src/urtc_common/conformance.py",
-      "sha256": "f38ad697e4a29177a35047f44c2efcf749b42b6b00caaf04ef0efa2c55bdd07e"
+      "sha256": "ac21e8b66c3c7f0865d67cebf75b0347aee227efb51fed0c22a5fb133dfeae10"
     },
     "framing.py": {
       "from": "src/urtc_common/framing.py",
-      "sha256": "7317394a709a4e2683b5534bae161ea5298b0c45829df05eb30a4046b884344d"
+      "sha256": "b26b47e7fec0ed1eb04f560221f42dae1b0706952084fd0787440a35b153ce2f"
     },
     "help_qt.py": {
       "from": "src/urtc_common/help_qt.py",
@@ -28,7 +28,7 @@
     },
     "protocol.py": {
       "from": "src/urtc_common/protocol.py",
-      "sha256": "eb3a32db6996db180464b9ca19d64d1bf8274c10aab1d7b3668e6cc75ff3de93"
+      "sha256": "c291f2e4d1792dd35ab6273bb81c021bc4089ff8fe773c497bb889b776205278"
     },
     "quick_state.py": {
       "from": "src/urtc_common/quick_state.py",
@@ -40,7 +40,7 @@
     },
     "slcan.py": {
       "from": "src/urtc_common/slcan.py",
-      "sha256": "a3a0d3d9037a5cbf227351f382cdca6de22c6915ebbba15400f872f94310f9ef"
+      "sha256": "f1a1367b22661e7915f993872730339caba34a01244348b4b1c85cabb1b607ba"
     },
     "transports.py": {
       "from": "src/urtc_common/transports.py",
@@ -56,7 +56,7 @@
     },
     "update_service.py": {
       "from": "src/urtc_common/update_service.py",
-      "sha256": "965764d3fed0dfa3ea725929694f869647e29e5aae0280d15af6d79808167356"
+      "sha256": "9c84dd68c3805a4bafe609384556bf347ab6ccffef63ce736343195bb855b6a1"
     },
     "update_strings.py": {
       "from": "src/urtc_common/update_strings.py",
@@ -64,11 +64,11 @@
     },
     "versioning.py": {
       "from": "src/urtc_common/versioning.py",
-      "sha256": "9445064b12844896972625baf500e52fb3afd268b69f9e0ba4ee4906cb080a85"
+      "sha256": "cb9ed186397eebb97fd2285d94919edb44cddad060e0fd25ff07ac90d2db0f00"
     },
     "virtual_board.py": {
       "from": "src/urtc_common/virtual_board.py",
-      "sha256": "93647ffb2e4bbd1090a9e4dfb658dad2ce0d56e60a0e9cbca1388cc92b08edc0"
+      "sha256": "9c13bb3a2782dafd5a28291a00a76fbc685726b3e8c6f2c31a4a8a6b3dc3b96d"
     }
   }
 }

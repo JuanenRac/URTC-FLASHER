@@ -34,6 +34,7 @@ import re
 import urllib.request
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from typing import Any
 from pathlib import Path
 
 from . import self_update as su
@@ -151,7 +152,7 @@ class UpdateService:
         public_key_hex: str = RELEASE_PUBLIC_KEY_HEX,
         key_id: str = RELEASE_KEY_ID,
         repo: str | None = None,
-        fetch: Callable[[str], object] = urllib_fetch,
+        fetch: Callable[[str], Any] = urllib_fetch,
         platform: str | None = None,
         busy: Callable[[], str | None] | None = None,
     ) -> None:

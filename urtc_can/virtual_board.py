@@ -40,7 +40,7 @@ import socket
 import subprocess
 import sys
 import threading
-from typing import Callable, Iterable
+from typing import Any, Callable, Iterable
 
 from . import protocol
 from .framing import FrameError
@@ -56,7 +56,8 @@ ADAPTER_VERSION = "V0101"  # hardware 01, software 01: what the V command answer
 
 
 def _magic(name: str) -> bytes:
-    return bytes.fromhex(protocol.MAGIC_PAYLOADS[name]["data"])
+    magic: Any = protocol.MAGIC_PAYLOADS[name]
+    return bytes.fromhex(magic["data"])
 
 
 class VirtualBoard:

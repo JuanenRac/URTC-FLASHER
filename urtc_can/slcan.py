@@ -99,7 +99,7 @@ class LineReader:
     def frames(self, chunk: bytes) -> list[CanFrame]:
         """Feed bytes and return every frame they completed."""
         self.feed(chunk)
-        out = []
+        out: list[CanFrame] = []
         while True:
             frame = self.next_frame()
             if frame is None:

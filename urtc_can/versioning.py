@@ -12,7 +12,7 @@ payload. This module only interprets frames that were already collected; waiting
 """
 from __future__ import annotations
 
-from typing import Iterable
+from typing import Any, Iterable
 
 from . import protocol
 
@@ -40,7 +40,7 @@ def parse_version_answer(frames: Iterable[Frame]) -> dict | None:
             patch_frame = data[:3]
     if answer is None:
         return None
-    result = {
+    result: dict[str, Any] = {
         "responder": "bootloader" if answer[0] == protocol.RESPONDER_BOOTLOADER else "application",
         "hardware_id": f"0x{int.from_bytes(answer[1:5], 'big'):08X}",
         "major": int.from_bytes(answer[5:7], "big"),

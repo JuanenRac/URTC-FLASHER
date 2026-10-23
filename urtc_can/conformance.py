@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Callable
+from typing import Any, Callable
 
 from . import protocol, quick_state, versioning
 from .framing import CanFrame, FrameError
@@ -31,14 +31,16 @@ def load(path: Path | str = DEFAULT_PATH) -> dict:
 
 def _to_call_fields(layout: str, fields: dict) -> dict:
     """Vector fields to call arguments: the hex string of a bytes field becomes bytes."""
-    types = {f["name"]: f["type"] for f in protocol.LAYOUTS[layout]["fields"]}
+    layout_fields: Any = protocol.LAYOUTS[layout]["fields"]
+    types = {f["name"]: f["type"] for f in layout_fields}
     return {name: (bytes.fromhex(value) if types[name] == "bytes" and value is not None else value) for name, value in fields.items()}
 
 
 def _from_result(layout: str, fields: dict | None) -> dict | None:
     if fields is None:
         return None
-    types = {f["name"]: f["type"] for f in protocol.LAYOUTS[layout]["fields"]}
+    layout_fields: Any = protocol.LAYOUTS[layout]["fields"]
+    types = {f["name"]: f["type"] for f in layout_fields}
     return {name: (value.hex().upper() if types[name] == "bytes" and value is not None else value) for name, value in fields.items()}
 
 
