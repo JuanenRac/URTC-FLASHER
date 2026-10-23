@@ -9,6 +9,8 @@ drawn to a PNG with ``grabWindow``. No board is needed and nothing is sent: the 
 
     python tools/capture_screens.py                 # writes docs/screenshots/<program>-deck.png, -help.png and -updates.png
     python tools/capture_screens.py --out DIR       # another folder
+    python tools/capture_screens.py --language german        # the same pictures in German: <program>-deck-de.png ...
+    python tools/capture_screens.py --all-languages          # the English ones and those of the seven other languages
 
 The same file is in the flasher and in the tester; it finds out which one it is in. The pictures use the Basic style of Qt Quick Controls, the one the
 programs run with, and, on Windows, the fonts of the system (an offscreen Qt has none of its own there).
@@ -28,10 +30,13 @@ if sys.platform == "win32":
     os.environ.setdefault("QT_QPA_FONTDIR", os.path.join(os.environ.get("SystemRoot", r"C:\Windows"), "Fonts"))
 
 PROGRAMS = {
-    "flasher": {"module": "qt_flasher", "bridge": "FlasherQtBridge", "context": "flasherBackend", "deck": "FlasherDeck.qml"},
-    "tester": {"module": "qt_tester", "bridge": "TesterQtBridge", "context": "testerBackend", "deck": "TesterDeck.qml"},
+    "flasher": {"module": "qt_flasher", "bridge": "FlasherQtBridge", "context": "flasherBackend", "deck": "FlasherDeck.qml", "config": "flasher_config"},
+    "tester": {"module": "qt_tester", "bridge": "TesterQtBridge", "context": "testerBackend", "deck": "TesterDeck.qml", "config": "tester_config"},
 }
 SIZE = (1440, 900)
+# the language code the program stores -> the suffix of the picture (English has none)
+LANGUAGE_SUFFIX = {"english": "", "spanish": "-es", "german": "-de", "french": "-fr", "italian": "-it", "japanese": "-ja", "chinese": "-zh",
+                   "portuguese": "-pt"}
 
 
 def which_program() -> str:
@@ -41,7 +46,17 @@ def which_program() -> str:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--out", default=str(ROOT / "docs" / "screenshots"))
+    parser.add_argument("--language", choices=sorted(LANGUAGE_SUFFIX), default="english", help="the interface language of the pictures")
+    parser.add_argument("--all-languages", action="store_true", help="one run per language (each in its own process)")
     args = parser.parse_args(argv)
+    if args.all_languages:
+        import subprocess
+
+        for code in LANGUAGE_SUFFIX:
+            result = subprocess.run([sys.executable, str(Path(__file__).resolve()), "--language", code, "--out", args.out], check=False)
+            if result.returncode != 0:
+                return result.returncode
+        return 0
     name = which_program()
     spec = PROGRAMS[name]
     sys.path.insert(0, str(ROOT))
@@ -56,6 +71,13 @@ def main(argv: list[str] | None = None) -> int:
     from PySide6.QtQuickControls2 import QQuickStyle
 
     module = importlib.import_module(spec["module"])
+    if args.language != "english":
+        # the program reads its language from its configuration file when it is imported: switch the texts and the copies of the code
+        config = importlib.import_module(spec["config"])
+        config._current_language = args.language
+        config._translations = config.load_language(args.language)
+        if hasattr(module, "_current_language"):
+            module._current_language = args.language
     QQuickStyle.setStyle("Basic")
     app = QGuiApplication([])
     bridge = getattr(module, spec["bridge"])()
@@ -83,7 +105,7 @@ def main(argv: list[str] | None = None) -> int:
 
     def shot(label: str) -> None:
         image = QQuickWindow.grabWindow(root)
-        path = out / f"{name}-{label}.png"
+        path = out / f"{name}-{label}{LANGUAGE_SUFFIX[args.language]}.png"
         if not image.save(str(path)):
             raise SystemExit(f"CAPTURE=FAIL could not write {path}")
         written.append(path.name)

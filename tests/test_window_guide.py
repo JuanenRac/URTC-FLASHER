@@ -11,7 +11,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 PROGRAM = "flasher"
-PICTURES = [f"{PROGRAM}-deck.png", f"{PROGRAM}-help.png", f"{PROGRAM}-updates.png"]
+SUFFIXES = ["", "-es", "-de", "-fr", "-it", "-ja", "-zh", "-pt"]   # English and the seven other languages of the program
+PICTURES = [f"{PROGRAM}-{screen}{suffix}.png" for suffix in SUFFIXES for screen in ("deck", "help", "updates")]
 READMES = ["README.md", "README_spa.md", "README_fra.md", "README_ita.md", "README_deu.md", "README_jpn.md", "README_zho.md", "README_por.md"]
 
 
@@ -40,3 +41,4 @@ def test_every_readme_points_to_the_guide_and_shows_the_window():
 def test_the_script_that_takes_the_pictures_is_there_and_names_this_program():
     source = (ROOT / "tools" / "capture_screens.py").read_text(encoding="utf-8")
     assert "grabWindow" in source and "QT_QPA_PLATFORM" in source and PROGRAM in source
+    assert "--all-languages" in source and all(suffix in source for suffix in SUFFIXES if suffix)
