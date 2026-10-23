@@ -31,7 +31,7 @@ jobs:
       - name: Run the test suite
         run: |
           python -m pip install pyserial PySide6 -r requirements-dev.txt
-          python -m pytest -q tests
+          python -m pytest -q --cov --cov-config=.coveragerc --cov-fail-under=61 tests
         env:
           QT_QPA_PLATFORM: offscreen
   baseline:

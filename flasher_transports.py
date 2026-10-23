@@ -34,10 +34,23 @@ from urtc_can.transports import (  # noqa: F401
     TransportError,
     as_frames,
     detect_bitrate_listen_only,
+    is_serial_url,
     list_socketcan_interfaces,
 )
 from urtc_can.transports import SLCAN as _SharedSLCAN
 from urtc_can.transports import SocketCAN as _SharedSocketCAN
+
+
+VIRTUAL_PORT_ENV = "URTC_VIRTUAL_PORT"
+
+
+def virtual_ports(environ=None):
+    """The serial URLs named in URTC_VIRTUAL_PORT (comma separated), for example socket://127.0.0.1:7777: a virtual board
+    (python -m urtc_can.virtual_board) to try the program with no adapter and no hardware. Anything that is not a URL is ignored."""
+    import os
+
+    text = (os.environ if environ is None else environ).get(VIRTUAL_PORT_ENV, "")
+    return [item.strip() for item in text.split(",") if is_serial_url(item.strip())]
 
 
 class SLCAN(_SharedSLCAN):

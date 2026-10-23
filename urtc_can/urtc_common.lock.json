@@ -28,11 +28,15 @@
     },
     "transports.py": {
       "from": "src/urtc_common/transports.py",
-      "sha256": "87cb108800646e712f57aad2a1cffcd2cd21ca4f4909baef636d08bb9cba5b75"
+      "sha256": "3fb0d9a6db95de1131e5a26919695817ad0ccd277e00c269b74ec234c6b8d1ce"
     },
     "versioning.py": {
       "from": "src/urtc_common/versioning.py",
       "sha256": "9445064b12844896972625baf500e52fb3afd268b69f9e0ba4ee4906cb080a85"
+    },
+    "virtual_board.py": {
+      "from": "src/urtc_common/virtual_board.py",
+      "sha256": "93647ffb2e4bbd1090a9e4dfb658dad2ce0d56e60a0e9cbca1388cc92b08edc0"
     }
   }
 }

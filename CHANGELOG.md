@@ -2,6 +2,11 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- **A virtual board stands in for the hardware:** the program uses `urtc_can/virtual_board.py` from URTC-COMMON (a SLCAN server over TCP with a model of the board, application and bootloader), opens `socket://host:port` serial URLs, and the window lists the URLs named in `URTC_VIRTUAL_PORT` next to the real ports; a test flashes an image end to end through it. 6 new tests.
+- The CI holds the tests to a coverage floor of 61 percent (measured 69; `pytest-cov` is in `requirements-dev.txt`).
+
 ## [0.4.0] - Official images listed for a bare board and a development requirements file
 
 - **A board with no firmware and no image on disk gets the list of official images:** when the board answers from its boot-loader with no valid application and `firmware/` holds no image for it, the images of the newest release on GitHub are listed in the download section (nothing is downloaded or chosen by itself), with the log line in the eight languages. When an image is already there it is still chosen as before.

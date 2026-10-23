@@ -91,8 +91,16 @@ def _checked(error: type[TransportError], can_id: int, data: bytes) -> bytes:
 # =============================================================================
 # SLCAN
 # =============================================================================
+def is_serial_url(port: str) -> bool:
+    """True for a pyserial URL such as ``socket://127.0.0.1:7777`` (a COM port or a device path never contains ``://``)."""
+    return isinstance(port, str) and "://" in port
+
+
 class SLCAN:
     """The adapter's virtual COM port, speaking the SLCAN ASCII protocol.
+
+    ``port`` is a COM port or device path, or a pyserial URL (``socket://127.0.0.1:7777`` reaches the virtual board of
+    ``urtc_common.virtual_board``, so the programs run with no adapter).
 
     The OS-level read timeout is fixed once at connection and never changed: a caller's "wait up to N
     seconds" is a software deadline, because reassigning a serial port's timeout reaches down to the OS
@@ -110,7 +118,17 @@ class SLCAN:
                 raise SLCANError("pyserial isn't installed, so serial/SLCAN connections aren't available. Install it with: pip install pyserial") from exc
         self.log = log or _noop_log
         self._serial_exception = getattr(serial_module, "SerialException", OSError)
-        self.ser = serial_module.Serial(port, baudrate=baud, timeout=self._OS_READ_TIMEOUT)
+        if is_serial_url(port):
+            # socket://host:port (the virtual board), loop://, rfc2217://: anything pyserial opens by URL
+            opener = getattr(serial_module, "serial_for_url", None)
+            if opener is None:
+                raise SLCANError(f"this serial module cannot open {port!r} by URL")
+            try:
+                self.ser = opener(port, baudrate=baud, timeout=self._OS_READ_TIMEOUT)
+            except (self._serial_exception, OSError, ValueError) as exc:
+                raise SLCANError(f"couldn't open {port!r}: {exc}") from exc
+        else:
+            self.ser = serial_module.Serial(port, baudrate=baud, timeout=self._OS_READ_TIMEOUT)
         self._reader = LineReader()
         # Guards the write itself: send_frame can be called from a button, a keep-alive timer and a worker thread at once.
         self._write_lock = threading.Lock()

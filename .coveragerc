@@ -1,0 +1,12 @@
+[run]
+source = .
+omit =
+    tests/*
+    tools/*
+    build/*
+    dist/*
+    .venv/*
+    _swd_fixtures_scratch/*
+    verify_qt_*.py
+    bump*.py
+    build_exe.*

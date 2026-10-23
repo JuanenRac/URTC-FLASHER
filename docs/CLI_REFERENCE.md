@@ -264,6 +264,10 @@ Documented directly in `run_cli()`'s own docstring in `urtc_flasher.py`:
 | `2` | bad arguments or an invalid firmware file (missing `--port`, an unavailable transport, a file that fails the plausibility check without `--force`) |
 | `130` | cancelled (Ctrl+C) |
 
+## Without hardware
+
+A virtual board stands in for the adapter and the board: start `python -m urtc_can.virtual_board` and give its serial URL to `--port` with `--transport serial` (for example `--port socket://127.0.0.1:7777`). The window lists the URLs named in the environment variable `URTC_VIRTUAL_PORT` (comma separated) next to the real ports. The virtual board answers like a board, application and bootloader; it is a model written from the protocol description and does not replace a trial on a real board.
+
 ## GUI
 
 Running `urtc_flasher.py` with no arguments (or double-clicking it) opens

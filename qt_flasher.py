@@ -49,7 +49,7 @@ from flasher_records import (
 )
 from flasher_protocol import FlashError, URTCFlasher, minor_with_patch
 from flasher_swd_tools import CubeProgrammerCLI, PyOCDCLI, SWDFlashError
-from flasher_transports import SLCAN, SocketCAN, detect_bitrate_listen_only, list_socketcan_interfaces
+from flasher_transports import SLCAN, SocketCAN, detect_bitrate_listen_only, list_socketcan_interfaces, virtual_ports
 from flasher_validation import validate_firmware_file, validate_swd_image_file
 from urtc_ui import LanguageModel, connection_badge, format_bytes
 
@@ -1028,6 +1028,7 @@ class FlasherQtBridge(QObject):
             ports.extend(item for item in sorted(self._socketcan_ports) if item not in ports)
         else:
             self._socketcan_ports = set()
+        ports.extend(url for url in virtual_ports() if url not in ports)  # a virtual board named in URTC_VIRTUAL_PORT
         self._ports = ports
         if self._selected_port not in ports:
             self._selected_port = ports[0] if ports else ""
