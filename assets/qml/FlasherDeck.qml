@@ -205,6 +205,7 @@ ApplicationWindow {
 
     HelpDialog {
         id: helpDialog
+        objectName: "helpDialog"
         model: flasherBackend.help
         panelColor: window.panel
         borderColor: window.panelBorder
@@ -215,6 +216,7 @@ ApplicationWindow {
 
     UpdateDialog {
         id: updateDialog
+        objectName: "updateDialog"
         model: flasherBackend.updates
         panelColor: window.panel
         borderColor: window.panelBorder

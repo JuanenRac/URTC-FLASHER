@@ -1161,6 +1161,14 @@ Ce projet fait partie de l'écosystème robotique HYDRA-UMC du même auteur (Jua
 - **[HYDRA-UMC-OPS-AGENT](https://github.com/JuanenRac/HYDRA-UMC-OPS-AGENT)** — coordinateur d'incidents de maintenance : un rôle edge à faible privilège collecte un instantané d'inventaire/santé assaini, un rôle control-plane le rend en lecture seule et demande à un fournisseur d'IA de suggérer un diagnostic - n'applique jamais de correctif ni ne déploie rien.
 - **[HYDRA-UMC-DEV-SERVER](https://github.com/JuanenRac/HYDRA-UMC-DEV-SERVER)** — hôte de développement reproductible (Raspberry Pi 5 / CM5) qui héberge le code source de l'écosystème et exécute des tâches de compilation/test délimitées via une file d'attente durable ; un rôle de développement dédié, explicitement distinct d'un CM5 opérationnel.
 
+## 🖼️ La fenêtre, pas à pas
+
+Ces images montrent la vraie fenêtre, dessinée sans écran telle qu'elle s'ouvre (rien de connecté, rien d'envoyé). Le guide parcourt le panneau, la fenêtre d'aide et celle de mise à jour.
+
+![La fenêtre, pas à pas](docs/screenshots/flasher-deck.png)
+
+[Guide avec images](docs/WINDOW_GUIDE.md)
+
 <!-- urtc-section:updates -->
 ## 🔄 Comment il se met à jour
 
