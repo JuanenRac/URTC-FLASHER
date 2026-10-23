@@ -1,0 +1,10 @@
+{
+  "format": 1,
+  "urtc_common_version": "0.0.7",
+  "files": {
+    "make_update_package.py": {
+      "from": "tools/make_update_package.py",
+      "sha256": "950df03625550f0e89e3e38b884682cd2a06a5d511c19391628d9d80e3873d5a"
+    }
+  }
+}

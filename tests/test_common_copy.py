@@ -21,6 +21,7 @@ LOCKS = (
     ROOT / "tests" / "fixtures" / "urtc_common.lock.json",
     ROOT / "urtc_ui" / "urtc_common.lock.json",
     ROOT / "assets" / "qml" / "urtc_common.lock.json",
+    ROOT / "tools" / "urtc_common.lock.json",
 )
 
 
