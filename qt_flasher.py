@@ -119,7 +119,7 @@ class FlasherQtBridge(QObject):
         self._logs: list[str] = []
         self._cancel_requested = False
         self._flash_path = ""
-        # CAN-OTA options, with the same safe defaults as the Tk window:
+        # CAN-OTA options, with the same safe defaults as the original window:
         # main board, bootloader entry requested, no F-RAM erase and no
         # downgrade (which also needs its own second confirmation).
         self._flash_target = "master"
@@ -159,8 +159,8 @@ class FlasherQtBridge(QObject):
         self._swd_tools: list[dict[str, object]] = []
         self._swd_probes: list[dict[str, str]] = []
         # Full-chip SWD/JTAG programming - real state mirroring the
-        # earlier Tk window's own swd_target_var/swd_tool_var/
-        # swd_probe_var/swd_dry_run_var/swd_backup_var (the earlier Tk window).
+        # original window's own swd_target_var/swd_tool_var/
+        # swd_probe_var/swd_dry_run_var/swd_backup_var (the original window).
         # Same real safe defaults: master board, whichever tool is
         # actually installed, dry-run ON, backup OFF.
         self._swd_target = "master"
@@ -856,7 +856,7 @@ class FlasherQtBridge(QObject):
         return self._swd_scanning
 
     # -- Full-chip SWD/JTAG programming - real state mirroring
-    # the earlier Tk window's own swd_target_var/swd_tool_var/swd_probe_var/
+    # the original window's own swd_target_var/swd_tool_var/swd_probe_var/
     # swd_dry_run_var/swd_backup_var. This talks to the target directly
     # over the debug probe, NOT the CAN transport - every gate below is
     # deliberately independent of self.connected. --
@@ -936,7 +936,7 @@ class FlasherQtBridge(QObject):
 
     @Property(bool, notify=changed)
     def canFullChipFlash(self) -> bool:
-        """Same real preconditions as the earlier Tk window's own
+        """Same real preconditions as the original window's own
         start_swd_flash(): a supported tool actually installed, both
         real image files selected, and - if more than one probe answers
         to the selected tool - one of them explicitly chosen rather
@@ -962,7 +962,7 @@ class FlasherQtBridge(QObject):
 
     @Slot(str, result=str)
     def buildSwdFlashConfirmBody(self, backup_path: str) -> str:
-        """Real message assembly, matching the earlier Tk window's own
+        """Real message assembly, matching the original window's own
         start_swd_flash() probe_line/backup_line construction exactly -
         kept here rather than chained QML .replace() calls since
         MSG_CONFIRM_FULL_CHIP alone carries 5 real placeholders, more
@@ -1009,7 +1009,7 @@ class FlasherQtBridge(QObject):
     def freeToolOptions(self) -> list[str]:
         """Real display labels, index-aligned with the real selection
         value each one writes (0 = none, matching
-        the earlier Tk window's own _free_tool_display_to_selection)."""
+        the original window's own _free_tool_display_to_selection)."""
         return [_("OPT_FREE_TOOL_NONE")] + [f"{tool_id + 1} - {name}" for tool_id, name in TOOL_NAMES.items()]
 
     @Property(str, notify=changed)
@@ -1252,7 +1252,7 @@ class FlasherQtBridge(QObject):
     def _swd_target_addrs(self) -> tuple[int, int, int, int]:
         """(bootloader_addr, bootloader_max_size, app_addr, app_max_size)
         for the currently selected target - same real per-chip table as
-        the earlier Tk window's own browse_swd_bootloader/browse_swd_app."""
+        the original window's own browse_swd_bootloader/browse_swd_app."""
         if self._swd_target == "slave":
             return SLAVE_BOOTLOADER_FLASH_ADDR, SLAVE_BOOTLOADER_MAX_SIZE, SLAVE_APP_FLASH_ADDR, SLAVE_APP_MAX_SIZE
         return BOOTLOADER_FLASH_ADDR, BOOTLOADER_MAX_SIZE, APP_FLASH_ADDR, APP_MAX_SIZE
@@ -1304,7 +1304,7 @@ class FlasherQtBridge(QObject):
         from setSwdTarget above, or a manually typed/pasted TextField
         value) or a file:// URL (QML's own FileDialog.selectedFile) -
         both normalized to a plain path here, same real re-validate-on
-        every-entry-point discipline the earlier Tk window's own
+        every-entry-point discipline the original window's own
         browse_swd_bootloader has (its own docstring: "the path fields
         are plain text entries, so a manually typed or pasted path
         would otherwise skip the check entirely")."""
@@ -1343,7 +1343,7 @@ class FlasherQtBridge(QObject):
         fullChipFlashButton handler) - backup_path is "" whenever no
         backup was requested (or this is a dry run, which never
         actually needs a real file). This is the one real destructive
-        action this whole method migrates from the earlier Tk window's own
+        action this whole method migrates from the original window's own
         start_swd_flash()/_swd_flash_worker - full_chip_flash() itself
         (flasher_swd_tools.py) is reused completely unchanged."""
         if not self.canFullChipFlash:
@@ -1610,7 +1610,7 @@ class FlasherQtBridge(QObject):
         threading.Thread(target=_worker, daemon=True, name=f"urtc-qt-config-write-{key}").start()
 
     # Real, pre-existing per-field i18n keys (already used by the
-    # earlier Tk window for this exact same real confirmation) -
+    # original window for this exact same real confirmation) -
     # reused here verbatim rather than inventing generic ones, so both
     # UIs show identical, already-translated wording for the same event.
     _CONFIG_WRITE_LABELS = {
@@ -1671,7 +1671,7 @@ class FlasherQtBridge(QObject):
     def saveFreeToolConfig(self, selection: int) -> None:
         """selection is the real value already resolved by QML from
         freeToolOptions' own index (0 = none, matching
-        the earlier Tk window's own _free_tool_display_to_selection), not a
+        the original window's own _free_tool_display_to_selection), not a
         raw combo index - see that Property's own docstring."""
         if not self.canWriteDeviceConfig or not 0 <= selection <= len(TOOL_NAMES):
             self._log("FREE_TOOL_SAVE_BLOCKED not connected, busy, or selection out of range")

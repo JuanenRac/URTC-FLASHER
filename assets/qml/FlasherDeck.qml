@@ -41,7 +41,7 @@ ApplicationWindow {
     // (separate from the CAN-OTA `confirm` dialog below, which stays
     // dedicated to that one real flow) - each real write persists a
     // real EEPROM field, so every one of them asks first, same as the
-    // earlier Tk window's own messagebox.askyesno.
+    // original window's own messagebox.askyesno.
     function requestConfigWrite(title, body, action) {
         if (!flasherBackend.canWriteDeviceConfig)
             return
@@ -625,8 +625,8 @@ ApplicationWindow {
                 // EEPROM fields only this tool ever writes (every other
                 // real app, including URTC-TESTER's own Qt Quick deck,
                 // only reads them). Each Save asks for the same real
-                // confirmation the earlier Tk window already
-                // does (see the earlier Tk window's own save_expansion_board_
+                // confirmation the original window already
+                // does (see the original window's own save_expansion_board_
                 // type/save_mlx_sensor_variant/program_free_tool_config/
                 // program_device_serial) via the one shared configConfirm
                 // dialog below.
@@ -796,7 +796,7 @@ ApplicationWindow {
                 Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: panelBorder }
                 // -- Full-chip SWD/JTAG programming - the one real
                 // destructive action this deck migrates from
-                // the earlier Tk window's own start_swd_flash()/_swd_flash_worker.
+                // the original window's own start_swd_flash()/_swd_flash_worker.
                 // flasher_swd_tools.py's PyOCDCLI/CubeProgrammerCLI are
                 // reused completely unchanged; only the UI is new. See
                 // startFullChipFlash's own docstring in qt_flasher.py.
@@ -979,7 +979,7 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     enabled: flasherBackend.canFullChipFlash
                     onClicked: {
-                        // Same real condition as the earlier Tk window's own
+                        // Same real condition as the original window's own
                         // start_swd_flash(): a backup is only ever taken
                         // for a real (non-dry-run) flash - matches
                         // startFullChipFlash's own dry_run short-circuit.
