@@ -1105,6 +1105,27 @@ JSON 数値（`50580689`）のどちらも受け付けます——ファイル�
 - **[HYDRA-UMC-OPS-AGENT](https://github.com/JuanenRac/HYDRA-UMC-OPS-AGENT)** — 保守インシデントコーディネーター: 低権限のエッジ役割がサニタイズされたインベントリ/ヘルスのスナップショットを収集し、コントロールプレーン役割がそれを読み取り専用でレンダリングして AI プロバイダーに診断の提案を依頼します - パッチを適用することも、何かをデプロイすることも決してありません。
 - **[HYDRA-UMC-DEV-SERVER](https://github.com/JuanenRac/HYDRA-UMC-DEV-SERVER)** — 再現可能な開発ホスト（Raspberry Pi 5 / CM5）。エコシステムのソースコードを保管し、永続キューのもとで境界の明確なビルド/テストタスクを実行する。運用中の CM5 とは明確に異なる、開発専用の役割。
 
+<!-- urtc-section:updates -->
+## 🔄 更新のしくみ
+
+このプログラムは自分自身の新しいバージョンを探せます。「更新を確認」ボタンは GitHub に一度だけ問い合わせ、お使いのシステム向けで新しい場合にだけ署名付きパッケージを提案します。確認を有効にしない限り、何も自動では確認もインストールもされず、更新にはあなたの確認が必要です。パッケージは SHA-256 と、プログラムに固定されたリリース鍵の署名に一致しなければなりません。前のバージョンは保持され、新しいバージョンが起動しない場合は自動的に復元されます。`urtc-updater --cli package list|check|install|rollback` はコマンドラインからフラッシャーとテスターに対して同じことを行い、`install --file` はネットワークなしで動作します。
+<!-- /urtc-section:updates -->
+
+<!-- urtc-section:first_flash -->
+## 🚦 ハードウェアなしの最初の書き込み
+
+1. 仮想ボードを起動します：`python -m urtc_can.virtual_board`。
+2. 別のターミナルで `URTC_VIRTUAL_PORT=socket://127.0.0.1:7777` を設定してフラッシャーを起動します。仮想ボードがポート一覧に表示されます。
+3. それを選んで接続を押し、`firmware/` からイメージを選び（または参照して）CAN-OTA 開始を押します。
+4. 仮想ボードは、実機と同じサイズ、署名、バージョンの検査を行いながら更新全体を受け付けます。これはモデルであり、実機では動かしていません。
+<!-- /urtc-section:first_flash -->
+
+<!-- urtc-section:compatibility -->
+## 🧩 互換性
+
+どのバージョンの URTC プログラムが連携して動作し、それぞれがどのプロトコルバージョンを話すかは、URTC-COMMON が生成する互換性表に載っています：[docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md)。
+<!-- /urtc-section:compatibility -->
+
 ## 📜 ライセンス
 
 URTC Flasher の著作権は (c) 2026 JuanenRac（Electro Hobby 3D）に帰属します。本プロジェクトまたはその派生物を配布する際は、この表示を必ず含めてください。

@@ -2,6 +2,10 @@
   "format": 1,
   "urtc_common_version": "0.0.7",
   "files": {
+    "HelpDialog.qml": {
+      "from": "qml/HelpDialog.qml",
+      "sha256": "f068c74647937e0b8a8c29b5eccfba9d9095522d5f734f859fcb73c4609ad4e7"
+    },
     "UpdateDialog.qml": {
       "from": "qml/UpdateDialog.qml",
       "sha256": "d93664a9117796b320814c3d95b96cede75071a91429105d4270f84189d08215"

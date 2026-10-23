@@ -1163,6 +1163,27 @@ Ce projet fait partie de l'écosystème robotique HYDRA-UMC du même auteur (Jua
 - **[HYDRA-UMC-OPS-AGENT](https://github.com/JuanenRac/HYDRA-UMC-OPS-AGENT)** — coordinateur d'incidents de maintenance : un rôle edge à faible privilège collecte un instantané d'inventaire/santé assaini, un rôle control-plane le rend en lecture seule et demande à un fournisseur d'IA de suggérer un diagnostic - n'applique jamais de correctif ni ne déploie rien.
 - **[HYDRA-UMC-DEV-SERVER](https://github.com/JuanenRac/HYDRA-UMC-DEV-SERVER)** — hôte de développement reproductible (Raspberry Pi 5 / CM5) qui héberge le code source de l'écosystème et exécute des tâches de compilation/test délimitées via une file d'attente durable ; un rôle de développement dédié, explicitement distinct d'un CM5 opérationnel.
 
+<!-- urtc-section:updates -->
+## 🔄 Comment il se met à jour
+
+Ce programme peut chercher une version plus récente de lui-même : le bouton « Rechercher une mise à jour » interroge GitHub une fois et ne propose un paquet signé que s'il est pour votre système et plus récent. Rien n'est vérifié ni installé tout seul tant que vous n'activez pas la vérification, et une mise à jour demande votre confirmation. Le paquet doit correspondre à son SHA-256 et à la signature de la clé des releases épinglée dans le programme ; la version précédente est conservée et rétablie d'elle-même si la nouvelle ne démarre pas. `urtc-updater --cli package list|check|install|rollback` fait la même chose en ligne de commande pour le flasher et le testeur, et `install --file` fonctionne sans réseau.
+<!-- /urtc-section:updates -->
+
+<!-- urtc-section:first_flash -->
+## 🚦 Premier flashage sans matériel
+
+1. Démarrez la carte virtuelle : `python -m urtc_can.virtual_board`.
+2. Dans un autre terminal, définissez `URTC_VIRTUAL_PORT=socket://127.0.0.1:7777` et démarrez le flasher : la carte virtuelle est dans la liste des ports.
+3. Sélectionnez-la, appuyez sur Connecter, choisissez une image de `firmware/` (ou parcourez) et appuyez sur Démarrer CAN-OTA.
+4. La carte virtuelle accepte toute la mise à jour, avec les mêmes vérifications de taille, de signature et de version qu'une vraie. C'est un modèle : rien de cela n'a tourné sur une carte.
+<!-- /urtc-section:first_flash -->
+
+<!-- urtc-section:compatibility -->
+## 🧩 Compatibilité
+
+Les versions des programmes URTC qui fonctionnent ensemble, et la version du protocole que parle chacune, figurent dans le tableau de compatibilité que génère URTC-COMMON : [docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md).
+<!-- /urtc-section:compatibility -->
+
 ## 📜 LICENCE
 
 URTC Flasher est (c) 2026 JuanenRac (Electro Hobby 3D). Cet avis doit

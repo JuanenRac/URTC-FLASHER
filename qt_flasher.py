@@ -52,6 +52,7 @@ from flasher_swd_tools import CubeProgrammerCLI, PyOCDCLI, SWDFlashError
 from flasher_transports import SLCAN, SocketCAN, detect_bitrate_listen_only, list_socketcan_interfaces, virtual_ports
 from flasher_validation import validate_firmware_file, validate_swd_image_file
 from urtc_can import update_service as update_service
+from urtc_can.help_qt import HelpModel
 from urtc_can.update_qt import UpdateModel
 from urtc_ui import LanguageModel, connection_badge, format_bytes
 
@@ -136,6 +137,7 @@ class FlasherQtBridge(QObject):
         self._file_logger: logging.Logger | None = None
         self._release_entries: list[dict] = []
         self._update_model: UpdateModel | None = None
+        self._help_model: HelpModel | None = None
         self._release_status = ""
         self._release_loading = False
         self._release_downloading = False
@@ -213,6 +215,13 @@ class FlasherQtBridge(QObject):
             )
             self._update_model = UpdateModel(service, language=lambda: _current_language, save_options=save, parent=self)
         return self._update_model
+
+    @Property(QObject, constant=True)
+    def help(self) -> QObject:
+        """The quick guide of the Help dialog (shared with the other programs, in the eight languages)."""
+        if self._help_model is None:
+            self._help_model = HelpModel("flasher", lambda: _current_language, parent=self)
+        return self._help_model
 
     @Property(str, constant=True)
     def title(self) -> str:

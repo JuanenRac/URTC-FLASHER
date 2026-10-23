@@ -1132,6 +1132,27 @@ Este proyecto es parte del ecosistema de robótica HYDRA-UMC del mismo autor (Ju
 - **[HYDRA-UMC-OPS-AGENT](https://github.com/JuanenRac/HYDRA-UMC-OPS-AGENT)** — coordinador de incidencias de mantenimiento: un rol edge de bajo privilegio recopila un snapshot de inventario/salud saneado, un rol control-plane lo renderiza de solo lectura y pide a un proveedor de IA que sugiera un diagnóstico - nunca aplica un parche ni despliega nada.
 - **[HYDRA-UMC-DEV-SERVER](https://github.com/JuanenRac/HYDRA-UMC-DEV-SERVER)** — host de desarrollo reproducible (Raspberry Pi 5 / CM5) que almacena el código del ecosistema y ejecuta tareas acotadas de compilación/pruebas bajo una cola duradera; un rol de desarrollo dedicado, explícitamente distinto de un CM5 operativo.
 
+<!-- urtc-section:updates -->
+## 🔄 Cómo se actualiza
+
+Este programa puede buscar una versión más nueva de sí mismo: el botón «Buscar actualización» pregunta una vez a GitHub y ofrece un paquete firmado solo si es para tu sistema y más nuevo. Nada se comprueba ni se instala por su cuenta salvo que actives la comprobación, y una actualización necesita tu confirmación. El paquete debe coincidir con su SHA-256 y con la firma de la clave de las releases fijada en el programa; la versión anterior se conserva y se restaura sola si la nueva no arranca. `urtc-updater --cli package list|check|install|rollback` hace lo mismo desde la línea de órdenes para el flasher y el tester, y `install --file` funciona sin red.
+<!-- /urtc-section:updates -->
+
+<!-- urtc-section:first_flash -->
+## 🚦 Primer flasheo sin hardware
+
+1. Arranca la placa virtual: `python -m urtc_can.virtual_board`.
+2. En otra terminal define `URTC_VIRTUAL_PORT=socket://127.0.0.1:7777` y arranca el flasher: la placa virtual está en la lista de puertos.
+3. Selecciónala, pulsa Conectar, elige una imagen de `firmware/` (o búscala) y pulsa Iniciar CAN-OTA.
+4. La placa virtual admite la actualización completa, con las mismas comprobaciones de tamaño, firma y versión que una real. Es un modelo: nada de esto ha corrido en una placa.
+<!-- /urtc-section:first_flash -->
+
+<!-- urtc-section:compatibility -->
+## 🧩 Compatibilidad
+
+Qué versiones de los programas de URTC funcionan juntas, y qué versión del protocolo habla cada una, figura en la tabla de compatibilidad que genera URTC-COMMON: [docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md).
+<!-- /urtc-section:compatibility -->
+
 ## 📜 LICENCIA
 
 URTC Flasher es (c) 2026 JuanenRac (Electro Hobby 3D). Este aviso debe
