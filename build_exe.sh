@@ -86,8 +86,8 @@ echo
 
 echo "[3/6] Installing Python dependencies..."
 python3 -m pip install --upgrade pip >/dev/null
-python3 -m pip install -r requirements.txt
-python3 -m pip install pyinstaller
+python3 -m pip install --require-hashes -r requirements.lock
+python3 -m pip install --require-hashes -r requirements-build.lock
 echo "      Done."
 echo
 
