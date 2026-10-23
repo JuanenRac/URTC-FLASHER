@@ -24,7 +24,7 @@
 </p>
 
 
-**Versão:** 0.3.9 (a versão desta própria ferramenta - mostrada no banner da
+**Versão:** 0.4.0 (a versão desta própria ferramenta - mostrada no banner da
 janela e na barra de título, acompanhada separadamente da versão do firmware
 da placa URTC que escreve. Segue um esquema X.Y.Z em que o número de patch
 sobe automaticamente em cada build real através de build_exe.bat/build_exe.sh
@@ -76,9 +76,9 @@ mão como alternativa. Tudo o resto descrito aqui foi exercitado apenas contra `
 
 | | |
 |---|---|
-| Versão | `0.3.9` |
+| Versão | `0.4.0` |
 | Maturidade | Funcional |
-| Testes | 405 |
+| Testes | 466 |
 | Tecnologia | Python / PySide6 / Qt Quick / CAN-OTA / SWD/JTAG |
 | Destino | O PC de quem o usa |
 | Em hardware real | Só simulado: testado com emuladores, dublês de teste ou simuladores; não há registo de execução em hardware real para esta versão |

@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here.
 
-## [Unreleased]
+## [0.4.0] - Official images listed for a bare board and a development requirements file
 
 - **A board with no firmware and no image on disk gets the list of official images:** when the board answers from its boot-loader with no valid application and `firmware/` holds no image for it, the images of the newest release on GitHub are listed in the download section (nothing is downloaded or chosen by itself), with the log line in the eight languages. When an image is already there it is still chosen as before.
 

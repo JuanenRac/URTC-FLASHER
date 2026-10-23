@@ -24,7 +24,7 @@
 </p>
 
 
-**Versión:** 0.3.9 (la versión de esta herramienta - se muestra en el banner
+**Versión:** 0.4.0 (la versión de esta herramienta - se muestra en el banner
 de la ventana y en la barra de título, se controla por separado de la
 versión del firmware de la placa URTC que escribe. Sigue un esquema X.Y.Z
 donde el número de parche sube automáticamente en cada build real via
@@ -75,9 +75,9 @@ como respaldo. Todo lo demás descrito aquí se ha ejercitado solo contra `MockC
 
 | | |
 |---|---|
-| Versión | `0.3.9` |
+| Versión | `0.4.0` |
 | Madurez | Funcional |
-| Tests | 405 |
+| Tests | 466 |
 | Tecnología | Python / PySide6 / Qt Quick / CAN-OTA / SWD/JTAG |
 | Destino | El PC de quien lo usa |
 | En hardware real | Solo simulado: probado con emuladores, dobles de prueba o simuladores; no consta ninguna ejecución en hardware real para esta versión |

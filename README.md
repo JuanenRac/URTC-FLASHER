@@ -24,7 +24,7 @@
 </p>
 
 
-**Version:** 0.3.9 (this tool's own version - shown in the window banner and
+**Version:** 0.4.0 (this tool's own version - shown in the window banner and
 title bar, tracked separately from the URTC board firmware version it
 writes. Follows an X.Y.Z scheme where the patch number is raised by the
 explicit `python bump.py` step - building never changes it - see CHANGELOG.md for
@@ -73,9 +73,9 @@ talking to a bootloader: have JTAG on hand as a fallback. Everything else descri
 
 | | |
 |---|---|
-| Version | `0.3.9` |
+| Version | `0.4.0` |
 | Maturity | Functional |
-| Tests | 405 |
+| Tests | 466 |
 | Stack | Python / PySide6 / Qt Quick / CAN-OTA / SWD/JTAG |
 | Target | The PC of the person using it |
 | On real hardware | Simulated only: tested against emulators, fakes or simulators; no run on real hardware is recorded for this version |

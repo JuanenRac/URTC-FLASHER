@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "urtc_common_version": "0.0.6",
+  "urtc_common_version": "0.0.7",
   "files": {
     "__init__.py": {
       "from": "src/urtc_ui/__init__.py",

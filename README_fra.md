@@ -24,7 +24,7 @@
 </p>
 
 
-**Version :** 0.3.9 (la version de cet outil - affichée dans la bannière
+**Version :** 0.4.0 (la version de cet outil - affichée dans la bannière
 de la fenêtre et la barre de titre, suivie séparément de la version du
 firmware de la carte URTC qu'il écrit. Suit un schéma X.Y.Z où le numéro
 de patch augmente automatiquement à chaque build réel via
@@ -77,9 +77,9 @@ JTAG à portée de main comme solution de repli. Tout le reste décrit ici n'a �
 
 | | |
 |---|---|
-| Version | `0.3.9` |
+| Version | `0.4.0` |
 | Maturité | Fonctionnel |
-| Tests | 405 |
+| Tests | 466 |
 | Technologie | Python / PySide6 / Qt Quick / CAN-OTA / SWD/JTAG |
 | Cible | Le PC de la personne qui l'utilise |
 | Sur matériel réel | Simulé seulement : testé avec des émulateurs, des doubles de test ou des simulateurs ; aucune exécution sur du matériel réel n'est consignée pour cette version |

@@ -24,7 +24,7 @@
 </p>
 
 
-**Version:** 0.3.9 (die Version dieses Tools selbst - angezeigt im
+**Version:** 0.4.0 (die Version dieses Tools selbst - angezeigt im
 Fenster-Banner und in der Titelleiste, getrennt verfolgt von der
 Firmware-Version der URTC-Platine, die es schreibt. Folgt einem
 X.Y.Z-Schema, bei dem die Patch-Nummer bei jedem echten Build über
@@ -78,9 +78,9 @@ JTAG als Rückfalloption bereit. Alles Übrige hier Beschriebene wurde nur gegen
 
 | | |
 |---|---|
-| Version | `0.3.9` |
+| Version | `0.4.0` |
 | Reifegrad | Funktionsfähig |
-| Tests | 405 |
+| Tests | 466 |
 | Technik | Python / PySide6 / Qt Quick / CAN-OTA / SWD/JTAG |
 | Ziel | Der PC der Person, die es benutzt |
 | Auf echter Hardware | Nur simuliert: gegen Emulatoren, Attrappen oder Simulatoren getestet; für diese Version ist kein Lauf auf echter Hardware vermerkt |
