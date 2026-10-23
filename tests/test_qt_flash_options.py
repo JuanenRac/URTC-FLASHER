@@ -305,6 +305,26 @@ class QtFlashOptionsTests(unittest.TestCase):
         self.assertEqual(self.bridge.selectedFirmware, "recovery.bin")
         self.assertTrue(any(line.startswith("RECOVERY_IMAGE_SELECTED") for line in self.logs))
 
+    def test_a_board_without_firmware_and_without_a_local_image_lists_the_newest_release(self):
+        listed = []
+        self.bridge.loadRelease = lambda tag: listed.append(tag)
+        self.bridge._selected_firmware = ""
+        self.bridge._recovery_candidate = ""
+        self.bridge._recovery_wants_download = True
+        self.bridge._on_snapshot_result([], "")
+        self.assertEqual(listed, [""])
+        self.assertEqual(self.bridge.selectedFirmware, "")  # nothing is downloaded or chosen by itself
+        self.assertTrue(any(line == "RECOVERY_NO_LOCAL_IMAGE" for line in self.logs))
+        # asked once only, and never when an image is already chosen or the target is the slave
+        self.bridge._on_snapshot_result([], "")
+        self.assertEqual(listed, [""])
+        for chosen, target in (("x.bin", "master"), ("", "slave")):
+            listed.clear()
+            self.bridge._selected_firmware, self.bridge._flash_target = chosen, target
+            self.bridge._recovery_wants_download = True
+            self.bridge._on_snapshot_result([], "")
+            self.assertEqual(listed, [], (chosen, target))
+
 
 if __name__ == "__main__":
     unittest.main()

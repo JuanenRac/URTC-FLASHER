@@ -128,6 +128,7 @@ class FlasherQtBridge(QObject):
         self._bus_activity_text = ""
         self._export_result = ""
         self._recovery_candidate = ""
+        self._recovery_wants_download = False  # the board has no application and firmware/ has no image for it
         self._browsed: dict[str, dict[str, object]] = {}   # files picked by hand, kept across rescans
         self._pending_invalid: dict[str, object] | None = None
         self._file_logger: logging.Logger | None = None
@@ -1446,12 +1447,15 @@ class FlasherQtBridge(QObject):
         try:
             version = URTCFlasher(transport, log=self._log).query_version()
             self._recovery_candidate = ""
+            self._recovery_wants_download = False
             if (
                 version is not None and version["responder"] == "bootloader" and version["hardware_id"] == 0
                 and self._flash_target == "master" and not self._selected_firmware
             ):
                 # The board sits in its bootloader with no valid application: offer the newest official image.
                 self._recovery_candidate = find_recovery_image(FIRMWARE_FOLDER, THIS_HARDWARE_ID) or ""
+                # and when there is none in firmware/, list the images of the newest release on GitHub (nothing is downloaded or flashed by itself)
+                self._recovery_wants_download = not self._recovery_candidate
             if version is None:
                 items.append({"label": "Version", "value": "No response", "ok": False})
             else:
@@ -1537,6 +1541,10 @@ class FlasherQtBridge(QObject):
         if candidate and not self._selected_firmware and self._flash_target == "master":
             self._selected_firmware = candidate
             self._log(f"RECOVERY_IMAGE_SELECTED {os.path.basename(candidate)}")
+        wants_download, self._recovery_wants_download = self._recovery_wants_download, False
+        if wants_download and not self._selected_firmware and self._flash_target == "master" and not self.releaseBusy:
+            self._log("RECOVERY_NO_LOCAL_IMAGE")
+            self.loadRelease("")
         if error:
             self._set_state(status="BOARD STATE FAILED", busy=False)
             self._log(f"BOARD_SNAPSHOT_FAILED {error}")

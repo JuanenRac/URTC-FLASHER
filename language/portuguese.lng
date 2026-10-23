@@ -363,6 +363,7 @@ QTLOG_DEBUG_BUNDLE_FAILED=Não foi possível guardar o pacote de depuração
 QTLOG_UPDATE_REPORT_WRITTEN=Relatório de atualização escrito
 QTLOG_UPDATE_REPORT_FAILED=Não foi possível escrever o relatório de atualização
 QTLOG_RECOVERY_IMAGE_SELECTED=A placa não tem firmware válido: foi selecionada a imagem oficial mais recente
+QTLOG_RECOVERY_NO_LOCAL_IMAGE=A placa não tem firmware válido e firmware/ não tem nenhuma imagem para ela: são listadas as imagens da última release no GitHub
 QTLOG_FIRMWARE_SELECTED_DESPITE_WARNING=Ficheiro selecionado, embora não pareça uma imagem válida
 QTLOG_LOG_SAVED=Registo guardado
 QTLOG_LOG_SAVE_FAILED=Não foi possível guardar o registo

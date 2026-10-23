@@ -363,6 +363,7 @@ QTLOG_DEBUG_BUNDLE_FAILED=Das Debug-Paket konnte nicht gespeichert werden
 QTLOG_UPDATE_REPORT_WRITTEN=Update-Bericht geschrieben
 QTLOG_UPDATE_REPORT_FAILED=Der Update-Bericht konnte nicht geschrieben werden
 QTLOG_RECOVERY_IMAGE_SELECTED=Die Platine hat keine gültige Firmware: das neueste offizielle Image wurde gewählt
+QTLOG_RECOVERY_NO_LOCAL_IMAGE=Die Platine hat keine gültige Firmware und firmware/ enthält kein Image dafür: die Images des neuesten Release auf GitHub werden aufgelistet
 QTLOG_FIRMWARE_SELECTED_DESPITE_WARNING=Datei gewählt, obwohl sie nicht wie ein gültiges Image aussieht
 QTLOG_LOG_SAVED=Protokoll gespeichert
 QTLOG_LOG_SAVE_FAILED=Das Protokoll konnte nicht gespeichert werden

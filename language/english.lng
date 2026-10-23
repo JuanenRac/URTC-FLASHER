@@ -362,6 +362,7 @@ QTLOG_DEBUG_BUNDLE_FAILED=Debug bundle could not be saved
 QTLOG_UPDATE_REPORT_WRITTEN=Update report written
 QTLOG_UPDATE_REPORT_FAILED=Update report could not be written
 QTLOG_RECOVERY_IMAGE_SELECTED=The board has no valid firmware: the newest official image was selected
+QTLOG_RECOVERY_NO_LOCAL_IMAGE=The board has no valid firmware and firmware/ holds no image for it: the images of the newest release on GitHub are listed
 QTLOG_FIRMWARE_SELECTED_DESPITE_WARNING=File selected although it does not look like a valid image
 QTLOG_LOG_SAVED=Log saved
 QTLOG_LOG_SAVE_FAILED=The log could not be saved

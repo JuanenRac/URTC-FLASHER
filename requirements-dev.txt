@@ -1,0 +1,4 @@
+# Everything the tests and the checks of the CI need on top of requirements.txt:
+#   python -m pip install -r requirements.txt -r requirements-dev.txt
+pytest>=8,<10
+ruff>=0.6,<1

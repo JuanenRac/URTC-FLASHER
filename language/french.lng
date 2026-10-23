@@ -363,6 +363,7 @@ QTLOG_DEBUG_BUNDLE_FAILED=Impossible d'enregistrer le paquet de débogage
 QTLOG_UPDATE_REPORT_WRITTEN=Rapport de mise à jour écrit
 QTLOG_UPDATE_REPORT_FAILED=Impossible d'écrire le rapport de mise à jour
 QTLOG_RECOVERY_IMAGE_SELECTED=La carte n'a pas de firmware valide : l'image officielle la plus récente a été sélectionnée
+QTLOG_RECOVERY_NO_LOCAL_IMAGE=La carte n'a pas de firmware valide et firmware/ ne contient aucune image pour elle : les images de la dernière release GitHub sont listées
 QTLOG_FIRMWARE_SELECTED_DESPITE_WARNING=Fichier sélectionné bien qu'il ne ressemble pas à une image valide
 QTLOG_LOG_SAVED=Journal enregistré
 QTLOG_LOG_SAVE_FAILED=Impossible d'enregistrer le journal

@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- **A board with no firmware and no image on disk gets the list of official images:** when the board answers from its boot-loader with no valid application and `firmware/` holds no image for it, the images of the newest release on GitHub are listed in the download section (nothing is downloaded or chosen by itself), with the log line in the eight languages. When an image is already there it is still chosen as before.
+
+- **The tests and the checks have a requirements file:** `requirements-dev.txt` lists pytest and ruff, and the CI installs from it.
+
 ## [0.3.9] - Shared protocol copies follow the optional functions
 
 - The copies of the shared protocol follow URTC-COMMON (the new identifiers of the optional functions).
