@@ -366,3 +366,6 @@ QTLOG_FIRMWARE_SELECTED_DESPITE_WARNING=Ficheiro selecionado, embora não pareç
 QTLOG_LOG_SAVED=Registo guardado
 QTLOG_LOG_SAVE_FAILED=Não foi possível guardar o registo
 QTLOG_GITHUB_DOWNLOADED=Transferido do GitHub
+QT_SLAVE_APP_LABEL=Aplicação do escravo
+QT_SLAVE_APP_NONE=Sem resposta (não há escravo, ou a aplicação é demasiado antiga)
+QT_SLAVE_APP_VALUE=v{version} / HW {hw}

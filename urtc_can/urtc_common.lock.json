@@ -20,11 +20,35 @@
     },
     "help_text.py": {
       "from": "src/urtc_common/help_text.py",
-      "sha256": "41212b21f777145e1dc9d5853e1e2e9d8574eb2567d7d4dc5d8d88b27512abb9"
+      "sha256": "8e0774ff91bdd34113292eef7693e4adbe9365b368380242896c8ec395d01e8a"
     },
     "launcher.py": {
       "from": "src/urtc_common/launcher.py",
       "sha256": "dbd8ebc1767b4af82cc651b23a78565d59c5b8c2f831296b7d3befa5688bde13"
+    },
+    "multinode.py": {
+      "from": "src/urtc_common/multinode.py",
+      "sha256": "c00bbe35b5474e024a3b0818ce8907e0d91b68100b0453db90cfb519709bbbed"
+    },
+    "multinode_host.py": {
+      "from": "src/urtc_common/multinode_host.py",
+      "sha256": "71e85959fee69662174266f382df521555d4e5f2a797c95e5b959e95fb0916f4"
+    },
+    "multinode_sim.py": {
+      "from": "src/urtc_common/multinode_sim.py",
+      "sha256": "d71e2b02a3996b85ca01e70737fec3baae55ba4596cea71f4fca335fac4bbe12"
+    },
+    "node_picker.py": {
+      "from": "src/urtc_common/node_picker.py",
+      "sha256": "5c6b64d13b4c026223c9893d090817f4d29bc44c8b2e00ffba2827a7ecf856c0"
+    },
+    "node_picker_qt.py": {
+      "from": "src/urtc_common/node_picker_qt.py",
+      "sha256": "92523109408109ad69b9e6b1f3aa019d74036140f2df01bda0df4b69d6371f45"
+    },
+    "node_picker_strings.py": {
+      "from": "src/urtc_common/node_picker_strings.py",
+      "sha256": "c23a6027911a165e35032882fbde3e031433680fc17035369931479452f04682"
     },
     "protocol.py": {
       "from": "src/urtc_common/protocol.py",
@@ -41,6 +65,10 @@
     "slcan.py": {
       "from": "src/urtc_common/slcan.py",
       "sha256": "f1a1367b22661e7915f993872730339caba34a01244348b4b1c85cabb1b607ba"
+    },
+    "tools_catalog.py": {
+      "from": "src/urtc_common/tools_catalog.py",
+      "sha256": "315c717a8fb1f0f4b1432bc775f71db56b56d3fe1be9c3f5fa43a663faf7c0ea"
     },
     "transports.py": {
       "from": "src/urtc_common/transports.py",
@@ -64,7 +92,7 @@
     },
     "versioning.py": {
       "from": "src/urtc_common/versioning.py",
-      "sha256": "cb9ed186397eebb97fd2285d94919edb44cddad060e0fd25ff07ac90d2db0f00"
+      "sha256": "86c066ac8cc5109fedbb2ed5f6ffe393543072b5fa4296e3e4c6fad30f0a2458"
     },
     "virtual_board.py": {
       "from": "src/urtc_common/virtual_board.py",

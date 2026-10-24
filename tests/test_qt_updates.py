@@ -79,6 +79,6 @@ def test_the_help_guide_is_the_shared_one_in_the_language_of_the_program(qt_app,
     bridge = qt_flasher.FlasherQtBridge()
     assert bridge.help is bridge.help
     monkeypatch.setattr(qt_flasher, "_current_language", "spanish")
-    assert bridge.help.title == "Ayuda" and len(bridge.help.sections) == 5 and bridge.help.sections[0]["title"] == "Conectar"
+    assert bridge.help.title == "Ayuda" and len(bridge.help.sections) == 6 and bridge.help.sections[0]["title"] == "Conectar"
     monkeypatch.setattr(qt_flasher, "_current_language", "portuguese")
     assert bridge.help.closeText == "Fechar"

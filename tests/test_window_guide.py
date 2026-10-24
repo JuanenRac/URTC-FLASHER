@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 PROGRAM = "flasher"
 SUFFIXES = ["", "-es", "-de", "-fr", "-it", "-ja", "-zh", "-pt"]   # English and the seven other languages of the program
-PICTURES = [f"{PROGRAM}-{screen}{suffix}.png" for suffix in SUFFIXES for screen in ("deck", "help", "updates")]
+PICTURES = [f"{PROGRAM}-{screen}{suffix}.png" for suffix in SUFFIXES for screen in ("deck", "help", "updates", "heads")]
 READMES = ["README.md", "README_spa.md", "README_fra.md", "README_ita.md", "README_deu.md", "README_jpn.md", "README_zho.md", "README_por.md"]
 
 

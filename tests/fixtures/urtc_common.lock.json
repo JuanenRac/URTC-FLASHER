@@ -5,6 +5,14 @@
     "can_conformance_vectors.json": {
       "from": "conformance/can_vectors.json",
       "sha256": "07ec77d845467577e999722b886670b072b164be080c5e900f74dbaba83b2c9b"
+    },
+    "node_picker_vectors.json": {
+      "from": "conformance/node_picker_vectors.json",
+      "sha256": "c05261812afda4beaa67793e76c276de0cb0740ae589fb36ea2317f9cde64dba"
+    },
+    "slave_version_vectors.json": {
+      "from": "conformance/slave_version_vectors.json",
+      "sha256": "7f9501e3fa4e295d1e465592c0364e80b1ad07db7e7d5892ae10596eb97d255d"
     }
   }
 }

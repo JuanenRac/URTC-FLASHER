@@ -966,7 +966,6 @@ partition différent.
 ├── assets/
 │   ├── URTC_APP_ICON.svg          <- icône partagée app/barre des tâches (vectorielle)
 │   ├── URTC_LOGO_FLASHER.svg      <- source de la bannière (vectorielle)
-│   ├── HYDRA_UMC_ICON.svg         <- source vectorielle animée HYDRA-UMC maintenue
 │   ├── qml/
 │   │   └── FlasherDeck.qml        <- UI Qt Quick du command deck CAN-OTA
 │   ├── urtc_icon.ico              <- icône barre des tâches/fenêtre sous Windows
@@ -1189,6 +1188,12 @@ Ce programme peut chercher une version plus récente de lui-même : le bouton «
 
 Les versions des programmes URTC qui fonctionnent ensemble, et la version du protocole que parle chacune, figurent dans le tableau de compatibilité que génère URTC-COMMON : [docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md).
 <!-- /urtc-section:compatibility -->
+
+<!-- urtc-section:heads -->
+## 🧭 Plusieurs têtes d'outil sur un bus
+
+Le firmware peut faire partager un bus CAN à plusieurs têtes d'outil (l'extension multinœud). Elle est **désactivée par défaut**, et un bus avec une seule tête fonctionne exactement comme avant. La fenêtre **Têtes** trouve les têtes, liste chacune avec son adresse, son outil et son numéro de série, et affiche son état : prête, sélectionnée, conflit d'adresse, défaut mémorisé, dans son bootloader ou perdue. Vous en sélectionnez une, le programme demande confirmation et ne lui envoie rien avant ; tant que plusieurs têtes sont sur le bus, une commande est refusée jusqu'à ce qu'une soit sélectionnée et l'ait confirmé. Si la tête sélectionnée est perdue, toutes les têtes passent à leur état sûr (une case de la fenêtre le désactive). Testé seulement contre un modèle du bus, pas avec des cartes. Voir `docs/MULTINODE.md` dans URTC-COMMON.
+<!-- /urtc-section:heads -->
 
 ## 📜 LICENCE
 

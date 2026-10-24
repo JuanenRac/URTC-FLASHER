@@ -67,3 +67,51 @@ def end_update_minor_field(minor: int, patch: int | None, bootloader_accepts_pat
 def compare(installed: Version, candidate: Version) -> int:
     """1 when the candidate is newer, 0 when equal, -1 when older. The patch decides only when both carry one."""
     return protocol.version_compare(installed, candidate)
+
+
+# -- the application of the expansion slave: 0x221 (register 0x01) and its companion 0x222 ---------------------------------------
+SLAVE_APP_PATCH_MAX = 127
+
+
+def slave_app_version_request() -> tuple[int, bytes]:
+    """The frame that asks the master for the version register of the slave application (it relays 8 bytes of the 10)."""
+    return protocol.encode_slave_reg_read_request(protocol.SLAVE_APP_REG_APP_VERSION, 8)
+
+
+def parse_slave_app_version(frames: Iterable[Frame]) -> dict | None:
+    """Combine the frames that answer one read of the slave version register (0x221, then 0x222) into one description.
+
+    None when there is no 0x221 answer of at least 8 bytes. Keys: responder ('application' or 'bootloader'), hardware_id,
+    major, minor (None: the answer of 8 bytes stops at the high byte of the minor field, so the low byte, which is the
+    minor number, is not known; with a longer answer it is read), minor_high, patch (None when the slave sends none: a slave
+    application from before the field, whose tenth byte is 0, gets no 0x222) and patch_aware.
+    """
+    answer = None
+    patch = None
+    for can_id, data in frames:
+        data = bytes(data)
+        if can_id == protocol.CAN_ID_SLAVE_REG_READ and len(data) >= 8 and answer is None:
+            answer = data
+        elif can_id == protocol.CAN_ID_SLAVE_APP_PATCH and patch is None:
+            fields = protocol.decode_slave_app_patch(data)
+            if fields is not None and fields["register"] == protocol.SLAVE_APP_REG_APP_VERSION and 1 <= fields["patch"] <= SLAVE_APP_PATCH_MAX:
+                patch = fields["patch"]
+    if answer is None:
+        return None
+    return {
+        "responder": "bootloader" if answer[0] == protocol.RESPONDER_BOOTLOADER else "application",
+        "hardware_id": f"0x{int.from_bytes(answer[1:5], 'big'):08X}",
+        "major": int.from_bytes(answer[5:7], "big"),
+        "minor": int.from_bytes(answer[7:9], "big") if len(answer) >= 9 else None,
+        "minor_high": answer[7],
+        "patch": patch,
+        "patch_aware": patch is not None,
+    }
+
+
+def slave_app_version_text(info: dict | None) -> str:
+    """``major.minor.patch`` with a ``?`` for what the frames did not carry (the minor of a slave seen through the master)."""
+    if info is None:
+        return "?"
+    minor = "?" if info["minor"] is None else str(info["minor"])
+    return f"{info['major']}.{minor}" + (f".{info['patch']}" if info["patch"] is not None else "")

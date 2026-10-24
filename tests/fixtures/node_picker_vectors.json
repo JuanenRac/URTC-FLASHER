@@ -1,0 +1,275 @@
+{
+ "about": "What the node picker says about a head and about the switch of the multinode extension. Made by tools/make_node_picker_vectors.py; do not edit by hand.",
+ "state_bits": {
+  "selected": 1,
+  "fault": 2,
+  "conflict": 4,
+  "bootloader": 8
+ },
+ "classify": [
+  {
+   "state": 0,
+   "conflict": false,
+   "alive": true,
+   "status": "ready"
+  },
+  {
+   "state": 0,
+   "conflict": false,
+   "alive": false,
+   "status": "lost"
+  },
+  {
+   "state": 0,
+   "conflict": true,
+   "alive": true,
+   "status": "conflict"
+  },
+  {
+   "state": 0,
+   "conflict": true,
+   "alive": false,
+   "status": "conflict"
+  },
+  {
+   "state": 1,
+   "conflict": false,
+   "alive": true,
+   "status": "selected"
+  },
+  {
+   "state": 1,
+   "conflict": false,
+   "alive": false,
+   "status": "lost"
+  },
+  {
+   "state": 1,
+   "conflict": true,
+   "alive": true,
+   "status": "conflict"
+  },
+  {
+   "state": 1,
+   "conflict": true,
+   "alive": false,
+   "status": "conflict"
+  },
+  {
+   "state": 2,
+   "conflict": false,
+   "alive": true,
+   "status": "fault"
+  },
+  {
+   "state": 2,
+   "conflict": false,
+   "alive": false,
+   "status": "lost"
+  },
+  {
+   "state": 2,
+   "conflict": true,
+   "alive": true,
+   "status": "conflict"
+  },
+  {
+   "state": 2,
+   "conflict": true,
+   "alive": false,
+   "status": "conflict"
+  },
+  {
+   "state": 4,
+   "conflict": false,
+   "alive": true,
+   "status": "conflict"
+  },
+  {
+   "state": 4,
+   "conflict": false,
+   "alive": false,
+   "status": "conflict"
+  },
+  {
+   "state": 4,
+   "conflict": true,
+   "alive": true,
+   "status": "conflict"
+  },
+  {
+   "state": 4,
+   "conflict": true,
+   "alive": false,
+   "status": "conflict"
+  },
+  {
+   "state": 8,
+   "conflict": false,
+   "alive": true,
+   "status": "bootloader"
+  },
+  {
+   "state": 8,
+   "conflict": false,
+   "alive": false,
+   "status": "lost"
+  },
+  {
+   "state": 8,
+   "conflict": true,
+   "alive": true,
+   "status": "conflict"
+  },
+  {
+   "state": 8,
+   "conflict": true,
+   "alive": false,
+   "status": "conflict"
+  },
+  {
+   "state": 3,
+   "conflict": false,
+   "alive": true,
+   "status": "fault"
+  },
+  {
+   "state": 3,
+   "conflict": false,
+   "alive": false,
+   "status": "lost"
+  },
+  {
+   "state": 3,
+   "conflict": true,
+   "alive": true,
+   "status": "conflict"
+  },
+  {
+   "state": 3,
+   "conflict": true,
+   "alive": false,
+   "status": "conflict"
+  },
+  {
+   "state": 9,
+   "conflict": false,
+   "alive": true,
+   "status": "bootloader"
+  },
+  {
+   "state": 9,
+   "conflict": false,
+   "alive": false,
+   "status": "lost"
+  },
+  {
+   "state": 9,
+   "conflict": true,
+   "alive": true,
+   "status": "conflict"
+  },
+  {
+   "state": 9,
+   "conflict": true,
+   "alive": false,
+   "status": "conflict"
+  },
+  {
+   "state": 10,
+   "conflict": false,
+   "alive": true,
+   "status": "fault"
+  },
+  {
+   "state": 10,
+   "conflict": false,
+   "alive": false,
+   "status": "lost"
+  },
+  {
+   "state": 10,
+   "conflict": true,
+   "alive": true,
+   "status": "conflict"
+  },
+  {
+   "state": 10,
+   "conflict": true,
+   "alive": false,
+   "status": "conflict"
+  }
+ ],
+ "switch": [
+  {
+   "config": null,
+   "switch": "unknown"
+  },
+  {
+   "config": {},
+   "switch": "unknown"
+  },
+  {
+   "config": {
+    "stored": 0,
+    "running": 0
+   },
+   "switch": "off"
+  },
+  {
+   "config": {
+    "stored": 1,
+    "running": 1
+   },
+   "switch": "on"
+  },
+  {
+   "config": {
+    "stored": 1,
+    "running": 0
+   },
+   "switch": "pending_on"
+  },
+  {
+   "config": {
+    "stored": 0,
+    "running": 1
+   },
+   "switch": "pending_off"
+  }
+ ],
+ "fail": [
+  {
+   "reason": "not announced",
+   "key": "NP_FAIL_NOT_ANNOUNCED"
+  },
+  {
+   "reason": "gone (no status for too long)",
+   "key": "NP_FAIL_GONE"
+  },
+  {
+   "reason": "another board uses its address",
+   "key": "NP_FAIL_CONFLICT"
+  },
+  {
+   "reason": "a fault is latched",
+   "key": "NP_FAIL_FAULT"
+  },
+  {
+   "reason": "in its bootloader",
+   "key": "NP_FAIL_BOOTLOADER"
+  },
+  {
+   "reason": "not confirmed selected",
+   "key": "NP_FAIL_UNCONFIRMED"
+  },
+  {
+   "reason": "did not confirm the selection",
+   "key": "NP_FAIL_UNCONFIRMED"
+  },
+  {
+   "reason": "not ready",
+   "key": "NP_FAIL_OTHER"
+  }
+ ]
+}

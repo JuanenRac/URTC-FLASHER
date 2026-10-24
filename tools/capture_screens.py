@@ -5,9 +5,10 @@
 # GPL-3.0-or-later - see LICENSE
 # =============================================================================
 """Takes the pictures of the window that the guide in docs/ shows: the real Qt Quick deck, loaded without a screen (``QT_QPA_PLATFORM=offscreen``) and
-drawn to a PNG with ``grabWindow``. No board is needed and nothing is sent: the window is shown at rest, as it opens, in English.
+drawn to a PNG with ``grabWindow``. No board is needed and nothing is sent: the window is shown at rest, as it opens, in English. The picture of the
+window of the tool heads (``-heads``) is taken over a modelled bus of seven heads, one in each state a head can be in; it shows the window, not a bus.
 
-    python tools/capture_screens.py                 # writes docs/screenshots/<program>-deck.png, -help.png and -updates.png
+    python tools/capture_screens.py                 # writes docs/screenshots/<program>-deck.png, -help.png, -updates.png and -heads.png
     python tools/capture_screens.py --out DIR       # another folder
     python tools/capture_screens.py --language german        # the same pictures in German: <program>-deck-de.png ...
     python tools/capture_screens.py --all-languages          # the English ones and those of the seven other languages
@@ -37,6 +38,29 @@ SIZE = (1440, 900)
 # the language code the program stores -> the suffix of the picture (English has none)
 LANGUAGE_SUFFIX = {"english": "", "spanish": "-es", "german": "-de", "french": "-fr", "italian": "-it", "japanese": "-ja", "chinese": "-zh",
                    "portuguese": "-pt"}
+
+
+def prepare_heads(bridge) -> None:
+    """Give the window of the tool heads a modelled bus: 2 selected and confirmed, 5 in conflict (two boards), 9 with a fault latched, 12 in its
+    bootloader, 14 lost, 17 ready. Everything runs in place (no thread) and on the clock of the model."""
+    from urtc_can import node_picker, protocol
+
+    picker, bus = node_picker.sim_picker((2, 5, 5, 9, 12, 14, 17), config={"stored": 1, "running": 1})
+    bus.nodes[2].serial = 0x77
+    bus.nodes[3].fault = True
+    bus.nodes[3].status_now = True
+    model = bridge.nodes
+    model._sync = True
+    model.attach(picker)
+    model.find()
+    model.ask(2)
+    model.confirm()
+    bus.nodes[5].enabled = False
+    for _ in range((protocol.MN_NODE_TIMEOUT_MS + 300) // 10):
+        bus.step(10)
+        picker.tick()
+    picker.host.table.nodes[12].state |= protocol.MN_STATE_BOOTLOADER
+    model._refresh()
 
 
 def which_program() -> str:
@@ -111,10 +135,12 @@ def main(argv: list[str] | None = None) -> int:
         written.append(path.name)
 
     shot("deck")
-    for dialog_name, label in (("helpDialog", "help"), ("updateDialog", "updates")):
+    for dialog_name, label in (("helpDialog", "help"), ("updateDialog", "updates"), ("nodeDialog", "heads")):
         dialog = root.findChild(QObject, dialog_name)
         if dialog is None:
             raise SystemExit(f"CAPTURE=FAIL no {dialog_name} in the deck")
+        if label == "heads":
+            prepare_heads(bridge)
         QMetaObject.invokeMethod(dialog, "open", Qt.ConnectionType.DirectConnection)
         pump(0.8)
         shot(label)

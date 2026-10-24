@@ -52,7 +52,12 @@ from flasher_swd_tools import CubeProgrammerCLI, PyOCDCLI, SWDFlashError
 from flasher_transports import SLCAN, SocketCAN, detect_bitrate_listen_only, list_socketcan_interfaces, virtual_ports
 from flasher_validation import validate_firmware_file, validate_swd_image_file
 from urtc_can import update_service as update_service
+from urtc_can import versioning
+from urtc_can.protocol import CAN_ID_SLAVE_APP_PATCH, CAN_ID_SLAVE_REG_READ
 from urtc_can.help_qt import HelpModel
+from urtc_can.multinode_host import MultinodeHost
+from urtc_can.node_picker import GatedTransport, NodePicker, config_reader_for, transport_io
+from urtc_can.node_picker_qt import NodePickerModel
 from urtc_can.update_qt import UpdateModel
 from urtc_ui import LanguageModel, connection_badge, format_bytes
 
@@ -138,6 +143,7 @@ class FlasherQtBridge(QObject):
         self._release_entries: list[dict] = []
         self._update_model: UpdateModel | None = None
         self._help_model: HelpModel | None = None
+        self._node_model: NodePickerModel | None = None
         self._release_status = ""
         self._release_loading = False
         self._release_downloading = False
@@ -215,6 +221,26 @@ class FlasherQtBridge(QObject):
             )
             self._update_model = UpdateModel(service, language=lambda: _current_language, save_options=save, parent=self)
         return self._update_model
+
+    @Property(QObject, constant=True)
+    def nodes(self) -> QObject:
+        """The window that finds the tool heads of the bus and selects one. With one head and no multinode extension (the default of the
+        firmware) it finds nobody and everything is sent as always; with several heads, a command goes only to the one the person selected
+        and confirmed. It stays off the bus while a transfer runs."""
+        if self._node_model is None:
+            def save(value: bool) -> None:
+                save_config({"multinode_release_on_lapse": value})
+
+            self._node_model = NodePickerModel(language=lambda: _current_language, save_release=save, app_busy=lambda: self._busy, parent=self)
+            self._node_model.restoreReleaseOption(bool(flasher_config.load_config().get("multinode_release_on_lapse", True)))
+            self._node_model.start()
+        return self._node_model
+
+    def _attach_node_picker(self, transport):
+        """Wrap a freshly opened transport so single-head frames are checked against the selected head, and give the picker to the window."""
+        picker = NodePicker(MultinodeHost(transport_io(transport)), config_reader=config_reader_for(transport), language=lambda: _current_language)
+        self.nodes.attach(picker)
+        return GatedTransport(transport, picker)
 
     @Property(QObject, constant=True)
     def help(self) -> QObject:
@@ -569,6 +595,8 @@ class FlasherQtBridge(QObject):
         """Stop a transfer and release the adapter before the window goes away."""
         self._cancel_requested = True
         transport, self._transport = self._transport, None
+        if self._node_model is not None:
+            self._node_model.stop()
         if transport is not None:
             try:
                 transport.close()
@@ -1472,6 +1500,29 @@ class FlasherQtBridge(QObject):
                 return frame[1]
         return None
 
+    @staticmethod
+    def _slave_application_item(transport) -> dict[str, object]:
+        """The version of the application of the expansion slave, read through the master (0x221 for register 0x01, then its 0x222 companion
+        with the patch). The minor number is not in the answer, so it shows as ``?``; a slave application from before the patch field sends
+        no companion and shows without a patch."""
+        transport.send_frame(*versioning.slave_app_version_request())
+        frames: list[tuple[int, bytes]] = []
+        deadline = time.monotonic() + 1.0
+        while time.monotonic() < deadline:
+            frame = transport.read_frame(timeout=0.1)
+            if frame is None:
+                continue
+            frames.append((frame[0], bytes(frame[1])))
+            if frame[0] == CAN_ID_SLAVE_REG_READ:
+                deadline = min(deadline, time.monotonic() + 0.2)      # the companion, if there is one, follows at once
+            if {CAN_ID_SLAVE_REG_READ, CAN_ID_SLAVE_APP_PATCH} <= {entry[0] for entry in frames}:
+                break
+        info = versioning.parse_slave_app_version(frames)
+        label = _("QT_SLAVE_APP_LABEL")
+        if info is None:
+            return {"label": label, "value": _("QT_SLAVE_APP_NONE"), "ok": False}
+        return {"label": label, "value": _("QT_SLAVE_APP_VALUE", version=versioning.slave_app_version_text(info), hw=info["hardware_id"]), "ok": True}
+
     def _read_board_snapshot_worker(self, transport) -> None:
         items: list[dict[str, object]] = []
         try:
@@ -1531,6 +1582,9 @@ class FlasherQtBridge(QObject):
                     "ok": expansion is not None,
                 }
             )
+
+            if expansion_value > 0:
+                items.append(self._slave_application_item(transport))
 
             transport.send_frame(CAN_ID_MLX_VARIANT_RESP, b"")
             mlx = self._wait_for_frame(transport, CAN_ID_MLX_VARIANT_RESP, 1)
@@ -1699,6 +1753,7 @@ class FlasherQtBridge(QObject):
                 self._transport.close()
             finally:
                 self._transport = None
+                self.nodes.attach(None)
                 self._set_state(status="DISCONNECTED")
                 self._log("TRANSPORT_DISCONNECTED")
             return
@@ -1721,7 +1776,7 @@ class FlasherQtBridge(QObject):
             self._connectionResult.emit(None, str(exc))
 
     def _on_connection_result(self, transport, error: str) -> None:
-        self._transport = transport
+        self._transport = None if transport is None else self._attach_node_picker(transport)
         if error:
             self._set_state(status="CONNECTION FAILED", busy=False)
             self._log(f"CONNECTION_FAILED {error}")

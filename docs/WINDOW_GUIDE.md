@@ -1,6 +1,6 @@
 # The window of the flasher, step by step
 
-These pictures are the real window, loaded without a screen and drawn to a file by `tools/capture_screens.py` (`python tools/capture_screens.py` writes them again). They show the program as it opens: nothing is connected, nothing is sent, and the language is English. The same texts exist in the eight languages of the program, and the **Help** button of the window shows the quick guide in the language you chose.
+These pictures are the real window, loaded without a screen and drawn to a file by `tools/capture_screens.py` (`python tools/capture_screens.py` writes them again). They show the program as it opens: nothing is connected, nothing is sent, and the language is English (the picture of the tool heads is the exception: it shows the window over a modelled bus). The same texts exist in the eight languages of the program, and the **Help** button of the window shows the quick guide in the language you chose.
 
 ## 1. The window as it opens
 
@@ -15,7 +15,7 @@ These pictures are the real window, loaded without a screen and drawn to a file 
 
 ![The Help window of the flasher](screenshots/flasher-help.png)
 
-The **Help** button opens five short steps in the language of the window: connect, pick an image, flash over CAN, without a board, and updates.
+The **Help** button opens six short steps in the language of the window: connect, pick an image, flash over CAN, without a board, several heads and updates.
 
 ## 3. Check for updates
 
@@ -23,20 +23,31 @@ The **Help** button opens five short steps in the language of the window: connec
 
 **Check for updates** asks GitHub once, only when you press it. Both options are conservative: the check at start is off, and an update is installed only after you confirm it and only if the signature of the package matches the key of the releases pinned in the program; the previous version is kept so you can go back.
 
+## 4. Several tool heads
+
+![The window of the tool heads of the flasher](screenshots/flasher-heads.png)
+
+The **Tool heads** button opens the window that finds the heads when more than one shares the bus (the multinode extension of the firmware, which is **off by default**: with it off, **Find heads** finds nobody, the bus counts as one head and everything is sent as it always was). The picture is taken over a modelled bus of seven heads, one in each state a head can be in, so it shows the window and not a real bus:
+
+* Each head has its **address**, its **tool**, its **serial number** and a **state** written in words: *Ready*, *Selected*, *Address conflict* (two boards on one address; neither can be selected), *Fault latched*, *In its bootloader* or *Lost* (no status for too long). Only a ready head has a **Select** button.
+* **Select** asks you to confirm. Nothing is sent to a head until it has confirmed that it is selected; while several heads are on the bus, any command to the board is refused until one is selected (the frames of the extension itself are not).
+* If the selected head is lost, faults, enters its bootloader or no longer reports itself selected, the window shows why in a banner. By default every head is also put in its safe state, so no output stays on without a host watching it; the checkbox at the bottom switches that off (it asks first, and the banner then says that the outputs were left as they are).
+* The line under the title says whether the head reports the extension as on, off, or saved but waiting for the next power-up. This has been tried against a model of the bus only, never against boards.
+
 ## The same pictures in the other languages
 
-The program has eight interface languages. These are the same three pictures of the flasher taken with each of them (`python tools/capture_screens.py --all-languages` writes them again; `--language german` writes one language). The texts are those of the program, not of this page, so a picture shows exactly what a person who chose that language sees.
+The program has eight interface languages. These are the same four pictures of the flasher taken with each of them (`python tools/capture_screens.py --all-languages` writes them again; `--language german` writes one language). The texts are those of the program, not of this page, so a picture shows exactly what a person who chose that language sees.
 
-| Language | Window | Help | Updates |
-|---|---|---|---|
-| English | [window](screenshots/flasher-deck.png) | [help](screenshots/flasher-help.png) | [updates](screenshots/flasher-updates.png) |
-| Español | [window](screenshots/flasher-deck-es.png) | [help](screenshots/flasher-help-es.png) | [updates](screenshots/flasher-updates-es.png) |
-| Deutsch | [window](screenshots/flasher-deck-de.png) | [help](screenshots/flasher-help-de.png) | [updates](screenshots/flasher-updates-de.png) |
-| Français | [window](screenshots/flasher-deck-fr.png) | [help](screenshots/flasher-help-fr.png) | [updates](screenshots/flasher-updates-fr.png) |
-| Italiano | [window](screenshots/flasher-deck-it.png) | [help](screenshots/flasher-help-it.png) | [updates](screenshots/flasher-updates-it.png) |
-| 日本語 | [window](screenshots/flasher-deck-ja.png) | [help](screenshots/flasher-help-ja.png) | [updates](screenshots/flasher-updates-ja.png) |
-| 简体中文 | [window](screenshots/flasher-deck-zh.png) | [help](screenshots/flasher-help-zh.png) | [updates](screenshots/flasher-updates-zh.png) |
-| Português | [window](screenshots/flasher-deck-pt.png) | [help](screenshots/flasher-help-pt.png) | [updates](screenshots/flasher-updates-pt.png) |
+| Language | Window | Help | Updates | Tool heads |
+|---|---|---|---|---|
+| English | [window](screenshots/flasher-deck.png) | [help](screenshots/flasher-help.png) | [updates](screenshots/flasher-updates.png) | [heads](screenshots/flasher-heads.png) |
+| Español | [window](screenshots/flasher-deck-es.png) | [help](screenshots/flasher-help-es.png) | [updates](screenshots/flasher-updates-es.png) | [heads](screenshots/flasher-heads-es.png) |
+| Deutsch | [window](screenshots/flasher-deck-de.png) | [help](screenshots/flasher-help-de.png) | [updates](screenshots/flasher-updates-de.png) | [heads](screenshots/flasher-heads-de.png) |
+| Français | [window](screenshots/flasher-deck-fr.png) | [help](screenshots/flasher-help-fr.png) | [updates](screenshots/flasher-updates-fr.png) | [heads](screenshots/flasher-heads-fr.png) |
+| Italiano | [window](screenshots/flasher-deck-it.png) | [help](screenshots/flasher-help-it.png) | [updates](screenshots/flasher-updates-it.png) | [heads](screenshots/flasher-heads-it.png) |
+| 日本語 | [window](screenshots/flasher-deck-ja.png) | [help](screenshots/flasher-help-ja.png) | [updates](screenshots/flasher-updates-ja.png) | [heads](screenshots/flasher-heads-ja.png) |
+| 简体中文 | [window](screenshots/flasher-deck-zh.png) | [help](screenshots/flasher-help-zh.png) | [updates](screenshots/flasher-updates-zh.png) | [heads](screenshots/flasher-heads-zh.png) |
+| Português | [window](screenshots/flasher-deck-pt.png) | [help](screenshots/flasher-help-pt.png) | [updates](screenshots/flasher-updates-pt.png) | [heads](screenshots/flasher-heads-pt.png) |
 
 ## What the pictures do not show
 

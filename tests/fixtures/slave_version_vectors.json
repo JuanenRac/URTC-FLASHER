@@ -1,0 +1,183 @@
+{
+ "about": "Reading the version of the slave application through the master: the answer to 0x221 for register 0x01 and its companion 0x222. Shared by the programs; edit it only in URTC-COMMON.",
+ "request": {
+  "id": 545,
+  "data": "0108"
+ },
+ "cases": [
+  {
+   "name": "patch follows the answer",
+   "frames": [
+    [
+     545,
+     "000303cc01000000"
+    ],
+    [
+     546,
+     "0105"
+    ]
+   ],
+   "expected": {
+    "responder": "application",
+    "hardware_id": "0x0303CC01",
+    "major": 0,
+    "minor": null,
+    "minor_high": 0,
+    "patch": 5,
+    "patch_aware": true
+   },
+   "text": "0.?.5"
+  },
+  {
+   "name": "slave from before the field sends no 0x222",
+   "frames": [
+    [
+     545,
+     "000303cc01000000"
+    ]
+   ],
+   "expected": {
+    "responder": "application",
+    "hardware_id": "0x0303CC01",
+    "major": 0,
+    "minor": null,
+    "minor_high": 0,
+    "patch": null,
+    "patch_aware": false
+   },
+   "text": "0.?"
+  },
+  {
+   "name": "the companion may come first",
+   "frames": [
+    [
+     546,
+     "017f"
+    ],
+    [
+     545,
+     "000303cc01000100"
+    ]
+   ],
+   "expected": {
+    "responder": "application",
+    "hardware_id": "0x0303CC01",
+    "major": 1,
+    "minor": null,
+    "minor_high": 0,
+    "patch": 127,
+    "patch_aware": true
+   },
+   "text": "1.?.127"
+  },
+  {
+   "name": "a patch of another register is ignored",
+   "frames": [
+    [
+     545,
+     "000303cc01000000"
+    ],
+    [
+     546,
+     "0205"
+    ]
+   ],
+   "expected": {
+    "responder": "application",
+    "hardware_id": "0x0303CC01",
+    "major": 0,
+    "minor": null,
+    "minor_high": 0,
+    "patch": null,
+    "patch_aware": false
+   },
+   "text": "0.?"
+  },
+  {
+   "name": "a patch outside 1..127 is ignored",
+   "frames": [
+    [
+     545,
+     "000303cc01000000"
+    ],
+    [
+     546,
+     "0180"
+    ]
+   ],
+   "expected": {
+    "responder": "application",
+    "hardware_id": "0x0303CC01",
+    "major": 0,
+    "minor": null,
+    "minor_high": 0,
+    "patch": null,
+    "patch_aware": false
+   },
+   "text": "0.?"
+  },
+  {
+   "name": "a short companion is ignored",
+   "frames": [
+    [
+     545,
+     "000303cc01000000"
+    ],
+    [
+     546,
+     "01"
+    ]
+   ],
+   "expected": {
+    "responder": "application",
+    "hardware_id": "0x0303CC01",
+    "major": 0,
+    "minor": null,
+    "minor_high": 0,
+    "patch": null,
+    "patch_aware": false
+   },
+   "text": "0.?"
+  },
+  {
+   "name": "an answer of nine bytes carries the minor",
+   "frames": [
+    [
+     545,
+     "000303cc010000000c"
+    ],
+    [
+     546,
+     "0109"
+    ]
+   ],
+   "expected": {
+    "responder": "application",
+    "hardware_id": "0x0303CC01",
+    "major": 0,
+    "minor": 12,
+    "minor_high": 0,
+    "patch": 9,
+    "patch_aware": true
+   },
+   "text": "0.12.9"
+  },
+  {
+   "name": "a short answer is no answer",
+   "frames": [
+    [
+     545,
+     "000303cc010000"
+    ]
+   ],
+   "expected": null,
+   "text": "?"
+  },
+  {
+   "name": "nothing answered",
+   "frames": [],
+   "expected": null,
+   "text": "?"
+  }
+ ]
+}

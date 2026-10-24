@@ -6,6 +6,10 @@
       "from": "qml/HelpDialog.qml",
       "sha256": "f068c74647937e0b8a8c29b5eccfba9d9095522d5f734f859fcb73c4609ad4e7"
     },
+    "NodePickerDialog.qml": {
+      "from": "qml/NodePickerDialog.qml",
+      "sha256": "4c0772b3a3e1e2a738efc3aadbf2418574ea7281d1351dab0da54f54bff97dbb"
+    },
     "UpdateDialog.qml": {
       "from": "qml/UpdateDialog.qml",
       "sha256": "d93664a9117796b320814c3d95b96cede75071a91429105d4270f84189d08215"
