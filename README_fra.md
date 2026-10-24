@@ -72,7 +72,7 @@ traitez la première vraie tentative de flash avec la même prudence que
 vous accorderiez à tout nouvel outil parlant à un bootloader : gardez le
 JTAG à portée de main comme solution de repli. Tout le reste décrit ici n'a été exercé que contre `MockCAN`, un bootloader simulé, jamais contre une vraie carte.
 
-**Vérification d'honnêteté - ce qui fonctionne réellement aujourd'hui :** `tests/` contient 42 fichiers pytest (485 tests : tous réussis ; 78 d'entre eux sont ignorés sans PySide6) - le protocole CAN-OTA face à un vrai transport `MockCAN` (`flasher_transports.py`) qui rejoue une séquence complète de bootloader simulé (démarrage/effacement/réception, données de page + PAGE_ACK, blocs HMAC, fin de mise à jour avec un vrai succès ou un `VERIFY_FAIL_REASON` précis), les règles de signature (signature publiée envoyée sans aucune clé, image non signée refusée, sha256 du manifeste non conforme refusé avant tout trafic sur le bus), les contrôles d'intégrité d'image et le dossier `firmware/` fourni par rapport à ses manifestes. GitHub Actions (`.github/workflows/ci.yml`) exécute cette suite à chaque push, et `tools/build_test.py` l'exécute dans `build-test.sh`/`.bat`. Les deux scripts `verify_qt_*.py` à la racine sont de vrais contrôles de bout en bout hors pytest (ils nécessitent une vraie boucle d'événements Qt ; lancement avec `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`) ; `verify_qt_swd_full_chip_flash.py` construit seulement les commandes `PyOCDCLI`/`CubeProgrammerCLI` avec `dry_run=True`. Rien de tout cela n'a été exécuté sur une vraie carte dans cet environnement. Voir `CHANGELOG.md` pour ce qui a réellement été publié. Le bootloader simulé (`MockCAN`) n'est qu'un modèle écrit à partir de la description du protocole : il reproduit les ACK de page, la dernière page partielle et les trames de relecture, mais ce n'est pas le vrai bootloader, donc une exécution de tests au vert ne remplace pas un essai sur une vraie carte (l'image officielle de 73476 octets ne pouvait pas être installée et la dernière trame d'une sauvegarde était perdue alors que les tests passaient, justement parce que la simulation était plus indulgente que le vrai bootloader).
+**Vérification d'honnêteté - ce qui fonctionne réellement aujourd'hui :** `tests/` contient 47 fichiers pytest (515 tests : tous réussis ; 78 d'entre eux sont ignorés sans PySide6) - le protocole CAN-OTA face à un vrai transport `MockCAN` (`flasher_transports.py`) qui rejoue une séquence complète de bootloader simulé (démarrage/effacement/réception, données de page + PAGE_ACK, blocs HMAC, fin de mise à jour avec un vrai succès ou un `VERIFY_FAIL_REASON` précis), les règles de signature (signature publiée envoyée sans aucune clé, image non signée refusée, sha256 du manifeste non conforme refusé avant tout trafic sur le bus), les contrôles d'intégrité d'image et le dossier `firmware/` fourni par rapport à ses manifestes. GitHub Actions (`.github/workflows/ci.yml`) exécute cette suite à chaque push, et `tools/build_test.py` l'exécute dans `build-test.sh`/`.bat`. Elle exécute aussi `ruff check` et `python -m mypy` (un contrôle des types du programme et des copies du code partagé). Les trois scripts `verify_qt_*.py` à la racine sont de vrais contrôles de bout en bout hors pytest (ils nécessitent une vraie boucle d'événements Qt ; lancement avec `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`) ; `verify_qt_swd_full_chip_flash.py` construit seulement les commandes `PyOCDCLI`/`CubeProgrammerCLI` avec `dry_run=True`. Rien de tout cela n'a été exécuté sur une vraie carte dans cet environnement. Voir `CHANGELOG.md` pour ce qui a réellement été publié. Le bootloader simulé (`MockCAN`) n'est qu'un modèle écrit à partir de la description du protocole : il reproduit les ACK de page, la dernière page partielle et les trames de relecture, mais ce n'est pas le vrai bootloader, donc une exécution de tests au vert ne remplace pas un essai sur une vraie carte (l'image officielle de 73476 octets ne pouvait pas être installée et la dernière trame d'une sauvegarde était perdue alors que les tests passaient, justement parce que la simulation était plus indulgente que le vrai bootloader).
 
 > **État de la sûreté et de la cybersécurité :** cet écosystème n'est pas un système de sécurité certifié et aucune carte URTC assemblée n'existe encore. Les bootloaders contrôlent les images de firmware par CRC32 et un HMAC-SHA256 à clé partagée, pas par une signature asymétrique (prévue) ; les images d'application publiées sont signées avec la clé publique de développement (`signing_key_kind: dev`), si bien que n'importe qui peut produire une image acceptée par le bootloader ; rien n'a été transmis à une carte réelle. Lisez la [base de sécurité](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md) et le [modèle de menaces](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md) avant de vous fier à une affirmation d'ici pour la sécurité d'une personne.
 
@@ -228,7 +228,7 @@ Cet outil s'attend à un dossier `firmware/` juste à côté de
 ├── firmware/
 │   ├── URTC_MAIN_FIRMWARE_v<version>.bin  <- placez les nouveaux fichiers .bin ici
 │   ├── URTC_*  <- tools/sync_firmware.py remplace les fichiers URTC_* de ce dossier par ceux d'une release ; les autres fichiers restent
-│   └── URTC_SLAVE_FIRMWARE_v0.1.9.bin        <- application du chip esclave d'extension, le cas echeant
+│   └── URTC_SLAVE_FIRMWARE_v<version>.bin    <- application du chip esclave d'extension, le cas echeant
 ├── logs/                          <- cree automatiquement, un fichier par session
 ├── urtc_config.json               <- optionnel, non inclus par defaut (voir "Changer la cle HMAC" ci-dessous)
 ├── urtc_flasher.py                <- point d'entrée : arguments CLI et démarrage de la fenêtre Qt Quick
@@ -275,7 +275,7 @@ liste avec un ✓ ou ✗ clair et la raison :
 | Fichier | Taille | Statut |
 |---|---|---|
 | URTC_MAIN_FIRMWARE_v<version>.bin | 71.8 KB | ✓ semble valide |
-| URTC_SLAVE_FIRMWARE_v0.1.9.bin | 33.9 KB | ✓ semble valide |
+| URTC_SLAVE_FIRMWARE_v<version>.bin | 33.9 KB | ✓ semble valide |
 | notes.txt.bin | 0.1 KB | ✗ le premier mot ne ressemble pas a un pointeur de pile valide |
 
 - **Exactement un fichier passe la vérification** → il est sélectionné
@@ -387,10 +387,10 @@ sur une carte réelle.
 
 Ce que vous verrez :
 
-- **`v1.1 (application, HardwareID 0x0303CC01)`** - cas normal,
+- **`v0.2 (application, HardwareID 0x0303CC01)`** - cas normal,
   application en cours d'exécution, tout correspond.
 - **`Bootloader running, no valid firmware currently installed,
-  bootloader v1.1.2`** - la carte est coincée dans le bootloader sans
+  bootloader v0.1.2`** - la carte est coincée dans le bootloader sans
   rien vers quoi sauter (puce vierge, ou chaque vérification sur
   l'emplacement principal a échoué). C'est exactement la situation pour
   laquelle cet outil existe - flashez-la. La version de bootloader
@@ -967,15 +967,19 @@ partition différent.
 │   ├── URTC_APP_ICON.svg          <- icône partagée app/barre des tâches (vectorielle)
 │   ├── URTC_LOGO_FLASHER.svg      <- source de la bannière (vectorielle)
 │   ├── qml/
-│   │   └── FlasherDeck.qml        <- UI Qt Quick du command deck CAN-OTA
+│   │   ├── FlasherDeck.qml        <- UI Qt Quick du command deck CAN-OTA
+│   │   ├── HelpDialog.qml         La fenêtre du guide rapide (partagée)
+│   │   ├── NodePickerDialog.qml   La fenêtre des têtes d'outil (partagée)
+│   │   ├── UpdateDialog.qml       La fenêtre de recherche de mises à jour (partagée)
+│   │   └── urtc_common.lock.json  Verrou des fichiers copiés de URTC-COMMON
 │   ├── urtc_icon.ico              <- icône barre des tâches/fenêtre sous Windows
 │   └── urtc_icon.png              <- icône barre des tâches/fenêtre sous Linux
 ├── firmware/
 │   ├── URTC_MAIN_FIRMWARE_v<version>.bin     <- firmware applicatif actuel de la carte principale
-│   ├── URTC_MAIN_BOOTLOADER_v0.3.8.bin   <- bootloader de la carte principale (SWD/JTAG uniquement, exclu de la
+│   ├── URTC_MAIN_BOOTLOADER_v<version>.bin   <- bootloader de la carte principale (SWD/JTAG uniquement, exclu de la
 │   │                                         liste de firmware CAN-OTA - voir section 3 ci-dessus)
-│   ├── URTC_SLAVE_FIRMWARE_v0.1.9.bin    <- application de la puce esclave d'extension (cartes d'extension avancées uniquement)
-│   ├── URTC_SLAVE_BOOTLOADER_v0.2.2.bin  <- bootloader de la puce esclave d'extension
+│   ├── URTC_SLAVE_FIRMWARE_v<version>.bin    <- application de la puce esclave d'extension (cartes d'extension avancées uniquement)
+│   ├── URTC_SLAVE_BOOTLOADER_v<version>.bin  <- bootloader de la puce esclave d'extension
 │   └── *.bin.sha256, *.bin.manifest.json  <- empreinte publiée + manifeste (version, sha256, signature) de chaque image
 ├── images/
 │   ├── URTC_FLASHER_BANNER.svg    <- bannière du logo affichée en haut de ce README
@@ -1003,6 +1007,10 @@ partition différent.
 ├── flasher_protocol.py            <- la machine à états CAN OTA elle-même
 ├── flasher_github.py              <- liste et télécharge les assets d'une release GitHub d'URTC
 ├── flasher_records.py             <- journaux de session (emplacement, conservation) et rapports de mise à jour
+├── flasher_integrity.py           Contrôles avant de déclarer un flashage terminé : SHA-256 et CRC-32 de l'image sur le disque
+├── flasher_release_signature.py   Signatures de version publiée (Ed25519) des fichiers que cet outil télécharge ou flashe
+├── urtc_can/                      Code partagé copié de URTC-COMMON : protocole, transports, carte virtuelle, mises à jour, aide et la fenêtre des têtes d'outil
+├── urtc_ui/                       Aides d'interface partagées (copie de URTC-COMMON)
 ├── verify_qt_device_config.py     <- vraie vérification de bout en bout, délibérément hors pytest, des écritures de configuration Qt Quick (a besoin d'une vraie boucle d'événements Qt)
 ├── verify_qt_swd_full_chip_flash.py <- vraie vérification de bout en bout, délibérément hors pytest, du panneau Qt Quick de programmation complète SWD/JTAG (dry-run uniquement)
 ├── verify_qt_can_options.py       <- vraie vérification, hors pytest, que la console Qt Quick se charge et que les options CAN-OTA se comportent (cible, retour arrière, sauvegarde)
@@ -1039,21 +1047,33 @@ partition différent.
 │   ├── test_sync_firmware.py
 │   ├── test_validation_ccm_stack.py
 │   ├── test_validation_formats.py
-│   └── test_version_report.py
+│   ├── test_version_report.py
+│   ├── test_*.py             Et un fichier par autre domaine : la fenêtre Qt, les fichiers de langue, le guide de la fenêtre, la carte virtuelle, la signature de version et le dialogue de mise à jour
+│   └── fixtures/             Vecteurs partagés avec les autres programmes et traces enregistrées
 ├── requirements.txt                <- pyserial>=3.5 + PySide6>=6.8,<7
+├── requirements-dev.txt / requirements*.lock Dépendances des tests et de la compilation, figées avec des empreintes
+├── mypy.ini / ruff.toml / pytest.ini Réglages du contrôle des types et des contrôles statiques
+├── urtc_i18n.lock.json             Verrou des fichiers de langue générés depuis le catalogue de URTC-COMMON
+├── urtc.project.json               Manifeste du projet (version, maturité, preuves)
+├── run.bat / run.sh                Lancent le programme
 ├── build_exe.bat                  <- build autonome pour Windows
 ├── build_exe.sh                   <- build autonome pour Linux
 ├── build-test.bat                 <- contrôle build/compilation sans gestion de version
 ├── build-test.sh                  <- le même, pour Linux
 ├── bump.py                        <- Commande explicite pour monter la version (compiler ne la monte jamais)
-├── bump_version.py                <- incrément de version type compteur kilométrique, exécuté par les scripts de build
+├── bump_version.py                <- incrément de version type compteur kilométrique, appelé par bump.py
 ├── bump_manifest_version.py       <- synchronise la version de urtc.project.json avec la version native (--sync)
 ├── docs/
-│   └── CLI_REFERENCE.md           <- référence des options de ligne de commande
+│   ├── CLI_REFERENCE.md           <- référence des options de ligne de commande
+│   ├── WINDOW_GUIDE.md            La fenêtre pas à pas, avec de vraies images dans les huit langues
+│   └── screenshots/               Les images du guide de la fenêtre, dans les huit langues
 ├── tools/
 │   ├── build_test.py                     <- contrôle de compilation sans gestion de version + validation des sources du deck Qt Quick
 │   ├── ci_validate.py                    <- validation manifest/CHANGELOG/docs utilisée par la CI
-│   └── sync_firmware.py                  <- met à jour firmware/ depuis les assets d'une release URTC ou un dossier local (empreintes vérifiées ; --check vérifie)
+│   ├── sync_firmware.py                  <- met à jour firmware/ depuis les assets d'une release URTC ou un dossier local (empreintes vérifiées ; --check vérifie)
+│   ├── capture_screens.py                Prend les images du guide de la fenêtre sans écran (une langue ou toutes)
+│   ├── make_update_package.py            Construit et signe le paquet de mise à jour d'une version publiée
+│   └── _doc_policy.py / _readme_parity.py / _tracked_names.py Contrôles partagés utilisés par ci_validate.py
 ├── README.md                      <- (version anglaise)
 ├── README_fra.md                  <- ce fichier
 ├── README_spa.md / README_ita.md / README_deu.md / README_zho.md / README_jpn.md / README_por.md  <- autres traductions

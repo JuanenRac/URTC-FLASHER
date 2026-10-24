@@ -73,7 +73,7 @@ CAN バス経由で URTC ボードファームウェアを更新するための�
 最初の実際のフラッシュ試行に臨んでください：フォールバックとして手元に
 JTAG を用意しておいてください。 ここで説明するその他の機能は、シミュレートされたブートローダーである `MockCAN` に対してのみ試されており、実機のボードに対して試したことはありません。
 
-**正直な現状確認 - 実際に今動くもの:** `tests/` には 41 個の pytest ファイル（478 件のテスト：すべて成功、うち 76 件は PySide6 がない場合スキップ）があります——完全なブートローダーシーケンス（開始／消去／受信、ページデータ + PAGE_ACK、HMAC チャンク、本当の成功または特定の `VERIFY_FAIL_REASON` による更新終了）を再現する実際の `MockCAN` トランスポート（`flasher_transports.py`）に対する CAN-OTA プロトコル、署名ルール（公開署名は鍵なしで送信、未署名イメージは拒否、マニフェストの sha256 不一致はバス通信前に拒否）、イメージ整合性チェック、同梱の `firmware/` とそのマニフェストの照合です。GitHub Actions（`.github/workflows/ci.yml`）が push のたびにこのスイートを実行し、`tools/build_test.py` も `build-test.sh`/`.bat` で実行します。ルートにある 2 つの `verify_qt_*.py` スクリプトは pytest の外にある本物のエンドツーエンドチェックです（本物の Qt イベントループが必要。`QT_QPA_PLATFORM=offscreen python verify_qt_*.py` で実行）。`verify_qt_swd_full_chip_flash.py` は `dry_run=True` で `PyOCDCLI`/`CubeProgrammerCLI` のコマンドを組み立てるだけです。この環境では実機ボードに対しては一切実行していません。何がリリースされたかは `CHANGELOG.md` を参照してください。 シミュレートされたブートローダー（`MockCAN`）はプロトコルの記述から作ったモデルにすぎません。ページ ACK、部分的な最後のページ、読み戻しフレームは再現しますが、本物のブートローダーではないため、テストがすべて成功しても実機での試験の代わりにはなりません（公式の 73476 バイトのイメージがインストールできず、バックアップの最後のフレームが失われていたのに、シミュレーションが本物のブートローダーより寛容だったためにテストは成功していました）。
+**正直な現状確認 - 実際に今動くもの:** `tests/` には 47 個の pytest ファイル（515 件のテスト：すべて成功、うち 78 件は PySide6 がない場合スキップ）があります——完全なブートローダーシーケンス（開始／消去／受信、ページデータ + PAGE_ACK、HMAC チャンク、本当の成功または特定の `VERIFY_FAIL_REASON` による更新終了）を再現する実際の `MockCAN` トランスポート（`flasher_transports.py`）に対する CAN-OTA プロトコル、署名ルール（公開署名は鍵なしで送信、未署名イメージは拒否、マニフェストの sha256 不一致はバス通信前に拒否）、イメージ整合性チェック、同梱の `firmware/` とそのマニフェストの照合です。GitHub Actions（`.github/workflows/ci.yml`）が push のたびにこのスイートを実行し、`tools/build_test.py` も `build-test.sh`/`.bat` で実行します。さらに `ruff check` と `python -m mypy`（プログラムと共有コードのコピーの型チェック）も実行します。ルートにある 3 つの `verify_qt_*.py` スクリプトは pytest の外にある本物のエンドツーエンドチェックです（本物の Qt イベントループが必要。`QT_QPA_PLATFORM=offscreen python verify_qt_*.py` で実行）。`verify_qt_swd_full_chip_flash.py` は `dry_run=True` で `PyOCDCLI`/`CubeProgrammerCLI` のコマンドを組み立てるだけです。この環境では実機ボードに対しては一切実行していません。何がリリースされたかは `CHANGELOG.md` を参照してください。 シミュレートされたブートローダー（`MockCAN`）はプロトコルの記述から作ったモデルにすぎません。ページ ACK、部分的な最後のページ、読み戻しフレームは再現しますが、本物のブートローダーではないため、テストがすべて成功しても実機での試験の代わりにはなりません（公式の 73476 バイトのイメージがインストールできず、バックアップの最後のフレームが失われていたのに、シミュレーションが本物のブートローダーより寛容だったためにテストは成功していました）。
 
 > **安全性とセキュリティの現状:** このエコシステムは認証された安全システムではなく、実装済みの URTC 基板もまだ存在しません。ブートローダーはファームウェアイメージを CRC32 と共有鍵の HMAC-SHA256 で検査しており、非対称署名ではありません(予定)。公開されているアプリケーションイメージは公開の開発用鍵(`signing_key_kind: dev`)で署名されているため、誰でもブートローダーが受け入れるイメージを作れます。実際の基板には何も送信されていません。ここに書かれた内容を人の安全のために頼る前に、[セキュリティベースライン](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md)と[脅威モデル](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md)をお読みください。
 
@@ -271,7 +271,7 @@ SocketCAN にはこの特定の落とし穴はありません——`can0` のよ
 | ファイル | サイズ | 状態 |
 |---|---|---|
 | URTC_MAIN_FIRMWARE_v<version>.bin | 71.8 KB | ✓ 有効に見えます |
-| URTC_SLAVE_FIRMWARE_v0.1.9.bin | 33.9 KB | ✓ 有効に見えます |
+| URTC_SLAVE_FIRMWARE_v<version>.bin | 33.9 KB | ✓ 有効に見えます |
 | notes.txt.bin | 0.1 KB | ✗ 最初のワードが有効なスタックポインタに見えません |
 
 - **チェックに合格したファイルが正確に 1 つ** → ツールが起動した瞬間に、
@@ -909,16 +909,20 @@ JSON 数値（`50580689`）のどちらも受け付けます——ファイル�
 │   ├── URTC_APP_ICON.svg          <- 共有アプリ/タスクバーアイコンのソース（ベクター）
 │   ├── URTC_LOGO_FLASHER.svg      <- バナーのソース（ベクター）
 │   ├── qml/
-│   │   └── FlasherDeck.qml        <- CAN-OTA コマンドデッキの Qt Quick UI
+│   │   ├── FlasherDeck.qml        <- CAN-OTA コマンドデッキの Qt Quick UI
+│   │   ├── HelpDialog.qml         クイックガイドのウィンドウ（共有）
+│   │   ├── NodePickerDialog.qml   ツールヘッドのウィンドウ（共有）
+│   │   ├── UpdateDialog.qml       更新確認のウィンドウ（共有）
+│   │   └── urtc_common.lock.json  URTC-COMMON からコピーしたファイルのロックファイル
 │   ├── urtc_icon.ico              <- Windows タスクバー/ウィンドウアイコン
 │   └── urtc_icon.png              <- Linux タスクバー/ウィンドウアイコン
 ├── firmware/
 │   ├── URTC_MAIN_FIRMWARE_v<version>.bin     <- 現在のメインボードアプリケーションファームウェア
-│   ├── URTC_MAIN_BOOTLOADER_v0.3.8.bin   <- メインボードブートローダー（SWD/JTAG のみ、
+│   ├── URTC_MAIN_BOOTLOADER_v<version>.bin   <- メインボードブートローダー（SWD/JTAG のみ、
 │   │                                         CAN-OTA ファームウェアリストからフィルタリング
 │   │                                         除外——上記のセクション 3 参照）
-│   ├── URTC_SLAVE_FIRMWARE_v0.1.9.bin    <- 拡張スレーブアプリケーション（Advanced 拡張ボードのみ）
-│   ├── URTC_SLAVE_BOOTLOADER_v0.2.2.bin  <- 拡張スレーブブートローダー
+│   ├── URTC_SLAVE_FIRMWARE_v<version>.bin    <- 拡張スレーブアプリケーション（Advanced 拡張ボードのみ）
+│   ├── URTC_SLAVE_BOOTLOADER_v<version>.bin  <- 拡張スレーブブートローダー
 │   └── *.bin.sha256, *.bin.manifest.json  <- 各イメージの公開ダイジェスト + マニフェスト（バージョン、sha256、署名）
 ├── images/
 │   ├── URTC_FLASHER_BANNER.svg    <- 本 README の先頭に表示される Logo バナー
@@ -947,6 +951,10 @@ JSON 数値（`50580689`）のどちらも受け付けます——ファイル�
 ├── flasher_protocol.py            <- CAN OTA ステートマシン本体
 ├── flasher_github.py              <- URTC の GitHub リリースのアセットを一覧表示してダウンロード
 ├── flasher_records.py             <- セッションログ（保存場所・保持）と更新レポート
+├── flasher_integrity.py           フラッシュ完了と報告する前の確認：ディスク上のイメージの SHA-256 と CRC-32
+├── flasher_release_signature.py   このツールがダウンロードまたは書き込むファイルのリリース署名（Ed25519）
+├── urtc_can/                      URTC-COMMON からコピーした共有コード：プロトコル、トランスポート、仮想ボード、更新、ヘルプ、ツールヘッドのウィンドウ
+├── urtc_ui/                       共有のインターフェース補助コード（URTC-COMMON のコピー）
 ├── verify_qt_device_config.py     <- Qt Quick の設定書き込みに対する、意図的に pytest の外に置かれた本物のエンドツーエンド検証（本物の Qt イベントループが必要）
 ├── verify_qt_swd_full_chip_flash.py <- Qt Quick のフルチップ SWD/JTAG パネルに対する、意図的に pytest の外に置かれた本物のエンドツーエンド検証（dry-run のみ）
 ├── verify_qt_can_options.py       <- pytest の外に置かれた、Qt Quick デッキの読み込みと CAN-OTA オプション（ターゲット、ダウングレード、バックアップ）の動作確認
@@ -983,21 +991,33 @@ JSON 数値（`50580689`）のどちらも受け付けます——ファイル�
 │   ├── test_sync_firmware.py
 │   ├── test_validation_ccm_stack.py
 │   ├── test_validation_formats.py
-│   └── test_version_report.py
+│   ├── test_version_report.py
+│   ├── test_*.py             さらに、他の領域ごとに 1 ファイル：Qt ウィンドウ、言語ファイル、ウィンドウガイド、仮想ボード、リリース署名、更新ダイアログ
+│   └── fixtures/             他のプログラムと共有するベクターと記録したトレース
 ├── requirements.txt                <- pyserial>=3.5 + PySide6>=6.8,<7
+├── requirements-dev.txt / requirements*.lock テストとビルドの依存関係（ハッシュで固定）
+├── mypy.ini / ruff.toml / pytest.ini 型チェックと静的チェックの設定
+├── urtc_i18n.lock.json             URTC-COMMON のカタログから生成した言語ファイルのロックファイル
+├── urtc.project.json               プロジェクトマニフェスト（バージョン、成熟度、証拠）
+├── run.bat / run.sh                プログラムを起動する
 ├── build_exe.bat                  <- Windows 独立ビルド
 ├── build_exe.sh                   <- Linux 独立ビルド
 ├── build-test.bat                 <- バージョンを更新しないビルド/コンパイル確認
 ├── build-test.sh                  <- 同上、Linux 向け
 ├── bump.py                        <- 明示的なバージョン加算コマンド（コンパイルでは加算されない）
-├── bump_version.py                <- オドメーター式バージョンインクリメント、ビルドスクリプトが実行
+├── bump_version.py                <- オドメーター式バージョンインクリメント、bump.py が実行
 ├── bump_manifest_version.py       <- urtc.project.json のバージョンをネイティブ側と同期（--sync）
 ├── docs/
-│   └── CLI_REFERENCE.md           <- コマンドラインフラグのリファレンス
+│   ├── CLI_REFERENCE.md           <- コマンドラインフラグのリファレンス
+│   ├── WINDOW_GUIDE.md            ウィンドウを順に説明（8 言語の実画像付き）
+│   └── screenshots/               ウィンドウガイドの画像（8 言語）
 ├── tools/
 │   ├── build_test.py                     <- バージョンを更新しないコンパイル確認 + Qt Quick デッキのソース検証
 │   ├── ci_validate.py                    <- CI が使用する manifest/CHANGELOG/docs の検証
-│   └── sync_firmware.py                  <- URTC リリースのアセットまたはローカルフォルダから firmware/ を更新（ダイジェスト確認、--check で検証）
+│   ├── sync_firmware.py                  <- URTC リリースのアセットまたはローカルフォルダから firmware/ を更新（ダイジェスト確認、--check で検証）
+│   ├── capture_screens.py                画面なしでウィンドウガイドの画像を撮る（1 言語または全言語）
+│   ├── make_update_package.py            リリースの更新パッケージをビルドして署名する
+│   └── _doc_policy.py / _readme_parity.py / _tracked_names.py ci_validate.py が使う共有チェック
 ├── README.md                      <- 英語版
 ├── README_jpn.md / README_por.md                  <- 本ファイル
 ├── README_spa.md / README_ita.md / README_fra.md / README_deu.md / README_zho.md  <- 他の翻訳

@@ -68,7 +68,7 @@ either platform is a real board over real hardware — treat a first
 real-world flash attempt with the same caution you'd give any new tool
 talking to a bootloader: have JTAG on hand as a fallback. Everything else described here was exercised only against `MockCAN`, a simulated bootloader, never against a real board.
 
-**Honesty check - what actually runs today:** `tests/` holds 42 pytest files (485 tests: all pass; 78 of them skip without PySide6) - the CAN-OTA protocol against a real `MockCAN` transport (`flasher_transports.py`) that plays back a full simulated bootloader sequence (start/erase/receive, page data + PAGE_ACK, HMAC chunks, end-update with a real success or a specific `VERIFY_FAIL_REASON`), the signature rules (published signature sent without any key, unsigned image refused, manifest sha256 mismatch refused before any bus traffic), the image integrity checks and the bundled `firmware/` against its manifests. GitHub Actions (`.github/workflows/ci.yml`) runs this suite on every push, and `tools/build_test.py` runs it in `build-test.sh`/`.bat`. The two `verify_qt_*.py` scripts at the repo root are real end-to-end checks kept outside pytest (they need a real Qt event loop; run them with `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`); `verify_qt_swd_full_chip_flash.py` only builds the `PyOCDCLI`/`CubeProgrammerCLI` commands with `dry_run=True`. None of this has been run against a real board over real hardware in this environment. See `CHANGELOG.md` for exactly what has shipped so far. The simulated bootloader (`MockCAN`) is only a model written from the protocol description: it reproduces the page acknowledgements, the partial last page and the readback frames, but it is not the real bootloader, so a green test run does not replace a trial on a real board (the official 73476-byte image could not be installed, and the last frame of a backup was dropped, while the tests passed, precisely because the simulation was more forgiving than the real bootloader).
+**Honesty check - what actually runs today:** `tests/` holds 47 pytest files (515 tests: all pass; 78 of them skip without PySide6) - the CAN-OTA protocol against a real `MockCAN` transport (`flasher_transports.py`) that plays back a full simulated bootloader sequence (start/erase/receive, page data + PAGE_ACK, HMAC chunks, end-update with a real success or a specific `VERIFY_FAIL_REASON`), the signature rules (published signature sent without any key, unsigned image refused, manifest sha256 mismatch refused before any bus traffic), the image integrity checks and the bundled `firmware/` against its manifests. GitHub Actions (`.github/workflows/ci.yml`) runs this suite on every push, and `tools/build_test.py` runs it in `build-test.sh`/`.bat`. It also runs `ruff check` and `python -m mypy` (a type check of the program and of the copies of the shared code). The three `verify_qt_*.py` scripts at the repo root are real end-to-end checks kept outside pytest (they need a real Qt event loop; run them with `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`); `verify_qt_swd_full_chip_flash.py` only builds the `PyOCDCLI`/`CubeProgrammerCLI` commands with `dry_run=True`. None of this has been run against a real board over real hardware in this environment. See `CHANGELOG.md` for exactly what has shipped so far. The simulated bootloader (`MockCAN`) is only a model written from the protocol description: it reproduces the page acknowledgements, the partial last page and the readback frames, but it is not the real bootloader, so a green test run does not replace a trial on a real board (the official 73476-byte image could not be installed, and the last frame of a backup was dropped, while the tests passed, precisely because the simulation was more forgiving than the real bootloader).
 
 > **Safety and security status:** this ecosystem is not a certified safety system, and no populated URTC board exists yet. The bootloaders check firmware images with CRC32 and a shared-key HMAC-SHA256, not with an asymmetric signature (planned); the published application images are signed with the public development key (`signing_key_kind: dev`), so anyone can produce an image the bootloader accepts; nothing has been transmitted to a real board. Read the [security baseline](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md) and the [threat model](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md) before relying on any statement here for the safety of a person.
 
@@ -252,7 +252,7 @@ in the list with a clear ✓ or ✗ and the reason why:
 | File | Size | Status |
 |---|---|---|
 | URTC_MAIN_FIRMWARE_v<version>.bin | 71.8 KB | ✓ looks valid |
-| URTC_SLAVE_FIRMWARE_v0.1.9.bin | 33.9 KB | ✓ looks valid |
+| URTC_SLAVE_FIRMWARE_v<version>.bin | 33.9 KB | ✓ looks valid |
 | notes.txt.bin | 0.1 KB | ✗ first word doesn't look like a valid stack pointer |
 
 - **Exactly one file passes the check** → it's selected for you the moment
@@ -852,15 +852,19 @@ partition scheme.
 │   ├── URTC_APP_ICON.svg          <- shared app/taskbar icon source (vector)
 │   ├── URTC_LOGO_FLASHER.svg      <- banner source (vector)
 │   ├── qml/
-│   │   └── FlasherDeck.qml        <- Qt Quick UI for the CAN-OTA command deck
+│   │   ├── FlasherDeck.qml        <- Qt Quick UI for the CAN-OTA command deck
+│   │   ├── HelpDialog.qml         The quick-guide window (shared)
+│   │   ├── NodePickerDialog.qml   The tool heads window (shared)
+│   │   ├── UpdateDialog.qml       The Check for updates window (shared)
+│   │   └── urtc_common.lock.json  Lock of the files copied from URTC-COMMON
 │   ├── urtc_icon.ico              <- Windows taskbar/window icon
 │   └── urtc_icon.png              <- Linux taskbar/window icon
 ├── firmware/
 │   ├── URTC_MAIN_FIRMWARE_v<version>.bin     <- current main-board application firmware
-│   ├── URTC_MAIN_BOOTLOADER_v0.3.8.bin   <- main-board bootloader (SWD/JTAG only, filtered out of
+│   ├── URTC_MAIN_BOOTLOADER_v<version>.bin   <- main-board bootloader (SWD/JTAG only, filtered out of
 │   │                                         the CAN-OTA firmware list - see section 3 above)
-│   ├── URTC_SLAVE_FIRMWARE_v0.1.9.bin    <- expansion slave application (advanced expansion boards only)
-│   ├── URTC_SLAVE_BOOTLOADER_v0.2.2.bin  <- expansion slave bootloader
+│   ├── URTC_SLAVE_FIRMWARE_v<version>.bin    <- expansion slave application (advanced expansion boards only)
+│   ├── URTC_SLAVE_BOOTLOADER_v<version>.bin  <- expansion slave bootloader
 │   └── *.bin.sha256, *.bin.manifest.json  <- published digest + manifest (version, sha256, signature) of each image
 ├── images/
 │   ├── URTC_FLASHER_BANNER.svg    <- logo banner shown at the top of this README
@@ -889,6 +893,10 @@ partition scheme.
 ├── flasher_protocol.py            <- the CAN OTA state machine itself
 ├── flasher_github.py              <- lists and downloads the assets of a URTC GitHub release
 ├── flasher_records.py             <- session logs (location, retention) and update reports
+├── flasher_integrity.py           Checks before a flash is reported as done: SHA-256 and CRC-32 of the image on disk
+├── flasher_release_signature.py   Release signatures (Ed25519) of the files this tool downloads or flashes
+├── urtc_can/                      Shared code copied from URTC-COMMON: protocol, transports, virtual board, updates, help and the tool heads window
+├── urtc_ui/                       Shared interface helpers (copy from URTC-COMMON)
 ├── verify_qt_device_config.py     <- real, outside-pytest end-to-end check of the Qt Quick config writes (needs a real Qt event loop)
 ├── verify_qt_swd_full_chip_flash.py <- real, outside-pytest end-to-end check of the Qt Quick full-chip SWD/JTAG panel (dry-run only)
 ├── verify_qt_can_options.py       <- real, outside-pytest check that the Qt Quick deck loads and that the CAN-OTA options behave (target, downgrade, backup)
@@ -925,8 +933,15 @@ partition scheme.
 │   ├── test_sync_firmware.py
 │   ├── test_validation_ccm_stack.py
 │   ├── test_validation_formats.py
-│   └── test_version_report.py
+│   ├── test_version_report.py
+│   ├── test_*.py             Plus one file per other area: the Qt window, the language files, the window guide, the virtual board, the release signature and the update dialog
+│   └── fixtures/             Vectors shared with the other programs and recorded traces
 ├── requirements.txt                <- pyserial>=3.5 + PySide6>=6.8,<7
+├── requirements-dev.txt / requirements*.lock Dependencies of the tests and of the build, closed with hashes
+├── mypy.ini / ruff.toml / pytest.ini Settings of the type check and of the static checks
+├── urtc_i18n.lock.json             Lock of the language files generated from the catalog of URTC-COMMON
+├── urtc.project.json               Project manifest (version, maturity, evidence)
+├── run.bat / run.sh                Start the program
 ├── build_exe.bat                  <- Windows standalone build
 ├── build_exe.sh                   <- Linux standalone build
 ├── build-test.bat                 <- non-versioning build/compile check
@@ -935,11 +950,16 @@ partition scheme.
 ├── bump_version.py                <- odometer-style version bump, called by bump.py
 ├── bump_manifest_version.py       <- syncs urtc.project.json's version to the native one (--sync)
 ├── docs/
-│   └── CLI_REFERENCE.md           <- command-line flags reference
+│   ├── CLI_REFERENCE.md           <- command-line flags reference
+│   ├── WINDOW_GUIDE.md            The window step by step, with real pictures in the eight languages
+│   └── screenshots/               The pictures of the window guide, in the eight languages
 ├── tools/
 │   ├── build_test.py                     <- non-versioning compile + Qt Quick deck source check
 │   ├── ci_validate.py                    <- manifest/CHANGELOG/docs validation used by CI
-│   └── sync_firmware.py                  <- refreshes firmware/ from the assets of a URTC release or a local folder (digests checked; --check verifies)
+│   ├── sync_firmware.py                  <- refreshes firmware/ from the assets of a URTC release or a local folder (digests checked; --check verifies)
+│   ├── capture_screens.py                Takes the pictures of the window guide without a screen (one language or all)
+│   ├── make_update_package.py            Builds and signs the update package of a release
+│   └── _doc_policy.py / _readme_parity.py / _tracked_names.py Shared checks used by ci_validate.py
 ├── README.md                      <- this file
 ├── README_spa.md / README_ita.md / README_fra.md / README_deu.md / README_zho.md / README_jpn.md / README_por.md  <- translations
 ├── LICENSE

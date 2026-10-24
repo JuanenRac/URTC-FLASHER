@@ -60,7 +60,7 @@ CAN 自我标识），以便你在决定要刷写什么之前，先看看当前�
 针对真实硬件的真实板卡——请以对待任何与引导程序通信的新工具同样的谨慎态度
 对待首次真实刷写尝试：手边备好 JTAG 作为后备手段。 这里描述的其他功能都只针对模拟引导程序 `MockCAN` 测试过，从未针对真实板卡测试过。
 
-**诚实核查 - 今天真正能运行的部分：** `tests/` 下有 41 个 pytest 文件（478 个测试：全部通过，其中 76 个在没有 PySide6 时跳过）——针对真实 `MockCAN` 传输（`flasher_transports.py`）的 CAN-OTA 协议测试，它会回放完整的模拟引导程序序列（开始／擦除／接收、页数据 + PAGE_ACK、HMAC 分块、以真实成功或特定 `VERIFY_FAIL_REASON` 结束更新）；签名规则（无需任何密钥即发送已发布的签名、拒绝未签名镜像、清单 sha256 不符时在任何总线通信前拒绝）；镜像完整性检查；以及随附 `firmware/` 与其清单的核对。GitHub Actions（`.github/workflows/ci.yml`）在每次推送时运行这套测试，`tools/build_test.py` 也会在 `build-test.sh`/`.bat` 中运行。根目录下的两个 `verify_qt_*.py` 脚本是 pytest 之外的真实端到端检查（需要真实的 Qt 事件循环；用 `QT_QPA_PLATFORM=offscreen python verify_qt_*.py` 运行）；`verify_qt_swd_full_chip_flash.py` 只以 `dry_run=True` 构造 `PyOCDCLI`/`CubeProgrammerCLI` 命令。这些都没有在本环境中针对真实板卡运行过。已发布的内容请参见 `CHANGELOG.md`。 模拟的引导程序（`MockCAN`）只是根据协议说明编写的模型：它能重现页确认、不完整的最后一页和回读帧，但它不是真正的引导程序，所以测试全部通过并不能代替在真实板卡上的试验（官方 73476 字节镜像曾无法安装、备份的最后一帧曾被丢弃，而测试却是通过的，正是因为模拟比真正的引导程序更宽松）。
+**诚实核查 - 今天真正能运行的部分：** `tests/` 下有 47 个 pytest 文件（515 个测试：全部通过，其中 78 个在没有 PySide6 时跳过）——针对真实 `MockCAN` 传输（`flasher_transports.py`）的 CAN-OTA 协议测试，它会回放完整的模拟引导程序序列（开始／擦除／接收、页数据 + PAGE_ACK、HMAC 分块、以真实成功或特定 `VERIFY_FAIL_REASON` 结束更新）；签名规则（无需任何密钥即发送已发布的签名、拒绝未签名镜像、清单 sha256 不符时在任何总线通信前拒绝）；镜像完整性检查；以及随附 `firmware/` 与其清单的核对。GitHub Actions（`.github/workflows/ci.yml`）在每次推送时运行这套测试，`tools/build_test.py` 也会在 `build-test.sh`/`.bat` 中运行。它还会运行 `ruff check` 和 `python -m mypy`（对程序及共享代码副本的类型检查）。根目录下的三个 `verify_qt_*.py` 脚本是 pytest 之外的真实端到端检查（需要真实的 Qt 事件循环；用 `QT_QPA_PLATFORM=offscreen python verify_qt_*.py` 运行）；`verify_qt_swd_full_chip_flash.py` 只以 `dry_run=True` 构造 `PyOCDCLI`/`CubeProgrammerCLI` 命令。这些都没有在本环境中针对真实板卡运行过。已发布的内容请参见 `CHANGELOG.md`。 模拟的引导程序（`MockCAN`）只是根据协议说明编写的模型：它能重现页确认、不完整的最后一页和回读帧，但它不是真正的引导程序，所以测试全部通过并不能代替在真实板卡上的试验（官方 73476 字节镜像曾无法安装、备份的最后一帧曾被丢弃，而测试却是通过的，正是因为模拟比真正的引导程序更宽松）。
 
 > **安全与安防现状:**本生态系统不是经认证的安全系统,目前也不存在已组装的 URTC 电路板。引导程序使用 CRC32 和共享密钥的 HMAC-SHA256 校验固件映像,而非非对称签名(计划中);已发布的应用映像使用公开的开发密钥签名(`signing_key_kind: dev`),因此任何人都可以生成引导程序接受的映像;尚未向任何真实电路板发送过任何内容。在依赖此处任何说法来保障人身安全之前,请先阅读[安全基线](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md)和[威胁模型](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md)。
 
@@ -226,7 +226,7 @@ SocketCAN 没有这个特定的坑——访问一个类似 `can0` 的接口不�
 | 文件 | 大小 | 状态 |
 |---|---|---|
 | URTC_MAIN_FIRMWARE_v<version>.bin | 71.8 KB | ✓ 看起来有效 |
-| URTC_SLAVE_FIRMWARE_v0.1.9.bin | 33.9 KB | ✓ 看起来有效 |
+| URTC_SLAVE_FIRMWARE_v<version>.bin | 33.9 KB | ✓ 看起来有效 |
 | notes.txt.bin | 0.1 KB | ✗ 第一个字看起来不像一个有效的堆栈指针 |
 
 - **恰好有一个文件通过检查** → 工具启动的那一刻就会为你选中它。文件夹中
@@ -709,15 +709,19 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 │   ├── URTC_APP_ICON.svg          <- 共享的应用/任务栏图标源文件（矢量图）
 │   ├── URTC_LOGO_FLASHER.svg      <- 横幅源文件（矢量图）
 │   ├── qml/
-│   │   └── FlasherDeck.qml        <- CAN-OTA 指令面板的 Qt Quick UI
+│   │   ├── FlasherDeck.qml        <- CAN-OTA 指令面板的 Qt Quick UI
+│   │   ├── HelpDialog.qml         快速指南窗口（共享）
+│   │   ├── NodePickerDialog.qml   工具头窗口（共享）
+│   │   ├── UpdateDialog.qml       检查更新窗口（共享）
+│   │   └── urtc_common.lock.json  复制自 URTC-COMMON 的文件的锁定文件
 │   ├── urtc_icon.ico              <- Windows 任务栏/窗口图标
 │   └── urtc_icon.png              <- Linux 任务栏/窗口图标
 ├── firmware/
 │   ├── URTC_MAIN_FIRMWARE_v<version>.bin     <- 当前的主板应用固件
-│   ├── URTC_MAIN_BOOTLOADER_v0.3.8.bin   <- 主板引导程序（仅限 SWD/JTAG，从 CAN-OTA
+│   ├── URTC_MAIN_BOOTLOADER_v<version>.bin   <- 主板引导程序（仅限 SWD/JTAG，从 CAN-OTA
 │   │                                         固件列表中过滤掉——见上方第 3 节）
-│   ├── URTC_SLAVE_FIRMWARE_v0.1.9.bin    <- 扩展从属应用程序（仅限高级扩展板）
-│   ├── URTC_SLAVE_BOOTLOADER_v0.2.2.bin  <- 扩展从属引导程序
+│   ├── URTC_SLAVE_FIRMWARE_v<version>.bin    <- 扩展从属应用程序（仅限高级扩展板）
+│   ├── URTC_SLAVE_BOOTLOADER_v<version>.bin  <- 扩展从属引导程序
 │   └── *.bin.sha256, *.bin.manifest.json  <- 每个镜像已发布的摘要 + 清单（版本、sha256、签名）
 ├── images/
 │   ├── URTC_FLASHER_BANNER.svg    <- 显示在本 README 顶部的 Logo 横幅
@@ -746,6 +750,10 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 ├── flasher_protocol.py            <- CAN OTA 状态机本身
 ├── flasher_github.py              <- 列出并下载 URTC GitHub 发布版本的资源（assets）
 ├── flasher_records.py             <- 会话日志（位置、保留）与更新报告
+├── flasher_integrity.py           在刷写被报告为完成之前的检查：磁盘上镜像的 SHA-256 和 CRC-32
+├── flasher_release_signature.py   此工具下载或刷写的文件的发布版本签名（Ed25519）
+├── urtc_can/                      复制自 URTC-COMMON 的共享代码：协议、传输、虚拟板、更新、帮助和工具头窗口
+├── urtc_ui/                       共享的界面辅助代码（URTC-COMMON 的副本）
 ├── verify_qt_device_config.py     <- 真实的、刻意放在 pytest 之外的端到端检查，验证 Qt Quick 配置写入（需要真实的 Qt 事件循环）
 ├── verify_qt_swd_full_chip_flash.py <- 真实的、刻意放在 pytest 之外的端到端检查，验证 Qt Quick 全芯片 SWD/JTAG 面板（仅 dry-run）
 ├── verify_qt_can_options.py       <- pytest 之外的真实检查：Qt Quick 控制台能够加载，CAN-OTA 选项（目标、降级、备份）工作正常
@@ -782,21 +790,33 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 │   ├── test_sync_firmware.py
 │   ├── test_validation_ccm_stack.py
 │   ├── test_validation_formats.py
-│   └── test_version_report.py
+│   ├── test_version_report.py
+│   ├── test_*.py             另外每个领域各有一个文件：Qt 窗口、语言文件、窗口指南、虚拟板、发布签名和更新对话框
+│   └── fixtures/             与其他程序共享的向量和已录制的轨迹
 ├── requirements.txt                <- pyserial>=3.5 + PySide6>=6.8,<7
+├── requirements-dev.txt / requirements*.lock 测试和构建所用依赖，带哈希锁定
+├── mypy.ini / ruff.toml / pytest.ini 类型检查和静态检查的设置
+├── urtc_i18n.lock.json             由 URTC-COMMON 目录生成的语言文件的锁定文件
+├── urtc.project.json               项目清单（版本、成熟度、证据）
+├── run.bat / run.sh                启动程序
 ├── build_exe.bat                  <- Windows 独立构建
 ├── build_exe.sh                   <- Linux 独立构建
 ├── build-test.bat                 <- 不递增版本号的构建/编译检查
 ├── build-test.sh                  <- 同上，适用于 Linux
 ├── bump.py                        <- 显式的版本递增命令（编译从不递增）
-├── bump_version.py                <- 里程表式版本递增，由构建脚本运行
+├── bump_version.py                <- 里程表式版本递增，由 bump.py 运行
 ├── bump_manifest_version.py       <- 将 urtc.project.json 的版本与原生版本同步（--sync）
 ├── docs/
-│   └── CLI_REFERENCE.md           <- 命令行参数参考
+│   ├── CLI_REFERENCE.md           <- 命令行参数参考
+│   ├── WINDOW_GUIDE.md            逐步介绍窗口，附八种语言的真实图片
+│   └── screenshots/               窗口指南的图片，八种语言各一套
 ├── tools/
 │   ├── build_test.py                     <- 不递增版本号的编译检查 + Qt Quick 面板源码校验
 │   ├── ci_validate.py                    <- CI 使用的 manifest/CHANGELOG/docs 校验
-│   └── sync_firmware.py                  <- 从 URTC 发布版本的资源或本地文件夹更新 firmware/（校验摘要；--check 用于校验）
+│   ├── sync_firmware.py                  <- 从 URTC 发布版本的资源或本地文件夹更新 firmware/（校验摘要；--check 用于校验）
+│   ├── capture_screens.py                无屏幕生成窗口指南的图片（一种语言或全部语言）
+│   ├── make_update_package.py            构建并签名某个发布版本的更新包
+│   └── _doc_policy.py / _readme_parity.py / _tracked_names.py ci_validate.py 使用的共享检查
 ├── README.md                      <- 英文原版
 ├── README_zho.md                  <- 本文件
 ├── README_spa.md / README_ita.md / README_fra.md / README_deu.md / README_jpn.md / README_por.md  <- 其他翻译
