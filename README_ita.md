@@ -622,7 +622,7 @@ completo SWD/JTAG del chip è deliberatamente solo-GUI per ora, data
 quanto più è in gioco se un'esecuzione scriptata ottiene una
 combinazione file/target sbagliata senza che nessuno stia osservando.
 
-**`--transport python-can`** usa il pacchetto opzionale `python-can` (`pip install python-can`) per PCAN, Kvaser, gs_usb/candleLight e le altre interfacce supportate, così l'adattatore non va riscritto con SLCAN: `--port` è allora `<interfaccia>:<canale>` (ad esempio `pcan:PCAN_USBBUS1`) e il bus si apre a 500 kbit/s. È disponibile solo da riga di comando.
+**`--transport python-can`** usa il pacchetto opzionale `python-can` (`pip install python-can`) per PCAN, Kvaser, gs_usb/candleLight e le altre interfacce supportate, così l'adattatore non va riscritto con SLCAN: `--port` è allora `<interfaccia>:<canale>` (ad esempio `pcan:PCAN_USBBUS1`) e il bus si apre a 500 kbit/s. La finestra offre gli stessi adattatori quando `python-can` è installato: quelli che trova per PCAN, Kvaser e gs_usb e quelli indicati nella variabile d'ambiente `URTC_PYTHON_CAN` (`<interfaccia>:<canale>` separati da virgole), elencati come `python-can:<interfaccia>:<canale>`; la velocità del bus di quella connessione è fissa a 500 kbit/s. La finestra può anche essere avviata con `--firmware PERCORSO` per avere già selezionata un'immagine (non si scrive nulla su una scheda finché non ci si connette e non si conferma l'aggiornamento).
 
 **`--transport mock`** esegue l'intera sequenza di aggiornamento contro
 un bootloader simulato, in memoria, invece di una scheda reale - nessun

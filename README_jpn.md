@@ -608,7 +608,7 @@ usage: urtc_flasher.py --cli [-h] [--transport {serial,socketcan,python-can,mock
 組み合わせを間違えた場合にどれだけ多くのものが危険にさらされるかを考慮
 し、現時点では意図的に GUI 専用です。
 
-**`--transport python-can`** は、オプションの `python-can` パッケージ（`pip install python-can`）を使って PCAN、Kvaser、gs_usb/candleLight などの対応インターフェースを扱うため、アダプターを SLCAN に書き換える必要がありません。`--port` は `<インターフェース>:<チャンネル>`（例：`pcan:PCAN_USBBUS1`）となり、バスは 500 kbit/s で開かれます。コマンドラインでのみ利用できます。
+**`--transport python-can`** は、オプションの `python-can` パッケージ（`pip install python-can`）を使って PCAN、Kvaser、gs_usb/candleLight などの対応インターフェースを扱うため、アダプターを SLCAN に書き換える必要がありません。`--port` は `<インターフェース>:<チャンネル>`（例：`pcan:PCAN_USBBUS1`）となり、バスは 500 kbit/s で開かれます。`python-can` がインストールされている場合、ウィンドウでも同じアダプターを選べます。PCAN、Kvaser、gs_usb について python-can が見つけたものと、環境変数 `URTC_PYTHON_CAN`（`<インターフェース>:<チャンネル>` をカンマ区切り）で指定したものが `python-can:<インターフェース>:<チャンネル>` として一覧に表示され、この接続のバス速度は 500 kbit/s 固定です。ウィンドウは `--firmware パス` を付けて起動すると、イメージを選択済みの状態にできます（接続して更新を確定するまで、ボードには何も書き込まれません）。
 
 **`--transport mock`** は、実際のボードではなく、シミュレートされた
 メモリ内ブートローダーに対して更新シーケンス全体を実行します——アダプター

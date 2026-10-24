@@ -50,7 +50,10 @@ from flasher_records import (
 )
 from flasher_protocol import FlashError, URTCFlasher, minor_with_patch
 from flasher_swd_tools import CubeProgrammerCLI, PyOCDCLI, SWDFlashError
-from flasher_transports import SLCAN, SocketCAN, detect_bitrate_listen_only, list_socketcan_interfaces, virtual_ports
+from flasher_transports import (
+    SLCAN, PythonCAN, SocketCAN, detect_bitrate_listen_only, is_python_can_port, list_python_can_adapters, list_socketcan_interfaces,
+    python_can_spec, virtual_ports,
+)
 from flasher_validation import validate_firmware_file, validate_swd_image_file
 from urtc_can import update_service as update_service
 from urtc_can import versioning
@@ -1089,6 +1092,7 @@ class FlasherQtBridge(QObject):
         else:
             self._socketcan_ports = set()
         ports.extend(url for url in virtual_ports() if url not in ports)  # a virtual board named in URTC_VIRTUAL_PORT
+        ports.extend(item for item in list_python_can_adapters() if item not in ports)  # PCAN, Kvaser, gs_usb through the optional python-can
         self._ports = ports
         if self._selected_port not in ports:
             self._selected_port = ports[0] if ports else ""
@@ -1121,7 +1125,7 @@ class FlasherQtBridge(QObject):
         """Listen-only search for the bus speed: nothing is transmitted at any speed tried."""
         if self._transport is not None or self._busy:
             return
-        if not self._selected_port or self._selected_port in self._socketcan_ports:
+        if not self._selected_port or self._selected_port in self._socketcan_ports or is_python_can_port(self._selected_port):
             self._log(_("MSG_SELECT_COM_PORT_FIRST"))
             return
         self._set_state(status=_("STATUS_TRYING_EACH_BITRATE"), busy=True)
@@ -1768,9 +1772,12 @@ class FlasherQtBridge(QObject):
 
     def _connect_worker(self) -> None:
         try:
-            transport: SocketCAN | SLCAN
+            transport: SocketCAN | SLCAN | PythonCAN
             if self._selected_port in self._socketcan_ports:
                 transport = SocketCAN(self._selected_port, log=self._log)
+                transport.open_channel()
+            elif is_python_can_port(self._selected_port):
+                transport = PythonCAN(python_can_spec(self._selected_port), log=self._log)  # fixed 500 kbit/s, like the bus
                 transport.open_channel()
             else:
                 transport = SLCAN(self._selected_port, log=self._log)
@@ -1918,6 +1925,20 @@ class FlasherQtBridge(QObject):
         self._log(result)
 
 
+def firmware_argument(argv: list[str]) -> str:
+    """The image named by ``--firmware PATH`` (or ``--firmware=PATH``) on the command line, or an empty text.
+
+    The URTC Updater starts the window this way after it checked the release signature of the image. The window only selects the file:
+    nothing is written to a board until the person connects, chooses the options and confirms the update.
+    """
+    for index, item in enumerate(argv):
+        if item == "--firmware" and index + 1 < len(argv):
+            return argv[index + 1]
+        if item.startswith("--firmware="):
+            return item[len("--firmware="):]
+    return ""
+
+
 def run_qtquick() -> int:
     """Run the QML command deck (the program's only window)."""
     # Basic is a portable Qt Quick Controls style with fully customizable
@@ -1941,4 +1962,7 @@ def run_qtquick() -> int:
     # The window is up: a release that was just installed has started, and the automatic check (off unless the person turned it on) may run.
     update_service.mark_started(bridge.updates.controller.service.root)
     bridge.updates.startupCheck()
+    handed_over = firmware_argument(sys.argv[1:])
+    if handed_over:
+        bridge.addFirmwareFile(handed_over)
     return app.exec()

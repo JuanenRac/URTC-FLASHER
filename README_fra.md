@@ -642,7 +642,7 @@ uniquement pour l'instant, étant donné ce qui est bien plus en jeu si
 une exécution scriptée obtient une mauvaise combinaison fichier/cible
 sans que personne ne surveille.
 
-**`--transport python-can`** utilise le paquet optionnel `python-can` (`pip install python-can`) pour PCAN, Kvaser, gs_usb/candleLight et les autres interfaces qu'il prend en charge, de sorte qu'il n'est pas nécessaire de reflasher l'adaptateur en SLCAN : `--port` est alors `<interface>:<canal>` (par exemple `pcan:PCAN_USBBUS1`) et le bus est ouvert à 500 kbit/s. Il n'est disponible qu'en ligne de commande.
+**`--transport python-can`** utilise le paquet optionnel `python-can` (`pip install python-can`) pour PCAN, Kvaser, gs_usb/candleLight et les autres interfaces qu'il prend en charge, de sorte qu'il n'est pas nécessaire de reflasher l'adaptateur en SLCAN : `--port` est alors `<interface>:<canal>` (par exemple `pcan:PCAN_USBBUS1`) et le bus est ouvert à 500 kbit/s. La fenêtre propose les mêmes adaptateurs lorsque `python-can` est installé : ceux qu'il trouve pour PCAN, Kvaser et gs_usb et ceux nommés dans la variable d'environnement `URTC_PYTHON_CAN` (`<interface>:<canal>` séparés par des virgules), listés sous la forme `python-can:<interface>:<canal>` ; la vitesse du bus de cette connexion est fixée à 500 kbit/s. La fenêtre peut aussi être lancée avec `--firmware CHEMIN` pour qu'une image soit déjà choisie (rien n'est écrit sur une carte tant que vous ne vous connectez pas et ne confirmez pas la mise à jour).
 
 **`--transport mock`** exécute toute la séquence de mise à jour contre
 un bootloader simulé, en mémoire, plutôt qu'une vraie carte - aucun

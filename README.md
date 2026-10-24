@@ -568,7 +568,7 @@ anyway), `130` cancelled with Ctrl+C. Only covers the CAN OTA update path
 now, given how much more is at stake if a scripted run gets a wrong
 file/target combination wrong with nobody watching.
 
-**`--transport python-can`** uses the optional `python-can` package (`pip install python-can`) for PCAN, Kvaser, gs_usb/candleLight and the other interfaces it supports, so the adapter does not have to be reflashed to SLCAN: `--port` is then `<interface>:<channel>` (for example `pcan:PCAN_USBBUS1`) and the bus is opened at 500 kbit/s. It is available in the command line only.
+**`--transport python-can`** uses the optional `python-can` package (`pip install python-can`) for PCAN, Kvaser, gs_usb/candleLight and the other interfaces it supports, so the adapter does not have to be reflashed to SLCAN: `--port` is then `<interface>:<channel>` (for example `pcan:PCAN_USBBUS1`) and the bus is opened at 500 kbit/s. The window offers the same adapters when `python-can` is installed: those it finds for PCAN, Kvaser and gs_usb, and those named in the `URTC_PYTHON_CAN` environment variable (comma separated `<interface>:<channel>`), listed as `python-can:<interface>:<channel>`; the bus speed of that connection is fixed at 500 kbit/s. The window can also be started with `--firmware PATH` to have an image already selected (nothing is written to a board until you connect and confirm the update).
 
 **`--transport mock`** runs the whole update sequence against a
 simulated, in-memory bootloader instead of a real board - no adapter, no

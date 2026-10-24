@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import pytest
 
-from flasher_transports import PythonCAN, PythonCANError
+from flasher_transports import PythonCAN, PythonCANError, is_python_can_port, list_python_can_adapters, python_can_spec
 
 
 class _Message:
@@ -105,3 +105,30 @@ def test_a_bad_spec_and_a_missing_package_are_explained(monkeypatch, fake_can):
     monkeypatch.setitem(sys.modules, "can", None)  # import can -> ImportError
     with pytest.raises(PythonCANError, match="python-can is not installed"):
         PythonCAN("pcan:1").open_channel()
+
+
+class _Detecting:
+    def __init__(self, configs=None, error=None):
+        self.configs, self.error, self.asked = configs, error, None
+
+    def detect_available_configs(self, interfaces=None):
+        self.asked = interfaces
+        if self.error:
+            raise self.error
+        return self.configs
+
+
+def test_the_window_lists_the_adapters_python_can_finds_and_those_named_in_the_environment():
+    module = _Detecting([{"interface": "pcan", "channel": "PCAN_USBBUS1"}, {"interface": "gs_usb", "channel": 0}, {"bad": 1}])
+    ports = list_python_can_adapters(module, {"URTC_PYTHON_CAN": "kvaser:0, pcan:PCAN_USBBUS1, nonsense, :x"})
+    assert ports == ["python-can:kvaser:0", "python-can:pcan:PCAN_USBBUS1", "python-can:gs_usb:0"]
+    assert module.asked == ["pcan", "kvaser", "gs_usb"]  # only the adapters that are asked for, no other driver is loaded
+    assert all(is_python_can_port(port) for port in ports) and not is_python_can_port("COM3")
+    assert python_can_spec(ports[0]) == "kvaser:0"
+
+
+def test_nothing_is_offered_and_nothing_fails_without_python_can_or_when_probing_fails():
+    assert list_python_can_adapters(None, {}, find_spec=lambda name: None) == []
+    assert list_python_can_adapters(None, {"URTC_PYTHON_CAN": "pcan:1"}, find_spec=lambda name: None) == ["python-can:pcan:1"]
+    assert list_python_can_adapters(_Detecting(error=OSError("driver missing")), {}) == []
+    assert list_python_can_adapters(_Detecting(configs=None), {}) == []

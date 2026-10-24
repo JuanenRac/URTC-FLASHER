@@ -647,7 +647,7 @@ dessen, wie viel mehr auf dem Spiel steht, wenn ein skriptgesteuerter
 Lauf eine falsche Datei-/Ziel-Kombination erwischt, ohne dass jemand
 zusieht.
 
-**`--transport python-can`** nutzt das optionale Paket `python-can` (`pip install python-can`) für PCAN, Kvaser, gs_usb/candleLight und die anderen unterstützten Schnittstellen, sodass der Adapter nicht auf SLCAN umgeflasht werden muss: `--port` ist dann `<Schnittstelle>:<Kanal>` (zum Beispiel `pcan:PCAN_USBBUS1`), und der Bus wird mit 500 kbit/s geöffnet. Es ist nur auf der Kommandozeile verfügbar.
+**`--transport python-can`** nutzt das optionale Paket `python-can` (`pip install python-can`) für PCAN, Kvaser, gs_usb/candleLight und die anderen unterstützten Schnittstellen, sodass der Adapter nicht auf SLCAN umgeflasht werden muss: `--port` ist dann `<Schnittstelle>:<Kanal>` (zum Beispiel `pcan:PCAN_USBBUS1`), und der Bus wird mit 500 kbit/s geöffnet. Das Fenster bietet dieselben Adapter an, wenn `python-can` installiert ist: die, die es für PCAN, Kvaser und gs_usb findet, und die in der Umgebungsvariable `URTC_PYTHON_CAN` genannten (`<Schnittstelle>:<Kanal>`, durch Kommas getrennt), aufgelistet als `python-can:<Schnittstelle>:<Kanal>`; die Busgeschwindigkeit dieser Verbindung ist fest 500 kbit/s. Das Fenster lässt sich auch mit `--firmware PFAD` starten, damit schon ein Image ausgewählt ist (auf eine Platine wird erst geschrieben, wenn Sie verbinden und das Update bestätigen).
 
 **`--transport mock`** führt die gesamte Update-Sequenz gegen einen
 simulierten, speicherinternen Bootloader aus statt gegen eine echte

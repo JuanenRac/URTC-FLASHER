@@ -593,7 +593,7 @@ deliberadamente apenas GUI por agora, dado o muito mais que está em jogo se
 uma execução por script errar uma combinação de ficheiro/alvo sem ninguém a
 observar.
 
-**`--transport python-can`** usa o pacote opcional `python-can` (`pip install python-can`) para PCAN, Kvaser, gs_usb/candleLight e as outras interfaces que suporta, pelo que o adaptador não tem de ser regravado com SLCAN: `--port` passa a ser `<interface>:<canal>` (por exemplo `pcan:PCAN_USBBUS1`) e o barramento abre-se a 500 kbit/s. Só está disponível na linha de comandos.
+**`--transport python-can`** usa o pacote opcional `python-can` (`pip install python-can`) para PCAN, Kvaser, gs_usb/candleLight e as outras interfaces que suporta, pelo que o adaptador não tem de ser regravado com SLCAN: `--port` passa a ser `<interface>:<canal>` (por exemplo `pcan:PCAN_USBBUS1`) e o barramento abre-se a 500 kbit/s. A janela oferece os mesmos adaptadores quando o `python-can` está instalado: os que ele encontra para PCAN, Kvaser e gs_usb e os indicados na variável de ambiente `URTC_PYTHON_CAN` (`<interface>:<canal>` separados por vírgulas), listados como `python-can:<interface>:<canal>`; a velocidade do barramento dessa ligação é fixa, 500 kbit/s. A janela também pode arrancar com `--firmware CAMINHO` para já ter uma imagem escolhida (não se escreve nada numa placa enquanto não se ligar e confirmar a atualização).
 
 **`--transport mock`** executa toda a sequência de atualização contra um
 bootloader simulado em memória em vez de uma placa real - sem adaptador, sem

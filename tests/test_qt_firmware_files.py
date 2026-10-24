@@ -142,3 +142,12 @@ class QtFirmwareFilesTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+@unittest.skipIf(qt_flasher is None, "PySide6 is not available")
+class FirmwareArgumentTests(unittest.TestCase):
+    def test_the_image_handed_over_on_the_command_line_is_read(self):
+        self.assertEqual(qt_flasher.firmware_argument(["--firmware", "a.bin"]), "a.bin")
+        self.assertEqual(qt_flasher.firmware_argument(["--qtquick", "--firmware=b c.bin"]), "b c.bin")
+        self.assertEqual(qt_flasher.firmware_argument(["--firmware"]), "")
+        self.assertEqual(qt_flasher.firmware_argument([]), "")

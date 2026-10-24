@@ -480,7 +480,7 @@ usage: urtc_flasher.py --cli [-h] [--transport {serial,socketcan,python-can,mock
 考虑到如果一次脚本化运行在无人监视的情况下弄错了文件/目标组合，风险会
 大得多。
 
-**`--transport python-can`** 使用可选的 `python-can` 包（`pip install python-can`），支持 PCAN、Kvaser、gs_usb/candleLight 及其支持的其他接口，因此无需把适配器重刷为 SLCAN：此时 `--port` 为 `<接口>:<通道>`（例如 `pcan:PCAN_USBBUS1`），总线以 500 kbit/s 打开。它仅在命令行中可用。
+**`--transport python-can`** 使用可选的 `python-can` 包（`pip install python-can`），支持 PCAN、Kvaser、gs_usb/candleLight 及其支持的其他接口，因此无需把适配器重刷为 SLCAN：此时 `--port` 为 `<接口>:<通道>`（例如 `pcan:PCAN_USBBUS1`），总线以 500 kbit/s 打开。安装了 `python-can` 时，窗口也提供同样的适配器：python-can 为 PCAN、Kvaser 和 gs_usb 找到的适配器，以及环境变量 `URTC_PYTHON_CAN`（以逗号分隔的 `<接口>:<通道>`）中列出的适配器，显示为 `python-can:<接口>:<通道>`；该连接的总线速度固定为 500 kbit/s。窗口也可以用 `--firmware 路径` 启动，使镜像已被选中（在您连接并确认更新之前，不会向板子写入任何内容）。
 
 **`--transport mock`** 针对一个模拟的、内存中的引导程序运行整个更新序列，
 而非真实板卡——不涉及适配器、端口，或任何物理设备：
