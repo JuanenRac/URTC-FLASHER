@@ -20,6 +20,7 @@ import threading
 import time
 import zipfile
 from pathlib import Path
+from typing import Any
 
 from PySide6.QtCore import QObject, Property, QTimer, QUrl, Signal, Slot
 from PySide6.QtGui import QGuiApplication, QIcon
@@ -602,10 +603,12 @@ class FlasherQtBridge(QObject):
                 transport.close()
             except Exception:
                 pass
-        handlers = list(self._file_logger.handlers) if self._file_logger is not None else []
+        file_logger = self._file_logger
+        handlers = list(file_logger.handlers) if file_logger is not None else []
         for handler in handlers:
             handler.close()
-            self._file_logger.removeHandler(handler)
+            if file_logger is not None:
+                file_logger.removeHandler(handler)
 
     # -- CAN-OTA options (target, bootloader entry, F-RAM erase, downgrade) --
     def _flash_slot(self) -> tuple[int, int]:
@@ -1178,11 +1181,11 @@ class FlasherQtBridge(QObject):
                     continue
                 valid, reason, size = validate_firmware_file(path, *self._flash_slot())
                 entries.append({"name": path.name, "path": str(path), "valid": valid, "reason": reason, "size": size})
-        for path, browsed in list(self._browsed.items()):
-            if not os.path.isfile(path):
-                del self._browsed[path]
-            elif not any(item["path"] == path for item in entries):
-                valid, reason, size = validate_firmware_file(path, *self._flash_slot())
+        for browsed_path, browsed in list(self._browsed.items()):
+            if not os.path.isfile(browsed_path):
+                del self._browsed[browsed_path]
+            elif not any(item["path"] == browsed_path for item in entries):
+                valid, reason, size = validate_firmware_file(browsed_path, *self._flash_slot())
                 browsed.update(valid=valid, reason=reason, size=size)
                 entries.append(dict(browsed))
         self._firmware = entries
@@ -1410,15 +1413,15 @@ class FlasherQtBridge(QObject):
             else:
                 target_kwargs = {}  # main board's own defaults already baked into full_chip_flash's own signature
             if tool == "pyocd":
-                programmer = PyOCDCLI(log=self._log)
+                pyocd = PyOCDCLI(log=self._log)
                 pyocd_target = SLAVE_PYOCD_TARGET_NAME if is_slave else PYOCD_TARGET_NAME
-                programmer.full_chip_flash(
+                pyocd.full_chip_flash(
                     bootloader_path, app_path, dry_run=dry_run, probe_uid=probe_uid,
                     backup_path=backup_path, target=pyocd_target, **target_kwargs,
                 )
             else:
-                programmer = CubeProgrammerCLI(log=self._log)
-                programmer.full_chip_flash(
+                cube = CubeProgrammerCLI(log=self._log)
+                cube.full_chip_flash(
                     bootloader_path, app_path, dry_run=dry_run, serial=probe_uid,
                     backup_path=backup_path, **target_kwargs,
                 )
@@ -1673,7 +1676,7 @@ class FlasherQtBridge(QObject):
     }
 
     @Slot(str, object, object)
-    def _on_config_write_result(self, key: str, confirmed: object, expected: object) -> None:
+    def _on_config_write_result(self, key: str, confirmed: Any, expected: Any) -> None:
         if key in self._CONFIG_WRITE_LABELS:
             labels, confirmed_key, mismatch_key, no_confirm_key = self._CONFIG_WRITE_LABELS[key]
             if confirmed == expected:
@@ -1765,6 +1768,7 @@ class FlasherQtBridge(QObject):
 
     def _connect_worker(self) -> None:
         try:
+            transport: SocketCAN | SLCAN
             if self._selected_port in self._socketcan_ports:
                 transport = SocketCAN(self._selected_port, log=self._log)
                 transport.open_channel()
