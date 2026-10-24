@@ -163,6 +163,167 @@
    "text": "0.12.9"
   },
   {
+   "name": "the companion carries the low byte of the minor",
+   "frames": [
+    [
+     545,
+     "000303cc01000000"
+    ],
+    [
+     546,
+     "010402"
+    ]
+   ],
+   "expected": {
+    "responder": "application",
+    "hardware_id": "0x0303CC01",
+    "major": 0,
+    "minor": 2,
+    "minor_high": 0,
+    "patch": 4,
+    "patch_aware": true
+   },
+   "text": "0.2.4"
+  },
+  {
+   "name": "a minor of zero is a minor",
+   "frames": [
+    [
+     545,
+     "000303cc01000000"
+    ],
+    [
+     546,
+     "010400"
+    ]
+   ],
+   "expected": {
+    "responder": "application",
+    "hardware_id": "0x0303CC01",
+    "major": 0,
+    "minor": 0,
+    "minor_high": 0,
+    "patch": 4,
+    "patch_aware": true
+   },
+   "text": "0.0.4"
+  },
+  {
+   "name": "the high byte of the minor comes from the answer",
+   "frames": [
+    [
+     545,
+     "000303cc01000001"
+    ],
+    [
+     546,
+     "01052c"
+    ]
+   ],
+   "expected": {
+    "responder": "application",
+    "hardware_id": "0x0303CC01",
+    "major": 0,
+    "minor": 300,
+    "minor_high": 1,
+    "patch": 5,
+    "patch_aware": true
+   },
+   "text": "0.300.5"
+  },
+  {
+   "name": "the companion with the minor may come first",
+   "frames": [
+    [
+     546,
+     "017f0c"
+    ],
+    [
+     545,
+     "000303cc01000000"
+    ]
+   ],
+   "expected": {
+    "responder": "application",
+    "hardware_id": "0x0303CC01",
+    "major": 0,
+    "minor": 12,
+    "minor_high": 0,
+    "patch": 127,
+    "patch_aware": true
+   },
+   "text": "0.12.127"
+  },
+  {
+   "name": "the answer of nine bytes wins over the companion",
+   "frames": [
+    [
+     545,
+     "000303cc010000000c"
+    ],
+    [
+     546,
+     "010909"
+    ]
+   ],
+   "expected": {
+    "responder": "application",
+    "hardware_id": "0x0303CC01",
+    "major": 0,
+    "minor": 12,
+    "minor_high": 0,
+    "patch": 9,
+    "patch_aware": true
+   },
+   "text": "0.12.9"
+  },
+  {
+   "name": "a companion of the first release has two bytes and no minor",
+   "frames": [
+    [
+     545,
+     "000303cc01000000"
+    ],
+    [
+     546,
+     "0107"
+    ]
+   ],
+   "expected": {
+    "responder": "application",
+    "hardware_id": "0x0303CC01",
+    "major": 0,
+    "minor": null,
+    "minor_high": 0,
+    "patch": 7,
+    "patch_aware": true
+   },
+   "text": "0.?.7"
+  },
+  {
+   "name": "a minor byte with an invalid patch is ignored",
+   "frames": [
+    [
+     545,
+     "000303cc01000000"
+    ],
+    [
+     546,
+     "018005"
+    ]
+   ],
+   "expected": {
+    "responder": "application",
+    "hardware_id": "0x0303CC01",
+    "major": 0,
+    "minor": null,
+    "minor_high": 0,
+    "patch": null,
+    "patch_aware": false
+   },
+   "text": "0.?"
+  },
+  {
    "name": "a short answer is no answer",
    "frames": [
     [

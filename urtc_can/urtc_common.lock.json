@@ -52,7 +52,7 @@
     },
     "protocol.py": {
       "from": "src/urtc_common/protocol.py",
-      "sha256": "c291f2e4d1792dd35ab6273bb81c021bc4089ff8fe773c497bb889b776205278"
+      "sha256": "183d0fef8ad8d16b9ecdbc8ebbbce2f4d948fd50bb0f3f82c69ca95baf44f1ef"
     },
     "quick_state.py": {
       "from": "src/urtc_common/quick_state.py",
@@ -92,7 +92,7 @@
     },
     "versioning.py": {
       "from": "src/urtc_common/versioning.py",
-      "sha256": "86c066ac8cc5109fedbb2ed5f6ffe393543072b5fa4296e3e4c6fad30f0a2458"
+      "sha256": "dde6c0d5e8fffc590c4b9eafa6eb31ccf58678d7b4881e616d4c4e7e26808ca7"
     },
     "virtual_board.py": {
       "from": "src/urtc_common/virtual_board.py",

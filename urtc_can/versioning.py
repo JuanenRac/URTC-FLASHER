@@ -82,12 +82,13 @@ def parse_slave_app_version(frames: Iterable[Frame]) -> dict | None:
     """Combine the frames that answer one read of the slave version register (0x221, then 0x222) into one description.
 
     None when there is no 0x221 answer of at least 8 bytes. Keys: responder ('application' or 'bootloader'), hardware_id,
-    major, minor (None: the answer of 8 bytes stops at the high byte of the minor field, so the low byte, which is the
-    minor number, is not known; with a longer answer it is read), minor_high, patch (None when the slave sends none: a slave
+    major, minor (None: the answer of 8 bytes stops at the high byte of the minor field, so the low byte is not in it; it is read from
+    the third byte of the 0x222 companion when the slave sends one, or from a longer answer, and is otherwise not known), minor_high, patch (None when the slave sends none: a slave
     application from before the field, whose tenth byte is 0, gets no 0x222) and patch_aware.
     """
     answer = None
     patch = None
+    minor_low = None
     for can_id, data in frames:
         data = bytes(data)
         if can_id == protocol.CAN_ID_SLAVE_REG_READ and len(data) >= 8 and answer is None:
@@ -96,13 +97,20 @@ def parse_slave_app_version(frames: Iterable[Frame]) -> dict | None:
             fields = protocol.decode_slave_app_patch(data)
             if fields is not None and fields["register"] == protocol.SLAVE_APP_REG_APP_VERSION and 1 <= fields["patch"] <= SLAVE_APP_PATCH_MAX:
                 patch = fields["patch"]
+                minor_low = fields.get("minor_low")
     if answer is None:
         return None
+    if len(answer) >= 9:
+        minor = int.from_bytes(answer[7:9], "big")
+    elif minor_low is not None:
+        minor = (answer[7] << 8) | minor_low
+    else:
+        minor = None
     return {
         "responder": "bootloader" if answer[0] == protocol.RESPONDER_BOOTLOADER else "application",
         "hardware_id": f"0x{int.from_bytes(answer[1:5], 'big'):08X}",
         "major": int.from_bytes(answer[5:7], "big"),
-        "minor": int.from_bytes(answer[7:9], "big") if len(answer) >= 9 else None,
+        "minor": minor,
         "minor_high": answer[7],
         "patch": patch,
         "patch_aware": patch is not None,

@@ -663,7 +663,7 @@ LAYOUTS = {
     'slave_reg_write': {'id': 544, 'role': 'request', 'dlc': {'min': 2, 'max': 8}, 'fields': [{'name': 'register', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'payload', 'type': 'bytes', 'offset': 1, 'rest': True}]},
     'slave_reg_read_request': {'id': 545, 'role': 'request', 'dlc': {'exact': 2}, 'fields': [{'name': 'register', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'length', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [1, 8]}]},
     'slave_reg_read_response': {'id': 545, 'role': 'response', 'dlc': {'min': 1, 'max': 8}, 'fields': [{'name': 'data', 'type': 'bytes', 'offset': 0, 'rest': True}]},
-    'slave_app_patch': {'id': 546, 'role': 'response', 'dlc': {'exact': 2}, 'fields': [{'name': 'register', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'patch', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [1, 127]}]},
+    'slave_app_patch': {'id': 546, 'role': 'response', 'dlc': {'min': 2, 'max': 3}, 'fields': [{'name': 'register', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'patch', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [1, 127]}, {'name': 'minor_low', 'type': 'u8', 'offset': 2, 'width': 1, 'optional': True}]},
     'paste_jetting_config': {'id': 560, 'role': 'request', 'dlc': {'exact': 3}, 'fields': [{'name': 'channel', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 3]}, {'name': 'frequency_hz', 'type': 'u16', 'offset': 1, 'width': 2, 'range': [1, 65535]}]},
     'paste_jetting_pulse': {'id': 561, 'role': 'request', 'dlc': {'exact': 3}, 'fields': [{'name': 'channel', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 3]}, {'name': 'duty_percent', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 100]}, {'name': 'duration_ms', 'type': 'u8', 'offset': 2, 'width': 1, 'range': [1, 255]}]},
     'ads1115_config': {'id': 576, 'role': 'request', 'dlc': {'exact': 2}, 'fields': [{'name': 'config', 'type': 'u16', 'offset': 0, 'width': 2}]},
@@ -1691,9 +1691,10 @@ def decode_slave_reg_read_response(data: bytes, strict: bool = False) -> dict | 
     return decode("slave_reg_read_response", data, strict)
 
 
-def encode_slave_app_patch(register: int, patch: int) -> tuple[int, bytes]:
+def encode_slave_app_patch(register: int, patch: int, minor_low: int | None = None) -> tuple[int, bytes]:
     """Patch number of the slave application (companion of 0x221) (0x222, response)."""
-    return encode("slave_app_patch", register=register, patch=patch)
+    values = {k: v for k, v in dict(register=register, patch=patch, minor_low=minor_low).items() if v is not None}
+    return encode("slave_app_patch", **values)
 
 
 def decode_slave_app_patch(data: bytes, strict: bool = False) -> dict | None:

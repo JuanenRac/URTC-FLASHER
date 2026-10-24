@@ -1503,8 +1503,8 @@ class FlasherQtBridge(QObject):
     @staticmethod
     def _slave_application_item(transport) -> dict[str, object]:
         """The version of the application of the expansion slave, read through the master (0x221 for register 0x01, then its 0x222 companion
-        with the patch). The minor number is not in the answer, so it shows as ``?``; a slave application from before the patch field sends
-        no companion and shows without a patch."""
+        with the patch and the low byte of the minor number). The answer holds only the high byte of the minor, so the whole minor comes from the
+        companion; a slave application from before the field sends no companion and shows as ``?`` without a patch."""
         transport.send_frame(*versioning.slave_app_version_request())
         frames: list[tuple[int, bytes]] = []
         deadline = time.monotonic() + 1.0

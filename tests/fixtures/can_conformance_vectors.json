@@ -2688,6 +2688,20 @@
       }
     },
     {
+      "name": "SLAVE_APP_PATCH response: patch 4 of version 0.2",
+      "message": "SLAVE_APP_PATCH",
+      "layout": "slave_app_patch",
+      "fields": {
+        "register": 1,
+        "patch": 4,
+        "minor_low": 2
+      },
+      "frame": {
+        "id": "0x222",
+        "data": "010402"
+      }
+    },
+    {
       "name": "PASTE_JETTING_CONFIG request: channel 1 at 1 kHz",
       "message": "PASTE_JETTING_CONFIG",
       "layout": "paste_jetting_config",
@@ -5375,7 +5389,22 @@
       },
       "fields": {
         "register": 1,
-        "patch": 4
+        "patch": 4,
+        "minor_low": null
+      }
+    },
+    {
+      "name": "SLAVE_APP_PATCH response: patch 4 of version 0.2",
+      "message": "SLAVE_APP_PATCH",
+      "layout": "slave_app_patch",
+      "frame": {
+        "id": "0x222",
+        "data": "010402"
+      },
+      "fields": {
+        "register": 1,
+        "patch": 4,
+        "minor_low": 2
       }
     },
     {
@@ -5387,17 +5416,6 @@
         "data": "01"
       },
       "fields": null
-    },
-    {
-      "name": "SLAVE_APP_PATCH response: one byte too many is refused when strict",
-      "message": "SLAVE_APP_PATCH",
-      "layout": "slave_app_patch",
-      "frame": {
-        "id": "0x222",
-        "data": "010400"
-      },
-      "fields": null,
-      "strict": true
     },
     {
       "name": "PASTE_JETTING_CONFIG request: channel 1 at 1 kHz",

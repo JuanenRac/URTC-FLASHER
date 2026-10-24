@@ -135,6 +135,9 @@ def test_the_slave_application_shows_its_version_with_the_patch_of_the_companion
     item = qt_flasher.FlasherQtBridge._slave_application_item(transport)
     assert transport.sent == [(0x221, bytes([1, 8]))]
     assert item["ok"] and item["label"] == "Slave application" and item["value"] == "v0.?.5 / HW 0x0303CC01"
+    whole = protocol.encode_slave_app_patch(protocol.SLAVE_APP_REG_APP_VERSION, 4, 2)
+    full = qt_flasher.FlasherQtBridge._slave_application_item(_Scripted([answer, whole]))
+    assert full["value"] == "v0.2.4 / HW 0x0303CC01"
     old = qt_flasher.FlasherQtBridge._slave_application_item(_Scripted([answer]))
     assert old["value"] == "v0.? / HW 0x0303CC01"
     none = qt_flasher.FlasherQtBridge._slave_application_item(_Scripted([]))
