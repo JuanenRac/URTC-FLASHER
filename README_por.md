@@ -24,7 +24,7 @@
 </p>
 
 
-**Versão:** 0.4.0 (a versão desta própria ferramenta - mostrada no banner da
+**Versão:** 0.4.1 (a versão desta própria ferramenta - mostrada no banner da
 janela e na barra de título, acompanhada separadamente da versão do firmware
 da placa URTC que escreve. Segue um esquema X.Y.Z em que o número de patch
 é subido pelo passo explícito `python bump.py` (compilar nunca o altera)
@@ -79,7 +79,7 @@ mão como alternativa. Tudo o resto descrito aqui foi exercitado apenas contra `
 
 | | |
 |---|---|
-| Versão | `0.4.0` |
+| Versão | `0.4.1` |
 | Maturidade | Funcional |
 | Testes | 515 |
 | Tecnologia | Python / PySide6 / Qt Quick / CAN-OTA / SWD/JTAG |
