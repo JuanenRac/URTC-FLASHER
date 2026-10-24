@@ -34,6 +34,8 @@ jobs:
           python -m pytest -q --cov --cov-config=.coveragerc --cov-fail-under=61 tests
         env:
           QT_QPA_PLATFORM: offscreen
+      - name: Type check
+        run: python -m mypy
   baseline:
     name: Validate project baseline
     runs-on: ubuntu-latest

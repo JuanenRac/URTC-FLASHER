@@ -40,7 +40,7 @@ from flasher_config import (
     LOGS_FOLDER, PYOCD_TARGET_NAME, REQUIRE_PRODUCTION_SIGNATURE, SLAVE_APP_FLASH_ADDR, SLAVE_APP_MAX_SIZE,
     SLAVE_HARDWARE_ID, THIS_HARDWARE_ID,
     SLAVE_BOOTLOADER_FLASH_ADDR, SLAVE_BOOTLOADER_MAX_SIZE,
-    SLAVE_PYOCD_TARGET_NAME, SLAVE_TOTAL_FLASH_SIZE, TOOL_NAMES, _, _current_language, save_config, translate_log_line,
+    SLAVE_PYOCD_TARGET_NAME, SLAVE_TOTAL_FLASH_SIZE, TOOL_NAMES, _, _current_language, save_config, translate_log_line, translate_status,
 )
 from flasher_github import GitHubDownloadError, download_file, fetch_release, fetch_release_or_pinned, is_sidecar, sidecars_for
 from flasher_integrity import manifest_signing_kind, preflight_image
@@ -366,7 +366,7 @@ class FlasherQtBridge(QObject):
 
     @Property(str, notify=changed)
     def status(self) -> str:
-        return translate_log_line(self._status)
+        return translate_status(self._status)
 
     @Property("QStringList", notify=logChanged)
     def logs(self) -> list[str]:

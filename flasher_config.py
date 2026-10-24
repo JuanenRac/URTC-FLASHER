@@ -8,6 +8,7 @@ from urtc_ui import DEFAULT_LANGUAGE, LANGUAGES
 import sys
 import os
 import json
+import re
 
 from urtc_can import protocol
 
@@ -326,6 +327,19 @@ def translate_log_line(message):
                 return f"{label}: {rest}"
             return label
     return str(message)
+
+def translate_status(message):
+    """Shows the status line of the window in the interface language. The status is a few uppercase English words (``CONNECTED COM3``): the
+    longest run of words from the start that has a text (``QTSTATUS_<WORDS>``) is translated and what follows (the port, the bit rate) is kept.
+    A status without a text is returned unchanged; a token such as ``SWD_FLASH_COMPLETE`` goes through ``translate_log_line``."""
+    text = str(message)
+    words = text.split(" ")
+    for count in range(len(words), 0, -1):
+        key = "QTSTATUS_" + re.sub(r"[^A-Z0-9]+", "_", " ".join(words[:count])).strip("_")
+        label = _translations.get(key)
+        if label:
+            return " ".join([label, *words[count:]])
+    return translate_log_line(text)
 
 
 def _load_config_overrides(log=None):
