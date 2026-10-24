@@ -360,6 +360,7 @@ QTLOG_DEBUG_BUNDLE_EXPORTED=Pacchetto di debug salvato
 QTLOG_DEBUG_BUNDLE_FAILED=Impossibile salvare il pacchetto di debug
 QTLOG_UPDATE_REPORT_WRITTEN=Rapporto di aggiornamento scritto
 QTLOG_UPDATE_REPORT_FAILED=Impossibile scrivere il rapporto di aggiornamento
+QTLOG_UPDATE_REPORT_UNSIGNED=Il rapporto di aggiornamento non è stato firmato: la chiave di firma non è utilizzabile
 QTLOG_RECOVERY_IMAGE_SELECTED=La scheda non ha un firmware valido: è stata selezionata l'immagine ufficiale più recente
 QTLOG_RECOVERY_NO_LOCAL_IMAGE=La scheda non ha un firmware valido e firmware/ non contiene alcuna immagine per essa: vengono elencate le immagini dell'ultima release su GitHub
 QTLOG_FIRMWARE_SELECTED_DESPITE_WARNING=File selezionato anche se non sembra un'immagine valida

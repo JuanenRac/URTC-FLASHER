@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from flasher_config import THIS_HARDWARE_ID
 from flasher_records import (
-    build_update_report, find_recovery_image, prune_session_logs, verify_update_report,
+    build_update_report, find_recovery_image, prune_session_logs, sign_update_report, verify_signed_report, verify_update_report,
     writable_logs_folder, write_update_report,
 )
 
@@ -100,3 +100,18 @@ def test_no_suitable_image_gives_none(tmp_path):
     (tmp_path / "loose.bin").write_bytes(b"x")
     assert find_recovery_image(str(tmp_path), THIS_HARDWARE_ID) is None
     assert find_recovery_image(str(tmp_path / "missing"), THIS_HARDWARE_ID) is None
+
+
+def test_a_report_signed_with_the_key_of_the_user_shows_any_edit(tmp_path):
+    key = str(tmp_path / "records.key")
+    signed = sign_update_report(_report(), key)
+    assert signed["signature"]["algorithm"] == "Ed25519" and verify_update_report(signed)
+    assert verify_signed_report(signed)
+    assert sign_update_report(_report(), key)["signature"]["public_key"] == signed["signature"]["public_key"]  # the key is reused
+    edited = dict(signed, result="failed")
+    assert not verify_signed_report(edited)
+    # rewriting the digest to match the edit does not help: the signature covered the old one
+    from flasher_records import _report_digest
+    edited["report_sha256"] = _report_digest(edited)
+    assert verify_update_report(edited) and not verify_signed_report(edited)
+    assert not verify_signed_report(_report())  # an unsigned report is not a signed one

@@ -75,7 +75,7 @@ def prune_session_logs(folder: str, keep: int = KEEP_SESSION_LOGS) -> int:
 
 
 def _report_digest(report: dict) -> str:
-    body = {key: value for key, value in report.items() if key != "report_sha256"}
+    body = {key: value for key, value in report.items() if key not in ("report_sha256", "signature")}
     return hashlib.sha256(json.dumps(body, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()
 
 
@@ -107,6 +107,24 @@ def build_update_report(*, tool_version, image_path, image_sha256, image_size, t
 
 def verify_update_report(report: dict) -> bool:
     return isinstance(report, dict) and report.get("report_sha256") == _report_digest(report)
+
+
+def sign_update_report(report: dict, key_file: str | None = None) -> dict:
+    """The report with a ``signature`` block made with the key of this user (see urtc_can/record_signing.py).
+
+    The key is made on first use. The signature shows the report was written with this user's key and not edited
+    afterwards; it does not say who the user is. A failure to read or make the key raises ``SigningError``.
+    """
+    from urtc_can import record_signing
+
+    return record_signing.sign_report(report, record_signing.load_seed(key_file))
+
+
+def verify_signed_report(report: dict) -> bool:
+    """True when the report is unedited (its digest) and carries a signature that matches it."""
+    from urtc_can import record_signing
+
+    return verify_update_report(report) and record_signing.verify_report(report)
 
 
 def _operator() -> str:

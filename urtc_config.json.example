@@ -1,4 +1,4 @@
 {
-  "_comment": "Copy this file to urtc_config.json. Only 'language' is needed. Add 'hmac_key_hex' / 'slave_hmac_key_hex' (64 hexadecimal digits) ONLY to flash an image you built yourself with that key; the other fields are compiled-in values and should be left out. Set 'require_production_signature' to true to refuse images signed with the public development key (the bundled official images are).",
+  "_comment": "Copy this file to urtc_config.json. Only 'language' is needed. Add 'hmac_key_hex' / 'slave_hmac_key_hex' (64 hexadecimal digits) ONLY to flash an image you built yourself with that key; the other fields are compiled-in values and should be left out. Set 'require_production_signature' to true to refuse images signed with the public development key (the bundled official images are). Every update report is signed with a key of your own that is made on first use (~/.urtc-keys/records_ed25519.key, or the file named by URTC_RECORD_KEY_FILE); set 'sign_update_reports' to false to write it unsigned.",
   "language": "english"
 }
