@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- The project tree of the README lists the shared code, the lock of the language files, the checks and the window guide, the test counts and the description of the checks (the type check included) are current, and the Portuguese tree is in Portuguese; the At a glance table shows the current test count.
 - **The whole version of the slave application:** "Read board status" now shows `v0.2.4` where it showed `v0.?.4`: the master sends the low byte of the minor number in a third byte of the `0x222` companion frame and the shared code joins it with the high byte of the `0x221` answer. A slave or a master from before that byte still shows the minor as `?`.
 - **The status line of the window in the language of the program:** the statuses the window sets (`READY`, `CONNECTED COM3`, `CAN-OTA IN PROGRESS` ...) have texts in the eight languages in the catalog (`QTSTATUS_*`), shown by `translate_status`; what follows the words (the port, the bit rate) is kept, and a test checks that every literal status the window sets has a text in every language.
 - **A type check on every push, and the development lock written for the Python the CI runs:** `mypy.ini` and a step of the CI (`python -m mypy`) check the program and the copies of the shared code (the window code in `qt_flasher.py` included; the Qt objects shared from URTC-COMMON are checked there); `requirements-dev.lock` is written with hashes for Python 3.12 and includes mypy.

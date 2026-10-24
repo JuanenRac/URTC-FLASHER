@@ -70,7 +70,7 @@ CAN 自我标识），以便你在决定要刷写什么之前，先看看当前�
 |---|---|
 | 版本 | `0.4.0` |
 | 成熟度 | 可用 |
-| 测试 | 488 |
+| 测试 | 515 |
 | 技术栈 | Python / PySide6 / Qt Quick / CAN-OTA / SWD/JTAG |
 | 目标 | 使用者的电脑 |
 | 真实硬件 | 仅模拟：使用模拟器、替身或仿真测试；此版本没有在真实硬件上运行的记录 |
@@ -912,6 +912,7 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 *辅助工具与生态系统运维*
 - **[HYDRA-UMC-DASHBOARD-AI](https://github.com/JuanenRac/HYDRA-UMC-DASHBOARD-AI)** — 基于 DATALAKE/ANOMALY-DETECTOR 的智能摘要与异常高亮面板，具备诚实的统计回退机制。
 - **[HYDRA-UMC-WATCH](https://github.com/JuanenRac/HYDRA-UMC-WATCH)** — 带有触觉提醒模式与配对手机语音中继的 WearOS 伴侣应用(尚未在实体手表上运行)。
+- **[URTC-COMMON](https://github.com/JuanenRac/URTC-COMMON)** — 只写一次的 CAN 协议数据（规范、生成的表、一致性向量）以及各程序共享的代码；本仓库带有其所用部分的副本。
 - **[URTC-GATEWAY](https://github.com/JuanenRac/URTC-GATEWAY)** — 位于 CAN 总线前的网关，只放行列表中的标识符，限制其速率，并要求会话密钥。
 - **[URTC-SMART-RACK](https://github.com/JuanenRac/URTC-SMART-RACK)** — 面向板卡安装机架的固件，具备真实的工具 ID 解码与 Smart Idle 预热逻辑。
 - **[URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL)** — 面向热成像/RGB 检测工具头的固件及真实 Python 视觉伴侣程序。

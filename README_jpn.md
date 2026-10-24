@@ -83,7 +83,7 @@ JTAG を用意しておいてください。 ここで説明するその他の�
 |---|---|
 | バージョン | `0.4.0` |
 | 成熟度 | 機能する |
-| テスト | 488 |
+| テスト | 515 |
 | 技術 | Python / PySide6 / Qt Quick / CAN-OTA / SWD/JTAG |
 | 対象 | 利用者の PC |
 | 実機での確認 | シミュレーションのみ：エミュレーター、模擬部品、シミュレーターで試験済み。このバージョンについて実機での動作記録はありません |
@@ -1114,6 +1114,7 @@ JSON 数値（`50580689`）のどちらも受け付けます——ファイル�
 *補完ツール&エコシステム運用*
 - **[HYDRA-UMC-DASHBOARD-AI](https://github.com/JuanenRac/HYDRA-UMC-DASHBOARD-AI)** — 誠実な統計フォールバックを備えた、DATALAKE/ANOMALY-DETECTOR 上のスマートサマリーと異常ハイライトパネル。
 - **[HYDRA-UMC-WATCH](https://github.com/JuanenRac/HYDRA-UMC-WATCH)** — 触覚アラートのパターンとペアリング済みスマートフォンへの音声リレーを備えた WearOS コンパニオンアプリ(物理的なウォッチではまだ実行していない)。
+- **[URTC-COMMON](https://github.com/JuanenRac/URTC-COMMON)** — 一度だけ書かれた CAN プロトコルのデータ（仕様、生成された表、適合ベクトル）と、各プログラムが共有するコード。このリポジトリは使用する部分のコピーを含みます。
 - **[URTC-GATEWAY](https://github.com/JuanenRac/URTC-GATEWAY)** — CAN バスの手前に置き、一覧にある識別子だけを通し、レートを制限し、セッション鍵を求めるゲートウェイ。
 - **[URTC-SMART-RACK](https://github.com/JuanenRac/URTC-SMART-RACK)** — 実際の工具 ID デコードと Smart Idle 予熱ロジックを備えた、基板搭載ラック用ファームウェア。
 - **[URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL)** — サーマル/RGB 検査ツールヘッド向けの、ファームウェアと実際の Python ビジョンコンパニオン。
