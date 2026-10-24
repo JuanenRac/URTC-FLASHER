@@ -1184,6 +1184,22 @@ El firmware puede hacer que varios cabezales compartan un bus CAN (la extensión
 Qué versiones de los programas de URTC funcionan juntas, y qué versión del protocolo habla cada una, figura en la tabla de compatibilidad que genera URTC-COMMON: [docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md).
 <!-- /urtc-section:compatibility -->
 
+<!-- urtc-section:status_flasher -->
+## 💡 Estado del proyecto
+
+🟢 hecho y verificado · 🟡 funciona, con límites conocidos · 🟠 a medias o sin verificar · 🔴 sin hacer o sin funcionar. Nada es verde si nunca corrió en hardware real.
+
+| Parte | Estado | Lo que el repositorio puede demostrar |
+| --- | :---: | --- |
+| Software | 🟡 | Funciona en un PC y contra el simulador; nunca se ha usado con una placa real. |
+| Interfaz | 🟡 | La ventana funciona y se comprueba contra una placa simulada; no se ha probado con un adaptador real. |
+| Pruebas | 🟢 | La batería de pruebas pasa en la CI en cada subida. |
+| Hardware real | 🟠 | Aún no se ha ejecutado con una placa real: la prueba de banco sigue pendiente. |
+| Seguridad | 🟡 | Las versiones se firman con Ed25519 y se comprueban antes de usarlas; el manejo de las claves no lo ha revisado nadie más. |
+| Documentación | 🟡 | README en ocho idiomas y documentos de referencia; las traducciones no las ha revisado ningún hablante nativo. |
+
+<!-- /urtc-section:status_flasher -->
+
 ## 📜 LICENCIA
 
 URTC Flasher es (c) 2026 JuanenRac (Electro Hobby 3D). Este aviso debe
