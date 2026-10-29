@@ -359,6 +359,7 @@ QTLOG_BUS_ACTIVITY=Activité du bus
 QTLOG_DEBUG_BUNDLE_EXPORTED=Paquet de débogage enregistré
 QTLOG_DEBUG_BUNDLE_FAILED=Impossible d'enregistrer le paquet de débogage
 QTLOG_UPDATE_REPORT_WRITTEN=Rapport de mise à jour écrit
+QTLOG_UPDATE_EVIDENCE_WRITTEN=Enregistrement de preuve écrit
 QTLOG_UPDATE_REPORT_FAILED=Impossible d'écrire le rapport de mise à jour
 QTLOG_UPDATE_REPORT_UNSIGNED=Le rapport de mise à jour n'a pas été signé : la clé de signature est inutilisable
 QTLOG_RECOVERY_IMAGE_SELECTED=La carte n'a pas de firmware valide : l'image officielle la plus récente a été sélectionnée

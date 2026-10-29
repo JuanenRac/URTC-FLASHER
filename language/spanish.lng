@@ -359,6 +359,7 @@ QTLOG_BUS_ACTIVITY=Actividad del bus
 QTLOG_DEBUG_BUNDLE_EXPORTED=Paquete de depuración guardado
 QTLOG_DEBUG_BUNDLE_FAILED=No se pudo guardar el paquete de depuración
 QTLOG_UPDATE_REPORT_WRITTEN=Informe de actualización escrito
+QTLOG_UPDATE_EVIDENCE_WRITTEN=Registro de evidencia escrito
 QTLOG_UPDATE_REPORT_FAILED=No se pudo escribir el informe de actualización
 QTLOG_UPDATE_REPORT_UNSIGNED=El informe de actualización se dejó sin firmar: no se pudo usar la clave de firma
 QTLOG_RECOVERY_IMAGE_SELECTED=La placa no tiene firmware válido: se seleccionó la imagen oficial más reciente

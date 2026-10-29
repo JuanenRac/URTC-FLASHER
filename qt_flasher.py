@@ -46,7 +46,7 @@ from flasher_config import (
 from flasher_github import GitHubDownloadError, download_file, fetch_release, fetch_release_or_pinned, is_sidecar, sidecars_for
 from flasher_integrity import manifest_signing_kind, preflight_image
 from flasher_records import (
-    build_update_report, find_recovery_image, prune_session_logs, sign_update_report, writable_logs_folder, write_update_report,
+    build_update_report, find_recovery_image, prune_session_logs, sign_update_report, writable_logs_folder, write_evidence_record, write_update_report,
 )
 from flasher_protocol import FlashError, URTCFlasher, minor_with_patch
 from flasher_swd_tools import CubeProgrammerCLI, PyOCDCLI, SWDFlashError
@@ -1889,8 +1889,10 @@ class FlasherQtBridge(QObject):
                     report = sign_update_report(report)
                 except Exception as exc:  # a key that cannot be read or made leaves the report unsigned
                     self._log(f"UPDATE_REPORT_UNSIGNED {exc}")
-            self._log(f"UPDATE_REPORT_WRITTEN {write_update_report(report, folder)}")
-        except (OSError, TypeError, KeyError) as exc:
+            report_path = write_update_report(report, folder)
+            self._log(f"UPDATE_REPORT_WRITTEN {report_path}")
+            self._log(f"UPDATE_EVIDENCE_WRITTEN {write_evidence_record(report, report_path)}")
+        except (OSError, TypeError, KeyError, ValueError) as exc:
             self._log(f"UPDATE_REPORT_FAILED {exc}")
 
     def _on_flash_progress(self, progress: int) -> None:

@@ -359,6 +359,7 @@ QTLOG_BUS_ACTIVITY=Attività del bus
 QTLOG_DEBUG_BUNDLE_EXPORTED=Pacchetto di debug salvato
 QTLOG_DEBUG_BUNDLE_FAILED=Impossibile salvare il pacchetto di debug
 QTLOG_UPDATE_REPORT_WRITTEN=Rapporto di aggiornamento scritto
+QTLOG_UPDATE_EVIDENCE_WRITTEN=Registro di evidenza scritto
 QTLOG_UPDATE_REPORT_FAILED=Impossibile scrivere il rapporto di aggiornamento
 QTLOG_UPDATE_REPORT_UNSIGNED=Il rapporto di aggiornamento non è stato firmato: la chiave di firma non è utilizzabile
 QTLOG_RECOVERY_IMAGE_SELECTED=La scheda non ha un firmware valido: è stata selezionata l'immagine ufficiale più recente

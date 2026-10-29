@@ -10,6 +10,10 @@
       "from": "src/urtc_common/conformance.py",
       "sha256": "ac21e8b66c3c7f0865d67cebf75b0347aee227efb51fed0c22a5fb133dfeae10"
     },
+    "evidence.py": {
+      "from": "src/urtc_common/evidence.py",
+      "sha256": "d51277bc5cd67f975f09966d70e64280244a767b26c50d2a109d8b9156f8bb75"
+    },
     "framing.py": {
       "from": "src/urtc_common/framing.py",
       "sha256": "b26b47e7fec0ed1eb04f560221f42dae1b0706952084fd0787440a35b153ce2f"

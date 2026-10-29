@@ -148,6 +148,21 @@ def write_update_report(report: dict, folder: str) -> str:
     return path
 
 
+def write_evidence_record(report: dict, report_path: str) -> str:
+    """Writes the same update as a ``urtc-evidence/1`` record next to the report (``urtc_evidence_<time>.json``) and returns the path.
+
+    The record is made from the report, so it says what the report says; the signature of a signed report stays with the report.
+    """
+    from urtc_can import evidence
+
+    record = evidence.from_update_report(report)
+    name = os.path.basename(report_path)
+    stem = name[len("urtc_update_report_"):] if name.startswith("urtc_update_report_") else name
+    path = os.path.join(os.path.dirname(report_path), "urtc_evidence_" + stem)
+    with open(path, "w", encoding="utf-8") as stream:
+        json.dump(record, stream, indent=2, ensure_ascii=False)
+    return path
+
 def _version_key(text: str):
     parts = []
     for piece in str(text).replace("v", "").replace("V", "").split("."):

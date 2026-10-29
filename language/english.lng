@@ -358,6 +358,7 @@ QTLOG_BUS_ACTIVITY=Bus activity
 QTLOG_DEBUG_BUNDLE_EXPORTED=Debug bundle saved
 QTLOG_DEBUG_BUNDLE_FAILED=Debug bundle could not be saved
 QTLOG_UPDATE_REPORT_WRITTEN=Update report written
+QTLOG_UPDATE_EVIDENCE_WRITTEN=Evidence record written
 QTLOG_UPDATE_REPORT_FAILED=Update report could not be written
 QTLOG_UPDATE_REPORT_UNSIGNED=The update report was left unsigned: the signing key could not be used
 QTLOG_RECOVERY_IMAGE_SELECTED=The board has no valid firmware: the newest official image was selected

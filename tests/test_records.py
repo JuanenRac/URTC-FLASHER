@@ -17,7 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from flasher_config import THIS_HARDWARE_ID
 from flasher_records import (
     build_update_report, find_recovery_image, prune_session_logs, sign_update_report, verify_signed_report, verify_update_report,
-    writable_logs_folder, write_update_report,
+    writable_logs_folder, write_evidence_record, write_update_report,
 )
 
 
@@ -115,3 +115,27 @@ def test_a_report_signed_with_the_key_of_the_user_shows_any_edit(tmp_path):
     edited["report_sha256"] = _report_digest(edited)
     assert verify_update_report(edited) and not verify_signed_report(edited)
     assert not verify_signed_report(_report())  # an unsigned report is not a signed one
+
+def test_the_same_update_is_also_written_as_an_evidence_record(tmp_path):
+    from urtc_can import evidence
+
+    report = _report(timestamp="2026-01-02T03:04:05Z")
+    path = write_update_report(report, str(tmp_path))
+    evidence_path = write_evidence_record(report, path)
+    assert Path(evidence_path).parent == tmp_path and Path(evidence_path).name == Path(path).name.replace("urtc_update_report_", "urtc_evidence_")
+    record = json.loads(Path(evidence_path).read_text(encoding="utf-8"))
+    assert evidence.verify(record) == []
+    assert record["kind"] == "flash" and record["outcome"] == "pass" and record["subject"]["version_after"] == "0.3"
+    assert record["artifacts"][0]["sha256"] == "ab" * 32
+
+
+def test_a_report_that_does_not_fit_the_shape_raises_and_leaves_no_file(tmp_path):
+    report = _report(timestamp="not a time")
+    path = write_update_report(report, str(tmp_path))
+    try:
+        write_evidence_record(report, path)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("a record with a malformed time must be refused")
+    assert not list(tmp_path.glob("urtc_evidence_*"))
