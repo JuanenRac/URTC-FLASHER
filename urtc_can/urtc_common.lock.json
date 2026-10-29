@@ -60,11 +60,11 @@
     },
     "record_signing.py": {
       "from": "src/urtc_common/record_signing.py",
-      "sha256": "4d848c2c4c50553f84257fdc708906dbdae0e136dd04f5365f5c5dd7a4026148"
+      "sha256": "f8655996b05fa7d14b56c43f4f79725af9ea6a1aad3c63e8af506b773eef7453"
     },
     "self_update.py": {
       "from": "src/urtc_common/self_update.py",
-      "sha256": "6a741d838069c61398da9a0c367e19a23b4020e4b54e8c86f3fcb0cd03ba5746"
+      "sha256": "2bd5c4cba06fe9dfede27892dab2b7ee34366133dcbfe3fab3a8152171c8ec01"
     },
     "slcan.py": {
       "from": "src/urtc_common/slcan.py",
@@ -88,7 +88,7 @@
     },
     "update_service.py": {
       "from": "src/urtc_common/update_service.py",
-      "sha256": "9c84dd68c3805a4bafe609384556bf347ab6ccffef63ce736343195bb855b6a1"
+      "sha256": "180421bd7b33a74913e5951b06de5890f20b424e9c2ef38604fed1dcc922cbe7"
     },
     "update_strings.py": {
       "from": "src/urtc_common/update_strings.py",

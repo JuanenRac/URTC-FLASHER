@@ -120,11 +120,22 @@ def default_root(app: str, environ: Mapping[str, str] | None = None, system: str
     return base / "URTC" / app
 
 
+class _CheckedRedirects(urllib.request.HTTPRedirectHandler):
+    """Follows a redirect only when its target is also https on an allowed host (a release asset is served from another
+    GitHub host, but never from plain http or from a host outside the list)."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # type: ignore[no-untyped-def]
+        su.check_host(newurl)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
 def urllib_fetch(url: str, timeout: float = 20.0):
-    """The default ``fetch``: https only, on the allowed hosts (the caller of ``self_update`` checks it again)."""
+    """The default ``fetch``: https only, on the allowed hosts, also after every redirect (the caller of ``self_update``
+    checks the first address again)."""
     su.check_host(url)
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "application/vnd.github+json, application/octet-stream"})
-    return urllib.request.urlopen(request, timeout=timeout)  # noqa: S310 - the scheme and the host were checked above
+    opener = urllib.request.build_opener(_CheckedRedirects)
+    return opener.open(request, timeout=timeout)  # noqa: S310 - the scheme and the host were checked above
 
 
 @dataclass(frozen=True)

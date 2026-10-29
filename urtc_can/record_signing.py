@@ -100,7 +100,7 @@ def load_seed(path: str | Path | None = None, create: bool = True) -> bytes:
     if not create:
         raise SigningError(f"{target.name}: there is no key file")
     seed = os.urandom(32)
-    target.parent.mkdir(parents=True, exist_ok=True)
+    target.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     descriptor = os.open(str(target), os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     with os.fdopen(descriptor, "w", encoding="ascii") as stream:
         stream.write(seed.hex() + "\n")

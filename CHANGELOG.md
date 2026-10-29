@@ -8,6 +8,7 @@ All notable changes to this project are documented here.
 - **The layout of the README is checked in the CI:** the validator runs `tools/universal_readme_check.py` and lists, as a warning, what differs from the universal layout of the README.
 - **Project status is the second section of the README,** right after At a glance, in the eight languages.
 - **The full CI runs every night:** a scheduled workflow runs the complete baseline again on the default branch and opens (or updates) one issue when it fails, so a change in a runner image, a toolchain or a pinned dependency is found the next day instead of with the next unrelated change. The workflow also starts when the firmware repository announces a new release of its images.
+- **The copy of the shared update code is current:** downloads now follow a redirect only to another allowed https host, and the bytes really written while extracting a package count towards the size limit.
 
 ## [0.4.1] - The whole version of the slave application and the status line of the window in the language of the program
 

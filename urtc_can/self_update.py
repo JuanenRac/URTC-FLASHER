@@ -337,6 +337,20 @@ def _safe_target(root: Path, member: str) -> Path:
     return target
 
 
+def _copy_bounded(source, out, spent: int) -> int:
+    """Copies ``source`` into ``out`` and returns the bytes written; stops with ``too_big`` when the bytes really written (not the
+    size the archive announces) take the total past the limit, so a small archive cannot expand without bound."""
+    written = 0
+    while True:
+        chunk = source.read(1024 * 1024)
+        if not chunk:
+            return written
+        written += len(chunk)
+        if spent + written > MAX_EXTRACTED_BYTES:
+            raise UpdateError("too_big", "the package expands past the limits")
+        out.write(chunk)
+
+
 def safe_extract(archive: str | Path, destination: str | Path) -> int:
     """Extracts a ``.zip`` or ``.tar.gz`` into ``destination``; returns the number of files. Refuses any path outside it, any
     link or device, and an archive that expands past the limits."""
@@ -361,7 +375,7 @@ def safe_extract(archive: str | Path, destination: str | Path) -> int:
                     raise UpdateError("too_big", "the package expands past the limits")
                 target.parent.mkdir(parents=True, exist_ok=True)
                 with zf.open(info) as src, open(target, "wb") as out:
-                    shutil.copyfileobj(src, out)
+                    total += _copy_bounded(src, out, total - info.file_size) - info.file_size
     elif name.endswith((".tar.gz", ".tgz")):
         with tarfile.open(archive, "r:gz") as tf:
             for member in tf:
@@ -382,7 +396,7 @@ def safe_extract(archive: str | Path, destination: str | Path) -> int:
                 if source is None:
                     raise UpdateError("unsafe_member", member.name)
                 with source, open(target, "wb") as out:
-                    shutil.copyfileobj(source, out)
+                    total += _copy_bounded(source, out, total - member.size) - member.size
                 if member.mode & 0o111:
                     target.chmod(0o755)
     else:
