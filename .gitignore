@@ -13,7 +13,7 @@ _swd_fixtures_scratch/
 # key written here must never be committed). Only urtc_config.json.example -
 # a placeholder, never real key material - is meant to be tracked.
 urtc_config.json
-# HYDRA-UMC shared secret protection
+# Local secrets are never committed
 .env
 .env.*
 !.env.example

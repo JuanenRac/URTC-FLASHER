@@ -1,5 +1,5 @@
 pyserial>=3.5
-# Qt Quick is the desktop renderer (the same engine as HYDRA-UMC-UPDATER) and the
+# Qt Quick is the desktop renderer (the same engine as URTC-UPDATER) and the
 # only window of the program; --cli needs no window.
 PySide6>=6.8,<7
 
