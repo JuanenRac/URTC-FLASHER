@@ -131,7 +131,7 @@ SLAVE_HARDWARE_ID = protocol.HARDWARE_ID_SLAVE  # STM32F303CBT6, expansion slave
 # --version given, or the file name), never a default - an invented one made every later official image look older to the anti-rollback check.
 
 # This tool's OWN version (shown in the banner and window title) - about the flasher script itself.
-FLASHER_VERSION = "0.4.1"
+FLASHER_VERSION = "0.4.2"
 FLASHER_AUTHOR = "JuanenRac"
 
 # --- HMAC signing keys: none by default ---

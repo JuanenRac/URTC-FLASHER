@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here.
 
-## [Unreleased]
+## [0.4.2] - The evidence of every flashing in the common format and the universal README
 
 - **Every update also leaves an evidence record:** next to the update report the flasher writes `urtc_evidence_<time>.json` in the common `urtc-evidence/1` shape (tool, time, board, versions before and after, the image with its SHA-256, outcome and a digest of the record), the same shape the tester and the updater can write. The report is unchanged, and a record that cannot be made never fails an update.
 - **Related Projects lists the URTC family:** the section names the repositories of URTC by group, each with one short line about what it is for, and, in one short line each, the sister projects (independent ecosystems of the same author that share the base and the tools), in the eight languages. It no longer says that URTC is part of another ecosystem.
