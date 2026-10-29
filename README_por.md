@@ -86,6 +86,22 @@ mão como alternativa. Tudo o resto descrito aqui foi exercitado apenas contra `
 | Destino | O PC de quem o usa |
 | Em hardware real | Só simulado: testado com emuladores, dublês de teste ou simuladores; não há registo de execução em hardware real para esta versão |
 
+<!-- urtc-section:status_flasher -->
+## 🚦 Estado do projeto
+
+🟢 feito e verificado · 🟡 funciona, com limites conhecidos · 🟠 a meio ou por verificar · 🔴 por fazer ou a não funcionar. Nada é verde se nunca correu em hardware real.
+
+| Parte | Estado | O que o repositório consegue demonstrar |
+| --- | :---: | --- |
+| Software | 🟡 | Funciona num PC e contra o simulador; nunca foi usado com uma placa real. |
+| Interface | 🟡 | A janela funciona e é verificada contra uma placa simulada; não foi experimentada com um adaptador real. |
+| Testes | 🟢 | A bateria de testes passa na CI em cada envio. |
+| Hardware real | 🟠 | Ainda não correu numa placa real: o ensaio de bancada continua pendente. |
+| Segurança | 🟡 | As versões são assinadas com Ed25519 e verificadas antes de usar; o tratamento das chaves não foi revisto por mais ninguém. |
+| Documentação | 🟡 | README em oito línguas e documentos de referência; as traduções não foram revistas por falantes nativos. |
+
+<!-- /urtc-section:status_flasher -->
+
 ## 1. 🔌 Fazer o seu adaptador falar CAN
 
 O que precisa de entre isto depende da sua plataforma e do transporte que vai
@@ -1140,22 +1156,6 @@ O firmware pode fazer várias cabeças de ferramenta partilharem um barramento C
 
 As versões dos programas URTC que funcionam em conjunto, e a versão do protocolo que cada uma fala, constam da tabela de compatibilidade que o URTC-COMMON gera: [docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md).
 <!-- /urtc-section:compatibility -->
-
-<!-- urtc-section:status_flasher -->
-## 💡 Estado do projeto
-
-🟢 feito e verificado · 🟡 funciona, com limites conhecidos · 🟠 a meio ou por verificar · 🔴 por fazer ou a não funcionar. Nada é verde se nunca correu em hardware real.
-
-| Parte | Estado | O que o repositório consegue demonstrar |
-| --- | :---: | --- |
-| Software | 🟡 | Funciona num PC e contra o simulador; nunca foi usado com uma placa real. |
-| Interface | 🟡 | A janela funciona e é verificada contra uma placa simulada; não foi experimentada com um adaptador real. |
-| Testes | 🟢 | A bateria de testes passa na CI em cada envio. |
-| Hardware real | 🟠 | Ainda não correu numa placa real: o ensaio de bancada continua pendente. |
-| Segurança | 🟡 | As versões são assinadas com Ed25519 e verificadas antes de usar; o tratamento das chaves não foi revisto por mais ninguém. |
-| Documentação | 🟡 | README em oito línguas e documentos de referência; as traduções não foram revistas por falantes nativos. |
-
-<!-- /urtc-section:status_flasher -->
 
 ## 📜 LICENÇA
 
