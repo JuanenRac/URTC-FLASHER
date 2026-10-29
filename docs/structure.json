@@ -1,0 +1,441 @@
+{
+  "repo": "URTC-FLASHER",
+  "ecosystem": "urtc",
+  "svg": "en",
+  "cards": [
+    {
+      "name": "Program modules",
+      "kind": "group",
+      "span": 3,
+      "columns": 2,
+      "rows": [
+        {
+          "name": "urtc_flasher.py",
+          "desc": {
+            "en": "entry point",
+            "es": "punto de entrada",
+            "de": "Einstiegspunkt",
+            "fr": "point d'entrée",
+            "it": "punto di ingresso",
+            "zh": "入口",
+            "ja": "エントリーポイント",
+            "pt": "ponto de entrada"
+          }
+        },
+        {
+          "name": "qt_flasher.py",
+          "desc": {
+            "en": "the Qt Quick deck",
+            "es": "el panel Qt Quick",
+            "de": "das Qt-Quick-Deck",
+            "fr": "le tableau Qt Quick",
+            "it": "il pannello Qt Quick",
+            "zh": "Qt Quick 面板",
+            "ja": "Qt Quick デッキ",
+            "pt": "o painel Qt Quick"
+          }
+        },
+        {
+          "name": "flasher_*.py",
+          "desc": {
+            "en": "protocol, checks, transports, SWD tools, records",
+            "es": "protocolo, comprobaciones, transportes, SWD, registros",
+            "de": "Protokoll, Prüfungen, Transporte, SWD, Protokolle",
+            "fr": "protocole, contrôles, transports, SWD, journaux",
+            "it": "protocollo, controlli, trasporti, SWD, registri",
+            "zh": "协议、检查、传输、SWD、记录",
+            "ja": "プロトコル、検査、トランスポート、SWD、記録",
+            "pt": "protocolo, verificações, transportes, SWD, registos"
+          }
+        },
+        {
+          "name": "verify_qt_*.py",
+          "desc": {
+            "en": "end-to-end checks of the Qt panels",
+            "es": "comprobaciones de extremo a extremo de los paneles Qt",
+            "de": "End-to-End-Prüfungen der Qt-Panels",
+            "fr": "contrôles de bout en bout des panneaux Qt",
+            "it": "controlli end-to-end dei pannelli Qt",
+            "zh": "Qt 面板的端到端检查",
+            "ja": "Qt パネルのエンドツーエンド検査",
+            "pt": "verificações de ponta a ponta dos painéis Qt"
+          }
+        },
+        {
+          "name": "urtc_can/",
+          "desc": {
+            "en": "protocol, transports and updates (copy)",
+            "es": "protocolo, transportes y actualizaciones (copia)",
+            "de": "Protokoll, Transporte und Updates (Kopie)",
+            "fr": "protocole, transports et mises à jour (copie)",
+            "it": "protocollo, trasporti e aggiornamenti (copia)",
+            "zh": "协议、传输和更新（副本）",
+            "ja": "プロトコル、トランスポート、更新（コピー）",
+            "pt": "protocolo, transportes e atualizações (cópia)"
+          }
+        },
+        {
+          "name": "urtc_ui/",
+          "desc": {
+            "en": "interface helpers (copy)",
+            "es": "ayudas de interfaz (copia)",
+            "de": "Oberflächen-Helfer (Kopie)",
+            "fr": "aides d'interface (copie)",
+            "it": "aiuti per l'interfaccia (copia)",
+            "zh": "界面辅助（副本）",
+            "ja": "インターフェースの補助（コピー）",
+            "pt": "auxiliares de interface (cópia)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "firmware/ tests/ language/ assets/ docs/",
+      "kind": "group",
+      "span": 3,
+      "columns": 2,
+      "rows": [
+        {
+          "name": "firmware/",
+          "desc": {
+            "en": "where the images go (starts empty)",
+            "es": "dónde van las imágenes (empieza vacía)",
+            "de": "wohin die Images kommen (anfangs leer)",
+            "fr": "où vont les images (vide au départ)",
+            "it": "dove vanno le immagini (all'inizio vuota)",
+            "zh": "镜像存放处（起初为空）",
+            "ja": "イメージの置き場所（最初は空）",
+            "pt": "onde ficam as imagens (começa vazia)"
+          }
+        },
+        {
+          "name": "tests/",
+          "desc": {
+            "en": "47 test files, one per area",
+            "es": "47 archivos de prueba, uno por área",
+            "de": "47 Testdateien, eine je Bereich",
+            "fr": "47 fichiers de test, un par domaine",
+            "it": "47 file di test, uno per area",
+            "zh": "47 个测试文件，每个领域一个",
+            "ja": "47 のテストファイル（領域ごと）",
+            "pt": "47 ficheiros de teste, um por área"
+          }
+        },
+        {
+          "name": "language/",
+          "desc": {
+            "en": "the eight .lng language files",
+            "es": "los ocho archivos de idioma .lng",
+            "de": "die acht .lng-Sprachdateien",
+            "fr": "les huit fichiers de langue .lng",
+            "it": "gli otto file di lingua .lng",
+            "zh": "八个 .lng 语言文件",
+            "ja": "8 つの .lng 言語ファイル",
+            "pt": "os oito ficheiros de idioma .lng"
+          }
+        },
+        {
+          "name": "assets/",
+          "desc": {
+            "en": "QML, banner and icon",
+            "es": "QML, banner e icono",
+            "de": "QML, Banner und Symbol",
+            "fr": "QML, bannière et icône",
+            "it": "QML, banner e icona",
+            "zh": "QML、横幅和图标",
+            "ja": "QML、バナー、アイコン",
+            "pt": "QML, faixa e ícone"
+          }
+        },
+        {
+          "name": "docs/",
+          "desc": {
+            "en": "architecture, build and run",
+            "es": "arquitectura, compilación y ejecución",
+            "de": "Architektur, Build und Betrieb",
+            "fr": "architecture, compilation et exécution",
+            "it": "architettura, compilazione ed esecuzione",
+            "zh": "架构、构建与运行",
+            "ja": "アーキテクチャ、ビルドと実行",
+            "pt": "arquitetura, compilação e execução"
+          }
+        },
+        {
+          "name": "logs/",
+          "desc": {
+            "en": "session logs (kept out of Git)",
+            "es": "registros de sesión (fuera de Git)",
+            "de": "Sitzungsprotokolle (nicht in Git)",
+            "fr": "journaux de session (hors de Git)",
+            "it": "registri di sessione (fuori da Git)",
+            "zh": "会话日志（不进入 Git）",
+            "ja": "セッションログ（Git 管理外）",
+            "pt": "registos de sessão (fora do Git)"
+          }
+        },
+        {
+          "name": "tools/",
+          "desc": {
+            "en": "build check, firmware sync, shared tools",
+            "es": "comprobación de compilación, sincronización del firmware, herramientas compartidas",
+            "de": "Build-Prüfung, Firmware-Sync, gemeinsame Werkzeuge",
+            "fr": "contrôle de compilation, synchro du firmware, outils partagés",
+            "it": "controllo di compilazione, sincronizzazione del firmware, strumenti condivisi",
+            "zh": "构建检查、固件同步、共用工具",
+            "ja": "ビルド検査、ファームウェア同期、共有ツール",
+            "pt": "verificação de compilação, sincronização do firmware, ferramentas partilhadas"
+          }
+        },
+        {
+          "name": "images/",
+          "desc": {
+            "en": "banner and the pictures of this README",
+            "es": "banner e imágenes de este README",
+            "de": "Banner und Bilder dieses READMEs",
+            "fr": "bannière et images de ce README",
+            "it": "banner e immagini di questo README",
+            "zh": "横幅和本 README 的图片",
+            "ja": "バナーとこの README の画像",
+            "pt": "faixa e imagens deste README"
+          }
+        },
+        {
+          "name": ".github/",
+          "desc": {
+            "en": "CI workflow, issue and pull-request templates",
+            "es": "flujo de CI y plantillas de issues y pull requests",
+            "de": "CI-Workflow sowie Vorlagen für Issues und Pull Requests",
+            "fr": "workflow de CI et modèles d'issues et de pull requests",
+            "it": "workflow di CI e modelli per issue e pull request",
+            "zh": "CI 工作流以及 Issue 和 Pull Request 模板",
+            "ja": "CI ワークフローと Issue・プルリクエストのテンプレート",
+            "pt": "fluxo de CI e modelos de issues e pull requests"
+          }
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Files at the root",
+        "es": "Archivos de la raíz",
+        "de": "Dateien im Wurzelverzeichnis",
+        "fr": "Fichiers à la racine",
+        "it": "File nella radice",
+        "zh": "根目录文件",
+        "ja": "ルートのファイル",
+        "pt": "Ficheiros na raiz"
+      },
+      "kind": "group",
+      "span": 3,
+      "columns": 2,
+      "rows": [
+        {
+          "name": "test.sh  test.bat",
+          "desc": {
+            "en": "run the tests",
+            "es": "ejecutan las pruebas",
+            "de": "führen die Tests aus",
+            "fr": "lancent les tests",
+            "it": "eseguono i test",
+            "zh": "运行测试",
+            "ja": "テストを実行",
+            "pt": "executam os testes"
+          },
+          "tree_name": "test.sh test.bat"
+        },
+        {
+          "name": "run.sh  run.bat",
+          "desc": {
+            "en": "start the program",
+            "es": "arrancan el programa",
+            "de": "starten das Programm",
+            "fr": "lancent le programme",
+            "it": "avviano il programma",
+            "zh": "启动程序",
+            "ja": "プログラムを起動",
+            "pt": "arrancam o programa"
+          },
+          "tree_name": "run.sh run.bat"
+        },
+        {
+          "name": "build-test.sh  build-test.bat",
+          "desc": {
+            "en": "build and test scripts that change nothing in the repository",
+            "es": "scripts de compilación y pruebas que no cambian nada en el repositorio",
+            "de": "Build- und Testskripte, die im Repository nichts ändern",
+            "fr": "scripts de compilation et de test qui ne changent rien dans le dépôt",
+            "it": "script di compilazione e test che non cambiano nulla nel repository",
+            "zh": "构建并测试的脚本，不会修改仓库内容",
+            "ja": "リポジトリを変更しないビルド・テストのスクリプト",
+            "pt": "scripts de compilação e testes que não alteram nada no repositório"
+          },
+          "tree_name": "build-test.sh build-test.bat"
+        },
+        {
+          "name": "urtc.project.json",
+          "desc": {
+            "en": "manifest: version, role, maturity and build command",
+            "es": "manifiesto: versión, papel, madurez y comando de compilación",
+            "de": "Manifest: Version, Rolle, Reifegrad und Build-Befehl",
+            "fr": "manifeste : version, rôle, maturité et commande de compilation",
+            "it": "manifesto: versione, ruolo, maturità e comando di compilazione",
+            "zh": "清单：版本、角色、成熟度和构建命令",
+            "ja": "マニフェスト：バージョン、役割、成熟度、ビルドコマンド",
+            "pt": "manifesto: versão, papel, maturidade e comando de compilação"
+          }
+        },
+        {
+          "name": "CHANGELOG.md",
+          "desc": {
+            "en": "what changed in each version",
+            "es": "qué cambió en cada versión",
+            "de": "was sich in jeder Version geändert hat",
+            "fr": "ce qui a changé à chaque version",
+            "it": "che cosa è cambiato in ogni versione",
+            "zh": "每个版本的变更",
+            "ja": "各バージョンの変更内容",
+            "pt": "o que mudou em cada versão"
+          }
+        },
+        {
+          "name": "SECURITY.md  SUPPORT.md  LICENSE",
+          "desc": {
+            "en": "security policy, support and license",
+            "es": "política de seguridad, soporte y licencia",
+            "de": "Sicherheitsrichtlinie, Support und Lizenz",
+            "fr": "politique de sécurité, assistance et licence",
+            "it": "politica di sicurezza, supporto e licenza",
+            "zh": "安全政策、支持和许可证",
+            "ja": "セキュリティポリシー、サポート、ライセンス",
+            "pt": "política de segurança, suporte e licença"
+          },
+          "tree_name": "SECURITY.md SUPPORT.md LICENSE"
+        },
+        {
+          "name": "CONTRIBUTING.md  CODE_OF_CONDUCT.md",
+          "desc": {
+            "en": "how to contribute and the code of conduct",
+            "es": "cómo contribuir y código de conducta",
+            "de": "wie man mitwirkt, und der Verhaltenskodex",
+            "fr": "comment contribuer et code de conduite",
+            "it": "come contribuire e codice di condotta",
+            "zh": "如何参与贡献和行为准则",
+            "ja": "貢献方法と行動規範",
+            "pt": "como contribuir e código de conduta"
+          },
+          "tree_name": "CONTRIBUTING.md CODE_OF_CONDUCT.md"
+        },
+        {
+          "name": ".gitattributes  .gitignore",
+          "desc": {
+            "en": "Git settings",
+            "es": "ajustes de Git",
+            "de": "Git-Einstellungen",
+            "fr": "réglages Git",
+            "it": "impostazioni di Git",
+            "zh": "Git 设置",
+            "ja": "Git の設定",
+            "pt": "definições do Git"
+          },
+          "tree_name": ".gitattributes .gitignore"
+        },
+        {
+          "name": "build_exe.sh  build_exe.bat",
+          "tree_name": "build_exe.sh build_exe.bat",
+          "desc": {
+            "en": "standalone program (PyInstaller)",
+            "es": "programa independiente (PyInstaller)",
+            "de": "eigenständiges Programm (PyInstaller)",
+            "fr": "programme autonome (PyInstaller)",
+            "it": "programma autonomo (PyInstaller)",
+            "zh": "独立程序 (PyInstaller)",
+            "ja": "単体プログラム (PyInstaller)",
+            "pt": "programa autónomo (PyInstaller)"
+          }
+        },
+        {
+          "name": "bump.py  bump_version.py  bump_manifest_version.py",
+          "desc": {
+            "en": "scripts that raise the version",
+            "es": "scripts que suben la versión",
+            "de": "Skripte, die die Version erhöhen",
+            "fr": "scripts qui augmentent la version",
+            "it": "script che alzano la versione",
+            "zh": "提升版本号的脚本",
+            "ja": "バージョンを上げるスクリプト",
+            "pt": "scripts que sobem a versão"
+          },
+          "tree_name": "bump.py bump_version.py bump_manifest_version.py"
+        },
+        {
+          "name": "requirements*.txt  requirements*.lock",
+          "tree_name": "requirements*.txt requirements*.lock",
+          "desc": {
+            "en": "dependencies, with their locks",
+            "es": "dependencias, con sus bloqueos",
+            "de": "Abhängigkeiten, mit ihren Sperren",
+            "fr": "dépendances, avec leurs verrous",
+            "it": "dipendenze, con i loro blocchi",
+            "zh": "依赖及其锁文件",
+            "ja": "依存関係とそのロック",
+            "pt": "dependências, com os seus bloqueios"
+          }
+        },
+        {
+          "name": "mypy.ini  pytest.ini  ruff.toml",
+          "tree_name": "mypy.ini pytest.ini ruff.toml",
+          "desc": {
+            "en": "type check, test and lint settings",
+            "es": "ajustes de tipos, pruebas y lint",
+            "de": "Einstellungen für Typen, Tests und Lint",
+            "fr": "réglages des types, des tests et du lint",
+            "it": "impostazioni di tipi, test e lint",
+            "zh": "类型检查、测试和 lint 设置",
+            "ja": "型検査、テスト、lint の設定",
+            "pt": "definições de tipos, testes e lint"
+          }
+        },
+        {
+          "name": "urtc_config.json.example",
+          "desc": {
+            "en": "example of the hardware overrides and the language",
+            "es": "ejemplo de los ajustes de hardware y del idioma",
+            "de": "Beispiel der Hardware-Einstellungen und der Sprache",
+            "fr": "exemple des réglages matériels et de la langue",
+            "it": "esempio delle impostazioni hardware e della lingua",
+            "zh": "硬件覆盖设置和语言的示例",
+            "ja": "ハードウェア設定と言語の例",
+            "pt": "exemplo das definições de hardware e do idioma"
+          }
+        },
+        {
+          "name": "urtc_i18n.lock.json",
+          "desc": {
+            "en": "lock of the generated language files",
+            "es": "bloqueo de los archivos de idioma generados",
+            "de": "Sperre der erzeugten Sprachdateien",
+            "fr": "verrou des fichiers de langue générés",
+            "it": "blocco dei file di lingua generati",
+            "zh": "生成语言文件的锁文件",
+            "ja": "生成された言語ファイルのロック",
+            "pt": "bloqueio dos ficheiros de idioma gerados"
+          }
+        },
+        {
+          "name": "NOTICE  LICENSE.md",
+          "tree_name": "NOTICE LICENSE.md",
+          "desc": {
+            "en": "copyright notice and documentation license",
+            "es": "aviso de copyright y licencia de la documentación",
+            "de": "Urheberrechtshinweis und Dokumentationslizenz",
+            "fr": "avis de droit d'auteur et licence de la documentation",
+            "it": "avviso di copyright e licenza della documentazione",
+            "zh": "版权声明和文档许可证",
+            "ja": "著作権表示とドキュメントのライセンス",
+            "pt": "aviso de direitos de autor e licença da documentação"
+          }
+        }
+      ]
+    }
+  ]
+}

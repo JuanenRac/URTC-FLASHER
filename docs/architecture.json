@@ -1,0 +1,162 @@
+{
+  "repo": "URTC-FLASHER",
+  "ecosystem": "urtc",
+  "tagline": "Updates the firmware of a URTC board over CAN and programs the whole chip over SWD/JTAG, with the image checked before anything is sent.",
+  "description": "URTC-FLASHER is a Qt Quick desktop program with a command line. It speaks the CAN-OTA bootloader protocol over an SLCAN serial adapter or SocketCAN, checks the image, its manifest and its signature before anything reaches the bus, shows what is installed, flashes the main board or the expansion slave with a backup slot, and drives pyOCD or STM32CubeProgrammer for full-chip SWD/JTAG work. It is tested against a simulated bootloader; nothing has been run on a real board.",
+  "columns": [
+    "WHO USES IT",
+    "THE FLASHER",
+    "WHAT IT TALKS TO"
+  ],
+  "nodes": [
+    {
+      "id": "person",
+      "column": 0,
+      "level": "external",
+      "title": "A person at the bench",
+      "lines": [
+        "the Qt Quick command deck in",
+        "eight languages, or the --cli",
+        "mode with no window"
+      ],
+      "code": [
+        "qt_flasher.py",
+        "urtc_flasher.py"
+      ]
+    },
+    {
+      "id": "upd",
+      "column": 0,
+      "level": "external",
+      "title": "URTC-UPDATER",
+      "lines": [
+        "can hand over a firmware image",
+        "whose release signature it",
+        "checked; this program flashes"
+      ]
+    },
+    {
+      "id": "proto",
+      "column": 1,
+      "level": "tested",
+      "title": "CAN-OTA protocol",
+      "lines": [
+        "bootloader handshake, paged",
+        "transfer with ACK, HMAC chunks,",
+        "end-update, readback"
+      ],
+      "code": [
+        "flasher_protocol.py",
+        "flasher_config.py"
+      ]
+    },
+    {
+      "id": "check",
+      "column": 1,
+      "level": "contract",
+      "title": "Image checks",
+      "lines": [
+        "manifest sha256, CRC32 and",
+        "HardwareID, Ed25519 signature",
+        "of a release, before any traffic"
+      ],
+      "code": [
+        "flasher_integrity.py",
+        "flasher_release_signature.py",
+        "flasher_validation.py"
+      ]
+    },
+    {
+      "id": "trans",
+      "column": 1,
+      "level": "tested",
+      "title": "Transports",
+      "lines": [
+        "SLCAN serial, SocketCAN on Linux",
+        "and a virtual board with no",
+        "hardware"
+      ],
+      "code": [
+        "flasher_transports.py",
+        "urtc_can/virtual_board.py"
+      ]
+    },
+    {
+      "id": "swd",
+      "column": 1,
+      "level": "config",
+      "title": "SWD/JTAG tools",
+      "lines": [
+        "commands for pyOCD, ST tool:",
+        "full chip, option bytes, slot",
+        "verification"
+      ],
+      "code": [
+        "flasher_swd_tools.py"
+      ]
+    },
+    {
+      "id": "rec",
+      "column": 1,
+      "level": "tested",
+      "title": "Logs and downloads",
+      "lines": [
+        "session logs, debug bundles and",
+        "firmware from a GitHub release"
+      ],
+      "code": [
+        "flasher_records.py",
+        "flasher_github.py"
+      ]
+    },
+    {
+      "id": "board",
+      "column": 2,
+      "level": "untested",
+      "title": "Board and bootloader",
+      "lines": [
+        "a URTC board behind a USB-CAN",
+        "adapter; never connected to",
+        "this program"
+      ]
+    },
+    {
+      "id": "probe",
+      "column": 2,
+      "level": "untested",
+      "title": "SWD/JTAG probe",
+      "lines": [
+        "driven through pyOCD or",
+        "STM32CubeProgrammer; only the",
+        "commands were built"
+      ]
+    },
+    {
+      "id": "gh",
+      "column": 2,
+      "level": "external",
+      "title": "GitHub releases",
+      "lines": [
+        "firmware images and their",
+        "digests and signatures"
+      ]
+    }
+  ],
+  "edges": [
+    {"from": "person", "to": "check", "label": "pick", "level": "tested"},
+    {"from": "upd", "to": "check", "level": "contract"},
+    {"from": "check", "to": "proto", "level": "tested"},
+    {"from": "proto", "to": "trans", "level": "tested"},
+    {"from": "trans", "to": "board", "label": "CAN-OTA", "level": "untested"},
+    {"from": "swd", "to": "probe", "label": "SWD", "level": "untested"},
+    {"from": "rec", "to": "gh", "label": "download", "level": "tested"}
+  ],
+  "legend": {
+    "tested": "covered by tests against a simulated bootloader",
+    "contract": "decides before anything is sent",
+    "config": "builds commands; the probe tool does the work",
+    "untested": "has not run on real hardware",
+    "external": "a person or another repository"
+  },
+  "footer": "Keep JTAG on hand for a first real flash: nothing here has touched a real board."
+}

@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The README follows the universal layout in the eight languages:** the numbered sections are now the fixed ones, with the step-by-step manual (adapter, install, firmware files, installed version, flashing, SWD/JTAG, command line, diagnostics, F-RAM erase, key and HardwareID) kept in Quick start, Features, Interfaces and Configuration; the Architecture and the Repository Structure are drawn from `docs/architecture.json` and `docs/structure.json`, and the annotated tree of the files is `docs/SOURCE_MAP.md`. The number of tests is current (500). The notice of the licenses now lists the eight README files and the guides of the documentation license.
 - **The layout of the README is checked in the CI:** the validator runs `tools/universal_readme_check.py` and lists, as a warning, what differs from the universal layout of the README.
 - **Project status is the second section of the README,** right after At a glance, in the eight languages.
 
