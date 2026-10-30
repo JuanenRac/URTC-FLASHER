@@ -9,6 +9,7 @@ drawn to a PNG with ``grabWindow``. No board is needed and nothing is sent: the 
 window of the tool heads (``-heads``) is taken over a modelled bus of seven heads, one in each state a head can be in; it shows the window, not a bus.
 
     python tools/capture_screens.py                 # writes docs/screenshots/<program>-deck.png, -help.png, -updates.png and -heads.png
+    python tools/capture_screens.py --readme                 # the pictures of the README: images/screenshots/<screen>.png at 1920x1080
     python tools/capture_screens.py --out DIR       # another folder
     python tools/capture_screens.py --language german        # the same pictures in German: <program>-deck-de.png ...
     python tools/capture_screens.py --all-languages          # the English ones and those of the seven other languages
@@ -70,6 +71,7 @@ def which_program() -> str:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--out", default=str(ROOT / "docs" / "screenshots"))
+    parser.add_argument("--readme", action="store_true", help="the pictures of the README: 1920x1080, in images/screenshots/, named after the screen only")
     parser.add_argument("--language", choices=sorted(LANGUAGE_SUFFIX), default="english", help="the interface language of the pictures")
     parser.add_argument("--all-languages", action="store_true", help="one run per language (each in its own process)")
     args = parser.parse_args(argv)
@@ -120,16 +122,17 @@ def main(argv: list[str] | None = None) -> int:
             time.sleep(0.01)
 
     root.setVisibility(QWindow.Visibility.Windowed)
-    root.setWidth(SIZE[0])
-    root.setHeight(SIZE[1])
+    size = (1920, 1080) if args.readme else SIZE
+    root.setWidth(size[0])
+    root.setHeight(size[1])
     pump(1.0)
-    out = Path(args.out)
+    out = Path(args.out) if not args.readme or args.out != str(ROOT / "docs" / "screenshots") else ROOT / "images" / "screenshots"
     out.mkdir(parents=True, exist_ok=True)
     written = []
 
     def shot(label: str) -> None:
         image = QQuickWindow.grabWindow(root)
-        path = out / f"{name}-{label}{LANGUAGE_SUFFIX[args.language]}.png"
+        path = out / (f"{label}.png" if args.readme else f"{name}-{label}{LANGUAGE_SUFFIX[args.language]}.png")
         if not image.save(str(path)):
             raise SystemExit(f"CAPTURE=FAIL could not write {path}")
         written.append(path.name)

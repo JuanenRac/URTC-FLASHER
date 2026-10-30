@@ -109,13 +109,22 @@ Dieses Programm kann nach einer neueren Version seiner selbst suchen: Die Schalt
 
 ## 🖼️ Screenshots
 
-<p align="center">
-  <img src="images/URTC_FLASHER_V1_1.png" alt="URTC Flasher Fenster" width="700">
-</p>
+<!-- urtc-shots -->
+Aufgenommen mit 1920×1080 auf einem Prüfstand, mit Beispieldaten und ohne eine echte Anlage dahinter.
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="images/screenshots/deck.png" alt="Das Fenster beim Öffnen: die Verbindung, das Firmware-Inventar, die vier Kontrollpunkte einer CAN-OTA-Aktualisierung und die Gerätekonfiguration." width="100%"><br><sub>Das Fenster beim Öffnen: die Verbindung, das Firmware-Inventar, die vier Kontrollpunkte einer CAN-OTA-Aktualisierung und die Gerätekonfiguration.</sub></td>
+<td width="50%" valign="top"><img src="images/screenshots/heads.png" alt="Werkzeugköpfe am Bus: ein modellierter Bus mit sechs Köpfen, jeder in einem anderen möglichen Zustand (gewählt, Adresskonflikt, Fehler gehalten, im Bootloader, verloren und bereit)." width="100%"><br><sub>Werkzeugköpfe am Bus: ein modellierter Bus mit sechs Köpfen, jeder in einem anderen möglichen Zustand (gewählt, Adresskonflikt, Fehler gehalten, im Bootloader, verloren und bereit).</sub></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="images/screenshots/help.png" alt="Das Hilfefenster: die Schritte zur Benutzung des Programms, in der Sprache des Fensters." width="100%"><br><sub>Das Hilfefenster: die Schritte zur Benutzung des Programms, in der Sprache des Fensters.</sub></td>
+<td width="50%" valign="top"><img src="images/screenshots/updates.png" alt="Das Update-Fenster: ein neueres signiertes Paket wird erst nach deiner Bestätigung installiert." width="100%"><br><sub>Das Update-Fenster: ein neueres signiertes Paket wird erst nach deiner Bestätigung installiert.</sub></td>
+</tr>
+</table>
+<!-- /urtc-shots -->
 
 Diese Bilder zeigen das echte Fenster, ohne Bildschirm gezeichnet, so wie es sich öffnet (nichts verbunden, nichts gesendet). Die Anleitung führt durch das Deck, das Hilfefenster und das Update-Fenster.
-
-![Das Fenster, Schritt für Schritt](docs/screenshots/flasher-deck.png)
 
 [Anleitung mit Bildern](docs/WINDOW_GUIDE.md)
 

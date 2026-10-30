@@ -108,13 +108,22 @@ This program can look for a newer version of itself: the "Check for updates" but
 
 ## 🖼️ Screenshots
 
-<p align="center">
-  <img src="images/URTC_FLASHER_V1_1.png" alt="URTC Flasher window" width="700">
-</p>
+<!-- urtc-shots -->
+Captured at 1920×1080 on a test bench, with sample data and no real installation behind them.
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="images/screenshots/deck.png" alt="The window as it opens: the connection, the firmware inventory, the four checkpoints of a CAN-OTA update and the device configuration." width="100%"><br><sub>The window as it opens: the connection, the firmware inventory, the four checkpoints of a CAN-OTA update and the device configuration.</sub></td>
+<td width="50%" valign="top"><img src="images/screenshots/heads.png" alt="Tool heads on the bus: a modelled bus with six heads, one in each state a head can be in (selected, address conflict, fault latched, in its bootloader, lost and ready)." width="100%"><br><sub>Tool heads on the bus: a modelled bus with six heads, one in each state a head can be in (selected, address conflict, fault latched, in its bootloader, lost and ready).</sub></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="images/screenshots/help.png" alt="The Help window: the steps for using the program, written in the language of the window." width="100%"><br><sub>The Help window: the steps for using the program, written in the language of the window.</sub></td>
+<td width="50%" valign="top"><img src="images/screenshots/updates.png" alt="The update window: a newer signed package is installed only after you confirm it." width="100%"><br><sub>The update window: a newer signed package is installed only after you confirm it.</sub></td>
+</tr>
+</table>
+<!-- /urtc-shots -->
 
 These pictures are the real window, drawn without a screen as it opens (nothing connected, nothing sent). The guide goes through the deck, the Help window and the update window.
-
-![The window, step by step](docs/screenshots/flasher-deck.png)
 
 [Guide with pictures](docs/WINDOW_GUIDE.md)
 

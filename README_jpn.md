@@ -112,13 +112,22 @@ URTC-FLASHER は URTC ボードにファームウェアを書き込むプログ�
 
 ## 🖼️ スクリーンショット
 
-<p align="center">
-  <img src="images/URTC_FLASHER_V1_1.png" alt="URTC Flasher window" width="700">
-</p>
+<!-- urtc-shots -->
+テストベンチで 1920×1080 で撮影。サンプルデータを使用しており、実際の設備は接続されていません。
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="images/screenshots/deck.png" alt="起動直後のウィンドウ：接続、ファームウェアの一覧、CAN-OTA 更新の 4 つのチェックポイント、デバイス設定。" width="100%"><br><sub>起動直後のウィンドウ：接続、ファームウェアの一覧、CAN-OTA 更新の 4 つのチェックポイント、デバイス設定。</sub></td>
+<td width="50%" valign="top"><img src="images/screenshots/heads.png" alt="バス上のツールヘッド：6 つのヘッドを持つモデル化したバスで、各ヘッドが取り得る状態（選択中、アドレス競合、障害保持、ブートローダー中、喪失、準備完了）を 1 つずつ示します。" width="100%"><br><sub>バス上のツールヘッド：6 つのヘッドを持つモデル化したバスで、各ヘッドが取り得る状態（選択中、アドレス競合、障害保持、ブートローダー中、喪失、準備完了）を 1 つずつ示します。</sub></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="images/screenshots/help.png" alt="ヘルプウィンドウ：プログラムの使い方の手順を、ウィンドウの言語で表示します。" width="100%"><br><sub>ヘルプウィンドウ：プログラムの使い方の手順を、ウィンドウの言語で表示します。</sub></td>
+<td width="50%" valign="top"><img src="images/screenshots/updates.png" alt="更新ウィンドウ：新しい署名付きパッケージは、確認した後にのみインストールされます。" width="100%"><br><sub>更新ウィンドウ：新しい署名付きパッケージは、確認した後にのみインストールされます。</sub></td>
+</tr>
+</table>
+<!-- /urtc-shots -->
 
 これらの画像は、画面なしで描画した、開いた直後の実際のウィンドウです（何も接続せず、何も送信していません）。ガイドではデッキ、ヘルプウィンドウ、更新ウィンドウを順に説明します。
-
-![ウィンドウをステップごとに](docs/screenshots/flasher-deck.png)
 
 [画像付きガイド](docs/WINDOW_GUIDE.md)
 

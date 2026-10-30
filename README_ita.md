@@ -109,13 +109,22 @@ Questo programma può cercare una versione più recente di sé stesso: il pulsan
 
 ## 🖼️ Schermate
 
-<p align="center">
-  <img src="images/URTC_FLASHER_V1_1.png" alt="Finestra di URTC Flasher" width="700">
-</p>
+<!-- urtc-shots -->
+Catturate a 1920×1080 su un banco di prova, con dati di esempio e senza alcuna installazione reale dietro.
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="images/screenshots/deck.png" alt="La finestra all'apertura: la connessione, l'inventario dei firmware, i quattro punti di controllo di un aggiornamento CAN-OTA e la configurazione del dispositivo." width="100%"><br><sub>La finestra all'apertura: la connessione, l'inventario dei firmware, i quattro punti di controllo di un aggiornamento CAN-OTA e la configurazione del dispositivo.</sub></td>
+<td width="50%" valign="top"><img src="images/screenshots/heads.png" alt="Teste utensile sul bus: un bus modellato con sei teste, una per ogni stato possibile (selezionata, conflitto di indirizzo, guasto memorizzato, nel bootloader, persa e pronta)." width="100%"><br><sub>Teste utensile sul bus: un bus modellato con sei teste, una per ogni stato possibile (selezionata, conflitto di indirizzo, guasto memorizzato, nel bootloader, persa e pronta).</sub></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="images/screenshots/help.png" alt="La finestra della Guida: i passi per usare il programma, scritti nella lingua della finestra." width="100%"><br><sub>La finestra della Guida: i passi per usare il programma, scritti nella lingua della finestra.</sub></td>
+<td width="50%" valign="top"><img src="images/screenshots/updates.png" alt="La finestra degli aggiornamenti: un pacchetto firmato più recente viene installato solo dopo la tua conferma." width="100%"><br><sub>La finestra degli aggiornamenti: un pacchetto firmato più recente viene installato solo dopo la tua conferma.</sub></td>
+</tr>
+</table>
+<!-- /urtc-shots -->
 
 Queste immagini mostrano la finestra reale, disegnata senza schermo com'è quando si apre (niente collegato, niente inviato). La guida percorre il pannello, la finestra Aiuto e quella di aggiornamento.
-
-![La finestra, passo dopo passo](docs/screenshots/flasher-deck.png)
 
 [Guida con immagini](docs/WINDOW_GUIDE.md)
 

@@ -107,13 +107,22 @@ Este programa puede buscar una versión más nueva de sí mismo: el botón «Bus
 
 ## 🖼️ Capturas de pantalla
 
-<p align="center">
-  <img src="images/URTC_FLASHER_V1_1.png" alt="Ventana de URTC Flasher" width="700">
-</p>
+<!-- urtc-shots -->
+Capturadas a 1920×1080 en un banco de pruebas, con datos de ejemplo y sin ninguna instalación real detrás.
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="images/screenshots/deck.png" alt="La ventana al abrirse: la conexión, el inventario de firmware, los cuatro puntos de control de una actualización CAN-OTA y la configuración del dispositivo." width="100%"><br><sub>La ventana al abrirse: la conexión, el inventario de firmware, los cuatro puntos de control de una actualización CAN-OTA y la configuración del dispositivo.</sub></td>
+<td width="50%" valign="top"><img src="images/screenshots/heads.png" alt="Cabezales en el bus: un bus modelado con seis cabezales, uno en cada estado posible (seleccionado, conflicto de dirección, fallo retenido, en su bootloader, perdido y listo)." width="100%"><br><sub>Cabezales en el bus: un bus modelado con seis cabezales, uno en cada estado posible (seleccionado, conflicto de dirección, fallo retenido, en su bootloader, perdido y listo).</sub></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="images/screenshots/help.png" alt="La ventana de Ayuda: los pasos para usar el programa, escritos en el idioma de la ventana." width="100%"><br><sub>La ventana de Ayuda: los pasos para usar el programa, escritos en el idioma de la ventana.</sub></td>
+<td width="50%" valign="top"><img src="images/screenshots/updates.png" alt="La ventana de actualizaciones: un paquete firmado más reciente solo se instala después de que lo confirmes." width="100%"><br><sub>La ventana de actualizaciones: un paquete firmado más reciente solo se instala después de que lo confirmes.</sub></td>
+</tr>
+</table>
+<!-- /urtc-shots -->
 
 Estas imágenes son la ventana real, dibujada sin pantalla tal como se abre (nada conectado, nada enviado). La guía recorre el panel, la ventana de Ayuda y la de actualización.
-
-![La ventana, paso a paso](docs/screenshots/flasher-deck.png)
 
 [Guía con imágenes](docs/WINDOW_GUIDE.md)
 

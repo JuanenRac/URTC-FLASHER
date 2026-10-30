@@ -104,13 +104,22 @@ URTC-FLASHER 是把固件写入 URTC 板的程序。它通过 USB-CAN 适配器�
 
 ## 🖼️ 屏幕截图
 
-<p align="center">
-  <img src="images/URTC_FLASHER_V1_1.png" alt="URTC Flasher window" width="700">
-</p>
+<!-- urtc-shots -->
+在测试台上以 1920×1080 截取，使用示例数据，背后没有真实的安装。
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="images/screenshots/deck.png" alt="刚打开时的窗口：连接、固件清单、CAN-OTA 更新的四个检查点以及设备配置。" width="100%"><br><sub>刚打开时的窗口：连接、固件清单、CAN-OTA 更新的四个检查点以及设备配置。</sub></td>
+<td width="50%" valign="top"><img src="images/screenshots/heads.png" alt="总线上的工具头：一条模拟总线上的六个工具头，每个处于一种可能的状态（已选择、地址冲突、故障锁定、处于引导程序、丢失和就绪）。" width="100%"><br><sub>总线上的工具头：一条模拟总线上的六个工具头，每个处于一种可能的状态（已选择、地址冲突、故障锁定、处于引导程序、丢失和就绪）。</sub></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="images/screenshots/help.png" alt="帮助窗口：使用该程序的各个步骤，使用窗口的语言显示。" width="100%"><br><sub>帮助窗口：使用该程序的各个步骤，使用窗口的语言显示。</sub></td>
+<td width="50%" valign="top"><img src="images/screenshots/updates.png" alt="更新窗口：只有在你确认之后，才会安装较新的已签名软件包。" width="100%"><br><sub>更新窗口：只有在你确认之后，才会安装较新的已签名软件包。</sub></td>
+</tr>
+</table>
+<!-- /urtc-shots -->
 
 这些图片是真实的窗口，在没有屏幕的情况下按打开时的样子绘制（未连接任何设备，未发送任何内容）。指南依次介绍面板、帮助窗口和更新窗口。
-
-![窗口分步指南](docs/screenshots/flasher-deck.png)
 
 [图文指南](docs/WINDOW_GUIDE.md)
 

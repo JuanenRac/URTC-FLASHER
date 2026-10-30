@@ -109,13 +109,22 @@ Este programa pode procurar uma versão mais recente de si próprio: o botão «
 
 ## 🖼️ Capturas de ecrã
 
-<p align="center">
-  <img src="images/URTC_FLASHER_V1_1.png" alt="Janela do URTC Flasher" width="700">
-</p>
+<!-- urtc-shots -->
+Capturadas a 1920×1080 numa bancada de testes, com dados de exemplo e sem qualquer instalação real por trás.
+
+<table>
+<tr>
+<td width="50%" valign="top"><img src="images/screenshots/deck.png" alt="A janela ao abrir: a ligação, o inventário de firmware, os quatro pontos de controlo de uma atualização CAN-OTA e a configuração do dispositivo." width="100%"><br><sub>A janela ao abrir: a ligação, o inventário de firmware, os quatro pontos de controlo de uma atualização CAN-OTA e a configuração do dispositivo.</sub></td>
+<td width="50%" valign="top"><img src="images/screenshots/heads.png" alt="Cabeças de ferramenta no barramento: um barramento modelado com seis cabeças, cada uma num estado possível (selecionada, conflito de endereço, falha retida, no bootloader, perdida e pronta)." width="100%"><br><sub>Cabeças de ferramenta no barramento: um barramento modelado com seis cabeças, cada uma num estado possível (selecionada, conflito de endereço, falha retida, no bootloader, perdida e pronta).</sub></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><img src="images/screenshots/help.png" alt="A janela de Ajuda: os passos para utilizar o programa, escritos no idioma da janela." width="100%"><br><sub>A janela de Ajuda: os passos para utilizar o programa, escritos no idioma da janela.</sub></td>
+<td width="50%" valign="top"><img src="images/screenshots/updates.png" alt="A janela de atualizações: um pacote assinado mais recente só é instalado depois de o confirmar." width="100%"><br><sub>A janela de atualizações: um pacote assinado mais recente só é instalado depois de o confirmar.</sub></td>
+</tr>
+</table>
+<!-- /urtc-shots -->
 
 Estas imagens são a janela real, desenhada sem ecrã tal como abre (nada ligado, nada enviado). O guia percorre o painel, a janela de Ajuda e a de atualização.
-
-![A janela, passo a passo](docs/screenshots/flasher-deck.png)
 
 [Guia com imagens](docs/WINDOW_GUIDE.md)
 

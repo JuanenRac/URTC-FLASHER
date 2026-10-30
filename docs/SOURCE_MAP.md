@@ -23,7 +23,7 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   └── *.bin.sha256, *.bin.manifest.json  <- published digest + manifest (version, sha256, signature) of each image
 ├── images/
 │   ├── URTC_FLASHER_BANNER.svg    <- logo banner shown at the top of this README
-│   └── URTC_FLASHER_V1_1.png      <- real window screenshot, shown in the Photos section above
+│   └── screenshots/               <- the pictures of the README (tools/capture_screens.py --readme)
 ├── language/
 │   ├── english.lng                <- default language, plain KEY=Value pairs
 │   ├── spanish.lng
