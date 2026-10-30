@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The lights of Project status follow the evidence of the manifest:** the manifest says how far the repository has been shown to work (`evidence`: `host-test`, `simulator`, `bench` or `field`) and the validator fails when a light is above what that evidence and the maturity allow (`tools/status_lights.py`), so a green that never ran on real hardware cannot come back.
 - **The evidence of the updates can be listed from the command line:** `urtc_flasher.py --history FOLDER [--json]` reads the evidence records (`urtc-evidence/1`) of a folder, checks each one and lists them newest first with a summary; a record edited after it was written is listed as not valid and the exit status is 1. It opens no bus. The shared code is the history of the common evidence.
 
 ## [0.4.2] - The evidence of every flashing in the common format and the universal README
