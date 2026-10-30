@@ -195,7 +195,27 @@ def run_cli(argv):
 
 
 
+def run_history(argv):
+    """``urtc_flasher.py --history FOLDER [--json]``: the evidence records (urtc-evidence/1) of a folder, newest first, each one checked.
+    Opens no bus. Exit codes: 0 every record is valid, 1 one of them fails its check (edited after it was written, not JSON ...), 2 the folder does not exist."""
+    from urtc_can import evidence_history
+
+    parser = argparse.ArgumentParser(prog="urtc_flasher.py --history", description="List the evidence records of a folder, checking each one.")
+    parser.add_argument("folder", help="the folder with the evidence files (the reports of the updates are written next to the report)")
+    parser.add_argument("--json", action="store_true", help="print the list with its summary as one JSON document")
+    args = parser.parse_args(argv)
+    try:
+        entries = evidence_history.select(evidence_history.load_folder(args.folder))
+    except FileNotFoundError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 2
+    print(evidence_history.to_json(entries).rstrip("\n") if args.json else evidence_history.to_text(entries))
+    return 1 if any(not entry.valid for entry in entries) else 0
+
+
 def main():
+    if "--history" in sys.argv:
+        return run_history([a for a in sys.argv[1:] if a != "--history"])
     if "--cli" in sys.argv and "--qtquick" in sys.argv:
         print("ERROR: --cli and --qtquick are mutually exclusive modes.", file=sys.stderr)
         return 2

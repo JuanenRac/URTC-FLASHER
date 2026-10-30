@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- **The evidence of the updates can be listed from the command line:** `urtc_flasher.py --history FOLDER [--json]` reads the evidence records (`urtc-evidence/1`) of a folder, checks each one and lists them newest first with a summary; a record edited after it was written is listed as not valid and the exit status is 1. It opens no bus. The shared code is the history of the common evidence.
+
 ## [0.4.2] - The evidence of every flashing in the common format and the universal README
 
 - **Every update also leaves an evidence record:** next to the update report the flasher writes `urtc_evidence_<time>.json` in the common `urtc-evidence/1` shape (tool, time, board, versions before and after, the image with its SHA-256, outcome and a digest of the record), the same shape the tester and the updater can write. The report is unchanged, and a record that cannot be made never fails an update.
