@@ -35,7 +35,7 @@ def test_the_guide_shows_every_picture_and_every_link_in_it_exists():
 def test_every_readme_points_to_the_guide_and_shows_the_window():
     for readme in READMES:
         text = (ROOT / readme).read_text(encoding="utf-8")
-        assert "docs/WINDOW_GUIDE.md" in text and f"docs/screenshots/{PROGRAM}-deck.png" in text, readme
+        assert "docs/WINDOW_GUIDE.md" in text and "images/screenshots/deck.png" in text, readme
 
 
 def test_the_script_that_takes_the_pictures_is_there_and_names_this_program():
