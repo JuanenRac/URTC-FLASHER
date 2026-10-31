@@ -5,7 +5,9 @@ All notable changes to this project are documented here.
 ## [Unreleased]
 
 - **The flasher signs its evidence records like the tester does:** with `"sign_evidence": true` in the config file (off by default; the key in `record_key_file`, else the default of the family, never printed) the evidence record of an update, and of a run against a simulated bus, carries an Ed25519 signature; if signing fails no evidence file is written and the log says why. `sign_update_reports` is a different switch and stays as it was.
+- **The deck has the switch to sign the evidence:** a check box, "Sign the evidence records of this flasher with my Ed25519 key", turns the `sign_evidence` setting on and off (off by default; it is saved in the config file), in the eight languages (Portuguese of Portugal); if the setting cannot be saved the log says so and the box does not claim to be on.
 - **A trust store of public keys:** `"trusted_keys": {"alias": "<public key>"}` in the config file makes `--history` and the History window say "Signed by <alias>" or "Valid signature, unknown key"; `--public-key HEX` wins over the store. The History window has a Signature column. The shared copy and its lock files are synchronized.
+- **Pictures of the History window:** `tools/capture_screens.py` now also takes the History window (over four sample records and one trusted key, so the Signature column shows each state) in the eight languages, `docs/WINDOW_GUIDE.md` shows it, and the other pictures were taken again. The window's columns were narrowed so the Signature column is not cut off.
 
 ## [0.4.5] - The shared evidence modules accept the optional Ed25519 signature of an evidence record
 

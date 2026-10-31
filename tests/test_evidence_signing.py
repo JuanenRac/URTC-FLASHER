@@ -192,3 +192,47 @@ def test_the_window_has_the_signature_column_with_the_store(folder, monkeypatch)
 
 def test_the_records_module_exports_the_seal():
     assert flasher_records.seal_evidence is seal_evidence
+
+
+# -- the switch in the Qt interface -------------------------------------------------------------------------------------------------------------
+def test_the_text_of_the_switch_exists_in_the_eight_languages():
+    root = Path(__file__).resolve().parent.parent
+    for name in ("english", "spanish", "german", "french", "italian", "japanese", "chinese", "portuguese"):
+        lines = (root / "language" / f"{name}.lng").read_text(encoding="utf-8").splitlines()
+        assert any(line.startswith("CHK_SIGN_EVIDENCE=") and len(line) > 25 for line in lines), name
+
+
+def test_the_switch_is_off_by_default_and_saves_the_setting(monkeypatch):
+    pytest.importorskip("PySide6")
+    import qt_flasher
+
+    saved = {}
+    monkeypatch.setattr(qt_flasher, "save_config", lambda updates: saved.update(updates) or True)
+    _config(monkeypatch, {})
+    bridge = qt_flasher.FlasherQtBridge()
+    bridge._log = lambda text: None
+    assert bridge.signEvidence is False
+    bridge.setSignEvidence(True)
+    assert saved == {"sign_evidence": True}
+    _config(monkeypatch, {"sign_evidence": True})
+    assert bridge.signEvidence is True
+    bridge.setSignEvidence(False)
+    assert saved == {"sign_evidence": False}
+
+
+def test_a_switch_that_cannot_be_saved_is_logged_and_does_not_claim_to_be_on(monkeypatch):
+    pytest.importorskip("PySide6")
+    import qt_flasher
+
+    logged = []
+    monkeypatch.setattr(qt_flasher, "save_config", lambda updates: False)
+    _config(monkeypatch, {})
+    bridge = qt_flasher.FlasherQtBridge()
+    bridge._log = logged.append
+    bridge.setSignEvidence(True)
+    assert logged == ["SIGN_EVIDENCE_NOT_SAVED"] and bridge.signEvidence is False
+
+
+def test_the_deck_has_the_checkbox_bound_to_the_setting():
+    qml = (Path(__file__).resolve().parent.parent / "assets" / "qml" / "FlasherDeck.qml").read_text(encoding="utf-8")
+    assert 'objectName: "signEvidenceCheck"' in qml and "flasherBackend.signEvidence" in qml and "flasherBackend.setSignEvidence(checked)" in qml

@@ -5,6 +5,7 @@
 
 CHK_ERASE_FRAM_BEFORE_FLASHING=Auch die Persistenz-F-RAM vor dem Flashen löschen
 CHK_ALLOW_DOWNGRADE=Downgrade erlauben (Anti-Rollback umgehen) für dieses Update
+CHK_SIGN_EVIDENCE=Nachweisdatensätze dieses Flashers mit meinem Ed25519-Schlüssel signieren
 BTN_BACKUP_FIRMWARE_CAN=Firmware sichern (CAN)...
 LBL_APPLICATION_FILE=Anwendung (.bin/.hex/.elf):
 BTN_AUTO_DETECT=Automatische Erkennung
@@ -361,6 +362,8 @@ QTLOG_DEBUG_BUNDLE_FAILED=Das Debug-Paket konnte nicht gespeichert werden
 QTLOG_UPDATE_REPORT_WRITTEN=Update-Bericht geschrieben
 QTLOG_UPDATE_EVIDENCE_WRITTEN=Nachweisdatensatz geschrieben
 QTLOG_UPDATE_EVIDENCE_NOT_WRITTEN=Nachweisdatensatz nicht geschrieben (er konnte nicht signiert werden)
+QTLOG_SIGN_EVIDENCE=Signieren der Nachweisdatensätze
+QTLOG_SIGN_EVIDENCE_NOT_SAVED=Die Signatureinstellung konnte nicht gespeichert werden
 QTLOG_UPDATE_REPORT_FAILED=Der Update-Bericht konnte nicht geschrieben werden
 QTLOG_UPDATE_REPORT_UNSIGNED=Der Update-Bericht blieb unsigniert: der Signaturschlüssel ließ sich nicht verwenden
 QTLOG_RECOVERY_IMAGE_SELECTED=Die Platine hat keine gültige Firmware: das neueste offizielle Image wurde gewählt

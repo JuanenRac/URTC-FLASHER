@@ -594,6 +594,7 @@ ApplicationWindow {
                 RowLayout {
                     Layout.fillWidth: true
                     CheckBox { text: flasherBackend.uiText("CHK_ALLOW_DOWNGRADE"); checked: flasherBackend.allowDowngrade; enabled: !flasherBackend.busy && flasherBackend.downgradeOptionsAvailable; onToggled: flasherBackend.setAllowDowngrade(checked); palette.windowText: textPrimary }
+                    CheckBox { objectName: "signEvidenceCheck"; text: flasherBackend.uiText("CHK_SIGN_EVIDENCE"); checked: flasherBackend.signEvidence; onToggled: flasherBackend.setSignEvidence(checked); palette.windowText: textPrimary }
                     GameButton { text: flasherBackend.uiText("BTN_BACKUP_FIRMWARE_CAN"); accent: "#24465e"; Layout.fillWidth: true; enabled: flasherBackend.canReadback; onClicked: readbackDialog.open() }
                 }
                 Text { text: flasherBackend.uiText("HELP_ALLOW_DOWNGRADE"); color: "#e0a030"; font.pixelSize: 9; wrapMode: Text.WordWrap; Layout.fillWidth: true }

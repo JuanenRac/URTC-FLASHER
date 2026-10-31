@@ -4,6 +4,7 @@
 
 CHK_ERASE_FRAM_BEFORE_FLASHING=Also erase the persistence F-RAM before flashing
 CHK_ALLOW_DOWNGRADE=Allow downgrade (bypass anti-rollback) for this update
+CHK_SIGN_EVIDENCE=Sign the evidence records of this flasher with my Ed25519 key
 BTN_BACKUP_FIRMWARE_CAN=Back up Firmware (CAN)...
 LBL_APPLICATION_FILE=Application (.bin/.hex/.elf):
 BTN_AUTO_DETECT=Auto-detect
@@ -360,6 +361,8 @@ QTLOG_DEBUG_BUNDLE_FAILED=Debug bundle could not be saved
 QTLOG_UPDATE_REPORT_WRITTEN=Update report written
 QTLOG_UPDATE_EVIDENCE_WRITTEN=Evidence record written
 QTLOG_UPDATE_EVIDENCE_NOT_WRITTEN=Evidence record not written (it could not be signed)
+QTLOG_SIGN_EVIDENCE=Signing of the evidence records
+QTLOG_SIGN_EVIDENCE_NOT_SAVED=The signing setting could not be saved
 QTLOG_UPDATE_REPORT_FAILED=Update report could not be written
 QTLOG_UPDATE_REPORT_UNSIGNED=The update report was left unsigned: the signing key could not be used
 QTLOG_RECOVERY_IMAGE_SELECTED=The board has no valid firmware: the newest official image was selected

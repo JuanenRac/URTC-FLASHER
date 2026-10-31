@@ -101,7 +101,7 @@ Dialog {
                 delegate: Text {
                     required property var modelData
                     required property int index
-                    Layout.preferredWidth: [170, 80, 90, 150, 130, 120, 90, 170][index]
+                    Layout.preferredWidth: [150, 60, 80, 100, 90, 80, 90, 170][index]
                     Layout.fillWidth: index === 4
                     text: modelData
                     color: dialog.accentColor
@@ -127,12 +127,12 @@ Dialog {
                         RowLayout {
                             Layout.fillWidth: true
                             spacing: 8
-                            Text { Layout.preferredWidth: 170; text: modelData.time; color: dialog.textColor; font.pixelSize: 12; elide: Text.ElideRight }
-                            Text { Layout.preferredWidth: 80; text: modelData.kindText; color: dialog.textColor; font.pixelSize: 12; elide: Text.ElideRight }
-                            Text { Layout.preferredWidth: 90; text: modelData.outcomeText; color: dialog.outcomeColor(modelData.outcome); font.pixelSize: 12; elide: Text.ElideRight }
-                            Text { Layout.preferredWidth: 150; text: modelData.tool; color: dialog.textColor; font.pixelSize: 12; elide: Text.ElideRight }
-                            Text { Layout.preferredWidth: 130; Layout.fillWidth: true; text: modelData.board; color: dialog.textColor; font.pixelSize: 12; elide: Text.ElideRight }
-                            Text { Layout.preferredWidth: 120; text: modelData.version; color: dialog.textColor; font.pixelSize: 12; elide: Text.ElideRight }
+                            Text { Layout.preferredWidth: 150; text: modelData.time; color: dialog.textColor; font.pixelSize: 12; elide: Text.ElideRight }
+                            Text { Layout.preferredWidth: 60; text: modelData.kindText; color: dialog.textColor; font.pixelSize: 12; elide: Text.ElideRight }
+                            Text { Layout.preferredWidth: 80; text: modelData.outcomeText; color: dialog.outcomeColor(modelData.outcome); font.pixelSize: 12; elide: Text.ElideRight }
+                            Text { Layout.preferredWidth: 100; text: modelData.tool; color: dialog.textColor; font.pixelSize: 12; elide: Text.ElideRight }
+                            Text { Layout.preferredWidth: 90; Layout.fillWidth: true; text: modelData.board; color: dialog.textColor; font.pixelSize: 12; elide: Text.ElideRight }
+                            Text { Layout.preferredWidth: 80; text: modelData.version; color: dialog.textColor; font.pixelSize: 12; elide: Text.ElideRight }
                             Text { Layout.preferredWidth: 90; text: modelData.checkText; color: modelData.valid ? dialog.okColor : dialog.badColor; font.bold: !modelData.valid; font.pixelSize: 12 }
                             Text {
                                 objectName: "historySignature"

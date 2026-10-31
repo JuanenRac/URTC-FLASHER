@@ -4,7 +4,7 @@
   "files": {
     "EvidenceHistoryDialog.qml": {
       "from": "qml/EvidenceHistoryDialog.qml",
-      "sha256": "47d9bd26fc653b0a28852ebca23ab5ec21688bd21ec5f0da636574839271495d"
+      "sha256": "7f09477847db4e8b60009a6c34e10a6d1eac1fad3df239eb261c64e09c784222"
     },
     "HelpDialog.qml": {
       "from": "qml/HelpDialog.qml",

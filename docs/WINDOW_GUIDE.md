@@ -37,22 +37,26 @@ The **Tool heads** button opens the window that finds the heads when more than o
 ## 5. History
 
 The **History** button next to **Help** opens the history of operations: the evidence records (`urtc-evidence/1`) that the flasher wrote, newest first, with the kind, the result, the tool, the board and the versions. Each record is checked when the window opens; one that was edited after it was written, a file that is not JSON or a record of another format is shown as **NOT VALID** with what is wrong. You can filter by result and by text, or reduce the list to the records that fail. The window reads the folder again each time it opens (or when you press **Read again**), shows at most 500 rows and says how many there are, and never changes anything on disk. It is the same window, in the eight languages, in the flasher, the tester and the updater.
+
+![The History window of the flasher, with the Signature column](screenshots/flasher-history.png)
+
+The **Signature** column says whether a record is signed: **Signed by <alias>** when its key is one of the `trusted_keys` of the configuration, **Valid signature, unknown key** when the signature is good but the key is not listed, **SIGNATURE NOT VALID** when it fails, and **Not signed**. The picture is taken over four sample records and one trusted key.
 From the command line, `python urtc_flasher.py --history FOLDER [--json]` gives the same list for a folder (see [CLI_REFERENCE.md](CLI_REFERENCE.md)).
 
 ## The same pictures in the other languages
 
-The program has eight interface languages. These are the same four pictures of the flasher taken with each of them (`python tools/capture_screens.py --all-languages` writes them again; `--language german` writes one language). The texts are those of the program, not of this page, so a picture shows exactly what a person who chose that language sees.
+The program has eight interface languages. These are the same five pictures of the flasher taken with each of them (`python tools/capture_screens.py --all-languages` writes them again; `--language german` writes one language). The texts are those of the program, not of this page, so a picture shows exactly what a person who chose that language sees.
 
-| Language | Window | Help | Updates | Tool heads |
-|---|---|---|---|---|
-| English | [window](screenshots/flasher-deck.png) | [help](screenshots/flasher-help.png) | [updates](screenshots/flasher-updates.png) | [heads](screenshots/flasher-heads.png) |
-| Español | [window](screenshots/flasher-deck-es.png) | [help](screenshots/flasher-help-es.png) | [updates](screenshots/flasher-updates-es.png) | [heads](screenshots/flasher-heads-es.png) |
-| Deutsch | [window](screenshots/flasher-deck-de.png) | [help](screenshots/flasher-help-de.png) | [updates](screenshots/flasher-updates-de.png) | [heads](screenshots/flasher-heads-de.png) |
-| Français | [window](screenshots/flasher-deck-fr.png) | [help](screenshots/flasher-help-fr.png) | [updates](screenshots/flasher-updates-fr.png) | [heads](screenshots/flasher-heads-fr.png) |
-| Italiano | [window](screenshots/flasher-deck-it.png) | [help](screenshots/flasher-help-it.png) | [updates](screenshots/flasher-updates-it.png) | [heads](screenshots/flasher-heads-it.png) |
-| 日本語 | [window](screenshots/flasher-deck-ja.png) | [help](screenshots/flasher-help-ja.png) | [updates](screenshots/flasher-updates-ja.png) | [heads](screenshots/flasher-heads-ja.png) |
-| 简体中文 | [window](screenshots/flasher-deck-zh.png) | [help](screenshots/flasher-help-zh.png) | [updates](screenshots/flasher-updates-zh.png) | [heads](screenshots/flasher-heads-zh.png) |
-| Português | [window](screenshots/flasher-deck-pt.png) | [help](screenshots/flasher-help-pt.png) | [updates](screenshots/flasher-updates-pt.png) | [heads](screenshots/flasher-heads-pt.png) |
+| Language | Window | Help | Updates | Tool heads | History |
+|---|---|---|---|---|---|
+| English | [window](screenshots/flasher-deck.png) | [help](screenshots/flasher-help.png) | [updates](screenshots/flasher-updates.png) | [heads](screenshots/flasher-heads.png) | [history](screenshots/flasher-history.png) |
+| Español | [window](screenshots/flasher-deck-es.png) | [help](screenshots/flasher-help-es.png) | [updates](screenshots/flasher-updates-es.png) | [heads](screenshots/flasher-heads-es.png) | [history](screenshots/flasher-history-es.png) |
+| Deutsch | [window](screenshots/flasher-deck-de.png) | [help](screenshots/flasher-help-de.png) | [updates](screenshots/flasher-updates-de.png) | [heads](screenshots/flasher-heads-de.png) | [history](screenshots/flasher-history-de.png) |
+| Français | [window](screenshots/flasher-deck-fr.png) | [help](screenshots/flasher-help-fr.png) | [updates](screenshots/flasher-updates-fr.png) | [heads](screenshots/flasher-heads-fr.png) | [history](screenshots/flasher-history-fr.png) |
+| Italiano | [window](screenshots/flasher-deck-it.png) | [help](screenshots/flasher-help-it.png) | [updates](screenshots/flasher-updates-it.png) | [heads](screenshots/flasher-heads-it.png) | [history](screenshots/flasher-history-it.png) |
+| 日本語 | [window](screenshots/flasher-deck-ja.png) | [help](screenshots/flasher-help-ja.png) | [updates](screenshots/flasher-updates-ja.png) | [heads](screenshots/flasher-heads-ja.png) | [history](screenshots/flasher-history-ja.png) |
+| 简体中文 | [window](screenshots/flasher-deck-zh.png) | [help](screenshots/flasher-help-zh.png) | [updates](screenshots/flasher-updates-zh.png) | [heads](screenshots/flasher-heads-zh.png) | [history](screenshots/flasher-history-zh.png) |
+| Português | [window](screenshots/flasher-deck-pt.png) | [help](screenshots/flasher-help-pt.png) | [updates](screenshots/flasher-updates-pt.png) | [heads](screenshots/flasher-heads-pt.png) | [history](screenshots/flasher-history-pt.png) |
 
 ## What the pictures do not show
 

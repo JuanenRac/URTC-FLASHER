@@ -5,6 +5,7 @@
 
 CHK_ERASE_FRAM_BEFORE_FLASHING=Tambien borrar la F-RAM de persistencia antes de flashear
 CHK_ALLOW_DOWNGRADE=Permitir downgrade (saltarse el anti-rollback) para esta actualizacion
+CHK_SIGN_EVIDENCE=Firmar los registros de evidencia de este flasher con mi clave Ed25519
 BTN_BACKUP_FIRMWARE_CAN=Respaldar Firmware (CAN)...
 LBL_APPLICATION_FILE=Aplicacion (.bin/.hex/.elf):
 BTN_AUTO_DETECT=Autodetectar
@@ -361,6 +362,8 @@ QTLOG_DEBUG_BUNDLE_FAILED=No se pudo guardar el paquete de depuración
 QTLOG_UPDATE_REPORT_WRITTEN=Informe de actualización escrito
 QTLOG_UPDATE_EVIDENCE_WRITTEN=Registro de evidencia escrito
 QTLOG_UPDATE_EVIDENCE_NOT_WRITTEN=Registro de evidencia no escrito (no se pudo firmar)
+QTLOG_SIGN_EVIDENCE=Firma de los registros de evidencia
+QTLOG_SIGN_EVIDENCE_NOT_SAVED=No se pudo guardar el ajuste de firma
 QTLOG_UPDATE_REPORT_FAILED=No se pudo escribir el informe de actualización
 QTLOG_UPDATE_REPORT_UNSIGNED=El informe de actualización se dejó sin firmar: no se pudo usar la clave de firma
 QTLOG_RECOVERY_IMAGE_SELECTED=La placa no tiene firmware válido: se seleccionó la imagen oficial más reciente

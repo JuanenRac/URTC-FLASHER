@@ -4,6 +4,7 @@
 
 CHK_ERASE_FRAM_BEFORE_FLASHING=書き込み前に永続化 F-RAM も消去する
 CHK_ALLOW_DOWNGRADE=この更新についてダウングレードを許可（防ロールバックを回避）
+CHK_SIGN_EVIDENCE=このフラッシャーの証跡レコードを自分の Ed25519 キーで署名する
 BTN_BACKUP_FIRMWARE_CAN=ファームウェアをバックアップ（CAN）...
 LBL_APPLICATION_FILE=アプリケーション（.bin/.hex/.elf）：
 BTN_AUTO_DETECT=自動検出
@@ -360,6 +361,8 @@ QTLOG_DEBUG_BUNDLE_FAILED=デバッグバンドルを保存できませんでし
 QTLOG_UPDATE_REPORT_WRITTEN=更新レポートを書き込みました
 QTLOG_UPDATE_EVIDENCE_WRITTEN=エビデンス記録を書き込みました
 QTLOG_UPDATE_EVIDENCE_NOT_WRITTEN=エビデンス記録は書き込まれませんでした(署名できませんでした)
+QTLOG_SIGN_EVIDENCE=証跡レコードの署名
+QTLOG_SIGN_EVIDENCE_NOT_SAVED=署名の設定を保存できませんでした
 QTLOG_UPDATE_REPORT_FAILED=更新レポートを書き込めませんでした
 QTLOG_UPDATE_REPORT_UNSIGNED=更新レポートは署名されませんでした：署名鍵を使用できませんでした
 QTLOG_RECOVERY_IMAGE_SELECTED=基板に有効なファームウェアがありません：最新の公式イメージを選択しました

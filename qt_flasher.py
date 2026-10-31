@@ -643,6 +643,19 @@ class FlasherQtBridge(QObject):
         return self._erase_fram
 
     @Property(bool, notify=changed)
+    def signEvidence(self) -> bool:
+        """Whether the evidence records of this flasher are signed with the Ed25519 key of the user (the ``sign_evidence`` setting of the config file, off by default)."""
+        return flasher_config.evidence_signing_settings()[0]
+
+    @Slot(bool)
+    def setSignEvidence(self, enabled: bool) -> None:
+        if save_config({"sign_evidence": bool(enabled)}):
+            self._log(f"SIGN_EVIDENCE {'on' if enabled else 'off'}")
+        else:
+            self._log("SIGN_EVIDENCE_NOT_SAVED")
+        self.changed.emit()
+
+    @Property(bool, notify=changed)
     def allowDowngrade(self) -> bool:
         return self._allow_downgrade
 
