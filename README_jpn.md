@@ -21,13 +21,13 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-506-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-561-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocol-CAN--OTA-orange.svg" alt="CAN-OTA">
 </p>
 
 ---
 
-**正直な現状確認 - 実際に今動くもの:** `tests/` には 49 個の pytest ファイル（506 件のテスト：すべて成功、うち 73 件は PySide6 がない場合スキップ）があります——完全なブートローダーシーケンス（開始／消去／受信、ページデータ + PAGE_ACK、HMAC チャンク、本当の成功または特定の `VERIFY_FAIL_REASON` による更新終了）を再現する実際の `MockCAN` トランスポート（`flasher_transports.py`）に対する CAN-OTA プロトコル、署名ルール（公開署名は鍵なしで送信、未署名イメージは拒否、マニフェストの sha256 不一致はバス通信前に拒否）、イメージ整合性チェック、同梱の `firmware/` とそのマニフェストの照合です。GitHub Actions（`.github/workflows/ci.yml`）が push のたびにこのスイートを実行し、`tools/build_test.py` も `build-test.sh`/`.bat` で実行します。さらに `ruff check` と `python -m mypy`（プログラムと共有コードのコピーの型チェック）も実行します。ルートにある 3 つの `verify_qt_*.py` スクリプトは pytest の外にある本物のエンドツーエンドチェックです（本物の Qt イベントループが必要。`QT_QPA_PLATFORM=offscreen python verify_qt_*.py` で実行）。`verify_qt_swd_full_chip_flash.py` は `dry_run=True` で `PyOCDCLI`/`CubeProgrammerCLI` のコマンドを組み立てるだけです。この環境では実機ボードに対しては一切実行していません。何がリリースされたかは `CHANGELOG.md` を参照してください。 シミュレートされたブートローダー（`MockCAN`）はプロトコルの記述から作ったモデルにすぎません。ページ ACK、部分的な最後のページ、読み戻しフレームは再現しますが、本物のブートローダーではないため、テストがすべて成功しても実機での試験の代わりにはなりません（公式の 73476 バイトのイメージがインストールできず、バックアップの最後のフレームが失われていたのに、シミュレーションが本物のブートローダーより寛容だったためにテストは成功していました）。
+**正直な現状確認 - 実際に今動くもの:** `tests/` には 50 個の pytest ファイル（561 件のテスト：すべて成功、うち 73 件は PySide6 がない場合スキップ）があります——完全なブートローダーシーケンス（開始／消去／受信、ページデータ + PAGE_ACK、HMAC チャンク、本当の成功または特定の `VERIFY_FAIL_REASON` による更新終了）を再現する実際の `MockCAN` トランスポート（`flasher_transports.py`）に対する CAN-OTA プロトコル、署名ルール（公開署名は鍵なしで送信、未署名イメージは拒否、マニフェストの sha256 不一致はバス通信前に拒否）、イメージ整合性チェック、同梱の `firmware/` とそのマニフェストの照合です。GitHub Actions（`.github/workflows/ci.yml`）が push のたびにこのスイートを実行し、`tools/build_test.py` も `build-test.sh`/`.bat` で実行します。さらに `ruff check` と `python -m mypy`（プログラムと共有コードのコピーの型チェック）も実行します。ルートにある 3 つの `verify_qt_*.py` スクリプトは pytest の外にある本物のエンドツーエンドチェックです（本物の Qt イベントループが必要。`QT_QPA_PLATFORM=offscreen python verify_qt_*.py` で実行）。`verify_qt_swd_full_chip_flash.py` は `dry_run=True` で `PyOCDCLI`/`CubeProgrammerCLI` のコマンドを組み立てるだけです。この環境では実機ボードに対しては一切実行していません。何がリリースされたかは `CHANGELOG.md` を参照してください。 シミュレートされたブートローダー（`MockCAN`）はプロトコルの記述から作ったモデルにすぎません。ページ ACK、部分的な最後のページ、読み戻しフレームは再現しますが、本物のブートローダーではないため、テストがすべて成功しても実機での試験の代わりにはなりません（公式の 73476 バイトのイメージがインストールできず、バックアップの最後のフレームが失われていたのに、シミュレーションが本物のブートローダーより寛容だったためにテストは成功していました）。
 
 ---
 
@@ -39,7 +39,7 @@
 |---|---|
 | バージョン | `0.4.2` |
 | 成熟度 | 機能する |
-| テスト | 506 (`python -m pytest tests -q`) |
+| テスト | 561 (`python -m pytest tests -q`) |
 | 技術 | Python / PySide6 / Qt Quick / CAN-OTA / SWD/JTAG |
 | 対象 | 利用者の PC |
 | 実機での確認 | シミュレーションのみ：エミュレーター、模擬部品、シミュレーターで試験済み。このバージョンについて実機での動作記録はありません |
@@ -668,6 +668,8 @@ CI パイプラインで、または実際のハードウェアに触れる前�
 トされた更新を成功ではなく検証失敗にし、同じ方法で失敗パスをテストでき
 るようにします。
 
+- **操作履歴。** ヘルプの隣の**履歴**ボタンで、URTC-FLASHER がログフォルダーに書き込んだ証跡レコード（`urtc-evidence/1`）を開きます。各行に、種類、結果、ツール、ボード、バージョンが新しい順に表示されます。書き込み後に編集された記録、JSON ではないファイル、別の形式の記録は、問題点とともに「無効」と表示されます。結果やテキストで絞り込んだり、失敗した記録だけに絞ったりでき、開くたびにフォルダーを読み直し、最大 500 行（と総数）を表示し、ディスクには何も書き込みません。URTC-FLASHER、URTC-TESTER、URTC-UPDATER で同じウィンドウを使い、URTC-COMMON から共有され、8 言語に対応しています。コマンドラインでは、`python urtc_flasher.py --history FOLDER [--json]` がフォルダー内のレコードを一覧にして一つずつ検査し、無効なものがあれば終了ステータス 1 で終わります。バスは開きません。
+
 ## ⚙️ 設定
 
 このツールは**署名鍵を一切持ちません**。URTC のビルドが各アプリケーション
@@ -717,6 +719,8 @@ JSON 数値（`50580689`）のどちらも受け付けます——ファイル�
 `app_flash_addr` も、上記の署名キーと HardwareID と並んでここで上書き
 可能です——本ツールが将来異なるチップバリアントやパーティションスキーム
 に適応される場合に便利です。
+
+- **範囲外の `hardware_id`。** 32 ビットを超える `hardware_id` はスキップとして報告され、他の無効な値と同様に組み込みの HardwareID がそのまま使われます。
 
 ## 🚀 クイックスタート
 
@@ -973,12 +977,12 @@ HMAC キーの変更を参照してください。
 <!-- urtc-section:compatibility -->
 ### 要件と互換性
 
-どのバージョンの URTC プログラムが連携して動作し、それぞれがどのプロトコルバージョンを話すかは、URTC-COMMON が生成する互換性表に載っています：[docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md)。
+どのバージョンの URTC プログラムが連携して動作し、それぞれがどのプロトコルバージョンを話すかは、URTC-COMMON が生成する互換性表に載っています：[docs/COMPATIBILITY.md](https://github.com/JuanenRac/URTC/blob/main/docs/COMPATIBILITY.md)。`tools/changelog_section.py` を持つリポジトリ（ファームウェア、フラッシャー、テスター、アップデーター）のリリースノートは、そのバージョンの CHANGELOG の節にこの表を続けたものです：`python tools/changelog_section.py VERSION --compat`。
 <!-- /urtc-section:compatibility -->
 
 ## 🧪 テスト
 
-テストスイートは 49 ファイル、506 件です（`python -m pytest tests -q`。画面のない環境で Qt を使う場合は `QT_QPA_PLATFORM=offscreen`。PySide6 が必要な 73 件はなければスキップされます）：完全な模擬ブートローダー（開始、消去、受信、ページデータと ACK、HMAC チャンク、本当の成功または特定の `VERIFY_FAIL_REASON` を伴う更新終了）を再生する実際の `MockCAN` トランスポートに対する CAN-OTA プロトコル、署名のルール、イメージの整合性検査、`firmware/` に同梱されたファームウェアとそのマニフェストの照合、`dry_run` で組み立てた SWD/JTAG コマンド、言語ファイル、Qt Quick のパネルを扱います。ルートにある 3 つのスクリプト（`verify_qt_*.py`）は Qt パネルをエンドツーエンドで動かします。CI は `ruff check`、`python -m mypy`、`tools/ci_validate.py` も実行します。`MockCAN` はプロトコルから書いたモデルにすぎず、本物のブートローダーより寛容なので、テストが成功しても実機での試験の代わりにはなりません。
+テストスイートは 50 ファイル、561 件です（`python -m pytest tests -q`。画面のない環境で Qt を使う場合は `QT_QPA_PLATFORM=offscreen`。PySide6 が必要な 73 件はなければスキップされます）：完全な模擬ブートローダー（開始、消去、受信、ページデータと ACK、HMAC チャンク、本当の成功または特定の `VERIFY_FAIL_REASON` を伴う更新終了）を再生する実際の `MockCAN` トランスポートに対する CAN-OTA プロトコル、署名のルール、イメージの整合性検査、`firmware/` に同梱されたファームウェアとそのマニフェストの照合、`dry_run` で組み立てた SWD/JTAG コマンド、言語ファイル、Qt Quick のパネルを扱います。ルートにある 3 つのスクリプト（`verify_qt_*.py`）は Qt パネルをエンドツーエンドで動かします。CI は `ruff check`、`python -m mypy`、`tools/ci_validate.py` も実行します。`MockCAN` はプロトコルから書いたモデルにすぎず、本物のブートローダーより寛容なので、テストが成功しても実機での試験の代わりにはなりません。
 
 ## 🏗️ ビルドとリリース
 

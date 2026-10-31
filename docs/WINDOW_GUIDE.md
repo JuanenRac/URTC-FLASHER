@@ -15,7 +15,7 @@ These pictures are the real window, loaded without a screen and drawn to a file 
 
 ![The Help window of the flasher](screenshots/flasher-help.png)
 
-The **Help** button opens six short steps in the language of the window: connect, pick an image, flash over CAN, without a board, several heads and updates.
+The **Help** button opens seven short steps in the language of the window: connect, pick an image, flash over CAN, without a board, the history, several heads and updates.
 
 ## 3. Check for updates
 
@@ -33,6 +33,11 @@ The **Tool heads** button opens the window that finds the heads when more than o
 * **Select** asks you to confirm. Nothing is sent to a head until it has confirmed that it is selected; while several heads are on the bus, any command to the board is refused until one is selected (the frames of the extension itself are not).
 * If the selected head is lost, faults, enters its bootloader or no longer reports itself selected, the window shows why in a banner. By default every head is also put in its safe state, so no output stays on without a host watching it; the checkbox at the bottom switches that off (it asks first, and the banner then says that the outputs were left as they are).
 * The line under the title says whether the head reports the extension as on, off, or saved but waiting for the next power-up. This has been tried against a model of the bus only, never against boards.
+
+## 5. History
+
+The **History** button next to **Help** opens the history of operations: the evidence records (`urtc-evidence/1`) that the flasher wrote, newest first, with the kind, the result, the tool, the board and the versions. Each record is checked when the window opens; one that was edited after it was written, a file that is not JSON or a record of another format is shown as **NOT VALID** with what is wrong. You can filter by result and by text, or reduce the list to the records that fail. The window reads the folder again each time it opens (or when you press **Read again**), shows at most 500 rows and says how many there are, and never changes anything on disk. It is the same window, in the eight languages, in the flasher, the tester and the updater.
+From the command line, `python urtc_flasher.py --history FOLDER [--json]` gives the same list for a folder (see [CLI_REFERENCE.md](CLI_REFERENCE.md)).
 
 ## The same pictures in the other languages
 

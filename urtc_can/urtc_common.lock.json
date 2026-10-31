@@ -36,7 +36,7 @@
     },
     "help_text.py": {
       "from": "src/urtc_common/help_text.py",
-      "sha256": "8e0774ff91bdd34113292eef7693e4adbe9365b368380242896c8ec395d01e8a"
+      "sha256": "be3216c1486499417c10dd702b820de49d83e535a4cb592c47a403b5ed6960ed"
     },
     "launcher.py": {
       "from": "src/urtc_common/launcher.py",
