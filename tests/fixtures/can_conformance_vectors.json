@@ -3138,6 +3138,76 @@
         "id": "0x7FF",
         "data": "00000000"
       }
+    },
+    {
+      "name": "RACK_SET_PREHEAT request: soldering iron to 250 C",
+      "message": "RACK_SET_PREHEAT",
+      "layout": "rack_set_preheat",
+      "fields": {
+        "tool": 0,
+        "target_c": 250,
+        "sequence": 4
+      },
+      "frame": {
+        "id": "0x260",
+        "data": "0000FA0400000000"
+      }
+    },
+    {
+      "name": "RACK_REPLY response: applied on tool 0",
+      "message": "RACK_REPLY",
+      "layout": "rack_reply",
+      "fields": {
+        "command": 1,
+        "tool": 0,
+        "reason": 0
+      },
+      "frame": {
+        "id": "0x261",
+        "data": "010000"
+      }
+    },
+    {
+      "name": "RACK_REPLY response: tool absent in the slot",
+      "message": "RACK_REPLY",
+      "layout": "rack_reply",
+      "fields": {
+        "command": 1,
+        "tool": 0,
+        "reason": 3
+      },
+      "frame": {
+        "id": "0x261",
+        "data": "010003"
+      }
+    },
+    {
+      "name": "RACK_REPLY response: temperature out of range on tool 10",
+      "message": "RACK_REPLY",
+      "layout": "rack_reply",
+      "fields": {
+        "command": 1,
+        "tool": 10,
+        "reason": 4
+      },
+      "frame": {
+        "id": "0x261",
+        "data": "010A04"
+      }
+    },
+    {
+      "name": "RACK_REPLY response: unknown command, no tool",
+      "message": "RACK_REPLY",
+      "layout": "rack_reply",
+      "fields": {
+        "command": 64,
+        "tool": 255,
+        "reason": 8
+      },
+      "frame": {
+        "id": "0x261",
+        "data": "40FF08"
+      }
     }
   ],
   "frames_decode": [
@@ -6291,6 +6361,108 @@
       },
       "fields": null,
       "strict": true
+    },
+    {
+      "name": "RACK_SET_PREHEAT request: soldering iron to 250 C",
+      "message": "RACK_SET_PREHEAT",
+      "layout": "rack_set_preheat",
+      "frame": {
+        "id": "0x260",
+        "data": "0000FA0400000000"
+      },
+      "fields": {
+        "tool": 0,
+        "target_c": 250,
+        "sequence": 4,
+        "padding": "00000000"
+      }
+    },
+    {
+      "name": "RACK_SET_PREHEAT request: 7 bytes is too short",
+      "message": "RACK_SET_PREHEAT",
+      "layout": "rack_set_preheat",
+      "frame": {
+        "id": "0x260",
+        "data": "0000FA04000000"
+      },
+      "fields": null
+    },
+    {
+      "name": "RACK_REPLY response: applied on tool 0",
+      "message": "RACK_REPLY",
+      "layout": "rack_reply",
+      "frame": {
+        "id": "0x261",
+        "data": "010000"
+      },
+      "fields": {
+        "command": 1,
+        "tool": 0,
+        "reason": 0
+      }
+    },
+    {
+      "name": "RACK_REPLY response: tool absent in the slot",
+      "message": "RACK_REPLY",
+      "layout": "rack_reply",
+      "frame": {
+        "id": "0x261",
+        "data": "010003"
+      },
+      "fields": {
+        "command": 1,
+        "tool": 0,
+        "reason": 3
+      }
+    },
+    {
+      "name": "RACK_REPLY response: temperature out of range on tool 10",
+      "message": "RACK_REPLY",
+      "layout": "rack_reply",
+      "frame": {
+        "id": "0x261",
+        "data": "010A04"
+      },
+      "fields": {
+        "command": 1,
+        "tool": 10,
+        "reason": 4
+      }
+    },
+    {
+      "name": "RACK_REPLY response: unknown command, no tool",
+      "message": "RACK_REPLY",
+      "layout": "rack_reply",
+      "frame": {
+        "id": "0x261",
+        "data": "40FF08"
+      },
+      "fields": {
+        "command": 64,
+        "tool": 255,
+        "reason": 8
+      }
+    },
+    {
+      "name": "RACK_REPLY response: 2 bytes is too short",
+      "message": "RACK_REPLY",
+      "layout": "rack_reply",
+      "frame": {
+        "id": "0x261",
+        "data": "0100"
+      },
+      "fields": null
+    },
+    {
+      "name": "RACK_REPLY response: one byte too many is refused when strict",
+      "message": "RACK_REPLY",
+      "layout": "rack_reply",
+      "frame": {
+        "id": "0x261",
+        "data": "01000000"
+      },
+      "fields": null,
+      "strict": true
     }
   ],
   "frames_rejected": [
@@ -6967,6 +7139,27 @@
       "layout": "authorize_downgrade",
       "fields": {
         "magic": "00000000"
+      }
+    },
+    {
+      "name": "RACK_SET_PREHEAT: a fixed field that is not its fixed value",
+      "message": "RACK_SET_PREHEAT",
+      "layout": "rack_set_preheat",
+      "fields": {
+        "tool": 0,
+        "target_c": 250,
+        "sequence": 4,
+        "padding": "FFFFFFFF"
+      }
+    },
+    {
+      "name": "RACK_REPLY: reason above its maximum",
+      "message": "RACK_REPLY",
+      "layout": "rack_reply",
+      "fields": {
+        "command": 1,
+        "tool": 0,
+        "reason": 9
       }
     }
   ],

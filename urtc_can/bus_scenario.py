@@ -53,6 +53,7 @@ REPLY_CODES = ("applied", "repeat", "wrong_length", "tool_absent", "temp_out_of_
 REFUSAL_REASONS = REPLY_CODES[2:]
 CMD_SET_PREHEAT = 0x01
 CAN_ID_SET_PREHEAT = 0x260
+CAN_ID_REPLY = 0x261  # the standard identifier of the reply of the rack (rack_sim.CAN_ID_REPLY): the default of ``reject``
 CAN_ID_SET_FREE_TOOL = 0x1A2
 CAN_ID_FREE_TOOL_QUERY = 0x1A3
 FREE_TOOL_JUMPER = 0x1F
@@ -183,8 +184,8 @@ def _validate_rule(where: str, rule: Any) -> list[str]:
             problems.append(f"{where}: reject needs the id of the command it refuses")
         if rule.get("reason") not in REFUSAL_REASONS:
             problems.append(f"{where}: reason must be one of {REFUSAL_REASONS}")
-        if parse_id(rule.get("reply_id")) is None:
-            problems.append(f"{where}: reply_id must be the CAN identifier the refusal is sent with")
+        if "reply_id" in rule and parse_id(rule["reply_id"]) is None:
+            problems.append(f"{where}: reply_id must be the CAN identifier the refusal is sent with (omit it for the standard reply identifier 0x{CAN_ID_REPLY:03X})")
         _range(rule, "cmd", 0, 255, where, problems)
         if "deliver" in rule and not isinstance(rule["deliver"], bool):
             problems.append(f"{where}: deliver must be true or false")
@@ -513,7 +514,7 @@ class FaultyBus:
             self._note(direction, kind, item.can_id)
             tool = item.data[0] if item.data else 0xFF
             code = REPLY_CODES.index(rule["reason"])
-            self._inject(_Item(int(parse_id(rule["reply_id"]) or 0), bytes([rule.get("cmd", CMD_SET_PREHEAT), tool, code])))
+            self._inject(_Item(int(parse_id(rule["reply_id"]) or 0) if "reply_id" in rule else CAN_ID_REPLY, bytes([rule.get("cmd", CMD_SET_PREHEAT), tool, code])))
             return [item] if rule.get("deliver", False) else []
         if kind == "free_tool":
             self._free_tool(state, item)
@@ -559,7 +560,7 @@ SAFE_FREE_ANSWERS = tuple(answer for answer in FREE_TOOL_ANSWERS if answer != "v
 DEFAULT_IDS = (0x110, 0x111, 0x7F8, 0x7F9, 0x1A3, 0x260)
 
 
-def _rule_for(rng: random.Random, kind: str, ids: tuple[int, ...], reply_id: int) -> dict:
+def _rule_for(rng: random.Random, kind: str, ids: tuple[int, ...], reply_id: int | None) -> dict:
     rule: dict[str, Any] = {"fault": kind}
     if kind == "drop":
         rule["per_mille"] = rng.choice((50, 100, 250, 500))
@@ -578,7 +579,9 @@ def _rule_for(rng: random.Random, kind: str, ids: tuple[int, ...], reply_id: int
     elif kind == "mute":
         rule.update(**{"from": rng.randint(0, 8)}, count=rng.randint(1, 20))
     elif kind == "reject":
-        rule.update(id=rng.choice((CAN_ID_SET_PREHEAT, 0x110)), reason=rng.choice(REFUSAL_REASONS), reply_id=reply_id)
+        rule.update(id=rng.choice((CAN_ID_SET_PREHEAT, 0x110)), reason=rng.choice(REFUSAL_REASONS))
+        if reply_id is not None and reply_id != CAN_ID_REPLY:
+            rule["reply_id"] = reply_id   # the standard identifier is the default of the rule and is not written
     elif kind == "free_tool":
         answer = rng.choice(SAFE_FREE_ANSWERS)
         rule["answer"] = answer
@@ -594,7 +597,7 @@ def _rule_for(rng: random.Random, kind: str, ids: tuple[int, ...], reply_id: int
 
 
 def generate(seed: int, *, kinds: tuple[str, ...] = GENERATED_KINDS, rules: int | None = None, ids: tuple[int, ...] = DEFAULT_IDS,
-             reply_id: int = 0x261) -> Scenario:
+             reply_id: int | None = None) -> Scenario:
     """A scenario made from ``seed``: the same seed and the same arguments give the same scenario. It combines 1 to 4 rules (or ``rules``) of the
     kinds given. ``reject`` and ``free_tool`` may be asked for; a free-tool head never answers with a valid tool in a generated scenario."""
     if not _int(seed) or not 0 <= seed <= SEED_MAX:

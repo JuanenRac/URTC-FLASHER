@@ -697,6 +697,8 @@ LAYOUTS = {
     'readback_response_size': {'id': 2046, 'role': 'response', 'dlc': {'exact': 4}, 'fields': [{'name': 'total_size', 'type': 'u32', 'offset': 0, 'width': 4}]},
     'readback_response_data': {'id': 2046, 'role': 'response', 'dlc': {'min': 1, 'max': 8}, 'fields': [{'name': 'data', 'type': 'bytes', 'offset': 0, 'rest': True}]},
     'readback_page_ack': {'id': 2047, 'role': 'request', 'dlc': {'exact': 4}, 'fields': [{'name': 'page_index', 'type': 'u32', 'offset': 0, 'width': 4}]},
+    'rack_set_preheat': {'id': 608, 'role': 'request', 'dlc': {'exact': 8}, 'fields': [{'name': 'tool', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'target_c', 'type': 'u16', 'offset': 1, 'width': 2, 'range': [0, 65535]}, {'name': 'sequence', 'type': 'u8', 'offset': 3, 'width': 1}, {'name': 'padding', 'type': 'bytes', 'offset': 4, 'fixed': '00000000', 'length': 4}]},
+    'rack_reply': {'id': 609, 'role': 'response', 'dlc': {'exact': 3}, 'fields': [{'name': 'command', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'tool', 'type': 'u8', 'offset': 1, 'width': 1}, {'name': 'reason', 'type': 'u8', 'offset': 2, 'width': 1, 'range': [0, 8]}]},
     'mn_discover': {'id': 1024, 'role': 'request', 'dlc': {'exact': 2}, 'fields': [{'name': 'mn_version', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'slot_ms', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [1, 50]}]},
     'mn_select': {'id': 1025, 'role': 'request', 'dlc': {'exact': 3}, 'fields': [{'name': 'action', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 1]}, {'name': 'node', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 31]}, {'name': 'seq', 'type': 'u8', 'offset': 2, 'width': 1}]},
     'mn_safe_stop': {'id': 1026, 'role': 'request', 'dlc': {'exact': 1}, 'fields': [{'name': 'reason', 'type': 'u8', 'offset': 0, 'width': 1}]},
@@ -2033,6 +2035,59 @@ def encode_readback_page_ack(page_index: int) -> tuple[int, bytes]:
 def decode_readback_page_ack(data: bytes, strict: bool = False) -> dict | None:
     """Fields of 0x7FF (request), or None when the payload is too short."""
     return decode("readback_page_ack", data, strict)
+
+
+# ---------------------------------------------------------------------------
+# Frames of the tool rack (URTC-SMART-RACK): see docs/PROTOCOL_TABLE.md
+# ---------------------------------------------------------------------------
+RACK_CMD_SET_PREHEAT = 1  # Command code of the pre-heat order in the first byte of a reply
+RACK_TOOL_NONE = 0xFF  # Tool byte of a reply to a command that carried no tool
+RACK_REPLY_LENGTH = 3  # Length of the reply payload (bytes)
+RACK_ID_FIRST = 0x260  # first identifier reserved for the rack
+RACK_ID_LAST = 0x26F  # last identifier reserved for the rack
+RACK_ID_SET_PREHEAT = 0x260  # Pre-heat order for one tool of the rack
+RACK_ID_REPLY = 0x261  # Reply of the rack to a command: acknowledgement or refusal with the reason
+RACK_REPLY_APPLIED = 0  # acknowledgement: The command was applied
+RACK_REPLY_REPEAT = 1  # acknowledgement: The same command again (a repeat): nothing changes, the sender is told it arrived
+RACK_REPLY_WRONG_LENGTH = 2  # refusal: The payload does not have the length the command needs
+RACK_REPLY_TOOL_ABSENT = 3  # refusal: The slot named has no tool
+RACK_REPLY_TEMP_OUT_OF_RANGE = 4  # refusal: The temperature is above the limit of the tool
+RACK_REPLY_TOOL_INVALID = 5  # refusal: The tool byte names no tool
+RACK_REPLY_NOT_HEATABLE = 6  # refusal: The tool has no heater and takes only 0
+RACK_REPLY_HELD_RATE = 7  # refusal: The command came too soon after the last one accepted for that tool
+RACK_REPLY_UNKNOWN_COMMAND = 8  # refusal: The rack does not know the command
+RACK_REPLY_REASONS = {0: 'applied',
+ 1: 'repeat',
+ 2: 'wrong_length',
+ 3: 'tool_absent',
+ 4: 'temp_out_of_range',
+ 5: 'tool_invalid',
+ 6: 'not_heatable',
+ 7: 'held_rate',
+ 8: 'unknown_command'}
+RACK_REPLY_ACKNOWLEDGEMENTS = (0, 1)
+RACK_NAMES = {608: 'SET_PREHEAT', 609: 'REPLY'}
+RACK_DIRECTIONS = {608: 'host_to_rack', 609: 'rack_to_host'}
+
+
+def encode_rack_set_preheat(tool: int, target_c: int, sequence: int) -> tuple[int, bytes]:
+    """Pre-heat order for one tool of the rack (0x260, request)."""
+    return encode("rack_set_preheat", tool=tool, target_c=target_c, sequence=sequence)
+
+
+def decode_rack_set_preheat(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x260, or None when the payload is too short."""
+    return decode("rack_set_preheat", data, strict)
+
+
+def encode_rack_reply(command: int, tool: int, reason: int) -> tuple[int, bytes]:
+    """Reply of the rack to a command: acknowledgement or refusal with the reason (0x261, response)."""
+    return encode("rack_reply", command=command, tool=tool, reason=reason)
+
+
+def decode_rack_reply(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x261, or None when the payload is too short."""
+    return decode("rack_reply", data, strict)
 
 
 # ---------------------------------------------------------------------------
