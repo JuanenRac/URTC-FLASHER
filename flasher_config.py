@@ -451,9 +451,10 @@ def _load_config_overrides(log=None):
             # ways to write this in a hand-edited config file, and int()'s
             # own two-argument form only accepts a string for the first
             # argument, raising TypeError on a bare JSON number otherwise.
-            hw_id = int(val, 0) if isinstance(val, str) else int(val)
-            if not (0 <= hw_id <= 0xFFFFFFFF):
-                raise ValueError(f"{hw_id} is out of range for a 32-bit HardwareID")
+            candidate_id = int(val, 0) if isinstance(val, str) else int(val)
+            if not (0 <= candidate_id <= 0xFFFFFFFF):
+                raise ValueError(f"{candidate_id} is out of range for a 32-bit HardwareID")
+            hw_id = candidate_id
             overridden.append("hardware_id")
         except (ValueError, TypeError) as e:
             skipped.append(f"hardware_id ({e})")

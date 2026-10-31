@@ -141,7 +141,6 @@ def test_a_wrong_hardware_id_or_key_reverts_to_the_default(config_file):
     assert "hardware_id" in joined and "hmac_key_hex" in joined and "slave_hmac_key_hex" in joined
 
 
-@pytest.mark.xfail(strict=True, reason="the value is assigned before its range is checked, so an out-of-range hardware_id is kept although it is reported as skipped")
 def test_a_hardware_id_out_of_range_is_skipped(config_file):
     defaults = config._load_config_overrides()
     assert overrides(config_file, {"hardware_id": 0x1_0000_0000})[0] == defaults[0]
