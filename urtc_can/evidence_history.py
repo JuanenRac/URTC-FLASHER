@@ -28,7 +28,7 @@ import json
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Iterable, Sequence
+from typing import Any, Iterable, Mapping, Sequence
 
 from . import evidence
 
@@ -77,7 +77,7 @@ class Entry:
     record: dict[str, Any] = field(default_factory=dict)
     problems: list[str] = field(default_factory=list)
     other: str = ""     # a record that is not evidence but is a known shape (``OTHER_KINDS``); it has no problems and is not counted as evidence
-    sig_cache: str = field(default="", repr=False, compare=False)   # the signature state without a pinned key, found once
+    sig_cache: str = field(default="", repr=False, compare=False)   # whether the signature itself checked out ("good" or "bad"), found once
 
     @property
     def valid(self) -> bool:
@@ -92,7 +92,7 @@ class Entry:
 SIGNATURE_UNCHECKED = "unchecked"   # this copy has no ``record_signing``: a signature is never called valid when it cannot be checked
 
 
-def signature_state(entry: Entry, public: bytes | None = None) -> str:
+def signature_state(entry: Entry, public: bytes | None = None, trusted: Mapping[str, bytes] | None = None) -> str:
     """``unsigned``, ``valid``, ``other_key`` (good, but not by the public key given), ``invalid`` or ``unchecked`` for an evidence record.
 
     A record that fails its own check (``entry.valid`` false) is never ``valid``: a signature does not rescue a record that was edited. Records that are
@@ -102,14 +102,18 @@ def signature_state(entry: Entry, public: bytes | None = None) -> str:
         return "unsigned"
     if not entry.valid:
         return "invalid"
-    if public is None and entry.sig_cache:
-        return entry.sig_cache
     if _record_signing is None:
         return SIGNATURE_UNCHECKED
-    state = _record_signing.evidence_state(record, public)
-    if public is None:
-        entry.sig_cache = state
-    return state
+    if not entry.sig_cache:      # the check of the signature is slow (pure Python): made once per record, whatever key or store is asked about
+        entry.sig_cache = "good" if _record_signing.verify_evidence(record) else "bad"
+    return _record_signing.classify_evidence(record, entry.sig_cache == "good", public, trusted)
+
+
+def signature_alias(entry: Entry, trusted: Mapping[str, bytes] | None) -> str:
+    """The alias of the trusted key that signed the record, only when the signature is good and the key is in the store; else an empty text."""
+    if _record_signing is None or signature_state(entry, None, trusted) != "trusted":
+        return ""
+    return _record_signing.signer_alias(entry.record, trusted)
 
 
 def _entries_of(path: Path, base: Path) -> list[Entry]:

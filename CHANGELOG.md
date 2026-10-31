@@ -2,6 +2,11 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- **The flasher signs its evidence records like the tester does:** with `"sign_evidence": true` in the config file (off by default; the key in `record_key_file`, else the default of the family, never printed) the evidence record of an update, and of a run against a simulated bus, carries an Ed25519 signature; if signing fails no evidence file is written and the log says why. `sign_update_reports` is a different switch and stays as it was.
+- **A trust store of public keys:** `"trusted_keys": {"alias": "<public key>"}` in the config file makes `--history` and the History window say "Signed by <alias>" or "Valid signature, unknown key"; `--public-key HEX` wins over the store. The History window has a Signature column. The shared copy and its lock files are synchronized.
+
 ## [0.4.5] - The shared evidence modules accept the optional Ed25519 signature of an evidence record
 
 - **The shared evidence modules accept the optional Ed25519 signature of an evidence record:** a signed record keeps its digest and is no longer refused for the extra field; the history lists the state of each signature (matches, does not match, not signed) and the HTML and PDF report show it in the eight languages (Portuguese of Portugal). The flasher already signs its update report; its copy of the evidence modules now lists and checks the signature of an evidence record in the history and the report. The copies and their lock files are synchronized with the shared repository, and the font data of the PDF report was regenerated.

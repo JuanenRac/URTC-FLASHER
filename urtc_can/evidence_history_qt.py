@@ -10,7 +10,7 @@ check) work on what was read. The window shows at most ``ROW_LIMIT`` rows and sa
 """
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from pathlib import Path
 
 from PySide6.QtCore import Property, QObject, Signal, Slot
@@ -25,10 +25,13 @@ ROW_LIMIT = 500
 class EvidenceHistoryModel(QObject):
     changed = Signal()
 
-    def __init__(self, folder: Callable[[], str | Path | None], language: Callable[[], str] = lambda: "english", parent: QObject | None = None) -> None:
+    def __init__(self, folder: Callable[[], str | Path | None], language: Callable[[], str] = lambda: "english", parent: QObject | None = None,
+                 trusted: Callable[[], Mapping[str, bytes] | None] = lambda: None, public: Callable[[], bytes | None] = lambda: None) -> None:
         super().__init__(parent)
         self._folder = folder
         self._language = language
+        self._trusted = trusted    # the trust store of the program (alias -> public key), read each time the window is drawn
+        self._public = public      # a public key the reader gave; it wins over the store
         self._entries: list[evidence_history.Entry] | None = None
         self._error = ""
         self._outcome = ""
@@ -98,7 +101,7 @@ class EvidenceHistoryModel(QObject):
 
     @Property("QVariantList", notify=changed)
     def headers(self) -> list:
-        return [self.t(key) for key in ("EH_COL_TIME", "EH_COL_KIND", "EH_COL_OUTCOME", "EH_COL_TOOL", "EH_COL_BOARD", "EH_COL_VERSION", "EH_COL_CHECK")]
+        return [self.t(key) for key in ("EH_COL_TIME", "EH_COL_KIND", "EH_COL_OUTCOME", "EH_COL_TOOL", "EH_COL_BOARD", "EH_COL_VERSION", "EH_COL_CHECK", "EH_COL_SIGNATURE")]
 
     # -- state ---------------------------------------------------------------------------------------------------
     @Property(str, notify=changed)
@@ -158,7 +161,10 @@ class EvidenceHistoryModel(QObject):
                 version = f"{data['version_before'] or '?'} -> {data['version_after']}"
             else:
                 version = str(data["version_before"] or "")
+            state = evidence_history.signature_state(entry, self._public(), self._trusted())
+            alias = evidence_history.signature_alias(entry, self._trusted()) if self._public() is None else ""
             out.append({
+                "signatureState": state, "signatureText": report_strings.text(self._language(), "ER_SIG_" + state.upper(), alias=evidence_report.clean(alias)),
                 "time": data["timestamp_utc"] or "-", "kind": kind, "kindText": self.t(strings.kind_key(kind)) if kind in evidence.KINDS else (kind or "-"),
                 "outcome": outcome, "outcomeText": self.t(strings.outcome_key(outcome)) if outcome in evidence.OUTCOMES else (outcome or "-"),
                 "tool": f"{data['tool']} {data['tool_version']}".strip() or "-", "board": data["subject"] or "-", "version": version or "-",
@@ -211,7 +217,7 @@ class EvidenceHistoryModel(QObject):
                 raise OSError(self.t("EH_NO_FOLDER"))
             entries = evidence_history.load_folder(folder)    # every record, those that are not evidence too: the report lists them apart
             for fmt in evidence_report.FORMATS:
-                (folder / f"evidence_report.{fmt}").write_bytes(evidence_report.render(entries, fmt, language))
+                (folder / f"evidence_report.{fmt}").write_bytes(evidence_report.render(entries, fmt, language, self._public(), self._trusted()))
             self._report_status = report_strings.text(language, "ER_DONE", path=str(folder / "evidence_report.html"))
         except OSError as error:
             self._report_status = report_strings.text(language, "ER_FAILED", text=str(error))

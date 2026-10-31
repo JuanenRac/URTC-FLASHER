@@ -290,15 +290,33 @@ def run_history(argv):
     parser = argparse.ArgumentParser(prog="urtc_flasher.py --history", description="List the evidence records of a folder, checking each one.")
     parser.add_argument("folder", help="the folder with the evidence files (the reports of the updates are written next to the report)")
     parser.add_argument("--json", action="store_true", help="print the list with its summary as one JSON document")
+    parser.add_argument("--public-key", default=None, metavar="HEX",
+                        help="the public key (64 hexadecimal digits) you trust: a signature by another key fails the status; it wins over the trusted_keys of the config file")
     args = parser.parse_args(argv)
+    import flasher_config
+    from urtc_can import record_signing
+
     try:
+        public = record_signing.parse_public_key(args.public_key) if args.public_key else None
         loaded = evidence_history.load_folder(args.folder)
-    except FileNotFoundError as exc:
+    except (FileNotFoundError, record_signing.SigningError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 2
     entries, others = evidence_history.select(loaded), evidence_history.others_of(loaded)
     print(evidence_history.to_json(entries, others).rstrip("\n") if args.json else evidence_history.to_text(entries, others))
-    return 1 if any(not entry.valid for entry in entries) else 0
+    trusted = None
+    if public is None:
+        store, problems = flasher_config.trusted_keys_store()
+        for problem in problems:
+            print(f"WARNING: {problem}", file=sys.stderr)
+        trusted = store or None
+    states = [evidence_history.signature_state(entry, public, trusted) for entry in entries]
+    if trusted and not args.json:
+        names = sorted({evidence_history.signature_alias(e, trusted) for e, s in zip(entries, states) if s == "trusted"})
+        print(f"Signatures against the trust store: {states.count('trusted')} signed by a trusted key ({', '.join(names) or '-'}), {states.count('unknown_key')} by an unknown key, "
+              f"{states.count('invalid')} not valid, {states.count('unsigned')} unsigned.")
+    bad = "invalid" in states or (public is not None and "other_key" in states)
+    return 1 if any(not entry.valid for entry in entries) or bad else 0
 
 
 def main():

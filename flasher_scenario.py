@@ -23,7 +23,7 @@ from collections.abc import Iterator
 from typing import Any
 
 import flasher_protocol
-from flasher_records import write_update_report
+from flasher_records import seal_evidence, write_update_report
 from urtc_can import bus_scenario, evidence
 
 READ_COST_S = 0.001   # the time one read of the simulated bus takes on the virtual clock
@@ -62,6 +62,7 @@ def write_scenario_records(report: dict[str, Any], bus: bus_scenario.FaultyBus, 
     report_path = write_update_report(report, folder)
     name = os.path.basename(report_path)
     path = os.path.join(os.path.dirname(report_path), "urtc_evidence_" + name[len("urtc_update_report_"):])
+    body = seal_evidence(scenario_evidence(report, bus, note))    # signed like every evidence record when the setting is on; a failure writes no evidence file
     with open(path, "w", encoding="utf-8") as stream:
-        json.dump(scenario_evidence(report, bus, note), stream, indent=2, ensure_ascii=False)
+        json.dump(body, stream, indent=2, ensure_ascii=False)
     return report_path, path

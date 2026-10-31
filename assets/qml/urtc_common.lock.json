@@ -1,10 +1,10 @@
 {
   "format": 1,
-  "urtc_common_version": "0.1.1",
+  "urtc_common_version": "0.1.3",
   "files": {
     "EvidenceHistoryDialog.qml": {
       "from": "qml/EvidenceHistoryDialog.qml",
-      "sha256": "6586229fd961f4815bafaadbe535168cfbe0dbb4b2280b821c3a595142a26b1a"
+      "sha256": "47d9bd26fc653b0a28852ebca23ab5ec21688bd21ec5f0da636574839271495d"
     },
     "HelpDialog.qml": {
       "from": "qml/HelpDialog.qml",

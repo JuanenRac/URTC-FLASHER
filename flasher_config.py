@@ -217,6 +217,25 @@ LANGUAGE_FOLDER = os.path.normpath(os.path.join(base_dir, "language"))
 AVAILABLE_LANGUAGES = list(LANGUAGES)  # the list every URTC program shares (urtc_ui)
 
 
+def evidence_signing_settings(config=None):
+    """(enabled, key file) for the Ed25519 signature of the evidence records, from the config file.
+
+    ``sign_evidence`` is off unless it is exactly ``true`` (a switch that is not clearly on is off); ``record_key_file`` names the file with the key seed
+    (empty: the default of the family, ``~/.urtc-keys/records_ed25519.key`` or the file of ``URTC_RECORD_KEY_FILE``). The key is never read here, logged or printed.
+    This is not ``sign_update_reports``, which signs the update report and is on by default."""
+    from urtc_can import record_signing
+
+    return record_signing.signing_settings(load_config() if config is None else config)
+
+
+def trusted_keys_store(config=None):
+    """(trust store, problems) from the config file: ``"trusted_keys": {"alias": "<public key, 64 hexadecimal digits>"}``. Public keys only; an entry that
+    is not one is left out (so it is not trusted) and named in the problems, without its value."""
+    from urtc_can import record_signing
+
+    return record_signing.trust_store_from_config(load_config() if config is None else config)
+
+
 def load_config():
     """Reads the same urtc_config.json that _load_config_overrides below
     already reads for its own technical keys (hardware_id, hmac_key_hex,

@@ -29,6 +29,8 @@ from __future__ import annotations
 
 import hashlib
 import os
+import re
+from collections.abc import Mapping
 from pathlib import Path
 
 from . import self_update as _su
@@ -218,17 +220,85 @@ STATE_UNSIGNED = "unsigned"
 STATE_VALID = "valid"
 STATE_OTHER_KEY = "other_key"
 STATE_INVALID = "invalid"
+STATE_TRUSTED = "trusted"          # a good signature by a key of the trust store (the alias says whose)
+STATE_UNKNOWN_KEY = "unknown_key"  # a good signature, but the key is not in the trust store
+TRUST_KEY = "trusted_keys"         # the setting of a program that holds the store: {alias: public key in hexadecimal}
+_ALIAS = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 ._@-]{0,39}$")
 
 
-def evidence_state(record: dict, public: bytes | None = None) -> str:
-    """``unsigned`` (no signature block), ``valid``, ``other_key`` (a good signature, but not by the key the reader trusts) or ``invalid``."""
+def signing_settings(config: object) -> tuple[bool, str]:
+    """(enabled, key file) for signing the evidence records a program writes, from its configuration.
+
+    ``sign_evidence`` is on only when it is exactly ``true`` (a text, a number or anything else keeps it off); ``record_key_file`` names the file with the key
+    seed (empty: the default of the family). The key is not read here."""
+    if not isinstance(config, dict):
+        return False, ""
+    key_file = config.get("record_key_file")
+    return config.get("sign_evidence") is True, key_file if isinstance(key_file, str) and key_file.strip() else ""
+
+
+def trust_store_from_config(config: object) -> tuple[dict[str, bytes], list[str]]:
+    """The trust store of a program: ``(aliases -> public keys, problems)`` from the ``trusted_keys`` object of its configuration.
+
+    The store holds PUBLIC keys only, written in hexadecimal (64 digits), each under an alias of 1 to 40 characters (letters, digits, space and ``._@-``).
+    An entry that is not like that is left out and named in the problems (a key that is left out is simply not trusted, which is the safe side); the
+    problem says the alias, never the value. A private seed is also 32 bytes and cannot be told from a public key by looking: keep seeds in the key file."""
+    problems: list[str] = []
+    store: dict[str, bytes] = {}
+    entries = config.get(TRUST_KEY) if isinstance(config, dict) else None
+    if entries is None:
+        return store, problems
+    if not isinstance(entries, dict):
+        return store, [f"{TRUST_KEY} must be an object of alias: public key"]
+    for alias, value in entries.items():
+        if not isinstance(alias, str) or not _ALIAS.match(alias):
+            problems.append(f"{TRUST_KEY}: an alias must be 1 to 40 letters, digits, spaces or ._@- ({str(alias)[:20]!r} was left out)")
+            continue
+        try:
+            store[alias] = parse_public_key(value if isinstance(value, str) else "")
+        except SigningError:
+            problems.append(f"{TRUST_KEY}: the key of {alias!r} is not 64 hexadecimal digits and was left out")
+    return store, problems
+
+
+def signer_alias(record: dict, trusted: Mapping[str, bytes] | None) -> str:
+    """The alias (first in alphabetical order) of the trusted key that is written in the signature of ``record``, or an empty text.
+
+    It only compares the key written in the block with the store; whether the signature is good is ``evidence_state``'s question."""
+    block = record.get("signature") if isinstance(record, dict) else None
+    if not trusted or not isinstance(block, dict) or not isinstance(block.get("public_key"), str):
+        return ""
+    for alias in sorted(trusted):
+        if block["public_key"] == trusted[alias].hex():
+            return alias
+    return ""
+
+
+def evidence_state(record: dict, public: bytes | None = None, trusted: Mapping[str, bytes] | None = None) -> str:
+    """The state of the signature of a record.
+
+    ``unsigned`` (no block), ``invalid``, and for a good signature: ``valid`` (no key to compare with), ``other_key`` (a ``public`` key was given and it is not
+    that one) or, with a trust store, ``trusted`` (the key is in the store) / ``unknown_key`` (it is not). A ``public`` key given explicitly always wins over
+    the store: the reader said exactly which key to believe."""
     if not isinstance(record, dict) or "signature" not in record:
         return STATE_UNSIGNED
-    if verify_evidence(record):
-        if public is not None and not verify_evidence(record, public):
-            return STATE_OTHER_KEY
-        return STATE_VALID
-    return STATE_INVALID
+    return classify_evidence(record, verify_evidence(record), public, trusted)
+
+
+def classify_evidence(record: dict, good: bool, public: bytes | None = None, trusted: Mapping[str, bytes] | None = None) -> str:
+    """``evidence_state`` when the (slow) check of the signature was already made: ``good`` is what ``verify_evidence(record)`` answered.
+
+    A caller that shows the same record many times keeps ``good`` and asks again with another key or store at no cost."""
+    if not isinstance(record, dict) or "signature" not in record:
+        return STATE_UNSIGNED
+    if not good:
+        return STATE_INVALID
+    if public is not None:
+        block = record.get("signature")
+        return STATE_VALID if isinstance(block, dict) and block.get("public_key") == public.hex() else STATE_OTHER_KEY
+    if trusted:
+        return STATE_TRUSTED if signer_alias(record, trusted) else STATE_UNKNOWN_KEY
+    return STATE_VALID
 
 
 def parse_public_key(text: str) -> bytes:

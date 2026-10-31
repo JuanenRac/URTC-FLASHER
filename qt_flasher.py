@@ -259,7 +259,8 @@ class FlasherQtBridge(QObject):
     def history(self) -> QObject:
         """The history of operations: the evidence records the flasher wrote in its logs folder, each one checked (it only reads)."""
         if self._history_model is None:
-            self._history_model = EvidenceHistoryModel(lambda: writable_logs_folder(LOGS_FOLDER), lambda: _current_language, parent=self)
+            self._history_model = EvidenceHistoryModel(lambda: writable_logs_folder(LOGS_FOLDER), lambda: _current_language, parent=self,
+                                                  trusted=lambda: flasher_config.trusted_keys_store()[0] or None)
         return self._history_model
 
     @Property(str, constant=True)
@@ -1900,7 +1901,10 @@ class FlasherQtBridge(QObject):
                     self._log(f"UPDATE_REPORT_UNSIGNED {exc}")
             report_path = write_update_report(report, folder)
             self._log(f"UPDATE_REPORT_WRITTEN {report_path}")
-            self._log(f"UPDATE_EVIDENCE_WRITTEN {write_evidence_record(report, report_path)}")
+            try:
+                self._log(f"UPDATE_EVIDENCE_WRITTEN {write_evidence_record(report, report_path)}")
+            except ValueError as exc:    # signing was asked for and failed: no evidence file, and the log says why (the report above is written)
+                self._log(f"UPDATE_EVIDENCE_NOT_WRITTEN {exc}")
         except (OSError, TypeError, KeyError, ValueError) as exc:
             self._log(f"UPDATE_REPORT_FAILED {exc}")
 

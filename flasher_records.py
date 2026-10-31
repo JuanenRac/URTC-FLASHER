@@ -148,14 +148,35 @@ def write_update_report(report: dict, folder: str) -> str:
     return path
 
 
-def write_evidence_record(report: dict, report_path: str) -> str:
+def seal_evidence(record: dict, sign: bool | None = None, key_file: str | None = None) -> dict:
+    """The evidence record as it is written: with the Ed25519 ``signature`` block when signing is on, else as it is.
+
+    ``sign`` None reads the ``sign_evidence`` setting (off by default) and ``key_file`` None the ``record_key_file`` setting. If signing is on and fails (a key file
+    that cannot be read, or is not a key) ``ValueError`` is raised and nothing is written, so an unsigned file never passes for a signed one. The key is never printed."""
+    import flasher_config
+
+    enabled, configured = flasher_config.evidence_signing_settings()
+    if sign is not None:
+        enabled = sign
+    if not enabled:
+        return record
+    from urtc_can import record_signing
+
+    try:
+        return record_signing.sign_evidence(record, record_signing.load_seed(key_file or configured or None))
+    except (record_signing.SigningError, OSError) as exc:
+        raise ValueError(f"the evidence record could not be signed: {exc}") from exc
+
+
+def write_evidence_record(report: dict, report_path: str, sign: bool | None = None) -> str:
     """Writes the same update as a ``urtc-evidence/1`` record next to the report (``urtc_evidence_<time>.json``) and returns the path.
 
-    The record is made from the report, so it says what the report says; the signature of a signed report stays with the report.
+    The record is made from the report, so it says what the report says; the signature of a signed report stays with the report. The record itself is signed
+    with Ed25519 when the ``sign_evidence`` setting is on (see ``seal_evidence``; off by default).
     """
     from urtc_can import evidence
 
-    record = evidence.from_update_report(report)
+    record = seal_evidence(evidence.from_update_report(report), sign)
     name = os.path.basename(report_path)
     stem = name[len("urtc_update_report_"):] if name.startswith("urtc_update_report_") else name
     path = os.path.join(os.path.dirname(report_path), "urtc_evidence_" + stem)

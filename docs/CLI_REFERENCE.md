@@ -295,6 +295,12 @@ recognized by their shape, counted apart as "other records" and listed below the
 It opens no bus and changes nothing. Exit codes: `0` every record is valid (other records never make it fail), `1` one fails its check, `2` the folder does not exist. `--json` prints the list with
 its summary (counts by outcome and kind, first and last time) as one document. The tester and the updater have the same view (`history` and `evidence --history`).
 
+### Signing the evidence and trusting keys
+
+The evidence record of an update (and of a run against a simulated bus) can carry an Ed25519 signature, made with the key of the user. It is **off by default**: `"sign_evidence": true` in the config file turns it on (anything other than the plain value `true` keeps it off) and `"record_key_file": "PATH"` names the file with the key (empty: `~/.urtc-keys/records_ed25519.key`, or the file named by `URTC_RECORD_KEY_FILE`). The key is never printed, logged or put in a record. If signing is on and fails (an unreadable key file) **no evidence file is written** and the log says why; the update report is written all the same. This is not `sign_update_reports`, which signs the update report and is on by default.
+
+`--history` checks every signature. `--public-key HEX` (the 64-digit public key you trust) tells a good signature by another key apart and makes the exit code `1`; a signature that does not match also makes it `1`. A reader keeps a **trust store** in its configuration: `"trusted_keys": {"alias": "<public key, 64 hexadecimal digits>"}` (the tester and the flasher in their config file, the updater in its settings). It holds public keys only, never a seed; an alias is 1 to 40 letters, digits, spaces or `._@-`, and an entry that is not a public key is left out, named in a warning without its value, and therefore not trusted. With a store the history and the report say, for a good signature, `Signed by <alias>` when the key is in the store and `Valid signature, unknown key` when it is not, and `SIGNATURE NOT VALID` when the signature fails. An unknown key is shown and does not fail the status; a signature that fails does. A public key given on the command line (`--public-key`) wins over the store: the reader said exactly which key to believe, and a signature by any other key is then `Signed by another key` and fails the status. The History window of each program has a Signature column with the same words.
+
 ## Exit codes
 
 Documented directly in `run_cli()`'s own docstring in `urtc_flasher.py`:

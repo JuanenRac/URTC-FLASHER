@@ -25,7 +25,7 @@ import html
 import json
 import textwrap
 import unicodedata
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 from . import evidence, evidence_history
@@ -35,7 +35,7 @@ from . import evidence_report_strings as _st
 FORMATS = ("html", "pdf")
 FIELD_LIMIT = 2000   # the most characters of one value that the report prints
 ORIGINS = ("simulated", "replay", "real", "unknown")
-SIGNATURE_STATES = ("unsigned", "valid", "other_key", "invalid", "unchecked")
+SIGNATURE_STATES = ("unsigned", "valid", "trusted", "unknown_key", "other_key", "invalid", "unchecked")
 PDF_COLUMNS = 88   # Courier: characters per line
 PDF_LINES = 62
 PDF_WIDTH = 495    # embedded font: points per line (A4 less the margins)
@@ -98,7 +98,7 @@ def _recomputed(record: dict[str, Any]) -> str:
 class _Item:
     """One record prepared for printing: every value already clean."""
 
-    def __init__(self, number: int, entry: evidence_history.Entry, language: str, public: bytes | None = None) -> None:
+    def __init__(self, number: int, entry: evidence_history.Entry, language: str, public: bytes | None = None, trusted: Mapping[str, bytes] | None = None) -> None:
         record = entry.record
         subject, transport = _group(record, "subject"), _group(record, "transport")
         t = lambda key: _st.text(language, key)   # noqa: E731
@@ -116,8 +116,8 @@ class _Item:
         self.tool = tool or "-"
         self.board = clean(subject.get("name", "")) or "-"
         self.integrity = t("ER_INTEGRITY_OK") if entry.valid else t("ER_INTEGRITY_BAD")
-        self.sig_state = evidence_history.signature_state(entry, public)
-        self.sig_text = t("ER_SIG_" + self.sig_state.upper())
+        self.sig_state = evidence_history.signature_state(entry, public, trusted)
+        self.sig_text = _st.text(language, "ER_SIG_" + self.sig_state.upper(), alias=clean(evidence_history.signature_alias(entry, trusted)) if public is None else "")
         block = record.get("signature")
         self.key_id = clean(block.get("key_id", "")) if isinstance(block, dict) and self.sig_state != "unsigned" else ""
         self.file = clean(entry.file + (f":{entry.line}" if entry.line else ""))
@@ -149,9 +149,9 @@ class _Item:
                 self.fields.append((t("ER_F_DIGEST") + " *", recomputed))
 
 
-def _items(entries: Sequence[evidence_history.Entry], language: str, public: bytes | None = None) -> list[_Item]:
+def _items(entries: Sequence[evidence_history.Entry], language: str, public: bytes | None = None, trusted: Mapping[str, bytes] | None = None) -> list[_Item]:
     ordered = evidence_history.select(entries)    # newest first, the file name decides ties: the same records give the same order
-    return [_Item(number, entry, language, public) for number, entry in enumerate(ordered, 1)]
+    return [_Item(number, entry, language, public, trusted) for number, entry in enumerate(ordered, 1)]
 
 
 def _others(entries: Sequence[evidence_history.Entry], language: str) -> list[tuple[str, str]]:
@@ -186,10 +186,10 @@ def _e(value: Any) -> str:
     return html.escape(clean(value), quote=True)
 
 
-def to_html(entries: Sequence[evidence_history.Entry], language: str = "english", public: bytes | None = None) -> str:
+def to_html(entries: Sequence[evidence_history.Entry], language: str = "english", public: bytes | None = None, trusted: Mapping[str, bytes] | None = None) -> str:
     """The report as one HTML page (a string with ``\\n`` line ends)."""
     t = _tr(language)
-    items = _items(entries, language, public)
+    items = _items(entries, language, public, trusted)
     info = _summary(items, entries)
     out: list[str] = []
     add = out.append
@@ -212,7 +212,7 @@ def to_html(entries: Sequence[evidence_history.Entry], language: str = "english"
         (t("ER_BY_OUTCOME"), ", ".join(f"{_hist.text(language, _hist.outcome_key(k))}: {v}" for k, v in info["outcomes"].items())),
         (t("ER_BY_KIND"), ", ".join(f"{_hist.text(language, _hist.kind_key(k))}: {v}" for k, v in info["kinds"].items())),
         (t("ER_BY_ORIGIN"), ", ".join(f"{t('ER_ORIGIN_' + k.upper())}: {v}" for k, v in info["origins"].items())),
-        (t("ER_BY_SIGNATURE"), ", ".join(f"{t('ER_SIG_' + k.upper())}: {v}" for k, v in info["signatures"].items() if v) or "-"),
+        (t("ER_BY_SIGNATURE"), ", ".join(f"{t('ER_SIG_' + k.upper(), alias='*')}: {v}" for k, v in info["signatures"].items() if v) or "-"),
         (t("ER_FIRST"), info["first"] or "-"), (t("ER_LAST"), info["last"] or "-"),
     ]
     others = _others(entries, language)
@@ -275,17 +275,17 @@ def to_html(entries: Sequence[evidence_history.Entry], language: str = "english"
 
 
 # -- plain text and PDF -------------------------------------------------------------------------------------------------------------------------
-def to_text(entries: Sequence[evidence_history.Entry], language: str = "english", public: bytes | None = None) -> str:
+def to_text(entries: Sequence[evidence_history.Entry], language: str = "english", public: bytes | None = None, trusted: Mapping[str, bytes] | None = None) -> str:
     """The same report as lines of text (what the PDF prints)."""
     t = _tr(language)
-    items = _items(entries, language, public)
+    items = _items(entries, language, public, trusted)
     info = _summary(items, entries)
     lines = [t("ER_TITLE").upper(), "=" * len(t("ER_TITLE")), "", t("ER_LEAD"), "", t("ER_SUMMARY"), "-" * len(t("ER_SUMMARY")),
              f"{t('ER_TOTAL')}: {info['records']}", f"{t('ER_VALID')}: {info['valid']}", f"{t('ER_INVALID')}: {info['invalid']}",
              f"{t('ER_BY_OUTCOME')}: " + ", ".join(f"{_hist.text(language, _hist.outcome_key(k))} {v}" for k, v in info["outcomes"].items()),
              f"{t('ER_BY_KIND')}: " + ", ".join(f"{_hist.text(language, _hist.kind_key(k))} {v}" for k, v in info["kinds"].items()),
              f"{t('ER_BY_ORIGIN')}: " + ", ".join(f"{t('ER_ORIGIN_' + k.upper())} {v}" for k, v in info["origins"].items()),
-             f"{t('ER_BY_SIGNATURE')}: " + (", ".join(f"{t('ER_SIG_' + k.upper())} {v}" for k, v in info["signatures"].items() if v) or "-"),
+             f"{t('ER_BY_SIGNATURE')}: " + (", ".join(f"{t('ER_SIG_' + k.upper(), alias='*')} {v}" for k, v in info["signatures"].items() if v) or "-"),
              f"{t('ER_FIRST')}: {info['first'] or '-'}", f"{t('ER_LAST')}: {info['last'] or '-'}",
              *([f"{t('ER_OTHERS')}: " + ", ".join(f"{_hist.text(language, 'EH_OTHER_' + k.upper())} {v}" for k, v in info["other_kinds"].items() if v)] if info["others"] else []),
              "", t("ER_NOTE"), "", t("ER_SIG_NOTE"), ""]
@@ -397,7 +397,7 @@ def _to_unicode(used: dict[int, int]) -> bytes:
     return b"\n".join(lines)
 
 
-def to_pdf(entries: Sequence[evidence_history.Entry], language: str = "english", public: bytes | None = None) -> bytes:
+def to_pdf(entries: Sequence[evidence_history.Entry], language: str = "english", public: bytes | None = None, trusted: Mapping[str, bytes] | None = None) -> bytes:
     """The report as a PDF file (version 1.4, A4, no date): the same records give the same bytes.
 
     Western text is set in the standard font Courier, no font inside. Chinese and Japanese (and any text with a character Courier cannot show) are set in a subset
@@ -406,7 +406,7 @@ def to_pdf(entries: Sequence[evidence_history.Entry], language: str = "english",
     """
     if language not in _st.LANGUAGES:
         language = "english"
-    source = to_text(entries, language, public).splitlines()
+    source = to_text(entries, language, public, trusted).splitlines()
     footer_sample = _st.text(language, "ER_PAGE", page=999, pages=999) + _st.text(language, "ER_TITLE")
     font_name = pdf_font_for("\n".join(source) + footer_sample, language)
     glyphs: dict[int, tuple[int, int]] = {}
@@ -477,10 +477,10 @@ def to_pdf(entries: Sequence[evidence_history.Entry], language: str = "english",
     return bytes(out)
 
 
-def render(entries: Sequence[evidence_history.Entry], fmt: str = "html", language: str = "english", public: bytes | None = None) -> bytes:
+def render(entries: Sequence[evidence_history.Entry], fmt: str = "html", language: str = "english", public: bytes | None = None, trusted: Mapping[str, bytes] | None = None) -> bytes:
     """The report in ``fmt`` (``html`` or ``pdf``) as bytes; raises ``ValueError`` for another format."""
     if fmt == "html":
-        return to_html(entries, language, public).encode("utf-8")
+        return to_html(entries, language, public, trusted).encode("utf-8")
     if fmt == "pdf":
-        return to_pdf(entries, language, public)
+        return to_pdf(entries, language, public, trusted)
     raise ValueError(f"format must be one of {FORMATS}, got {fmt!r}")

@@ -101,7 +101,7 @@ Dialog {
                 delegate: Text {
                     required property var modelData
                     required property int index
-                    Layout.preferredWidth: [170, 80, 90, 150, 130, 120, 90][index]
+                    Layout.preferredWidth: [170, 80, 90, 150, 130, 120, 90, 170][index]
                     Layout.fillWidth: index === 4
                     text: modelData
                     color: dialog.accentColor
@@ -134,6 +134,15 @@ Dialog {
                             Text { Layout.preferredWidth: 130; Layout.fillWidth: true; text: modelData.board; color: dialog.textColor; font.pixelSize: 12; elide: Text.ElideRight }
                             Text { Layout.preferredWidth: 120; text: modelData.version; color: dialog.textColor; font.pixelSize: 12; elide: Text.ElideRight }
                             Text { Layout.preferredWidth: 90; text: modelData.checkText; color: modelData.valid ? dialog.okColor : dialog.badColor; font.bold: !modelData.valid; font.pixelSize: 12 }
+                            Text {
+                                objectName: "historySignature"
+                                Layout.preferredWidth: 170
+                                text: modelData.signatureText
+                                color: modelData.signatureState === "invalid" ? dialog.badColor : (modelData.signatureState === "trusted" ? dialog.okColor : dialog.mutedColor)
+                                font.bold: modelData.signatureState === "invalid"
+                                font.pixelSize: 12
+                                elide: Text.ElideRight
+                            }
                         }
                         Text {
                             Layout.fillWidth: true
