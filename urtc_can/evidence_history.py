@@ -32,6 +32,11 @@ from typing import Any, Iterable, Sequence
 
 from . import evidence
 
+try:    # a copy of this module that does not carry the signing module (or its Ed25519 helper) can still list and check records: signatures are then "unchecked"
+    from . import record_signing as _record_signing
+except ImportError:
+    _record_signing = None  # type: ignore[assignment]
+
 COLUMNS = ("timestamp_utc", "kind", "outcome", "tool", "tool_version", "subject", "version_before", "version_after", "artifacts", "valid", "file")
 FILE_LIMIT = 5000       # the most files read from one folder
 LINE_LIMIT = 100_000    # the most records read from one file
@@ -72,6 +77,7 @@ class Entry:
     record: dict[str, Any] = field(default_factory=dict)
     problems: list[str] = field(default_factory=list)
     other: str = ""     # a record that is not evidence but is a known shape (``OTHER_KINDS``); it has no problems and is not counted as evidence
+    sig_cache: str = field(default="", repr=False, compare=False)   # the signature state without a pinned key, found once
 
     @property
     def valid(self) -> bool:
@@ -81,6 +87,29 @@ class Entry:
     def time(self) -> str:
         value = self.record.get("timestamp_utc")
         return value if isinstance(value, str) else ""
+
+
+SIGNATURE_UNCHECKED = "unchecked"   # this copy has no ``record_signing``: a signature is never called valid when it cannot be checked
+
+
+def signature_state(entry: Entry, public: bytes | None = None) -> str:
+    """``unsigned``, ``valid``, ``other_key`` (good, but not by the public key given), ``invalid`` or ``unchecked`` for an evidence record.
+
+    A record that fails its own check (``entry.valid`` false) is never ``valid``: a signature does not rescue a record that was edited. Records that are
+    not evidence have no signature state (``unsigned``)."""
+    record = entry.record
+    if entry.other or "signature" not in record:
+        return "unsigned"
+    if not entry.valid:
+        return "invalid"
+    if public is None and entry.sig_cache:
+        return entry.sig_cache
+    if _record_signing is None:
+        return SIGNATURE_UNCHECKED
+    state = _record_signing.evidence_state(record, public)
+    if public is None:
+        entry.sig_cache = state
+    return state
 
 
 def _entries_of(path: Path, base: Path) -> list[Entry]:
@@ -196,7 +225,9 @@ def summary(entries: Sequence[Entry]) -> dict[str, Any]:
         if kind in kinds:
             kinds[kind] += 1
     times = sorted(e.time for e in shown if e.time)
-    return {"records": len(shown), "valid": sum(1 for e in shown if e.valid), "invalid": sum(1 for e in shown if not e.valid), "outcomes": outcomes,
+    states = [signature_state(e) for e in shown]
+    return {"signed": sum(1 for x in states if x != "unsigned"), "signature_invalid": sum(1 for x in states if x == "invalid"),
+            "records": len(shown), "valid": sum(1 for e in shown if e.valid), "invalid": sum(1 for e in shown if not e.valid), "outcomes": outcomes,
             "kinds": kinds, "first": times[0] if times else "", "last": times[-1] if times else "",
             "others": sum(other_kinds.values()), "other_kinds": other_kinds}
 
@@ -220,7 +251,7 @@ def _text_lines(entries: Sequence[Entry]) -> list[str]:
         r = row(entry)
         versions = f"{r['version_before'] or '?'} -> {r['version_after']}" if r["version_after"] else (str(r["version_before"]) if r["version_before"] else "")
         lines.append(f"{r['timestamp_utc'] or '-':<26} {r['kind'] or '-':<8} {r['outcome'] or '-':<8} {r['tool'] or '-':<22} {r['subject']:<20} {versions:<16} {r['file']}"
-                     + ("" if entry.valid else "  [NOT VALID]"))
+                     + ("" if entry.valid else "  [NOT VALID]") + ("  [SIGNATURE NOT VALID]" if signature_state(entry) == "invalid" else ""))
         lines += [f"    problem: {problem}" for problem in entry.problems]
     return lines
 
@@ -239,7 +270,7 @@ def to_json(entries: Sequence[Entry], others: Sequence[Entry] = ()) -> str:
     by file and type under ``others`` and counted in the summary."""
     others = others_of(others)
     document = {"format": "urtc-evidence-history/1", "summary": summary([*entries, *others]),
-                "entries": [{**row(e), "problems": e.problems, "record": e.record} for e in entries],
+                "entries": [{**row(e), "signature": signature_state(e), "problems": e.problems, "record": e.record} for e in entries],
                 "others": [other_row(e) for e in others]}
     return json.dumps(document, indent=2, ensure_ascii=False) + "\n"
 

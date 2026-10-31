@@ -22,7 +22,8 @@ signature is Ed25519 (RFC 8032), standard library only; the browser program make
 
 The signed message is ``urtc-record/1`` + a line break + the kind + a line break + the payload, where the payload of a
 saved session is ``log_file``, ``log_sha256`` and ``log_bytes`` one per line, and the one of an update report is its
-``report_sha256``.
+``report_sha256``, and the one of an evidence record (``urtc-evidence/1``) is its ``evidence_sha256``: the digest already covers every other
+field, so signing the digest signs the whole record.
 """
 from __future__ import annotations
 
@@ -35,6 +36,7 @@ from . import self_update as _su
 ALGORITHM = "Ed25519"
 KIND_SESSION = "session"
 KIND_REPORT = "update-report"
+KIND_EVIDENCE = "evidence"
 KEY_ENV = "URTC_RECORD_KEY_FILE"
 _PREFIX = "urtc-record/1"
 
@@ -171,3 +173,70 @@ def verify_report(report: dict) -> bool:
         return check_signature(report.get("signature"), KIND_REPORT, report_payload(report))
     except AttributeError:
         return False
+
+
+def evidence_payload(record: dict) -> str:
+    return str(record.get("evidence_sha256", ""))
+
+
+def sign_evidence(record: dict, seed: bytes | None = None) -> dict:
+    """A copy of an evidence record with its ``signature`` block.
+
+    The record must be a valid ``urtc-evidence/1`` record whose digest matches (a record that is already wrong is never signed: the signature would
+    vouch for it). The signature is not part of the digest, so a signed record keeps the digest it had.
+    """
+    from . import evidence
+
+    body = {key: value for key, value in record.items() if key != "signature"}
+    problems = evidence.verify(body)
+    if problems:
+        raise SigningError("the record is not valid and was not signed: " + "; ".join(problems[:3]))
+    body["signature"] = make_signature(seed or load_seed(), KIND_EVIDENCE, evidence_payload(body))
+    return body
+
+
+def verify_evidence(record: dict, public: bytes | None = None) -> bool:
+    """True when the record carries a signature that matches its digest AND the digest matches the record.
+
+    With ``public`` (the 32-byte public key the reader trusts) the signature must also be made by that key; without it the check only shows that the
+    record and the key inside the block belong together.
+    """
+    from . import evidence
+
+    try:
+        block = record.get("signature")
+        if evidence.verify(record):
+            return False
+        if public is not None and (not isinstance(block, dict) or block.get("public_key") != public.hex()):
+            return False
+        return check_signature(block, KIND_EVIDENCE, evidence_payload(record))
+    except AttributeError:
+        return False
+
+
+STATE_UNSIGNED = "unsigned"
+STATE_VALID = "valid"
+STATE_OTHER_KEY = "other_key"
+STATE_INVALID = "invalid"
+
+
+def evidence_state(record: dict, public: bytes | None = None) -> str:
+    """``unsigned`` (no signature block), ``valid``, ``other_key`` (a good signature, but not by the key the reader trusts) or ``invalid``."""
+    if not isinstance(record, dict) or "signature" not in record:
+        return STATE_UNSIGNED
+    if verify_evidence(record):
+        if public is not None and not verify_evidence(record, public):
+            return STATE_OTHER_KEY
+        return STATE_VALID
+    return STATE_INVALID
+
+
+def parse_public_key(text: str) -> bytes:
+    """A public key written as 64 hexadecimal digits (spaces around it allowed); ``SigningError`` for anything else."""
+    try:
+        key = bytes.fromhex(text.strip())
+    except ValueError as exc:
+        raise SigningError("a public key is 64 hexadecimal digits") from exc
+    if len(key) != 32:
+        raise SigningError("a public key has 32 bytes")
+    return key

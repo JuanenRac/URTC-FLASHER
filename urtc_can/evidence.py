@@ -12,8 +12,8 @@ words: which tool did what, when, to which board, over which transport, with whi
 * ``verify`` returns the list of what is wrong with a record (empty when it is well formed and its digest is right);
 * ``from_update_report``, ``from_result_record`` and ``from_updater_line`` turn the three existing records into it without changing them.
 
-The digest shows that a record was not edited after it was written. It does not say who wrote it: that is what the signature of
-``record_signing`` is for, which a program may add around a record. Nothing here reads the disk or the network, and a value that is not understood is
+The digest shows that a record was not edited after it was written. It does not say who wrote it: that is what the optional ``signature`` of
+``record_signing`` is for (outside the digest, made over it, checked there and not here). Nothing here reads the disk or the network, and a value that is not understood is
 refused, never guessed: an unknown field, an unknown kind or outcome and a malformed hash are all problems.
 """
 from __future__ import annotations
@@ -26,7 +26,8 @@ from typing import Any, Mapping
 FORMAT = "urtc-evidence/1"
 KINDS = ("flash", "test", "install", "session")
 OUTCOMES = ("pass", "fail", "error", "skipped")
-FIELDS = ("format", "kind", "outcome", "timestamp_utc", "tool", "tool_version", "operator", "subject", "transport", "artifacts", "detail", "evidence_sha256")
+FIELDS = ("format", "kind", "outcome", "timestamp_utc", "tool", "tool_version", "operator", "subject", "transport", "artifacts", "detail", "evidence_sha256", "signature")
+SIGNATURE_FIELDS = ("algorithm", "key_id", "public_key", "signature")
 SUBJECT_FIELDS = ("name", "hardware_id", "version_before", "version_after", "commit_before", "commit_after", "key_id")
 TRANSPORT_FIELDS = ("adapter", "bus", "bitrate")
 ARTIFACT_FIELDS = ("name", "sha256", "bytes")
@@ -41,8 +42,8 @@ _KEY_ID = re.compile(r"^[0-9a-f]{8,64}$")
 
 
 def digest(record: Mapping[str, Any]) -> str:
-    """SHA-256 of the record without its own digest, as compact JSON with the keys sorted (the same text on every platform)."""
-    body = {key: value for key, value in record.items() if key != "evidence_sha256"}
+    """SHA-256 of the record without its own digest and without its signature (a signature is made over the digest), as compact JSON with the keys sorted (the same text on every platform)."""
+    body = {key: value for key, value in record.items() if key not in ("evidence_sha256", "signature")}
     return hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")).hexdigest()
 
 
@@ -134,6 +135,12 @@ def verify(record: Any) -> list[str]:
                 }, problems)
                 if isinstance(item, dict) and not {"name", "sha256"} <= set(item):
                     problems.append(f"artifacts[{index}] needs a name and a sha256")
+    if "signature" in record:
+        block = record["signature"]
+        shapes = {"algorithm": r"Ed25519", "key_id": r"[0-9a-f]{16}", "public_key": r"[0-9a-f]{64}", "signature": r"[0-9a-f]{128}"}
+        if not (isinstance(block, dict) and set(block) == set(SIGNATURE_FIELDS)
+                and all(isinstance(block[k], str) and re.fullmatch(shapes[k], block[k]) for k in SIGNATURE_FIELDS)):
+            problems.append("signature is not a well formed Ed25519 block")
     declared = record.get("evidence_sha256")
     if not (isinstance(declared, str) and _SHA256.match(declared)):
         problems.append("evidence_sha256 must be 64 lowercase hexadecimal digits")

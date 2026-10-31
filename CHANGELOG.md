@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- **The shared evidence modules accept the optional Ed25519 signature of an evidence record:** a signed record keeps its digest and is no longer refused for the extra field; the history lists the state of each signature (matches, does not match, not signed) and the HTML and PDF report show it in the eight languages (Portuguese of Portugal). The flasher already signs its update report; its copy of the evidence modules now lists and checks the signature of an evidence record in the history and the report. The copies and their lock files are synchronized with the shared repository, and the font data of the PDF report was regenerated.
+
 ## [0.4.4] - The reply of the tool rack has a fixed CAN identifier, the PDF of the evidence report prints Chinese and Japanese, the history no longer lists other files as not valid and an update can run against a faulty simulated bus
 
 - **The reply of the tool rack has a fixed CAN identifier, `0x261`:** the shared protocol copy has the rack frames (the pre-heat order `0x260` and the reply `0x261`), and the bus scenario `reject` no longer needs `reply_id` (it sends the reply on `0x261`; another identifier can still be named). The conformance fixtures cover both frames.

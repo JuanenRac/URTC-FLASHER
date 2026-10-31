@@ -1,10 +1,10 @@
 {
   "format": 1,
-  "urtc_common_version": "0.1.1",
+  "urtc_common_version": "0.1.2",
   "files": {
     "__init__.py": {
       "from": "src/urtc_common/__init__.py",
-      "sha256": "71c586f647bec532cc2ec87cb2ecd62f6c0fc802ded5d0ff239a37a0721a7c6f"
+      "sha256": "497231a1b31e0a363d3fb07945c774046053b2362b81fbb500e9dbdc58c62971"
     },
     "bus_scenario.py": {
       "from": "src/urtc_common/bus_scenario.py",
@@ -16,11 +16,11 @@
     },
     "evidence.py": {
       "from": "src/urtc_common/evidence.py",
-      "sha256": "d51277bc5cd67f975f09966d70e64280244a767b26c50d2a109d8b9156f8bb75"
+      "sha256": "2bc453162314ccfbd04a0e86acdcefd0914e43358e0e50d8b3a27164e547c23c"
     },
     "evidence_history.py": {
       "from": "src/urtc_common/evidence_history.py",
-      "sha256": "a00850679dc0edd13d99781598aa6b42d6795ac2d35877351e04e493853998f3"
+      "sha256": "dd59e2f18481a5a123492826f2157ee3b8cf40230a80a24226126f3253402f0d"
     },
     "evidence_history_qt.py": {
       "from": "src/urtc_common/evidence_history_qt.py",
@@ -32,11 +32,11 @@
     },
     "evidence_report.py": {
       "from": "src/urtc_common/evidence_report.py",
-      "sha256": "af9dea770c5d577f57a29492542af011995c5d4b1928e8433e7a3f4b8a309c8d"
+      "sha256": "95613fadca2a69599ff2afdb0e1827ce0b76a897e8fdfa350142b1d4ecb7ef53"
     },
     "evidence_report_fonts.py": {
       "from": "src/urtc_common/evidence_report_fonts.py",
-      "sha256": "c3347167cce47092ca25e466083de46bc023954a0835893421db2270a14a7b50"
+      "sha256": "6321ca269597892e27dee1f57e26d7905ef0f5994fe5dd9ed0adca6c06e0c6f3"
     },
     "evidence_report_fonts_OFL.txt": {
       "from": "src/urtc_common/evidence_report_fonts_OFL.txt",
@@ -44,7 +44,7 @@
     },
     "evidence_report_strings.py": {
       "from": "src/urtc_common/evidence_report_strings.py",
-      "sha256": "a0c9c16b2a9b8913c1e2a64c5d153db4ba1d094f64283770036b3ab8babc6e85"
+      "sha256": "acb4a74396486a8a33205b14f941733a14f1c790cc1ea17e5fd0115e041cc803"
     },
     "framing.py": {
       "from": "src/urtc_common/framing.py",
@@ -96,7 +96,7 @@
     },
     "record_signing.py": {
       "from": "src/urtc_common/record_signing.py",
-      "sha256": "f8655996b05fa7d14b56c43f4f79725af9ea6a1aad3c63e8af506b773eef7453"
+      "sha256": "162cc07126df56180289b036b82e92981a5d38baed6ace2634aafa7db81ac7e8"
     },
     "self_update.py": {
       "from": "src/urtc_common/self_update.py",
