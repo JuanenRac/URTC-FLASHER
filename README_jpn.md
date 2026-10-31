@@ -37,7 +37,7 @@
 
 | | |
 |---|---|
-| バージョン | `0.4.2` |
+| バージョン | `0.4.3` |
 | 成熟度 | 機能する |
 | テスト | 561 (`python -m pytest tests -q`) |
 | 技術 | Python / PySide6 / Qt Quick / CAN-OTA / SWD/JTAG |

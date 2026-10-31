@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here.
 
-## [Unreleased]
+## [0.4.3] - A History window with the operations of the flasher, the evidence of the updates listed from the command line, an out-of-range HardwareID no longer kept and the lights of Project status following the evidence
 
 - **The Help window has a History step and the README describes the History window:** the quick guide (eight languages) says what the History button shows, the Interfaces section of the README in the eight languages describes the window and its command line form, and `docs/WINDOW_GUIDE.md` has a History section.
 - **An out-of-range HardwareID in the configuration file is no longer kept:** a `hardware_id` above 32 bits was reported as skipped but still replaced the built-in value; now it is checked first and the default stays.
