@@ -16,6 +16,12 @@ This tool is the CAN-OTA/SWD-JTAG flashing companion to the [URTC (Universal Rob
 
 If you build on this project, keep the licensing split in mind: code changes should stay GPL-3.0-or-later, documentation derivatives should stay CC BY-SA - each with attribution back to this project and its author.
 
+## Third-party font data in the PDF of the evidence report
+
+`urtc_can/evidence_report_fonts.py` contains subsets of **Noto Sans CJK** (Simplified Chinese and Japanese forms), Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name "Source".
+The subsets are modified versions of the font (static instance, reduced glyph set) and are distributed under the **SIL Open Font License, Version 1.1**; the full text is in `urtc_can/evidence_report_fonts_OFL.txt`.
+Source: https://github.com/notofonts/noto-cjk. The font data keeps its license; the rest of the code is not part of the font and stays under the license above.
+
 ---
 
 Author: JuanenRac (Electro Hobby 3D)

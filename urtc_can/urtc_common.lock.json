@@ -32,11 +32,19 @@
     },
     "evidence_report.py": {
       "from": "src/urtc_common/evidence_report.py",
-      "sha256": "1dee5c4fff5281320679aa0843cfa7f57f872631b1c200b7cf98fe13f1e28c2c"
+      "sha256": "af9dea770c5d577f57a29492542af011995c5d4b1928e8433e7a3f4b8a309c8d"
+    },
+    "evidence_report_fonts.py": {
+      "from": "src/urtc_common/evidence_report_fonts.py",
+      "sha256": "c3347167cce47092ca25e466083de46bc023954a0835893421db2270a14a7b50"
+    },
+    "evidence_report_fonts_OFL.txt": {
+      "from": "src/urtc_common/evidence_report_fonts_OFL.txt",
+      "sha256": "1dc499d0648636f75463c7d029530cd0d5d019af9ed11d377ac6220c6b0bd509"
     },
     "evidence_report_strings.py": {
       "from": "src/urtc_common/evidence_report_strings.py",
-      "sha256": "c2179a8372cc69fc5e65c7c9f582e5f95537352d7b7fbdbd896d28567dacb239"
+      "sha256": "a0c9c16b2a9b8913c1e2a64c5d153db4ba1d094f64283770036b3ab8babc6e85"
     },
     "framing.py": {
       "from": "src/urtc_common/framing.py",

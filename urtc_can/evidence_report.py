@@ -11,8 +11,9 @@ are not evidence but a known shape (the update report of the flasher, the result
 
 * the HTML is one self-contained file: no script, no external resource, a policy that forbids both, plain tables with captions and header cells, and every
   text that comes from a record is escaped (control characters and direction marks are replaced), so a hostile record cannot inject markup;
-* the PDF is written here, in plain objects with a standard font (Courier), with the same content as lines of text; it holds Western text only (other
-  characters show as ``?``; the HTML keeps them);
+* the PDF is written here, in plain objects, with the same content as lines of text: Western text in the standard font Courier, Chinese and Japanese in a
+  SUBSET of Noto Sans CJK embedded in the file (SIL Open Font License 1.1, see ``evidence_report_fonts``); a character the subset lacks is printed as a visible
+  square and the report says so, never as a silent ``?`` (the HTML keeps every character);
 * the same records give the same bytes: nothing reads the clock, only the times the records carry are printed.
 
 What the report proves: a matching digest shows a record was not changed after it was written, not who wrote it; "real adapter" means only that no
@@ -34,9 +35,10 @@ from . import evidence_report_strings as _st
 FORMATS = ("html", "pdf")
 FIELD_LIMIT = 2000   # the most characters of one value that the report prints
 ORIGINS = ("simulated", "replay", "real", "unknown")
-_LATIN = ("english", "spanish", "italian", "french", "german", "portuguese")   # the languages the PDF can print with its font
-PDF_COLUMNS = 88
+PDF_COLUMNS = 88   # Courier: characters per line
 PDF_LINES = 62
+PDF_WIDTH = 495    # embedded font: points per line (A4 less the margins)
+PDF_SIZE = 9       # points
 
 
 def origin(record: dict[str, Any]) -> str:
@@ -274,7 +276,7 @@ def to_text(entries: Sequence[evidence_history.Entry], language: str = "english"
              f"{t('ER_FIRST')}: {info['first'] or '-'}", f"{t('ER_LAST')}: {info['last'] or '-'}",
              *([f"{t('ER_OTHERS')}: " + ", ".join(f"{_hist.text(language, 'EH_OTHER_' + k.upper())} {v}" for k, v in info["other_kinds"].items() if v)] if info["others"] else []),
              "", t("ER_NOTE"), ""]
-    lines += [_st.text(language if language in _LATIN else "english", "ER_PDF_NOTE"), ""]
+    lines += [_st.text(language, "ER_PDF_NOTE"), ""]
     if not items:
         lines.append(t("ER_EMPTY"))
     for item in items:
@@ -295,28 +297,156 @@ def _pdf_escape(line: str) -> bytes:
     return data.replace(b"\\", b"\\\\").replace(b"(", b"\\(").replace(b")", b"\\)")
 
 
-def to_pdf(entries: Sequence[evidence_history.Entry], language: str = "english") -> bytes:
-    """The report as a PDF file (version 1.4, the standard font Courier, A4, no compression, no date): the same records give the same bytes."""
-    if language not in _LATIN:
-        language = "english"
+def pdf_font_for(text: str, language: str) -> str | None:
+    """Which font the PDF of this text needs: ``None`` for the standard Courier (the text is Western, in a Western language), ``sc`` or ``jp`` for an embedded subset.
+
+    Chinese uses ``sc`` and Japanese ``jp`` (their own letter forms). Western text that holds a character Courier cannot show goes in the embedded font too: ``jp``
+    when the text holds kana, else ``sc``.
+    """
+    if language == "chinese":
+        return "sc"
+    if language == "japanese":
+        return "jp"
+    try:
+        text.encode("cp1252")
+    except UnicodeEncodeError:
+        return "jp" if any("぀" <= char <= "ヿ" for char in text) else "sc"
+    return None
+
+
+def _wrap_courier(lines: Sequence[str]) -> list[str]:
     wrapped: list[str] = []
-    for line in to_text(entries, language).splitlines():
+    for line in lines:
         indent = len(line) - len(line.lstrip(" "))
         pieces = textwrap.wrap(line, width=PDF_COLUMNS, subsequent_indent=" " * (indent + 2), drop_whitespace=False, break_long_words=True) if line.strip() else [""]
         wrapped += [p.rstrip() for p in pieces] or [""]
+    return wrapped
+
+
+def _wrap_measured(lines: Sequence[str], glyphs: dict[int, tuple[int, int]]) -> list[str]:
+    """Wrap by the width of the glyphs (1/1000 em), at a space when there is one in reach, else between two characters (Chinese and Japanese have no spaces)."""
+    limit = PDF_WIDTH * 1000 / PDF_SIZE
+    wrapped: list[str] = []
+    for line in lines:
+        if not line.strip():
+            wrapped.append("")
+            continue
+        indent = len(line) - len(line.lstrip(" "))
+        prefix = " " * (indent + 2)
+        lead = indent
+        rest = line
+        while True:
+            width, cut = 0, 0
+            while cut < len(rest) and width + glyphs[ord(rest[cut])][1] <= limit:
+                width += glyphs[ord(rest[cut])][1]
+                cut += 1
+            if cut >= len(rest):
+                wrapped.append(rest.rstrip())
+                break
+            space = rest.rfind(" ", lead + 1, cut + 1)
+            if space > lead:
+                cut = space
+            cut = max(cut, lead + 1)
+            wrapped.append(rest[:cut].rstrip())
+            rest = prefix + rest[cut:].lstrip(" ")
+            lead = len(prefix)
+    return wrapped
+
+
+def _hex(text: str, glyphs: dict[int, tuple[int, int]], used: dict[int, int]) -> bytes:
+    """The text as a PDF hex string of glyph ids (Identity-H); ``used`` collects glyph id -> character for the ToUnicode map."""
+    out = []
+    for char in text:
+        gid = glyphs[ord(char)][0]
+        used.setdefault(gid, ord(char))
+        out.append("%04X" % gid)
+    return b"<" + "".join(out).encode("ascii") + b">"
+
+
+def _utf16_hex(text: str) -> bytes:
+    return b"<FEFF" + text.encode("utf-16-be").hex().upper().encode("ascii") + b">"
+
+
+def _to_unicode(used: dict[int, int]) -> bytes:
+    """The ToUnicode CMap of the glyphs the document uses (so the text can be copied and searched)."""
+    lines = [b"/CIDInit /ProcSet findresource begin", b"12 dict begin", b"begincmap", b"/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def",
+             b"/CMapName /Adobe-Identity-UCS def", b"/CMapType 2 def", b"1 begincodespacerange", b"<0000> <FFFF>", b"endcodespacerange"]
+    items = sorted(used.items())
+    for start in range(0, len(items), 100):
+        chunk = items[start:start + 100]
+        lines.append(b"%d beginbfchar" % len(chunk))
+        for gid, code in chunk:
+            lines.append(b"<%04X> <" % gid + chr(code).encode("utf-16-be").hex().upper().encode("ascii") + b">")
+        lines.append(b"endbfchar")
+    lines += [b"endcmap", b"CMapName currentdict /CMap defineresource pop", b"end", b"end"]
+    return b"\n".join(lines)
+
+
+def to_pdf(entries: Sequence[evidence_history.Entry], language: str = "english") -> bytes:
+    """The report as a PDF file (version 1.4, A4, no date): the same records give the same bytes.
+
+    Western text is set in the standard font Courier, no font inside. Chinese and Japanese (and any text with a character Courier cannot show) are set in a subset
+    of Noto Sans CJK that the file embeds (Type0 / CIDFontType2, Identity-H, with a ToUnicode map so the text can be copied). A character the subset lacks is printed
+    as U+25A1 and the report says how many different ones there were: never a silent ``?``.
+    """
+    if language not in _st.LANGUAGES:
+        language = "english"
+    source = to_text(entries, language).splitlines()
+    footer_sample = _st.text(language, "ER_PAGE", page=999, pages=999) + _st.text(language, "ER_TITLE")
+    font_name = pdf_font_for("\n".join(source) + footer_sample, language)
+    glyphs: dict[int, tuple[int, int]] = {}
+    used: dict[int, int] = {}
+    if font_name is None:
+        wrapped = _wrap_courier(source)
+    else:
+        from . import evidence_report_fonts as _fonts
+        font = _fonts.font(font_name)
+        glyphs = font["glyphs"]
+        replacement = chr(font["replacement"])
+        missing = {char for line in source for char in line if ord(char) not in glyphs}
+        if missing:
+            source = ["".join(char if ord(char) in glyphs else replacement for char in line) for line in source]
+            note = _st.text(language, "ER_PDF_NOTE")
+            at = source.index(note) + 1 if note in source else 0
+            source[at:at] = [_st.text(language, "ER_PDF_SUBST", count=len(missing)), ""]
+        wrapped = _wrap_measured(source, glyphs)
     pages = [wrapped[i:i + PDF_LINES] for i in range(0, len(wrapped), PDF_LINES)] or [[""]]
+    title = _st.text(language, "ER_TITLE")
     objects: list[bytes] = []   # object n is objects[n - 1]
-    page_ids = [5 + 2 * i for i in range(len(pages))]
+    first_page = 5 if font_name is None else 9
+    page_ids = [first_page + 2 * i for i in range(len(pages))]
     objects.append(b"<< /Type /Catalog /Pages 2 0 R >>")
     kids = b" ".join(b"%d 0 R" % pid for pid in page_ids)
     objects.append(b"<< /Type /Pages /Kids [" + kids + b"] /Count %d >>" % len(pages))
-    objects.append(b"<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>")
-    objects.append(b"<< /Title (" + _pdf_escape(_st.text(language, "ER_TITLE")) + b") /Producer (urtc_common.evidence_report) >>")
+    if font_name is None:
+        objects.append(b"<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>")
+        objects.append(b"<< /Title (" + _pdf_escape(title) + b") /Producer (urtc_common.evidence_report) >>")
+    else:
+        base = b"URTC" + font_name.upper().encode("ascii") + b"+NotoSansCJK" + font_name.upper().encode("ascii") + b"-Regular"
+        objects.append(b"<< /Type /Font /Subtype /Type0 /BaseFont /" + base + b" /Encoding /Identity-H /DescendantFonts [5 0 R] /ToUnicode 8 0 R >>")
+        objects.append(b"<< /Title " + _utf16_hex(title) + b" /Producer (urtc_common.evidence_report) >>")
+    bodies = []
     for index, page in enumerate(pages):
         footer = _st.text(language, "ER_PAGE", page=index + 1, pages=len(pages))
-        body = [b"BT", b"/F1 9 Tf", b"11 TL", b"50 792 Td"] + [b"(" + _pdf_escape(line) + b") '" for line in page] + [b"ET",
-                b"BT", b"/F1 8 Tf", b"50 30 Td", b"(" + _pdf_escape(footer) + b") Tj", b"ET"]
-        stream = b"\n".join(body)
+        if font_name is None:
+            body = [b"BT", b"/F1 9 Tf", b"11 TL", b"50 792 Td"] + [b"(" + _pdf_escape(line) + b") '" for line in page] + [b"ET",
+                    b"BT", b"/F1 8 Tf", b"50 30 Td", b"(" + _pdf_escape(footer) + b") Tj", b"ET"]
+        else:
+            body = [b"BT", b"/F1 9 Tf", b"11 TL", b"50 792 Td"] + [_hex(line, glyphs, used) + b" '" for line in page] + [b"ET",
+                    b"BT", b"/F1 8 Tf", b"50 30 Td", _hex(footer, glyphs, used) + b" Tj", b"ET"]
+        bodies.append(b"\n".join(body))
+    if font_name is not None:
+        compressed = font["ttf"]
+        advance = {g: adv for g, adv in glyphs.values()}
+        widths = b" ".join(b"%d [%d]" % (gid, advance[gid]) for gid in sorted(used))
+        objects.append(b"<< /Type /Font /Subtype /CIDFontType2 /BaseFont /" + base + b" /CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> "
+                       b"/FontDescriptor 6 0 R /DW 1000 /W [" + widths + b"] /CIDToGIDMap /Identity >>")
+        objects.append(b"<< /Type /FontDescriptor /FontName /" + base + b" /Flags 4 /FontBBox [-200 -300 1200 1100] /ItalicAngle 0 /Ascent 880 /Descent -120 "
+                       b"/CapHeight 733 /StemV 80 /FontFile2 7 0 R >>")
+        objects.append(b"<< /Length %d /Length1 %d /Filter /FlateDecode >>\nstream\n" % (len(compressed), font["length"]) + compressed + b"\nendstream")
+        unicode_map = _to_unicode(used)
+        objects.append(b"<< /Length %d >>\nstream\n" % len(unicode_map) + unicode_map + b"\nendstream")
+    for index, stream in enumerate(bodies):
         objects.append(b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R >> >> /Contents %d 0 R >>" % (page_ids[index] + 1))
         objects.append(b"<< /Length %d >>\nstream\n" % len(stream) + stream + b"\nendstream")
     out = bytearray(b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n")
