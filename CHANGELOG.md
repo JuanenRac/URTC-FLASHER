@@ -2,6 +2,11 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- **Run an update against a faulty simulated bus:** `--cli --transport mock --scenario FILE` (with `--seed N` and `--evidence-dir DIR`) puts the bus scenario of `urtc_can/bus_scenario.py` between the program and the in-memory bootloader, on a virtual clock (the timeouts of the protocol count virtual seconds, so a lost frame costs no real waiting). Whether the update succeeds or fails, the run writes the update report and a `urtc-evidence/1` record that says the bus was a simulation, with the scenario, its seed and what it did; the report is not signed. It is off unless given and is refused with a real adapter; a scenario that is not valid runs nothing. The quick guide says so in the eight languages.
+
+
 ## [0.4.3] - A History window with the operations of the flasher, the evidence of the updates listed from the command line, an out-of-range HardwareID no longer kept and the lights of Project status following the evidence
 
 - **The Help window has a History step and the README describes the History window:** the quick guide (eight languages) says what the History button shows, the Interfaces section of the README in the eight languages describes the window and its command line form, and `docs/WINDOW_GUIDE.md` has a History section.

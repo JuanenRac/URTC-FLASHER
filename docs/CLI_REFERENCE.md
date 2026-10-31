@@ -41,6 +41,7 @@ usage: urtc_flasher.py --cli [-h]
                              [--port PORT] --file FILE [--no-trigger]
                              [--force] [--version MAJOR.MINOR[.PATCH]]
                              [--allow-downgrade] [--mock-fail REASON]
+                             [--scenario FILE] [--seed N] [--evidence-dir DIR]
 
 Headless URTC CAN OTA firmware update (no GUI).
 
@@ -76,7 +77,37 @@ options:
                         this VERIFY_FAIL_REASON_* value (e.g. 0x03 for HMAC
                         mismatch) instead of a successful update. Ignored for
                         real transports.
+  --scenario FILE       With --transport mock: a bus scenario (urtc-
+                        scenario/1) that makes the simulated bus lose, repeat,
+                        reorder, delay or cut frames, or the bootloader go
+                        silent or refuse. Off unless given; never accepted
+                        with a real adapter. The run writes an update report
+                        and a urtc-evidence/1 record that say the bus was a
+                        simulation.
+  --seed N              With --scenario: the seed of the scenario for this run
+                        (default: the one in the file).
+  --evidence-dir DIR    With --scenario: the folder for the report and the
+                        evidence record (default: the logs folder).
 ```
+
+### Faults on the simulated bus: `--scenario`
+
+`--transport mock --scenario FILE` puts a bus scenario between the program and
+the in-memory bootloader (the format is described in
+[`BUS_SCENARIOS.md`](https://github.com/JuanenRac/URTC-COMMON/blob/main/docs/BUS_SCENARIOS.md)
+of URTC-COMMON; the code is `urtc_can/bus_scenario.py`). Frames can be lost,
+repeated, reordered, delayed, lost in bursts or cut short, and the bootloader
+can stay silent or refuse. The run lives on a virtual clock: the timeouts of
+the protocol count virtual seconds, so a lost frame costs no real waiting, and
+the same scenario and seed give the same run. Whether the update succeeds or
+fails, `flasher_scenario.py` writes the update report (not signed: this run
+touches no key) and a `urtc-evidence/1` record next to it whose `transport`
+is `mock:scenario:<name>` and whose `detail` says that the bus was a
+simulation, with the seed and what the scenario did. The exit status is the
+usual one (a scenario that is not valid, or one given with a real transport, is
+a usage error, 2). `python -m urtc_can.bus_scenario generate --seed N` writes
+test scenarios that combine the faults. A scenario can take frames away, repeat
+or move them, but it cannot make the bootloader say that something worked.
 
 `--transport mock` is a real, self-contained in-memory bootloader
 simulator (`MockCAN` in `flasher_transports.py`) built for exercising
@@ -248,6 +279,7 @@ usage: urtc_flasher.py --cli [-h]
                              [--port PORT] --file FILE [--no-trigger]
                              [--force] [--version MAJOR.MINOR[.PATCH]]
                              [--allow-downgrade] [--mock-fail REASON]
+                             [--scenario FILE] [--seed N] [--evidence-dir DIR]
 urtc_flasher.py --cli: error: the following arguments are required: --file
 $ echo $?
 2

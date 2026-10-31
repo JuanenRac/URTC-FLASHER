@@ -21,13 +21,13 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-561-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-602-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocol-CAN--OTA-orange.svg" alt="CAN-OTA">
 </p>
 
 ---
 
-**诚实核查 - 今天真正能运行的部分：** `tests/` 下有 50 个 pytest 文件（561 个测试：全部通过，其中 73 个在没有 PySide6 时跳过）——针对真实 `MockCAN` 传输（`flasher_transports.py`）的 CAN-OTA 协议测试，它会回放完整的模拟引导程序序列（开始／擦除／接收、页数据 + PAGE_ACK、HMAC 分块、以真实成功或特定 `VERIFY_FAIL_REASON` 结束更新）；签名规则（无需任何密钥即发送已发布的签名、拒绝未签名镜像、清单 sha256 不符时在任何总线通信前拒绝）；镜像完整性检查；以及随附 `firmware/` 与其清单的核对。GitHub Actions（`.github/workflows/ci.yml`）在每次推送时运行这套测试，`tools/build_test.py` 也会在 `build-test.sh`/`.bat` 中运行。它还会运行 `ruff check` 和 `python -m mypy`（对程序及共享代码副本的类型检查）。根目录下的三个 `verify_qt_*.py` 脚本是 pytest 之外的真实端到端检查（需要真实的 Qt 事件循环；用 `QT_QPA_PLATFORM=offscreen python verify_qt_*.py` 运行）；`verify_qt_swd_full_chip_flash.py` 只以 `dry_run=True` 构造 `PyOCDCLI`/`CubeProgrammerCLI` 命令。这些都没有在本环境中针对真实板卡运行过。已发布的内容请参见 `CHANGELOG.md`。 模拟的引导程序（`MockCAN`）只是根据协议说明编写的模型：它能重现页确认、不完整的最后一页和回读帧，但它不是真正的引导程序，所以测试全部通过并不能代替在真实板卡上的试验（官方 73476 字节镜像曾无法安装、备份的最后一帧曾被丢弃，而测试却是通过的，正是因为模拟比真正的引导程序更宽松）。
+**诚实核查 - 今天真正能运行的部分：** `tests/` 下有 51 个 pytest 文件（602 个测试：全部通过，其中 73 个在没有 PySide6 时跳过）——针对真实 `MockCAN` 传输（`flasher_transports.py`）的 CAN-OTA 协议测试，它会回放完整的模拟引导程序序列（开始／擦除／接收、页数据 + PAGE_ACK、HMAC 分块、以真实成功或特定 `VERIFY_FAIL_REASON` 结束更新）；签名规则（无需任何密钥即发送已发布的签名、拒绝未签名镜像、清单 sha256 不符时在任何总线通信前拒绝）；镜像完整性检查；以及随附 `firmware/` 与其清单的核对。GitHub Actions（`.github/workflows/ci.yml`）在每次推送时运行这套测试，`tools/build_test.py` 也会在 `build-test.sh`/`.bat` 中运行。它还会运行 `ruff check` 和 `python -m mypy`（对程序及共享代码副本的类型检查）。根目录下的三个 `verify_qt_*.py` 脚本是 pytest 之外的真实端到端检查（需要真实的 Qt 事件循环；用 `QT_QPA_PLATFORM=offscreen python verify_qt_*.py` 运行）；`verify_qt_swd_full_chip_flash.py` 只以 `dry_run=True` 构造 `PyOCDCLI`/`CubeProgrammerCLI` 命令。这些都没有在本环境中针对真实板卡运行过。已发布的内容请参见 `CHANGELOG.md`。 模拟的引导程序（`MockCAN`）只是根据协议说明编写的模型：它能重现页确认、不完整的最后一页和回读帧，但它不是真正的引导程序，所以测试全部通过并不能代替在真实板卡上的试验（官方 73476 字节镜像曾无法安装、备份的最后一帧曾被丢弃，而测试却是通过的，正是因为模拟比真正的引导程序更宽松）。
 
 ---
 
@@ -39,7 +39,7 @@
 |---|---|
 | 版本 | `0.4.3` |
 | 成熟度 | 可用 |
-| 测试 | 561 (`python -m pytest tests -q`) |
+| 测试 | 602 (`python -m pytest tests -q`) |
 | 技术栈 | Python / PySide6 / Qt Quick / CAN-OTA / SWD/JTAG |
 | 目标 | 使用者的电脑 |
 | 真实硬件 | 仅模拟：使用模拟器、替身或仿真测试；此版本没有在真实硬件上运行的记录 |
@@ -466,6 +466,12 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 固件可以让多个工具头共用一条 CAN 总线（多节点扩展）。它**默认关闭**，只有一个工具头的总线与以前完全一样地工作。**工具头**窗口会查找工具头，列出每个工具头的地址、工具和序列号，并显示其状态：就绪、已选择、地址冲突、故障已锁定、处于引导程序或已丢失。您选择一个后，程序会先请您确认，之后才向该工具头发送任何内容；只要总线上有多个工具头，在选中一个并得到它的确认之前，命令都会被拒绝。如果所选工具头丢失，所有工具头都会进入安全状态（窗口中的复选框可关闭此行为）。目前只针对总线模型测试过，没有在电路板上试过。参见 URTC-COMMON 中的 `docs/MULTINODE.md`。
 <!-- /urtc-section:heads -->
 
+<!-- urtc-section:bus_scenarios -->
+### 模拟总线故障
+
+计划或更新可以在无需硬件的情况下，针对像真实总线一样表现不佳的模拟总线运行。场景是一个 JSON 文件（`urtc-scenario/1`），列出各种故障：帧丢失、重复、乱序、延迟、成串丢失或被截短，节点保持沉默或拒绝命令并说明原因，以及处于自由配置（`0x1F`）的刀头以不同方式回应 `0x1A3` 和 `0x1A2`。除非您要求，否则什么都不会改变：选项是 `--scenario 文件`（配合测试器的模拟刀头或烧录器的 mock 传输），文件会被严格检查，其中有任何无法理解之处即被拒绝，真实适配器永远不会接受场景。相同的场景和相同的种子会按相同顺序给出相同的帧，`bus_scenario.py generate --seed N` 会写出组合各种故障的测试场景。运行会留下通常的证据记录（`urtc-evidence/1`），说明总线是模拟的，以及使用了哪个场景和种子。场景可以拿走帧、重复帧或移动帧，但无法让节点声称某件事成功了。格式与规则：[总线场景](https://github.com/JuanenRac/URTC-COMMON/blob/main/docs/BUS_SCENARIOS.md)。
+<!-- /urtc-section:bus_scenarios -->
+
 ## 🔒 安全与防护
 
 | 风险 | 防御 |
@@ -699,6 +705,7 @@ SocketCAN 没有这个特定的坑——访问一个类似 `can0` 的接口不�
 ├── flasher_protocol.py            <- CAN OTA 状态机本身
 ├── flasher_github.py               <- 列出并下载 URTC GitHub 发布版本的资源（assets）
 ├── flasher_records.py             <- 会话日志（位置、保留）与更新报告
+├── flasher_scenario.py            <- 模拟总线场景下的更新，使用虚拟时钟并生成证据记录
 ├── pytest.ini / ruff.toml          <- pytest 和 ruff（静态检查）的设置
 ├── requirements.txt
 ├── build_exe.bat                  <- Windows 独立构建
@@ -787,7 +794,7 @@ SocketCAN 没有这个特定的坑——访问一个类似 `can0` 的接口不�
 
 ## 🧪 测试
 
-测试套件在 50 个文件中共有 561 个测试（`python -m pytest tests -q`；在没有屏幕的机器上使用 Qt 时设置 `QT_QPA_PLATFORM=offscreen`；其中 73 个需要 PySide6，没有它时会被跳过）：针对真实 `MockCAN` 传输层的 CAN-OTA 协议（它回放完整的模拟引导程序：开始、擦除、接收、页数据和 ACK、HMAC 数据块、带真实成功或特定 `VERIFY_FAIL_REASON` 的更新结束）、签名规则、镜像完整性检查、`firmware/` 中内置的固件与其清单的核对、用 `dry_run` 构造的 SWD/JTAG 命令、语言文件和 Qt Quick 面板。根目录下的三个脚本（`verify_qt_*.py`）对 Qt 面板做端到端驱动。CI 还会运行 `ruff check`、`python -m mypy` 和 `tools/ci_validate.py`。`MockCAN` 只是根据协议写成的模型：它比真实的引导程序宽容，所以测试全绿并不能代替在真实板子上的试验。
+测试套件在 51 个文件中共有 602 个测试（`python -m pytest tests -q`；在没有屏幕的机器上使用 Qt 时设置 `QT_QPA_PLATFORM=offscreen`；其中 73 个需要 PySide6，没有它时会被跳过）：针对真实 `MockCAN` 传输层的 CAN-OTA 协议（它回放完整的模拟引导程序：开始、擦除、接收、页数据和 ACK、HMAC 数据块、带真实成功或特定 `VERIFY_FAIL_REASON` 的更新结束）、签名规则、镜像完整性检查、`firmware/` 中内置的固件与其清单的核对、用 `dry_run` 构造的 SWD/JTAG 命令、语言文件和 Qt Quick 面板。根目录下的三个脚本（`verify_qt_*.py`）对 Qt 面板做端到端驱动。CI 还会运行 `ruff check`、`python -m mypy` 和 `tools/ci_validate.py`。`MockCAN` 只是根据协议写成的模型：它比真实的引导程序宽容，所以测试全绿并不能代替在真实板子上的试验。
 
 ## 🏗️ 构建与发布
 

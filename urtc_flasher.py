@@ -77,6 +77,7 @@ from flasher_config import _CONFIG_LOADED, _load_config_overrides
 from flasher_transports import SLCAN, SLCANError, SocketCAN, SocketCANError, PythonCAN, PythonCANError, MockCAN
 from flasher_protocol import URTCFlasher, FlashError
 from flasher_validation import validate_firmware_file
+from flasher_config import FLASHER_VERSION
 
 def _cli_log(msg):
     print(msg, flush=True)
@@ -125,7 +126,32 @@ def run_cli(argv):
                          help="With --transport mock: simulate a verify failure with this "
                               "VERIFY_FAIL_REASON_* value (e.g. 0x03 for HMAC mismatch) instead "
                               "of a successful update. Ignored for real transports.")
+    parser.add_argument("--scenario", default=None, metavar="FILE",
+                         help="With --transport mock: a bus scenario (urtc-scenario/1) that makes the simulated bus lose, repeat, reorder, delay or "
+                              "cut frames, or the bootloader go silent or refuse. Off unless given; never accepted with a real adapter. The run "
+                              "writes an update report and a urtc-evidence/1 record that say the bus was a simulation.")
+    parser.add_argument("--seed", type=int, default=None, metavar="N",
+                         help="With --scenario: the seed of the scenario for this run (default: the one in the file).")
+    parser.add_argument("--evidence-dir", default=None, metavar="DIR",
+                         help="With --scenario: the folder for the report and the evidence record (default: the logs folder).")
     args = parser.parse_args(argv)
+
+    if args.scenario and args.transport != "mock":
+        _cli_log("ERROR: --scenario is only for --transport mock; a scenario is never applied to a real adapter.")
+        return 2
+    if (args.seed is not None or args.evidence_dir) and not args.scenario:
+        _cli_log("ERROR: --seed and --evidence-dir go with --scenario.")
+        return 2
+    scenario = None
+    if args.scenario:
+        from urtc_can import bus_scenario
+        try:
+            scenario = bus_scenario.load(args.scenario)
+            if args.seed is not None and not 0 <= args.seed <= bus_scenario.SEED_MAX:
+                raise bus_scenario.ScenarioError(f"seed must be a whole number from 0 to {bus_scenario.SEED_MAX}")
+        except bus_scenario.ScenarioError as exc:
+            _cli_log(f"ERROR: {exc}")
+            return 2
 
     if args.transport != "mock" and not args.port:
         _cli_log("ERROR: --port is required for --transport serial/socketcan/python-can.")
@@ -155,6 +181,9 @@ def run_cli(argv):
         return 2
     _cli_log(("Image digest verified: " if check.verified else "Image digest (no published digest to compare): ") + check.sha256)
     _cli_log({"signed": "Release signature verified.", "unsigned": "No release signature (image of a bench pre-release)."}.get(check.release_signature, ""))
+
+    if scenario is not None:
+        return _run_with_scenario(args, scenario, check, size)
 
     transport = None
     try:
@@ -193,6 +222,63 @@ def run_cli(argv):
             except Exception:
                 pass
 
+
+
+def _run_with_scenario(args, scenario, check, size):
+    """The update against the mock bootloader behind the bus of a scenario, on a virtual clock, with its report and evidence record."""
+    import flasher_scenario
+    from flasher_config import LOGS_FOLDER, THIS_HARDWARE_ID
+    from flasher_integrity import manifest_signing_kind
+    from flasher_records import build_update_report, writable_logs_folder
+    from urtc_can import bus_scenario
+
+    virtual = bus_scenario.VirtualTime()
+    bus = bus_scenario.FaultyBus(MockCAN(simulate_failure=args.mock_fail, log=_cli_log, delay=0.0), scenario, seed=args.seed, clock=virtual.clock,
+                                 sleep=virtual.sleep, read_cost_s=flasher_scenario.READ_COST_S)
+    _cli_log("Using the mock transport behind a bus scenario - nothing here is touching real hardware.")
+    _cli_log(f"Scenario {scenario.name}, seed {bus.seed}, {len(scenario.faults)} rule(s).")
+    result, note, code, versions = "success", "", 0, None
+    try:
+        with flasher_scenario.virtual_clock(virtual):
+            bus.open_channel()
+            flasher = URTCFlasher(bus, log=_cli_log, progress_cb=lambda pct: None)
+            if not args.no_trigger:
+                versions = flasher.report_version_change(args.file, "master", args.version)
+                flasher.trigger_bootloader_entry()
+            flasher.flash(args.file, allow_downgrade=args.allow_downgrade, version=args.version)
+        _cli_log("SUCCESS: firmware update complete.")
+    except KeyboardInterrupt:
+        _cli_log("Cancelled.")
+        return 130
+    except FlashError as exc:
+        result, note, code = "failed", str(exc), 1
+        _cli_log(f"FAILED: {exc}")
+    except Exception as exc:
+        result, note, code = "error", f"{type(exc).__name__}: {exc}", 1
+        _cli_log(f"UNEXPECTED ERROR: {exc}")
+    finally:
+        try:
+            bus.close()
+        except Exception:
+            pass
+    _cli_log(bus.summary())
+    folder = args.evidence_dir or writable_logs_folder(LOGS_FOLDER)
+    if not folder:
+        _cli_log("No folder to write the report and the evidence record in (use --evidence-dir).")
+        return code or 1
+    try:
+        report = build_update_report(
+            tool_version=FLASHER_VERSION, image_path=args.file, image_sha256=check.sha256, image_size=size, target="master",
+            installed=versions["installed"] if versions else None, new=versions["new"] if versions else None, hardware_id=THIS_HARDWARE_ID,
+            signing_key_kind=manifest_signing_kind(args.file), result=result,
+        )
+        report_path, evidence_path = flasher_scenario.write_scenario_records(report, bus, folder, note)
+        _cli_log(f"Update report: {report_path}")
+        _cli_log(f"Evidence record: {evidence_path}")
+    except (OSError, TypeError, KeyError, ValueError) as exc:
+        _cli_log(f"ERROR: the report could not be written: {exc}")
+        return code or 1
+    return code
 
 
 def run_history(argv):

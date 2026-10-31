@@ -48,6 +48,7 @@ Every file of the repository with a line on what it does: the annotated tree tha
 ├── flasher_protocol.py            <- the CAN OTA state machine itself
 ├── flasher_github.py              <- lists and downloads the assets of a URTC GitHub release
 ├── flasher_records.py             <- session logs (location, retention) and update reports
+├── flasher_scenario.py            <- an update behind a simulated bus scenario, on a virtual clock, with its evidence record
 ├── flasher_integrity.py           Checks before a flash is reported as done: SHA-256 and CRC-32 of the image on disk
 ├── flasher_release_signature.py   Release signatures (Ed25519) of the files this tool downloads or flashes
 ├── urtc_can/                      Shared code copied from URTC-COMMON: protocol, transports, virtual board, updates, help and the tool heads window

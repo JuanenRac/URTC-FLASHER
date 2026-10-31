@@ -21,13 +21,13 @@
   <img src="https://img.shields.io/badge/Licence-GPL%203.0-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Langage-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-561-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-602-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocole-CAN--OTA-orange.svg" alt="CAN-OTA">
 </p>
 
 ---
 
-**Vérification d'honnêteté - ce qui fonctionne réellement aujourd'hui :** `tests/` contient 50 fichiers pytest (561 tests : tous réussis ; 73 d'entre eux sont ignorés sans PySide6) - le protocole CAN-OTA face à un vrai transport `MockCAN` (`flasher_transports.py`) qui rejoue une séquence complète de bootloader simulé (démarrage/effacement/réception, données de page + PAGE_ACK, blocs HMAC, fin de mise à jour avec un vrai succès ou un `VERIFY_FAIL_REASON` précis), les règles de signature (signature publiée envoyée sans aucune clé, image non signée refusée, sha256 du manifeste non conforme refusé avant tout trafic sur le bus), les contrôles d'intégrité d'image et le dossier `firmware/` fourni par rapport à ses manifestes. GitHub Actions (`.github/workflows/ci.yml`) exécute cette suite à chaque push, et `tools/build_test.py` l'exécute dans `build-test.sh`/`.bat`. Elle exécute aussi `ruff check` et `python -m mypy` (un contrôle des types du programme et des copies du code partagé). Les trois scripts `verify_qt_*.py` à la racine sont de vrais contrôles de bout en bout hors pytest (ils nécessitent une vraie boucle d'événements Qt ; lancement avec `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`) ; `verify_qt_swd_full_chip_flash.py` construit seulement les commandes `PyOCDCLI`/`CubeProgrammerCLI` avec `dry_run=True`. Rien de tout cela n'a été exécuté sur une vraie carte dans cet environnement. Voir `CHANGELOG.md` pour ce qui a réellement été publié. Le bootloader simulé (`MockCAN`) n'est qu'un modèle écrit à partir de la description du protocole : il reproduit les ACK de page, la dernière page partielle et les trames de relecture, mais ce n'est pas le vrai bootloader, donc une exécution de tests au vert ne remplace pas un essai sur une vraie carte (l'image officielle de 73476 octets ne pouvait pas être installée et la dernière trame d'une sauvegarde était perdue alors que les tests passaient, justement parce que la simulation était plus indulgente que le vrai bootloader).
+**Vérification d'honnêteté - ce qui fonctionne réellement aujourd'hui :** `tests/` contient 51 fichiers pytest (602 tests : tous réussis ; 73 d'entre eux sont ignorés sans PySide6) - le protocole CAN-OTA face à un vrai transport `MockCAN` (`flasher_transports.py`) qui rejoue une séquence complète de bootloader simulé (démarrage/effacement/réception, données de page + PAGE_ACK, blocs HMAC, fin de mise à jour avec un vrai succès ou un `VERIFY_FAIL_REASON` précis), les règles de signature (signature publiée envoyée sans aucune clé, image non signée refusée, sha256 du manifeste non conforme refusé avant tout trafic sur le bus), les contrôles d'intégrité d'image et le dossier `firmware/` fourni par rapport à ses manifestes. GitHub Actions (`.github/workflows/ci.yml`) exécute cette suite à chaque push, et `tools/build_test.py` l'exécute dans `build-test.sh`/`.bat`. Elle exécute aussi `ruff check` et `python -m mypy` (un contrôle des types du programme et des copies du code partagé). Les trois scripts `verify_qt_*.py` à la racine sont de vrais contrôles de bout en bout hors pytest (ils nécessitent une vraie boucle d'événements Qt ; lancement avec `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`) ; `verify_qt_swd_full_chip_flash.py` construit seulement les commandes `PyOCDCLI`/`CubeProgrammerCLI` avec `dry_run=True`. Rien de tout cela n'a été exécuté sur une vraie carte dans cet environnement. Voir `CHANGELOG.md` pour ce qui a réellement été publié. Le bootloader simulé (`MockCAN`) n'est qu'un modèle écrit à partir de la description du protocole : il reproduit les ACK de page, la dernière page partielle et les trames de relecture, mais ce n'est pas le vrai bootloader, donc une exécution de tests au vert ne remplace pas un essai sur une vraie carte (l'image officielle de 73476 octets ne pouvait pas être installée et la dernière trame d'une sauvegarde était perdue alors que les tests passaient, justement parce que la simulation était plus indulgente que le vrai bootloader).
 
 ---
 
@@ -39,7 +39,7 @@
 |---|---|
 | Version | `0.4.3` |
 | Maturité | Fonctionnel |
-| Tests | 561 (`python -m pytest tests -q`) |
+| Tests | 602 (`python -m pytest tests -q`) |
 | Technologie | Python / PySide6 / Qt Quick / CAN-OTA / SWD/JTAG |
 | Cible | Le PC de la personne qui l'utilise |
 | Sur matériel réel | Simulé seulement : testé avec des émulateurs, des doubles de test ou des simulateurs ; aucune exécution sur du matériel réel n'est consignée pour cette version |
@@ -638,6 +638,12 @@ l'État de `URTC Tester`) si cela vous importe.
 Le firmware peut faire partager un bus CAN à plusieurs têtes d'outil (l'extension multinœud). Elle est **désactivée par défaut**, et un bus avec une seule tête fonctionne exactement comme avant. La fenêtre **Têtes** trouve les têtes, liste chacune avec son adresse, son outil et son numéro de série, et affiche son état : prête, sélectionnée, conflit d'adresse, défaut mémorisé, dans son bootloader ou perdue. Vous en sélectionnez une, le programme demande confirmation et ne lui envoie rien avant ; tant que plusieurs têtes sont sur le bus, une commande est refusée jusqu'à ce qu'une soit sélectionnée et l'ait confirmé. Si la tête sélectionnée est perdue, toutes les têtes passent à leur état sûr (une case de la fenêtre le désactive). Testé seulement contre un modèle du bus, pas avec des cartes. Voir `docs/MULTINODE.md` dans URTC-COMMON.
 <!-- /urtc-section:heads -->
 
+<!-- urtc-section:bus_scenarios -->
+### Défauts du bus simulé
+
+Un plan ou une mise à jour peut être exécuté contre un bus simulé qui se comporte mal comme un vrai, sans matériel. Un scénario est un fichier JSON (`urtc-scenario/1`) qui liste les défauts : trames perdues, répétées, réordonnées, retardées, perdues en rafales ou tronquées, un nœud qui reste silencieux ou refuse une commande en disant pourquoi, et une tête en configuration libre (`0x1F`) qui répond de différentes façons à `0x1A3` et `0x1A2`. Rien ne change si vous ne le demandez pas : l'option est `--scenario FICHIER` (avec la tête simulée du testeur ou le transport mock du programmeur), le fichier est vérifié strictement et refusé si quelque chose n'y est pas compris, et un vrai adaptateur n'en accepte jamais. Le même scénario avec la même graine donne les mêmes trames dans le même ordre, et `bus_scenario.py generate --seed N` écrit des scénarios de test qui combinent les défauts. L'exécution laisse l'enregistrement de preuve habituel (`urtc-evidence/1`), qui indique que le bus était une simulation et avec quel scénario et quelle graine. Un scénario peut retirer des trames, les répéter ou les déplacer, mais il ne peut pas faire dire à un nœud que quelque chose a fonctionné. Format et règles : [Scénarios du bus](https://github.com/JuanenRac/URTC-COMMON/blob/main/docs/BUS_SCENARIOS.md).
+<!-- /urtc-section:bus_scenarios -->
+
 ## 🔒 Sécurité et protection
 
 | Risque | Défense |
@@ -932,6 +938,7 @@ Cet outil s'attend à un dossier `firmware/` juste à côté de
 ├── flasher_protocol.py            <- la machine a etats CAN OTA elle-meme, tant pour la carte principale que (relayee via son propre pont I2C) l'esclave d'extension
 ├── flasher_github.py               <- liste et télécharge les assets d'une release GitHub d'URTC
 ├── flasher_records.py             <- journaux de session (emplacement, conservation) et rapports de mise à jour
+├── flasher_scenario.py            <- une mise à jour derrière un scénario de bus simulé, sur une horloge virtuelle, avec son enregistrement de preuve
 ├── pytest.ini / ruff.toml          <- réglages de pytest et ruff (contrôles statiques)
 ├── requirements.txt
 ├── build_exe.bat                  <- build autonome pour Windows
@@ -1048,7 +1055,7 @@ Les versions des programmes URTC qui fonctionnent ensemble, et la version du pro
 
 ## 🧪 Tests
 
-La suite compte 561 tests dans 50 fichiers (`python -m pytest tests -q` ; avec Qt sur une machine sans écran, `QT_QPA_PLATFORM=offscreen` ; les 73 qui ont besoin de PySide6 sont ignorés sans lui) : le protocole CAN-OTA face à un vrai transport `MockCAN` qui rejoue un bootloader simulé complet (démarrage, effacement, réception, données de page et ACK, blocs HMAC, fin de mise à jour avec un vrai succès ou un `VERIFY_FAIL_REASON` précis), les règles de signature, les contrôles d'intégrité de l'image, le firmware inclus dans `firmware/` face à ses manifestes, les commandes SWD/JTAG construites avec `dry_run`, les fichiers de langue et les panneaux Qt Quick. Trois scripts à la racine (`verify_qt_*.py`) pilotent les panneaux Qt de bout en bout. La CI exécute aussi `ruff check`, `python -m mypy` et `tools/ci_validate.py`. `MockCAN` n'est qu'un modèle écrit à partir du protocole : il est plus indulgent que le vrai bootloader, donc une exécution verte ne remplace pas un essai sur une vraie carte.
+La suite compte 602 tests dans 51 fichiers (`python -m pytest tests -q` ; avec Qt sur une machine sans écran, `QT_QPA_PLATFORM=offscreen` ; les 73 qui ont besoin de PySide6 sont ignorés sans lui) : le protocole CAN-OTA face à un vrai transport `MockCAN` qui rejoue un bootloader simulé complet (démarrage, effacement, réception, données de page et ACK, blocs HMAC, fin de mise à jour avec un vrai succès ou un `VERIFY_FAIL_REASON` précis), les règles de signature, les contrôles d'intégrité de l'image, le firmware inclus dans `firmware/` face à ses manifestes, les commandes SWD/JTAG construites avec `dry_run`, les fichiers de langue et les panneaux Qt Quick. Trois scripts à la racine (`verify_qt_*.py`) pilotent les panneaux Qt de bout en bout. La CI exécute aussi `ruff check`, `python -m mypy` et `tools/ci_validate.py`. `MockCAN` n'est qu'un modèle écrit à partir du protocole : il est plus indulgent que le vrai bootloader, donc une exécution verte ne remplace pas un essai sur une vraie carte.
 
 ## 🏗️ Compilation et publication
 
