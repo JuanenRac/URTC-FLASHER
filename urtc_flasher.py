@@ -283,7 +283,8 @@ def _run_with_scenario(args, scenario, check, size):
 
 def run_history(argv):
     """``urtc_flasher.py --history FOLDER [--json]``: the evidence records (urtc-evidence/1) of a folder, newest first, each one checked.
-    Opens no bus. Exit codes: 0 every record is valid, 1 one of them fails its check (edited after it was written, not JSON ...), 2 the folder does not exist."""
+    Opens no bus. Exit codes: 0 every record is valid, 1 one of them fails its check (edited after it was written, not JSON ...), 2 the folder does not exist.
+    The update reports of the flasher and the result records of the tester that share the folder are not evidence: they are listed apart and never make it fail."""
     from urtc_can import evidence_history
 
     parser = argparse.ArgumentParser(prog="urtc_flasher.py --history", description="List the evidence records of a folder, checking each one.")
@@ -291,11 +292,12 @@ def run_history(argv):
     parser.add_argument("--json", action="store_true", help="print the list with its summary as one JSON document")
     args = parser.parse_args(argv)
     try:
-        entries = evidence_history.select(evidence_history.load_folder(args.folder))
+        loaded = evidence_history.load_folder(args.folder)
     except FileNotFoundError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 2
-    print(evidence_history.to_json(entries).rstrip("\n") if args.json else evidence_history.to_text(entries))
+    entries, others = evidence_history.select(loaded), evidence_history.others_of(loaded)
+    print(evidence_history.to_json(entries, others).rstrip("\n") if args.json else evidence_history.to_text(entries, others))
     return 1 if any(not entry.valid for entry in entries) else 0
 
 

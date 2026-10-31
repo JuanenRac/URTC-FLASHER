@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "urtc_common_version": "0.1.0",
+  "urtc_common_version": "0.1.1",
   "files": {
     "changelog_section.py": {
       "from": "tools/changelog_section.py",

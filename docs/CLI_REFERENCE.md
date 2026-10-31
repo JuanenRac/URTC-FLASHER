@@ -290,7 +290,9 @@ $ echo $?
 `python urtc_flasher.py --history FOLDER [--json]` lists the evidence records (`urtc-evidence/1`) found in the `.json` and `.jsonl` files of a folder, newest
 first: the time, the kind, the outcome, the tool, the board and the versions before and after, and the file. Each record is checked on the way: one that was
 edited after it was written (its digest no longer matches), a file that is not JSON or a record of another format is listed as `NOT VALID` with what is wrong.
-It opens no bus and changes nothing. Exit codes: `0` every record is valid, `1` one fails its check, `2` the folder does not exist. `--json` prints the list with
+The update report that the flasher writes next to its evidence (`urtc_update_report_<time>.json`) and the result record of the tester are not evidence: they are
+recognized by their shape, counted apart as "other records" and listed below the list by name and type (and under `others` with `--json`), never as `NOT VALID`.
+It opens no bus and changes nothing. Exit codes: `0` every record is valid (other records never make it fail), `1` one fails its check, `2` the folder does not exist. `--json` prints the list with
 its summary (counts by outcome and kind, first and last time) as one document. The tester and the updater have the same view (`history` and `evidence --history`).
 
 ## Exit codes

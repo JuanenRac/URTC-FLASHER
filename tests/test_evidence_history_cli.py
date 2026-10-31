@@ -1,4 +1,4 @@
-﻿# =============================================================================
+# =============================================================================
 # URTC-FLASHER - tests/test_evidence_history_cli.py
 # Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
 # GPL-3.0-or-later - see LICENSE
@@ -38,3 +38,28 @@ def test_a_record_edited_after_it_was_written_makes_the_history_fail(tmp_path, c
 def test_a_missing_folder_is_a_usage_error(tmp_path, capsys):
     assert urtc_flasher.run_history([str(tmp_path / "missing")]) == 2
     assert "not a folder" in capsys.readouterr().err
+
+
+def test_the_update_report_next_to_its_evidence_is_listed_apart_and_never_fails_the_history(tmp_path, capsys):
+    """The flasher writes ``urtc_update_report_<time>.json`` and ``urtc_evidence_<time>.json`` in the same folder: only the second one is evidence."""
+    import flasher_records
+
+    report = flasher_records.build_update_report(
+        tool_version="0.4.3", image_path="fw.bin", image_sha256="a" * 64, image_size=10, target="slave-1", installed=(0, 3), new=(0, 4), hardware_id=0xABCD,
+        signing_key_kind="release", result="OK", operator="ana", timestamp="2026-01-05T10:00:00Z")
+    report_path = flasher_records.write_update_report(report, str(tmp_path))
+    flasher_records.write_evidence_record(report, report_path)
+    assert len(list(tmp_path.glob("*.json"))) == 2
+    assert urtc_flasher.run_history([str(tmp_path)]) == 0
+    out = capsys.readouterr().out
+    assert "NOT VALID" not in out and "1 other record(s)" in out and "[update_report]" in out
+    assert urtc_flasher.run_history([str(tmp_path), "--json"]) == 0
+    document = json.loads(capsys.readouterr().out)
+    assert document["summary"]["records"] == 1 and document["summary"]["invalid"] == 0 and document["summary"]["others"] == 1
+    assert [o["type"] for o in document["others"]] == ["update_report"]
+
+
+def test_a_json_of_an_unknown_shape_still_makes_the_history_fail(tmp_path, capsys):
+    (tmp_path / "urtc_update_report_odd.json").write_text(json.dumps({"hello": "world"}), encoding="utf-8")
+    assert urtc_flasher.run_history([str(tmp_path)]) == 1
+    assert "NOT VALID" in capsys.readouterr().out

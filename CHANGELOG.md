@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The history of the flasher no longer lists the files that are not evidence as NOT VALID:** The update report (`urtc_update_report_<time>.json`) shares the folder with its evidence record (`urtc_evidence_<time>.json`) and was counted as a record that fails its check. The shared history recognizes them by their shape (never by the file name), counts them apart as "other records" and lists them by name and type in the text, in the JSON (`others`), in the History window (a counter and a list) and in the report, in the eight languages; the exit status of the history is 0 when there is only valid evidence and other records, and JSON of any other shape stays NOT VALID. The copies of the shared code were synchronized (`history_qt`, `history_qml` and `report`, with their locks).
 - **Run an update against a faulty simulated bus:** `--cli --transport mock --scenario FILE` (with `--seed N` and `--evidence-dir DIR`) puts the bus scenario of `urtc_can/bus_scenario.py` between the program and the in-memory bootloader, on a virtual clock (the timeouts of the protocol count virtual seconds, so a lost frame costs no real waiting). Whether the update succeeds or fails, the run writes the update report and a `urtc-evidence/1` record that says the bus was a simulation, with the scenario, its seed and what it did; the report is not signed. It is off unless given and is refused with a real adapter; a scenario that is not valid runs nothing. The quick guide says so in the eight languages.
 
 

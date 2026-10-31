@@ -155,12 +155,28 @@ Dialog {
                         }
                     }
                 }
+                Text {
+                    objectName: "historyOthers"
+                    Layout.fillWidth: true
+                    visible: text !== ""
+                    text: dialog.model ? dialog.model.othersText : ""
+                    color: dialog.mutedColor
+                    wrapMode: Text.WrapAnywhere
+                    font.pixelSize: 11
+                }
             }
         }
         RowLayout {
             Layout.fillWidth: true
             Button { text: model ? model.refreshText : ""; onClicked: if (model) model.refresh() }
-            Item { Layout.fillWidth: true }
+            Button { objectName: "historyReport"; text: model ? model.reportText : ""; onClicked: if (model) model.writeReport() }
+            Text {
+                Layout.fillWidth: true
+                text: model ? model.reportStatus : ""
+                color: dialog.mutedColor
+                elide: Text.ElideMiddle
+                font.pixelSize: 11
+            }
             Button { text: model ? model.closeText : ""; onClicked: dialog.close() }
         }
     }
