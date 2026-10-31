@@ -62,6 +62,7 @@ from urtc_can.help_qt import HelpModel
 from urtc_can.multinode_host import MultinodeHost
 from urtc_can.node_picker import GatedTransport, NodePicker, config_reader_for, transport_io
 from urtc_can.node_picker_qt import NodePickerModel
+from urtc_can.evidence_history_qt import EvidenceHistoryModel
 from urtc_can.update_qt import UpdateModel
 from urtc_ui import LanguageModel, connection_badge, format_bytes
 
@@ -147,6 +148,7 @@ class FlasherQtBridge(QObject):
         self._release_entries: list[dict] = []
         self._update_model: UpdateModel | None = None
         self._help_model: HelpModel | None = None
+        self._history_model: EvidenceHistoryModel | None = None
         self._node_model: NodePickerModel | None = None
         self._release_status = ""
         self._release_loading = False
@@ -252,6 +254,13 @@ class FlasherQtBridge(QObject):
         if self._help_model is None:
             self._help_model = HelpModel("flasher", lambda: _current_language, parent=self)
         return self._help_model
+
+    @Property(QObject, constant=True)
+    def history(self) -> QObject:
+        """The history of operations: the evidence records the flasher wrote in its logs folder, each one checked (it only reads)."""
+        if self._history_model is None:
+            self._history_model = EvidenceHistoryModel(lambda: writable_logs_folder(LOGS_FOLDER), lambda: _current_language, parent=self)
+        return self._history_model
 
     @Property(str, constant=True)
     def title(self) -> str:

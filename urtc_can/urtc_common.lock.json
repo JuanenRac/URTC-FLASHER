@@ -1,10 +1,10 @@
 {
   "format": 1,
-  "urtc_common_version": "0.0.9",
+  "urtc_common_version": "0.1.0",
   "files": {
     "__init__.py": {
       "from": "src/urtc_common/__init__.py",
-      "sha256": "1cace28d954e9956da3e0a9c4b71fb5ed55432b4f563c629fa3f2bc58afdaf04"
+      "sha256": "4c7ec2a50d36541c28ac5ee7b4b8fbc6a6a943f8a0ae3919ec8157f6790e1216"
     },
     "conformance.py": {
       "from": "src/urtc_common/conformance.py",
@@ -17,6 +17,14 @@
     "evidence_history.py": {
       "from": "src/urtc_common/evidence_history.py",
       "sha256": "63abdaf9e43532e9124a3037a4c54cf9a5e48b8b40018cf7a9a15264feaedb25"
+    },
+    "evidence_history_qt.py": {
+      "from": "src/urtc_common/evidence_history_qt.py",
+      "sha256": "c6304601f78a67679765d798ef34119e9cf72dd353676f95449da145e33b7b14"
+    },
+    "evidence_history_strings.py": {
+      "from": "src/urtc_common/evidence_history_strings.py",
+      "sha256": "1fe3397c62eb29319c6343859e80e5ef4b32848a5fd3d6efd4ebbc5a86621afc"
     },
     "framing.py": {
       "from": "src/urtc_common/framing.py",

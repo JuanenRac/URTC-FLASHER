@@ -225,6 +225,17 @@ ApplicationWindow {
         accentColor: window.cyan
     }
 
+    EvidenceHistoryDialog {
+        id: historyDialog
+        objectName: "historyDialog"
+        model: flasherBackend.history
+        panelColor: window.panel
+        borderColor: window.panelBorder
+        textColor: window.textPrimary
+        mutedColor: window.muted
+        accentColor: window.cyan
+    }
+
     UpdateDialog {
         id: updateDialog
         objectName: "updateDialog"
@@ -608,6 +619,7 @@ ApplicationWindow {
                     GameButton { text: flasherBackend.uiText("TITLE_SAVE_DEBUG_BUNDLE"); accent: "#24465e"; Layout.fillWidth: true; onClicked: debugBundleDialog.open() }
                     GameButton { text: flasherBackend.uiText("MENU_SAVE_LOGS"); accent: "#24465e"; Layout.fillWidth: true; onClicked: saveLogDialog.open() }
                     GameButton { text: flasherBackend.nodes.t("NP_TITLE"); objectName: "nodesButton"; accent: "#24465e"; Layout.fillWidth: true; onClicked: nodeDialog.open() }
+                    GameButton { text: flasherBackend.history.text("EH_BTN_OPEN"); objectName: "historyButton"; accent: "#24465e"; Layout.fillWidth: true; onClicked: historyDialog.open() }
                     GameButton { text: flasherBackend.updates.t("UPD_BTN_CHECK"); accent: "#24465e"; Layout.fillWidth: true; onClicked: updateDialog.open() }
                     GameButton { text: flasherBackend.help.title; accent: "#24465e"; Layout.fillWidth: true; onClicked: helpDialog.open() }
                     GameButton { text: flasherBackend.uiText("TITLE_ABOUT"); accent: "#24465e"; Layout.fillWidth: true; onClicked: aboutDialog.open() }

@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **A History window with the operations of the flasher:** a new button next to Help opens the history of operations, the same window as in the tester and the updater (shared from URTC-COMMON, in the eight languages): it lists the records the flasher wrote in its logs folder, newest first, with the kind, result, tool, board and versions, and marks as not valid a record that was edited after it was written or a file that is not a record. It can be filtered by result and text, reads only, and changes nothing on disk. The tool that prints the notes of a release (`tools/changelog_section.py`, with `--compat` it adds the compatibility table of `docs/COMPATIBILITY.md`) travels with the program.
 - **The lights of Project status follow the evidence of the manifest:** the manifest says how far the repository has been shown to work (`evidence`: `host-test`, `simulator`, `bench` or `field`) and the validator fails when a light is above what that evidence and the maturity allow (`tools/status_lights.py`), so a green that never ran on real hardware cannot come back.
 - **The evidence of the updates can be listed from the command line:** `urtc_flasher.py --history FOLDER [--json]` reads the evidence records (`urtc-evidence/1`) of a folder, checks each one and lists them newest first with a summary; a record edited after it was written is listed as not valid and the exit status is 1. It opens no bus. The shared code is the history of the common evidence.
 
