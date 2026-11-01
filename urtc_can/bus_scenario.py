@@ -258,6 +258,8 @@ def parse(text: str) -> Scenario:
         doc = json.loads(text, object_pairs_hook=_no_duplicates, parse_constant=_no_constant)
     except json.JSONDecodeError as exc:
         raise ScenarioError(f"the scenario is not JSON: {exc}") from exc
+    except RecursionError as exc:    # a text nested thousands of levels deep: the depth the interpreter allows depends on the version and the platform
+        raise ScenarioError("the scenario is not JSON: it is nested too deeply") from exc
     return from_dict(doc)
 
 

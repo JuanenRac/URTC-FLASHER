@@ -8,7 +8,7 @@
     },
     "bus_scenario.py": {
       "from": "src/urtc_common/bus_scenario.py",
-      "sha256": "c1b634e6d72581400ace0ff51051335328f88111c88d9e74456e7eb28a11e805"
+      "sha256": "5121706c348576fd5ca4a48e03c1a102bf01e0e8aab6146f421cc8bebd9ac195"
     },
     "conformance.py": {
       "from": "src/urtc_common/conformance.py",
