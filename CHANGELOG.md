@@ -2,14 +2,14 @@
 
 All notable changes to this project are documented here.
 
-## [0.4.7] - The History window is in the pictures of the README in the eight languages
-
-- **The History window is in the pictures of the README:** the Screenshots section also shows the window of the history of operations (every record checked on its own, with the Signature column that says whether it is signed, by which of your keys, or not valid), in the eight languages of the README. The picture is taken over sample records, on a bench, with no real installation behind.
-
-## [Unreleased]
+## [0.4.8] - The shared evidence code accepts the outcome unknown and a plan of the update can be run without a bus
 
 - **The shared evidence code accepts the outcome `unknown`:** a record whose result could not be decided (written by the tester when a check has no evidence either way) is read and listed as valid, and the history and the report say it in the eight languages (Portuguese of Portugal).
 - **A plan of the update without a bus:** `--cli --check-only --file IMAGE` (with `--json` for a document) checks an image and prints the steps of the update without opening a bus, asking for a port or sending a frame: the plausibility of the file, the published digest, the release signature, the version, the size, the SHA-256, the CRC32 and the steps of the protocol in order. Exit 0 when the flasher would go on with the image and 2 when it would refuse it; the update itself is unchanged. `docs/CLI_REFERENCE.md` says what it does not do.
+
+## [0.4.7] - The History window is in the pictures of the README in the eight languages
+
+- **The History window is in the pictures of the README:** the Screenshots section also shows the window of the history of operations (every record checked on its own, with the Signature column that says whether it is signed, by which of your keys, or not valid), in the eight languages of the README. The picture is taken over sample records, on a bench, with no real installation behind.
 
 ## [0.4.6] - The flasher signs its evidence records like the tester, with a switch in the window, a Signature column in the history, the store of trusted keys and a screenshot of the history
 
