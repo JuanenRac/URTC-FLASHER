@@ -27,7 +27,10 @@ This is a second reading of the protocol by the same author as the tools, not th
 shared conformance vectors through it, but only the firmware's own virtual board (``tests/virtual_board.c`` in the
 URTC repository, started with ``--exec``) runs the real receive path. ``--exec`` bridges the same SLCAN text to any
 program that reads one line per frame on its standard input and writes SLCAN lines on its standard output, which is
-what that program does.
+what that program does. ``--firmware-repo DIR`` builds that program from a checkout of the URTC repository (inside WSL on Windows, where the
+fake flash of the firmware's host build needs a 64-bit Linux) and bridges to it, so FLASHER, TESTER and the gateway can be tried against the
+real receive path with no adapter, no board and nothing to compile by hand: ``urtc-virtual-board --firmware-repo ../URTC``, then
+``URTC_VIRTUAL_PORT=socket://127.0.0.1:7777`` where a port is asked for.
 
 The server listens on the loopback interface unless told otherwise: anybody who can reach the port can talk to the
 board.
@@ -35,11 +38,15 @@ board.
 from __future__ import annotations
 
 import argparse
+import json
 import shlex
+import shutil
 import socket
 import subprocess
 import sys
+import tempfile
 import threading
+from pathlib import Path
 from typing import Any, Callable, Iterable
 
 from . import protocol
@@ -208,6 +215,42 @@ class SlcanAdapter:
         return out
 
 
+class FirmwareBoardError(Exception):
+    """The firmware's own virtual board could not be built (no URTC checkout there, no host C compiler, WSL missing on Windows)."""
+
+
+FIRMWARE_BOARD_BUILDER = ("tools", "fuzz_virtual_board.py")
+FIRMWARE_BOARD_MARK = "VIRTUAL_BOARD_COMMAND="
+
+
+def firmware_board_command(repo: Path, tool: int = 0, features: int = 0, build_dir: Path | None = None) -> list[str]:
+    """Builds the firmware's own virtual board and returns the command that runs it, ready for ``--exec``.
+
+    ``repo`` is a checkout of the URTC repository (its ``tests/virtual_board.c`` is the real receive path of the firmware compiled for the
+    host, with the address and undefined-behaviour sanitizers); the builder it carries compiles it with the host gcc, or inside WSL on Windows
+    because the fake flash needs a 64-bit Linux host. ``tool`` is the tool profile the board starts with (0 to 24) and ``features`` the
+    mask of the optional features that are on."""
+    script = Path(repo).joinpath(*FIRMWARE_BOARD_BUILDER)
+    if not script.is_file():
+        raise FirmwareBoardError(f"{script} not found: give the folder of the URTC repository")
+    if not 0 <= tool <= 24:
+        raise FirmwareBoardError("the tool profile must be between 0 and 24")
+    folder = build_dir or Path(tempfile.mkdtemp(prefix="urtc_virtual_board_"))
+    try:
+        done = subprocess.run([sys.executable, str(script), "--build-only", "--build-dir", str(folder)], capture_output=True, text=True, timeout=600)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise FirmwareBoardError(f"the build of the virtual board did not run: {exc}") from exc
+    if done.returncode == 2:
+        raise FirmwareBoardError("no host C compiler (install gcc, or WSL on Windows)")
+    if done.returncode != 0:
+        raise FirmwareBoardError("the virtual board of the firmware did not build: " + (done.stdout + done.stderr).strip()[-400:])
+    for line in reversed(done.stdout.splitlines()):
+        if line.startswith(FIRMWARE_BOARD_MARK):
+            prefix = json.loads(line[len(FIRMWARE_BOARD_MARK):])
+            return [*prefix, str(tool), str(features)]
+    raise FirmwareBoardError("the builder did not say how to run the virtual board")
+
+
 class ProcessBackend:
     """Bridges the adapter's frames to a program that speaks SLCAN text by lines (the firmware's virtual board).
 
@@ -370,16 +413,29 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--bootloader", action="store_true", help="start in the bootloader instead of the application")
     parser.add_argument("--exec", dest="command", default=None, metavar="COMMAND",
                         help="bridge to a program that speaks SLCAN text by lines (the firmware's virtual board) instead of the built-in model")
+    parser.add_argument("--firmware-repo", default=None, metavar="DIR",
+                        help="build the firmware's own virtual board from this checkout of the URTC repository (inside WSL on Windows) and bridge to it, "
+                             "as --exec would; --tool and --features choose the profile and the optional features it starts with")
+    parser.add_argument("--features", type=lambda text: int(text, 0), default=0, help="with --firmware-repo: the mask of optional features that are on (default 0)")
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    work: Path | None = None
     try:
         major, minor = (int(part) for part in args.board_version.split("."))
         board = VirtualBoard(version=(major, minor), patch=args.patch, tool_id=args.tool, bootloader=args.bootloader)
-        server = VirtualBoardServer(board, args.host, args.port, shlex.split(args.command) if args.command else None)
-    except (ValueError, OSError, FrameError) as exc:
+        if args.firmware_repo and args.command:
+            raise ValueError("--firmware-repo and --exec are two ways to say the same thing: give one")
+        command = shlex.split(args.command) if args.command else None
+        if args.firmware_repo:
+            work = Path(tempfile.mkdtemp(prefix="urtc_virtual_board_"))
+            command = firmware_board_command(Path(args.firmware_repo), args.tool, args.features, work)
+        server = VirtualBoardServer(board, args.host, args.port, command)
+    except (ValueError, OSError, FrameError, FirmwareBoardError) as exc:
+        if work is not None:
+            shutil.rmtree(work, ignore_errors=True)
         print(f"VIRTUAL_BOARD=FAIL {exc}", file=sys.stderr)
         return 2
     server.start()
@@ -390,6 +446,8 @@ def main(argv: list[str] | None = None) -> int:
         pass
     finally:
         server.stop()
+        if work is not None:
+            shutil.rmtree(work, ignore_errors=True)
     return 0
 
 

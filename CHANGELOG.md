@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- **The virtual board can be the firmware's own receive path:** the copy of the virtual board from URTC-COMMON 0.1.6 takes `--firmware-repo DIR` (`python -m urtc_can.virtual_board --firmware-repo ../URTC`, with a checkout of the URTC repository and a host C compiler, or WSL on Windows), builds the firmware's `tests/virtual_board.c` and bridges the SLCAN port to it; the port URL it prints goes in `URTC_VIRTUAL_PORT` or `--port` as before.
+
 ## [0.4.8] - The shared evidence code accepts the outcome unknown and a plan of the update can be run without a bus
 
 - **The shared evidence code accepts the outcome `unknown`:** a record whose result could not be decided (written by the tester when a check has no evidence either way) is read and listed as valid, and the history and the report say it in the eight languages (Portuguese of Portugal).

@@ -1,10 +1,10 @@
 {
   "format": 1,
-  "urtc_common_version": "0.1.5",
+  "urtc_common_version": "0.1.6",
   "files": {
     "__init__.py": {
       "from": "src/urtc_common/__init__.py",
-      "sha256": "999f6f23eef74e66b76b3d8ec2ca281874e633858161a016da69f08198b63acd"
+      "sha256": "2a00f926c1de3068be3964a9e17709814bf63f36a4b6a56efd18ee5087d77b02"
     },
     "bus_scenario.py": {
       "from": "src/urtc_common/bus_scenario.py",
@@ -136,7 +136,7 @@
     },
     "virtual_board.py": {
       "from": "src/urtc_common/virtual_board.py",
-      "sha256": "9c13bb3a2782dafd5a28291a00a76fbc685726b3e8c6f2c31a4a8a6b3dc3b96d"
+      "sha256": "e8f036f0ba0ace3ab0fc7f56fa388601de1a02ff1843f8b396627bc24bdc9191"
     }
   }
 }
