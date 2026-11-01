@@ -36,7 +36,7 @@
 
 | | |
 |---|---|
-| Version | `0.4.5` |
+| Version | `0.4.6` |
 | Reifegrad | Funktionsfähig |
 | Tests | 602 (`python -m pytest tests -q`) |
 | Technik | Python / PySide6 / Qt Quick / CAN-OTA / SWD/JTAG |

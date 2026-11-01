@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here.
 
-## [Unreleased]
+## [0.4.6] - The flasher signs its evidence records like the tester, with a switch in the window, a Signature column in the history, the store of trusted keys and a screenshot of the history
 
 - **The flasher signs its evidence records like the tester does:** with `"sign_evidence": true` in the config file (off by default; the key in `record_key_file`, else the default of the family, never printed) the evidence record of an update, and of a run against a simulated bus, carries an Ed25519 signature; if signing fails no evidence file is written and the log says why. `sign_update_reports` is a different switch and stays as it was.
 - **The deck has the switch to sign the evidence:** a check box, "Sign the evidence records of this flasher with my Ed25519 key", turns the `sign_evidence` setting on and off (off by default; it is saved in the config file), in the eight languages (Portuguese of Portugal); if the setting cannot be saved the log says so and the box does not claim to be on.
