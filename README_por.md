@@ -58,6 +58,7 @@
 | Testes | 🟢 | A bateria de testes passa na CI em cada envio. |
 | Hardware real | 🟠 | Ainda não correu numa placa real: o ensaio de bancada continua pendente. |
 | Segurança | 🟡 | As versões são assinadas com Ed25519 e verificadas antes de usar; o tratamento das chaves não foi revisto por mais ninguém. |
+| Idiomas e acessibilidade | 🟡 | A interface e a sua ajuda estão em oito idiomas; a utilização com teclado e leitor de ecrã não foi testada |
 | Documentação | 🟡 | README em oito línguas e documentos de referência; as traduções não foram revistas por falantes nativos. |
 
 <!-- /urtc-section:status_flasher -->

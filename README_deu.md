@@ -57,6 +57,7 @@
 | Tests | 🟢 | Die Testsuite besteht bei jedem Push in der CI. |
 | Echte Hardware | 🟠 | Noch kein Lauf an einer echten Platine: der Bankversuch steht noch aus. |
 | Sicherheit | 🟡 | Releases werden mit Ed25519 signiert und vor der Nutzung geprüft; der Umgang mit den Schlüsseln wurde von niemand anderem geprüft. |
+| Sprachen und Barrierefreiheit | 🟡 | Oberfläche und Hilfe gibt es in acht Sprachen; die Bedienung per Tastatur und Screenreader wurde nicht getestet |
 | Dokumentation | 🟡 | README in acht Sprachen und Referenzdokumente; die Übersetzungen wurden nicht von Muttersprachlern geprüft. |
 
 <!-- /urtc-section:status_flasher -->

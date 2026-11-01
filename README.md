@@ -58,6 +58,7 @@
 | Tests | 🟢 | The test suite passes in the CI on every push. |
 | Real hardware | 🟠 | No run on a real board yet: the bench test is still pending. |
 | Security | 🟡 | Releases are signed with Ed25519 and checked before use; the key handling was not reviewed by anyone else. |
+| Languages and accessibility | 🟡 | The interface and its help are in eight languages; keyboard and screen-reader use has not been tested |
 | Documentation | 🟡 | README in eight languages and reference documents; the translations were not reviewed by native speakers. |
 
 <!-- /urtc-section:status_flasher -->
