@@ -1,10 +1,10 @@
 {
   "format": 1,
-  "urtc_common_version": "0.1.4",
+  "urtc_common_version": "0.1.5",
   "files": {
     "__init__.py": {
       "from": "src/urtc_common/__init__.py",
-      "sha256": "d38dd656a89d6646f0260174c237fbbe3a713f012bf0527a55209087c9874278"
+      "sha256": "999f6f23eef74e66b76b3d8ec2ca281874e633858161a016da69f08198b63acd"
     },
     "bus_scenario.py": {
       "from": "src/urtc_common/bus_scenario.py",
@@ -16,7 +16,7 @@
     },
     "evidence.py": {
       "from": "src/urtc_common/evidence.py",
-      "sha256": "2bc453162314ccfbd04a0e86acdcefd0914e43358e0e50d8b3a27164e547c23c"
+      "sha256": "094ed0aaf0efc9aa32ee6cfecef1a09d57a3e09e14e6ae56877093d02839f971"
     },
     "evidence_history.py": {
       "from": "src/urtc_common/evidence_history.py",
@@ -28,7 +28,7 @@
     },
     "evidence_history_strings.py": {
       "from": "src/urtc_common/evidence_history_strings.py",
-      "sha256": "2212247fe2ad2147675bf98ae9dfeb85305cf7fcd6638014e2f274bcb313c104"
+      "sha256": "630556c2a701718ee72e49a276acc44e338310033655cd3a657a3678d80b4cba"
     },
     "evidence_report.py": {
       "from": "src/urtc_common/evidence_report.py",

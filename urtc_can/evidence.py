@@ -25,7 +25,7 @@ from typing import Any, Mapping
 
 FORMAT = "urtc-evidence/1"
 KINDS = ("flash", "test", "install", "session")
-OUTCOMES = ("pass", "fail", "error", "skipped")
+OUTCOMES = ("pass", "fail", "error", "skipped", "unknown")
 FIELDS = ("format", "kind", "outcome", "timestamp_utc", "tool", "tool_version", "operator", "subject", "transport", "artifacts", "detail", "evidence_sha256", "signature")
 SIGNATURE_FIELDS = ("algorithm", "key_id", "public_key", "signature")
 SUBJECT_FIELDS = ("name", "hardware_id", "version_before", "version_after", "commit_before", "commit_after", "key_id")
