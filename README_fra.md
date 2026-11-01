@@ -118,8 +118,12 @@ Capturées en 1920×1080 sur un banc d'essai, avec des données d'exemple et san
 <td width="50%" valign="top"><img src="images/screenshots/heads.png" alt="Têtes d'outil sur le bus : un bus modélisé avec six têtes, une dans chaque état possible (sélectionnée, conflit d'adresse, défaut mémorisé, dans son bootloader, perdue et prête)." width="100%"><br><sub>Têtes d'outil sur le bus : un bus modélisé avec six têtes, une dans chaque état possible (sélectionnée, conflit d'adresse, défaut mémorisé, dans son bootloader, perdue et prête).</sub></td>
 </tr>
 <tr>
+<td width="50%" valign="top"><img src="images/screenshots/history.png" alt="La fenêtre de l'historique : tous les enregistrements que les programmes ont écrits pour chaque carte, le plus récent d'abord, chacun vérifié séparément, avec une colonne Signature qui dit s'il est signé, par laquelle de vos clés, ou s'il n'est pas valide." width="100%"><br><sub>La fenêtre de l'historique : tous les enregistrements que les programmes ont écrits pour chaque carte, le plus récent d'abord, chacun vérifié séparément, avec une colonne Signature qui dit s'il est signé, par laquelle de vos clés, ou s'il n'est pas valide.</sub></td>
 <td width="50%" valign="top"><img src="images/screenshots/help.png" alt="La fenêtre d'aide : les étapes d'utilisation du programme, dans la langue de la fenêtre." width="100%"><br><sub>La fenêtre d'aide : les étapes d'utilisation du programme, dans la langue de la fenêtre.</sub></td>
+</tr>
+<tr>
 <td width="50%" valign="top"><img src="images/screenshots/updates.png" alt="La fenêtre de mise à jour : un paquet signé plus récent n'est installé qu'après votre confirmation." width="100%"><br><sub>La fenêtre de mise à jour : un paquet signé plus récent n'est installé qu'après votre confirmation.</sub></td>
+<td width="50%"></td>
 </tr>
 </table>
 <!-- /urtc-shots -->

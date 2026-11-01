@@ -118,8 +118,12 @@ Aufgenommen mit 1920×1080 auf einem Prüfstand, mit Beispieldaten und ohne eine
 <td width="50%" valign="top"><img src="images/screenshots/heads.png" alt="Werkzeugköpfe am Bus: ein modellierter Bus mit sechs Köpfen, jeder in einem anderen möglichen Zustand (gewählt, Adresskonflikt, Fehler gehalten, im Bootloader, verloren und bereit)." width="100%"><br><sub>Werkzeugköpfe am Bus: ein modellierter Bus mit sechs Köpfen, jeder in einem anderen möglichen Zustand (gewählt, Adresskonflikt, Fehler gehalten, im Bootloader, verloren und bereit).</sub></td>
 </tr>
 <tr>
+<td width="50%" valign="top"><img src="images/screenshots/history.png" alt="Das Verlaufsfenster: alle Protokolle, die die Programme zu jeder Platine geschrieben haben, das neueste zuerst, jedes für sich geprüft, mit einer Spalte Signatur, die sagt, ob es signiert ist, mit welchem deiner Schlüssel, oder ob es ungültig ist." width="100%"><br><sub>Das Verlaufsfenster: alle Protokolle, die die Programme zu jeder Platine geschrieben haben, das neueste zuerst, jedes für sich geprüft, mit einer Spalte Signatur, die sagt, ob es signiert ist, mit welchem deiner Schlüssel, oder ob es ungültig ist.</sub></td>
 <td width="50%" valign="top"><img src="images/screenshots/help.png" alt="Das Hilfefenster: die Schritte zur Benutzung des Programms, in der Sprache des Fensters." width="100%"><br><sub>Das Hilfefenster: die Schritte zur Benutzung des Programms, in der Sprache des Fensters.</sub></td>
+</tr>
+<tr>
 <td width="50%" valign="top"><img src="images/screenshots/updates.png" alt="Das Update-Fenster: ein neueres signiertes Paket wird erst nach deiner Bestätigung installiert." width="100%"><br><sub>Das Update-Fenster: ein neueres signiertes Paket wird erst nach deiner Bestätigung installiert.</sub></td>
+<td width="50%"></td>
 </tr>
 </table>
 <!-- /urtc-shots -->

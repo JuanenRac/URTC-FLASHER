@@ -113,8 +113,12 @@ URTC-FLASHER 是把固件写入 URTC 板的程序。它通过 USB-CAN 适配器�
 <td width="50%" valign="top"><img src="images/screenshots/heads.png" alt="总线上的工具头：一条模拟总线上的六个工具头，每个处于一种可能的状态（已选择、地址冲突、故障锁定、处于引导程序、丢失和就绪）。" width="100%"><br><sub>总线上的工具头：一条模拟总线上的六个工具头，每个处于一种可能的状态（已选择、地址冲突、故障锁定、处于引导程序、丢失和就绪）。</sub></td>
 </tr>
 <tr>
+<td width="50%" valign="top"><img src="images/screenshots/history.png" alt="历史窗口：程序为每块板子写下的所有记录，最新的在前，每条单独校验；“签名”列显示它是否已签名、由您的哪把密钥签名，或是否无效。" width="100%"><br><sub>历史窗口：程序为每块板子写下的所有记录，最新的在前，每条单独校验；“签名”列显示它是否已签名、由您的哪把密钥签名，或是否无效。</sub></td>
 <td width="50%" valign="top"><img src="images/screenshots/help.png" alt="帮助窗口：使用该程序的各个步骤，使用窗口的语言显示。" width="100%"><br><sub>帮助窗口：使用该程序的各个步骤，使用窗口的语言显示。</sub></td>
+</tr>
+<tr>
 <td width="50%" valign="top"><img src="images/screenshots/updates.png" alt="更新窗口：只有在你确认之后，才会安装较新的已签名软件包。" width="100%"><br><sub>更新窗口：只有在你确认之后，才会安装较新的已签名软件包。</sub></td>
+<td width="50%"></td>
 </tr>
 </table>
 <!-- /urtc-shots -->

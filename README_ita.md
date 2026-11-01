@@ -118,8 +118,12 @@ Catturate a 1920×1080 su un banco di prova, con dati di esempio e senza alcuna 
 <td width="50%" valign="top"><img src="images/screenshots/heads.png" alt="Teste utensile sul bus: un bus modellato con sei teste, una per ogni stato possibile (selezionata, conflitto di indirizzo, guasto memorizzato, nel bootloader, persa e pronta)." width="100%"><br><sub>Teste utensile sul bus: un bus modellato con sei teste, una per ogni stato possibile (selezionata, conflitto di indirizzo, guasto memorizzato, nel bootloader, persa e pronta).</sub></td>
 </tr>
 <tr>
+<td width="50%" valign="top"><img src="images/screenshots/history.png" alt="La finestra della cronologia: tutti i record che i programmi hanno scritto per ogni scheda, il più recente per primo, ciascuno verificato a sé, con una colonna Firma che dice se è firmato, con quale delle tue chiavi, o se non è valido." width="100%"><br><sub>La finestra della cronologia: tutti i record che i programmi hanno scritto per ogni scheda, il più recente per primo, ciascuno verificato a sé, con una colonna Firma che dice se è firmato, con quale delle tue chiavi, o se non è valido.</sub></td>
 <td width="50%" valign="top"><img src="images/screenshots/help.png" alt="La finestra della Guida: i passi per usare il programma, scritti nella lingua della finestra." width="100%"><br><sub>La finestra della Guida: i passi per usare il programma, scritti nella lingua della finestra.</sub></td>
+</tr>
+<tr>
 <td width="50%" valign="top"><img src="images/screenshots/updates.png" alt="La finestra degli aggiornamenti: un pacchetto firmato più recente viene installato solo dopo la tua conferma." width="100%"><br><sub>La finestra degli aggiornamenti: un pacchetto firmato più recente viene installato solo dopo la tua conferma.</sub></td>
+<td width="50%"></td>
 </tr>
 </table>
 <!-- /urtc-shots -->
