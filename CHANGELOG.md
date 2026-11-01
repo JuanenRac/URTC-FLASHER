@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here.
 
-## [Unreleased]
+## [0.4.7] - The History window is in the pictures of the README in the eight languages
 
 - **The History window is in the pictures of the README:** the Screenshots section also shows the window of the history of operations (every record checked on its own, with the Signature column that says whether it is signed, by which of your keys, or not valid), in the eight languages of the README. The picture is taken over sample records, on a bench, with no real installation behind.
 
