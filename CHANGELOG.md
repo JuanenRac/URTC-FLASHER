@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- **A plan of the update without a bus:** `--cli --check-only --file IMAGE` (with `--json` for a document) checks an image and prints the steps of the update without opening a bus, asking for a port or sending a frame: the plausibility of the file, the published digest, the release signature, the version, the size, the SHA-256, the CRC32 and the steps of the protocol in order. Exit 0 when the flasher would go on with the image and 2 when it would refuse it; the update itself is unchanged. `docs/CLI_REFERENCE.md` says what it does not do.
+
 ## [0.4.6] - The flasher signs its evidence records like the tester, with a switch in the window, a Signature column in the history, the store of trusted keys and a screenshot of the history
 
 - **The flasher signs its evidence records like the tester does:** with `"sign_evidence": true` in the config file (off by default; the key in `record_key_file`, else the default of the family, never printed) the evidence record of an update, and of a run against a simulated bus, carries an Ed25519 signature; if signing fails no evidence file is written and the log says why. `sign_update_reports` is a different switch and stays as it was.

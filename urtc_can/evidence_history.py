@@ -138,6 +138,8 @@ def _entry(name: str, line: int, text: str) -> Entry:
         record = json.loads(text)
     except ValueError as error:
         return Entry(name, line, problems=[f"not JSON: {error}"])
+    except RecursionError:    # a document nested thousands of levels deep: refused like any other text that is not a record
+        return Entry(name, line, problems=["not JSON: nested too deeply"])
     if not isinstance(record, dict):
         return Entry(name, line, problems=["a record is a JSON object"])
     kind = other_kind(record)
@@ -157,6 +159,16 @@ def load_folder(folder: str | Path, recursive: bool = False) -> list[Entry]:
     for path in paths:
         entries += _entries_of(path, base)
     return entries
+
+
+def load_file(path: str | Path) -> list[Entry]:
+    """Every record of ONE ``.json`` or ``.jsonl`` file, checked like the ones of a folder: the way to verify a file somebody handed over, offline."""
+    target = Path(path)
+    if not target.is_file():
+        raise FileNotFoundError(f"{target} is not a file")
+    if target.suffix not in (".json", ".jsonl"):
+        return [Entry(target.name, 0, problems=["the file is not a .json or a .jsonl file and was not read"])]
+    return _entries_of(target, target.parent)
 
 
 def select(entries: Iterable[Entry], *, kind: str | None = None, outcome: str | None = None, tool: str | None = None, since: str | None = None,

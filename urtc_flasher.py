@@ -122,6 +122,10 @@ def run_cli(argv):
                               "bypassing the bootloader's own anti-rollback check for this attempt "
                               "only - use to deliberately revert to an older, still-signed release. "
                               "Off by default.")
+    parser.add_argument("--check-only", action="store_true",
+                        help="Check the image and print the plan of the update without opening any bus or sending a frame (no --port needed): the plausibility of the file, the "
+                             "published digest, the release signature, the version and the steps. Exit 0 when the flasher would go on with this image, 2 when it would refuse it.")
+    parser.add_argument("--json", action="store_true", help="With --check-only: print the plan as one JSON document.")
     parser.add_argument("--mock-fail", type=lambda s: int(s, 0), default=None, metavar="REASON",
                          help="With --transport mock: simulate a verify failure with this "
                               "VERIFY_FAIL_REASON_* value (e.g. 0x03 for HMAC mismatch) instead "
@@ -136,6 +140,23 @@ def run_cli(argv):
                          help="With --scenario: the folder for the report and the evidence record (default: the logs folder).")
     args = parser.parse_args(argv)
 
+    if args.check_only:
+        if args.scenario or args.seed is not None or args.evidence_dir:
+            _cli_log("ERROR: --check-only opens no bus: it does not go with --scenario, --seed or --evidence-dir.")
+            return 2
+        import json as _json
+
+        import flasher_plan
+        plan = flasher_plan.build_plan(args.file, args.version, args.no_trigger, args.force)
+        if args.json:
+            _cli_log(_json.dumps(plan, indent=2))
+        else:
+            for line in flasher_plan.render(plan):
+                _cli_log(line)
+        return 0 if plan["accepted"] else 2
+    if args.json:
+        _cli_log("ERROR: --json goes with --check-only.")
+        return 2
     if args.scenario and args.transport != "mock":
         _cli_log("ERROR: --scenario is only for --transport mock; a scenario is never applied to a real adapter.")
         return 2

@@ -1,10 +1,10 @@
 {
   "format": 1,
-  "urtc_common_version": "0.1.3",
+  "urtc_common_version": "0.1.4",
   "files": {
     "__init__.py": {
       "from": "src/urtc_common/__init__.py",
-      "sha256": "bdbcd2d88392e94e1700faddaf99c6824707f8f39ee38595699678d4cfbcb975"
+      "sha256": "d38dd656a89d6646f0260174c237fbbe3a713f012bf0527a55209087c9874278"
     },
     "bus_scenario.py": {
       "from": "src/urtc_common/bus_scenario.py",
@@ -20,7 +20,7 @@
     },
     "evidence_history.py": {
       "from": "src/urtc_common/evidence_history.py",
-      "sha256": "2c36d7aa646982729cefd1ad704f9aef8cdc269b9fe2afb48de0a6c450f87b00"
+      "sha256": "5b15638e9766f3d168260cc055cc4cfa5a668822db5b7910dc55a61263e8b595"
     },
     "evidence_history_qt.py": {
       "from": "src/urtc_common/evidence_history_qt.py",
