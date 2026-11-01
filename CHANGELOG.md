@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here.
 
-## [Unreleased]
+## [0.4.9] - The flasher is tested against the real bootloader built for the host and the virtual board can be the receive path of the firmware itself
 
 - **The flasher is tested against the real bootloader:** the copy of the virtual board from URTC-COMMON takes `--firmware-bootloader` (with `--firmware-repo`), which starts the bootloader of the master compiled for the host, and two new tests flash a signed image through it (the manifest names the board, the hash and the signature) and check that a signature with one bit changed is refused. They need the URTC repository next to this one (or `URTC_FIRMWARE_REPO`) and a host C compiler, WSL on Windows; the CI of this repository clones it.
 
