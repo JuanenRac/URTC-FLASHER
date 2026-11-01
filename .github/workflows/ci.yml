@@ -47,7 +47,7 @@ jobs:
         uses: ./.github/actions/urtc-baseline
       - name: Static checks (unused names, exception chaining, syntax)
         run: |
-          python -m pip install "ruff==0.17.2"
+          python -m pip install "ruff==0.17.1"
           ruff check .
       - name: Download the firmware images of the release (verified against the release signature)
         env:
