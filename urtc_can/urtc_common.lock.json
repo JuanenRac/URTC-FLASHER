@@ -36,7 +36,7 @@
     },
     "evidence_report_fonts.py": {
       "from": "src/urtc_common/evidence_report_fonts.py",
-      "sha256": "6321ca269597892e27dee1f57e26d7905ef0f5994fe5dd9ed0adca6c06e0c6f3"
+      "sha256": "9227703e24a96605b2f71d2ad9f4c3bfa9458f315f2cee845fe22947d84a3830"
     },
     "evidence_report_fonts_OFL.txt": {
       "from": "src/urtc_common/evidence_report_fonts_OFL.txt",
