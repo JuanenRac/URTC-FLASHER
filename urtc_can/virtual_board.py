@@ -30,7 +30,9 @@ program that reads one line per frame on its standard input and writes SLCAN lin
 what that program does. ``--firmware-repo DIR`` builds that program from a checkout of the URTC repository (inside WSL on Windows, where the
 fake flash of the firmware's host build needs a 64-bit Linux) and bridges to it, so FLASHER, TESTER and the gateway can be tried against the
 real receive path with no adapter, no board and nothing to compile by hand: ``urtc-virtual-board --firmware-repo ../URTC``, then
-``URTC_VIRTUAL_PORT=socket://127.0.0.1:7777`` where a port is asked for.
+``URTC_VIRTUAL_PORT=socket://127.0.0.1:7777`` where a port is asked for. ``--firmware-bootloader`` bridges to the twin of the bootloader instead
+(``tests/virtual_bootloader.c``: the bootloader of the master, its window, main loop, flash and signature check, compiled for the host), so an update can be
+flashed through the real code that accepts or refuses it.
 
 The server listens on the loopback interface unless told otherwise: anybody who can reach the port can talk to the
 board.
@@ -220,17 +222,19 @@ class FirmwareBoardError(Exception):
 
 
 FIRMWARE_BOARD_BUILDER = ("tools", "fuzz_virtual_board.py")
+FIRMWARE_BOOTLOADER_BUILDER = ("tools", "bootloader_twin.py")
 FIRMWARE_BOARD_MARK = "VIRTUAL_BOARD_COMMAND="
 
 
-def firmware_board_command(repo: Path, tool: int = 0, features: int = 0, build_dir: Path | None = None) -> list[str]:
+def firmware_board_command(repo: Path, tool: int = 0, features: int = 0, build_dir: Path | None = None, bootloader: bool = False) -> list[str]:
     """Builds the firmware's own virtual board and returns the command that runs it, ready for ``--exec``.
 
     ``repo`` is a checkout of the URTC repository (its ``tests/virtual_board.c`` is the real receive path of the firmware compiled for the
     host, with the address and undefined-behaviour sanitizers); the builder it carries compiles it with the host gcc, or inside WSL on Windows
     because the fake flash needs a 64-bit Linux host. ``tool`` is the tool profile the board starts with (0 to 24) and ``features`` the
-    mask of the optional features that are on."""
-    script = Path(repo).joinpath(*FIRMWARE_BOARD_BUILDER)
+    mask of the optional features that are on. With ``bootloader=True`` it is the twin of the bootloader that is built instead (``tests/virtual_bootloader.c``:
+    the bootloader of the master as it is, with its window, its main loop and its flash), which takes no arguments, so ``tool`` and ``features`` do not apply."""
+    script = Path(repo).joinpath(*(FIRMWARE_BOOTLOADER_BUILDER if bootloader else FIRMWARE_BOARD_BUILDER))
     if not script.is_file():
         raise FirmwareBoardError(f"{script} not found: give the folder of the URTC repository")
     if not 0 <= tool <= 24:
@@ -247,7 +251,7 @@ def firmware_board_command(repo: Path, tool: int = 0, features: int = 0, build_d
     for line in reversed(done.stdout.splitlines()):
         if line.startswith(FIRMWARE_BOARD_MARK):
             prefix = json.loads(line[len(FIRMWARE_BOARD_MARK):])
-            return [*prefix, str(tool), str(features)]
+            return list(prefix) if bootloader else [*prefix, str(tool), str(features)]
     raise FirmwareBoardError("the builder did not say how to run the virtual board")
 
 
@@ -417,6 +421,8 @@ def build_parser() -> argparse.ArgumentParser:
                         help="build the firmware's own virtual board from this checkout of the URTC repository (inside WSL on Windows) and bridge to it, "
                              "as --exec would; --tool and --features choose the profile and the optional features it starts with")
     parser.add_argument("--features", type=lambda text: int(text, 0), default=0, help="with --firmware-repo: the mask of optional features that are on (default 0)")
+    parser.add_argument("--firmware-bootloader", action="store_true",
+                        help="with --firmware-repo: bridge to the twin of the bootloader (the real C of the master's bootloader on the host) instead of the virtual board of the application")
     return parser
 
 
@@ -431,7 +437,9 @@ def main(argv: list[str] | None = None) -> int:
         command = shlex.split(args.command) if args.command else None
         if args.firmware_repo:
             work = Path(tempfile.mkdtemp(prefix="urtc_virtual_board_"))
-            command = firmware_board_command(Path(args.firmware_repo), args.tool, args.features, work)
+            command = firmware_board_command(Path(args.firmware_repo), args.tool, args.features, work, bootloader=args.firmware_bootloader)
+        elif args.firmware_bootloader:
+            raise ValueError("--firmware-bootloader needs --firmware-repo")
         server = VirtualBoardServer(board, args.host, args.port, command)
     except (ValueError, OSError, FrameError, FirmwareBoardError) as exc:
         if work is not None:

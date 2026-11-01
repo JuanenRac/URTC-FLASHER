@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The flasher is tested against the real bootloader:** the copy of the virtual board from URTC-COMMON takes `--firmware-bootloader` (with `--firmware-repo`), which starts the bootloader of the master compiled for the host, and two new tests flash a signed image through it (the manifest names the board, the hash and the signature) and check that a signature with one bit changed is refused. They need the URTC repository next to this one (or `URTC_FIRMWARE_REPO`) and a host C compiler, WSL on Windows; the CI of this repository clones it.
+
 - **The virtual board can be the firmware's own receive path:** the copy of the virtual board from URTC-COMMON 0.1.6 takes `--firmware-repo DIR` (`python -m urtc_can.virtual_board --firmware-repo ../URTC`, with a checkout of the URTC repository and a host C compiler, or WSL on Windows), builds the firmware's `tests/virtual_board.c` and bridges the SLCAN port to it; the port URL it prints goes in `URTC_VIRTUAL_PORT` or `--port` as before.
 
 ## [0.4.8] - The shared evidence code accepts the outcome unknown and a plan of the update can be run without a bus

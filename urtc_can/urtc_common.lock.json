@@ -136,7 +136,7 @@
     },
     "virtual_board.py": {
       "from": "src/urtc_common/virtual_board.py",
-      "sha256": "e8f036f0ba0ace3ab0fc7f56fa388601de1a02ff1843f8b396627bc24bdc9191"
+      "sha256": "b0980b2cb8b2000db82c64d9adeeab14a103ebb99a2cc08b5b3d25b351834785"
     }
   }
 }
