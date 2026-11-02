@@ -1093,6 +1093,7 @@ URTC は独立したリポジトリで構成され、それぞれに固有のバ
 
 ## 📚 ドキュメント
 
+- **[docs/WINDOW_GUIDE.md](docs/WINDOW_GUIDE.md)** — 画像付きのウィンドウガイド：メインウィンドウ、ヘルプ、更新ウィンドウ。
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** —— プルリクエストのための技術スタックとコーディング指針。
 - **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** —— このコミュニティで期待される行動規範。
 - **[SECURITY.md](SECURITY.md)** —— 脆弱性の報告方法と、このプロジェクトの実際のセキュリティ重点領域。

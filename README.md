@@ -1036,6 +1036,7 @@ URTC is made of independent repositories, each with its own version, tests and R
 
 ## 📚 Documentation
 
+- **[docs/WINDOW_GUIDE.md](docs/WINDOW_GUIDE.md)** — a guide to the window with pictures: the deck, the Help window and the update window.
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** — tech stack and coding guidelines for a pull request.
 - **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — the standards of behavior expected in this community.
 - **[SECURITY.md](SECURITY.md)** — how to report a vulnerability, and this project's own real security focus areas.

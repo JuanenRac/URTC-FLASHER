@@ -895,6 +895,7 @@ URTC 由相互独立的仓库组成，每个仓库都有自己的版本、测试
 
 ## 📚 文档
 
+- **[docs/WINDOW_GUIDE.md](docs/WINDOW_GUIDE.md)** — 带图片的窗口指南：主窗口、帮助窗口和更新窗口。
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** —— 提交 Pull Request 所需的技术栈和编码规范。
 - **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** —— 本社区所期望的行为准则。
 - **[SECURITY.md](SECURITY.md)** —— 如何报告漏洞，以及本项目真实的安全关注重点。

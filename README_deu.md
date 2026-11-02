@@ -1168,6 +1168,7 @@ URTC besteht aus unabhängigen Repositories mit jeweils eigener Version, eigenen
 
 ## 📚 Dokumentation
 
+- **[docs/WINDOW_GUIDE.md](docs/WINDOW_GUIDE.md)** — ein Rundgang durch das Fenster mit Bildern: das Hauptfenster, die Hilfe und das Update-Fenster.
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** — Technologie-Stack und Coding-Richtlinien für einen Pull Request.
 - **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — die in dieser Community erwarteten Verhaltensstandards.
 - **[SECURITY.md](SECURITY.md)** — wie man eine Schwachstelle meldet, und die echten Sicherheitsschwerpunkte dieses Projekts.
