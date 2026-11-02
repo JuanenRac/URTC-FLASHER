@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- **The test count in the "At a glance" table of the README is the real one:** the number was counted by collecting the tests of the suite and written into the eight READMEs.
+
 ## [0.5.0] - The check of the signing key reads the fingerprint from 0x7ED and a missing fingerprint is never reported as a difference, the README shows screenshots of the windows and the texts of the serial number are in eight languages
 
 - **The screenshots of the README are listed in `docs/screenshots.json`:** each picture has a short name and a caption in the eight languages, the README section is written from that file, and `tools/capture_screenshots.py` takes the pictures again without opening a window on the desktop.
