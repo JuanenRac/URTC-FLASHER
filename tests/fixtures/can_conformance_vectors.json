@@ -1484,6 +1484,22 @@
       "name": "VERSION_PATCH_RESPONSE"
     },
     {
+      "id": "0x7EA",
+      "name": "BOOTLOADER_SELECT"
+    },
+    {
+      "id": "0x7EB",
+      "name": "BOOTLOADER_SELECT_RESPONSE"
+    },
+    {
+      "id": "0x7EC",
+      "name": "BOOTLOADER_SIGNATURE_CHUNK"
+    },
+    {
+      "id": "0x7ED",
+      "name": "BOOTLOADER_KEY_ID"
+    },
+    {
       "id": "0x7F0",
       "name": "ENTER_BOOTLOADER"
     },
@@ -2890,6 +2906,125 @@
       "frame": {
         "id": "0x7E9",
         "data": "010701"
+      }
+    },
+    {
+      "name": "BOOTLOADER_SELECT request probe: ask whether anyone is there",
+      "message": "BOOTLOADER_SELECT",
+      "layout": "bootloader_select_request_probe",
+      "fields": {
+        "operation": "01",
+        "nbits": 0,
+        "prefix": 0
+      },
+      "frame": {
+        "id": "0x7EA",
+        "data": "010000000000"
+      }
+    },
+    {
+      "name": "BOOTLOADER_SELECT request select: select serial 0x01020304",
+      "message": "BOOTLOADER_SELECT",
+      "layout": "bootloader_select_request_select",
+      "fields": {
+        "operation": "02",
+        "serial": 16909060,
+        "seq": 7
+      },
+      "frame": {
+        "id": "0x7EA",
+        "data": "020102030407"
+      }
+    },
+    {
+      "name": "BOOTLOADER_SELECT request release: release",
+      "message": "BOOTLOADER_SELECT",
+      "layout": "bootloader_select_request_release",
+      "fields": {
+        "operation": "03"
+      },
+      "frame": {
+        "id": "0x7EA",
+        "data": "03"
+      }
+    },
+    {
+      "name": "BOOTLOADER_SELECT request uid: word 1 of the unique ID",
+      "message": "BOOTLOADER_SELECT",
+      "layout": "bootloader_select_request_uid",
+      "fields": {
+        "operation": "04",
+        "part": 1
+      },
+      "frame": {
+        "id": "0x7EA",
+        "data": "0401"
+      }
+    },
+    {
+      "name": "BOOTLOADER_SELECT_RESPONSE response probe: someone matches",
+      "message": "BOOTLOADER_SELECT_RESPONSE",
+      "layout": "bootloader_select_response_response_probe",
+      "fields": {
+        "operation": "01",
+        "mark": "A5"
+      },
+      "frame": {
+        "id": "0x7EB",
+        "data": "01A5"
+      }
+    },
+    {
+      "name": "BOOTLOADER_SELECT_RESPONSE response select: selected",
+      "message": "BOOTLOADER_SELECT_RESPONSE",
+      "layout": "bootloader_select_response_response_select",
+      "fields": {
+        "operation": "02",
+        "serial": 16909060,
+        "seq": 7
+      },
+      "frame": {
+        "id": "0x7EB",
+        "data": "020102030407"
+      }
+    },
+    {
+      "name": "BOOTLOADER_SELECT_RESPONSE response uid: word 0",
+      "message": "BOOTLOADER_SELECT_RESPONSE",
+      "layout": "bootloader_select_response_response_uid",
+      "fields": {
+        "operation": "04",
+        "part": 0,
+        "word": 286331153
+      },
+      "frame": {
+        "id": "0x7EB",
+        "data": "040011111111"
+      }
+    },
+    {
+      "name": "BOOTLOADER_SIGNATURE_CHUNK request: first chunk",
+      "message": "BOOTLOADER_SIGNATURE_CHUNK",
+      "layout": "bootloader_signature_chunk",
+      "fields": {
+        "index": 0,
+        "data": "00000000000000"
+      },
+      "frame": {
+        "id": "0x7EC",
+        "data": "0000000000000000"
+      }
+    },
+    {
+      "name": "BOOTLOADER_KEY_ID response: a key identifier",
+      "message": "BOOTLOADER_KEY_ID",
+      "layout": "bootloader_key_id",
+      "fields": {
+        "key_id": "0102030405060708"
+      },
+      "frame": {
+        "id": "0x7ED",
+        "data": "0102030405060708"
       }
     },
     {
@@ -5877,6 +6012,292 @@
       "fields": null
     },
     {
+      "name": "BOOTLOADER_SELECT request probe: ask whether anyone is there",
+      "message": "BOOTLOADER_SELECT",
+      "layout": "bootloader_select_request_probe",
+      "frame": {
+        "id": "0x7EA",
+        "data": "010000000000"
+      },
+      "fields": {
+        "operation": "01",
+        "nbits": 0,
+        "prefix": 0
+      }
+    },
+    {
+      "name": "BOOTLOADER_SELECT request: 5 bytes is too short",
+      "message": "BOOTLOADER_SELECT",
+      "layout": "bootloader_select_request_probe",
+      "frame": {
+        "id": "0x7EA",
+        "data": "0100000000"
+      },
+      "fields": null
+    },
+    {
+      "name": "BOOTLOADER_SELECT request: one byte too many is refused when strict",
+      "message": "BOOTLOADER_SELECT",
+      "layout": "bootloader_select_request_probe",
+      "frame": {
+        "id": "0x7EA",
+        "data": "01000000000000"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "BOOTLOADER_SELECT request select: select serial 0x01020304",
+      "message": "BOOTLOADER_SELECT",
+      "layout": "bootloader_select_request_select",
+      "frame": {
+        "id": "0x7EA",
+        "data": "020102030407"
+      },
+      "fields": {
+        "operation": "02",
+        "serial": 16909060,
+        "seq": 7
+      }
+    },
+    {
+      "name": "BOOTLOADER_SELECT request: 5 bytes is too short",
+      "message": "BOOTLOADER_SELECT",
+      "layout": "bootloader_select_request_select",
+      "frame": {
+        "id": "0x7EA",
+        "data": "0201020304"
+      },
+      "fields": null
+    },
+    {
+      "name": "BOOTLOADER_SELECT request: one byte too many is refused when strict",
+      "message": "BOOTLOADER_SELECT",
+      "layout": "bootloader_select_request_select",
+      "frame": {
+        "id": "0x7EA",
+        "data": "02010203040700"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "BOOTLOADER_SELECT request release: release",
+      "message": "BOOTLOADER_SELECT",
+      "layout": "bootloader_select_request_release",
+      "frame": {
+        "id": "0x7EA",
+        "data": "03"
+      },
+      "fields": {
+        "operation": "03"
+      }
+    },
+    {
+      "name": "BOOTLOADER_SELECT request: 0 bytes is too short",
+      "message": "BOOTLOADER_SELECT",
+      "layout": "bootloader_select_request_release",
+      "frame": {
+        "id": "0x7EA",
+        "data": ""
+      },
+      "fields": null
+    },
+    {
+      "name": "BOOTLOADER_SELECT request: one byte too many is refused when strict",
+      "message": "BOOTLOADER_SELECT",
+      "layout": "bootloader_select_request_release",
+      "frame": {
+        "id": "0x7EA",
+        "data": "0300"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "BOOTLOADER_SELECT request uid: word 1 of the unique ID",
+      "message": "BOOTLOADER_SELECT",
+      "layout": "bootloader_select_request_uid",
+      "frame": {
+        "id": "0x7EA",
+        "data": "0401"
+      },
+      "fields": {
+        "operation": "04",
+        "part": 1
+      }
+    },
+    {
+      "name": "BOOTLOADER_SELECT request: 1 bytes is too short",
+      "message": "BOOTLOADER_SELECT",
+      "layout": "bootloader_select_request_uid",
+      "frame": {
+        "id": "0x7EA",
+        "data": "04"
+      },
+      "fields": null
+    },
+    {
+      "name": "BOOTLOADER_SELECT request: one byte too many is refused when strict",
+      "message": "BOOTLOADER_SELECT",
+      "layout": "bootloader_select_request_uid",
+      "frame": {
+        "id": "0x7EA",
+        "data": "040100"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "BOOTLOADER_SELECT_RESPONSE response probe: someone matches",
+      "message": "BOOTLOADER_SELECT_RESPONSE",
+      "layout": "bootloader_select_response_response_probe",
+      "frame": {
+        "id": "0x7EB",
+        "data": "01A5"
+      },
+      "fields": {
+        "operation": "01",
+        "mark": "A5"
+      }
+    },
+    {
+      "name": "BOOTLOADER_SELECT_RESPONSE response: 1 bytes is too short",
+      "message": "BOOTLOADER_SELECT_RESPONSE",
+      "layout": "bootloader_select_response_response_probe",
+      "frame": {
+        "id": "0x7EB",
+        "data": "01"
+      },
+      "fields": null
+    },
+    {
+      "name": "BOOTLOADER_SELECT_RESPONSE response: one byte too many is refused when strict",
+      "message": "BOOTLOADER_SELECT_RESPONSE",
+      "layout": "bootloader_select_response_response_probe",
+      "frame": {
+        "id": "0x7EB",
+        "data": "01A500"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "BOOTLOADER_SELECT_RESPONSE response select: selected",
+      "message": "BOOTLOADER_SELECT_RESPONSE",
+      "layout": "bootloader_select_response_response_select",
+      "frame": {
+        "id": "0x7EB",
+        "data": "020102030407"
+      },
+      "fields": {
+        "operation": "02",
+        "serial": 16909060,
+        "seq": 7
+      }
+    },
+    {
+      "name": "BOOTLOADER_SELECT_RESPONSE response: 5 bytes is too short",
+      "message": "BOOTLOADER_SELECT_RESPONSE",
+      "layout": "bootloader_select_response_response_select",
+      "frame": {
+        "id": "0x7EB",
+        "data": "0201020304"
+      },
+      "fields": null
+    },
+    {
+      "name": "BOOTLOADER_SELECT_RESPONSE response: one byte too many is refused when strict",
+      "message": "BOOTLOADER_SELECT_RESPONSE",
+      "layout": "bootloader_select_response_response_select",
+      "frame": {
+        "id": "0x7EB",
+        "data": "02010203040700"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "BOOTLOADER_SELECT_RESPONSE response uid: word 0",
+      "message": "BOOTLOADER_SELECT_RESPONSE",
+      "layout": "bootloader_select_response_response_uid",
+      "frame": {
+        "id": "0x7EB",
+        "data": "040011111111"
+      },
+      "fields": {
+        "operation": "04",
+        "part": 0,
+        "word": 286331153
+      }
+    },
+    {
+      "name": "BOOTLOADER_SELECT_RESPONSE response: 5 bytes is too short",
+      "message": "BOOTLOADER_SELECT_RESPONSE",
+      "layout": "bootloader_select_response_response_uid",
+      "frame": {
+        "id": "0x7EB",
+        "data": "0400111111"
+      },
+      "fields": null
+    },
+    {
+      "name": "BOOTLOADER_SELECT_RESPONSE response: one byte too many is refused when strict",
+      "message": "BOOTLOADER_SELECT_RESPONSE",
+      "layout": "bootloader_select_response_response_uid",
+      "frame": {
+        "id": "0x7EB",
+        "data": "04001111111100"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "BOOTLOADER_SIGNATURE_CHUNK request: first chunk",
+      "message": "BOOTLOADER_SIGNATURE_CHUNK",
+      "layout": "bootloader_signature_chunk",
+      "frame": {
+        "id": "0x7EC",
+        "data": "0000000000000000"
+      },
+      "fields": {
+        "index": 0,
+        "data": "00000000000000"
+      }
+    },
+    {
+      "name": "BOOTLOADER_SIGNATURE_CHUNK request: 7 bytes is too short",
+      "message": "BOOTLOADER_SIGNATURE_CHUNK",
+      "layout": "bootloader_signature_chunk",
+      "frame": {
+        "id": "0x7EC",
+        "data": "00000000000000"
+      },
+      "fields": null
+    },
+    {
+      "name": "BOOTLOADER_KEY_ID response: a key identifier",
+      "message": "BOOTLOADER_KEY_ID",
+      "layout": "bootloader_key_id",
+      "frame": {
+        "id": "0x7ED",
+        "data": "0102030405060708"
+      },
+      "fields": {
+        "key_id": "0102030405060708"
+      }
+    },
+    {
+      "name": "BOOTLOADER_KEY_ID response: 7 bytes is too short",
+      "message": "BOOTLOADER_KEY_ID",
+      "layout": "bootloader_key_id",
+      "frame": {
+        "id": "0x7ED",
+        "data": "01020304050607"
+      },
+      "fields": null
+    },
+    {
       "name": "ENTER_BOOTLOADER request: enter",
       "message": "ENTER_BOOTLOADER",
       "layout": "enter_bootloader",
@@ -7123,6 +7544,119 @@
       "layout": "thermal_cal_chunk_req",
       "fields": {
         "chunk": 48
+      }
+    },
+    {
+      "name": "BOOTLOADER_SELECT: a payload that is not the magic one",
+      "message": "BOOTLOADER_SELECT",
+      "layout": "bootloader_select_request_probe",
+      "fields": {
+        "operation": "00",
+        "nbits": 0,
+        "prefix": 0
+      }
+    },
+    {
+      "name": "BOOTLOADER_SELECT: nbits above its maximum",
+      "message": "BOOTLOADER_SELECT",
+      "layout": "bootloader_select_request_probe",
+      "fields": {
+        "operation": "01",
+        "nbits": 33,
+        "prefix": 0
+      }
+    },
+    {
+      "name": "BOOTLOADER_SELECT: a payload that is not the magic one",
+      "message": "BOOTLOADER_SELECT",
+      "layout": "bootloader_select_request_select",
+      "fields": {
+        "operation": "00",
+        "serial": 16909060,
+        "seq": 7
+      }
+    },
+    {
+      "name": "BOOTLOADER_SELECT: a payload that is not the magic one",
+      "message": "BOOTLOADER_SELECT",
+      "layout": "bootloader_select_request_release",
+      "fields": {
+        "operation": "00"
+      }
+    },
+    {
+      "name": "BOOTLOADER_SELECT: a payload that is not the magic one",
+      "message": "BOOTLOADER_SELECT",
+      "layout": "bootloader_select_request_uid",
+      "fields": {
+        "operation": "00",
+        "part": 1
+      }
+    },
+    {
+      "name": "BOOTLOADER_SELECT: part above its maximum",
+      "message": "BOOTLOADER_SELECT",
+      "layout": "bootloader_select_request_uid",
+      "fields": {
+        "operation": "04",
+        "part": 3
+      }
+    },
+    {
+      "name": "BOOTLOADER_SELECT_RESPONSE: a payload that is not the magic one",
+      "message": "BOOTLOADER_SELECT_RESPONSE",
+      "layout": "bootloader_select_response_response_probe",
+      "fields": {
+        "operation": "00",
+        "mark": "A5"
+      }
+    },
+    {
+      "name": "BOOTLOADER_SELECT_RESPONSE: a payload that is not the magic one",
+      "message": "BOOTLOADER_SELECT_RESPONSE",
+      "layout": "bootloader_select_response_response_probe",
+      "fields": {
+        "operation": "01",
+        "mark": "00"
+      }
+    },
+    {
+      "name": "BOOTLOADER_SELECT_RESPONSE: a payload that is not the magic one",
+      "message": "BOOTLOADER_SELECT_RESPONSE",
+      "layout": "bootloader_select_response_response_select",
+      "fields": {
+        "operation": "00",
+        "serial": 16909060,
+        "seq": 7
+      }
+    },
+    {
+      "name": "BOOTLOADER_SELECT_RESPONSE: a payload that is not the magic one",
+      "message": "BOOTLOADER_SELECT_RESPONSE",
+      "layout": "bootloader_select_response_response_uid",
+      "fields": {
+        "operation": "00",
+        "part": 0,
+        "word": 286331153
+      }
+    },
+    {
+      "name": "BOOTLOADER_SELECT_RESPONSE: part above its maximum",
+      "message": "BOOTLOADER_SELECT_RESPONSE",
+      "layout": "bootloader_select_response_response_uid",
+      "fields": {
+        "operation": "04",
+        "part": 3,
+        "word": 286331153
+      }
+    },
+    {
+      "name": "BOOTLOADER_SIGNATURE_CHUNK: index above its maximum",
+      "message": "BOOTLOADER_SIGNATURE_CHUNK",
+      "layout": "bootloader_signature_chunk",
+      "fields": {
+        "index": 11,
+        "data": "00000000000000"
       }
     },
     {

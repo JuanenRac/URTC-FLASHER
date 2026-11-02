@@ -298,6 +298,7 @@ LOG_VERSION_CHANGE=Installiert v{installed} -> neu v{new}.
 LOG_VERSION_CHANGE_UNKNOWN=Installiert v{installed} -> neu v{new} (eine Version konnte nicht ermittelt werden).
 LOG_VERSION_DOWNGRADE_WARNING=Die neue Version ist ÄLTER als die installierte: Der Bootloader lehnt sie ab, sofern kein Downgrade erlaubt ist. Sichern Sie zuerst die installierte Firmware (Firmware sichern (CAN)).
 LOG_KEY_PRECHECK_MATCH=Platine und Image verwenden denselben Signaturschlüssel ({fingerprint}).
+LOG_KEY_PRECHECK_NO_DATA=Der Bootloader veröffentlicht den von ihm akzeptierten Signaturschlüssel nicht: Der Schlüssel wird vor der Übertragung nicht verglichen.
 LOG_KEY_PRECHECK_MISMATCH=Die Platine akzeptiert den Signaturschlüssel {board}, dieses Image ist aber mit {image} signiert: Das Update würde am Ende scheitern. Wählen Sie das richtige Image oder setzen Sie "key_id_precheck" in urtc_config.json auf "off", um diese Prüfung zu überspringen.
 LOG_END_UPDATE_WITH_PATCH=Der Bootloader liest die Patch-Nummer: Patch {patch} wird im Frame zum Ende des Updates gesendet.
 QTLOG_PORT_SCAN=Port-Suche

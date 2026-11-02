@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "urtc_common_version": "0.1.3",
+  "urtc_common_version": "0.1.7",
   "files": {
     "EvidenceHistoryDialog.qml": {
       "from": "qml/EvidenceHistoryDialog.qml",

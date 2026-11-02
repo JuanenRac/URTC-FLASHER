@@ -297,6 +297,7 @@ LOG_VERSION_CHANGE=インストール済み v{installed} -> 新規 v{new}。
 LOG_VERSION_CHANGE_UNKNOWN=インストール済み v{installed} -> 新規 v{new} (バージョンを特定できませんでした)。
 LOG_VERSION_DOWNGRADE_WARNING=新しいバージョンはインストール済みのものより古いです。ダウングレードを許可しない限りブートローダは拒否します。先にインストール済みファームウェアのバックアップを取ってください (ファームウェアのバックアップ (CAN))。
 LOG_KEY_PRECHECK_MATCH=ボードとイメージは同じ署名鍵 ({fingerprint}) を使っています。
+LOG_KEY_PRECHECK_NO_DATA=ブートローダーは受け付ける署名鍵を公開していないため、転送前に鍵の比較は行いません。
 LOG_KEY_PRECHECK_MISMATCH=ボードは署名鍵 {board} を受け付けますが、このイメージは {image} で署名されています。更新は最後に失敗します。正しいイメージを選ぶか、urtc_config.json の "key_id_precheck" を "off" にしてこの確認を省略してください。
 LOG_END_UPDATE_WITH_PATCH=ブートローダはパッチ番号を読み取ります: 更新終了フレームでパッチ {patch} を送信します。
 QTLOG_PORT_SCAN=ポートの検索

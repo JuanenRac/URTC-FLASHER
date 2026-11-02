@@ -133,6 +133,10 @@ CAN_ID_THERMAL_RAW_CHUNK = 0x253  # Raw pixel chunk data
 CAN_ID_THERMAL_CAL_CHUNK_REQ = 0x254  # Request a calibrated temperature chunk
 CAN_ID_THERMAL_CAL_CHUNK = 0x255  # Calibrated temperature chunk data
 CAN_ID_VERSION_PATCH_RESPONSE = 0x7E9  # Version patch response
+CAN_ID_BOOTLOADER_SELECT = 0x7EA  # Address one bootloader by its serial number
+CAN_ID_BOOTLOADER_SELECT_RESPONSE = 0x7EB  # Answer to the addressing of a bootloader
+CAN_ID_BOOTLOADER_SIGNATURE_CHUNK = 0x7EC  # One chunk of the Ed25519 signature record
+CAN_ID_BOOTLOADER_KEY_ID = 0x7ED  # Identifier of the signing key a bootloader trusts
 CAN_ID_ENTER_BOOTLOADER = 0x7F0  # Enter the bootloader
 CAN_ID_START_UPDATE = 0x7F1  # Start the firmware update
 CAN_ID_DATA = 0x7F2  # Firmware data
@@ -564,6 +568,10 @@ MESSAGES = {
     596: {'name': 'THERMAL_CAL_CHUNK_REQ', 'group': 'thermal', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': [22], 'gates': {'blocked_by_critical_error': True}},
     597: {'name': 'THERMAL_CAL_CHUNK', 'group': 'thermal', 'direction': 'board_to_host', 'handled_by': 'application', 'tools': [22]},
     2025: {'name': 'VERSION_PATCH_RESPONSE', 'group': 'bootloader', 'direction': 'board_to_host', 'handled_by': 'both', 'tools': None},
+    2026: {'name': 'BOOTLOADER_SELECT', 'group': 'bootloader', 'direction': 'host_to_board', 'handled_by': 'bootloader', 'tools': None},
+    2027: {'name': 'BOOTLOADER_SELECT_RESPONSE', 'group': 'bootloader', 'direction': 'board_to_host', 'handled_by': 'bootloader', 'tools': None},
+    2028: {'name': 'BOOTLOADER_SIGNATURE_CHUNK', 'group': 'bootloader', 'direction': 'host_to_board', 'handled_by': 'bootloader', 'tools': None},
+    2029: {'name': 'BOOTLOADER_KEY_ID', 'group': 'bootloader', 'direction': 'board_to_host', 'handled_by': 'bootloader', 'tools': None},
     2032: {'name': 'ENTER_BOOTLOADER', 'group': 'bootloader', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': False, 'needs_magic': 'enter_bootloader'}},
     2033: {'name': 'START_UPDATE', 'group': 'bootloader', 'direction': 'host_to_board', 'handled_by': 'bootloader', 'tools': None},
     2034: {'name': 'DATA', 'group': 'bootloader', 'direction': 'host_to_board', 'handled_by': 'bootloader', 'tools': None},
@@ -679,6 +687,15 @@ LAYOUTS = {
     'thermal_cal_chunk_req': {'id': 596, 'role': 'request', 'dlc': {'exact': 1}, 'fields': [{'name': 'chunk', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 47]}]},
     'thermal_cal_chunk': {'id': 597, 'role': 'response', 'dlc': {'exact': 8}, 'fields': [{'name': 'data', 'type': 'bytes', 'offset': 0, 'length': 8}]},
     'version_patch_response': {'id': 2025, 'role': 'response', 'dlc': {'min': 3, 'max': 8}, 'fields': [{'name': 'responder', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'patch', 'type': 'u8', 'offset': 1, 'width': 1}, {'name': 'flags', 'type': 'u8', 'offset': 2, 'width': 1}]},
+    'bootloader_select_request_probe': {'id': 2026, 'role': 'request', 'dlc': {'exact': 6}, 'fields': [{'name': 'operation', 'type': 'bytes', 'offset': 0, 'fixed': '01', 'length': 1}, {'name': 'nbits', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 32]}, {'name': 'prefix', 'type': 'u32', 'offset': 2, 'width': 4}]},
+    'bootloader_select_request_select': {'id': 2026, 'role': 'request', 'dlc': {'exact': 6}, 'fields': [{'name': 'operation', 'type': 'bytes', 'offset': 0, 'fixed': '02', 'length': 1}, {'name': 'serial', 'type': 'u32', 'offset': 1, 'width': 4}, {'name': 'seq', 'type': 'u8', 'offset': 5, 'width': 1}]},
+    'bootloader_select_request_release': {'id': 2026, 'role': 'request', 'dlc': {'exact': 1}, 'fields': [{'name': 'operation', 'type': 'bytes', 'offset': 0, 'fixed': '03', 'length': 1}]},
+    'bootloader_select_request_uid': {'id': 2026, 'role': 'request', 'dlc': {'exact': 2}, 'fields': [{'name': 'operation', 'type': 'bytes', 'offset': 0, 'fixed': '04', 'length': 1}, {'name': 'part', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 2]}]},
+    'bootloader_select_response_response_probe': {'id': 2027, 'role': 'response', 'dlc': {'exact': 2}, 'fields': [{'name': 'operation', 'type': 'bytes', 'offset': 0, 'fixed': '01', 'length': 1}, {'name': 'mark', 'type': 'bytes', 'offset': 1, 'fixed': 'A5', 'length': 1}]},
+    'bootloader_select_response_response_select': {'id': 2027, 'role': 'response', 'dlc': {'exact': 6}, 'fields': [{'name': 'operation', 'type': 'bytes', 'offset': 0, 'fixed': '02', 'length': 1}, {'name': 'serial', 'type': 'u32', 'offset': 1, 'width': 4}, {'name': 'seq', 'type': 'u8', 'offset': 5, 'width': 1}]},
+    'bootloader_select_response_response_uid': {'id': 2027, 'role': 'response', 'dlc': {'exact': 6}, 'fields': [{'name': 'operation', 'type': 'bytes', 'offset': 0, 'fixed': '04', 'length': 1}, {'name': 'part', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 2]}, {'name': 'word', 'type': 'u32', 'offset': 2, 'width': 4}]},
+    'bootloader_signature_chunk': {'id': 2028, 'role': 'request', 'dlc': {'exact': 8}, 'fields': [{'name': 'index', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 10]}, {'name': 'data', 'type': 'bytes', 'offset': 1, 'length': 7}]},
+    'bootloader_key_id': {'id': 2029, 'role': 'response', 'dlc': {'exact': 8}, 'fields': [{'name': 'key_id', 'type': 'bytes', 'offset': 0, 'length': 8}]},
     'enter_bootloader': {'id': 2032, 'role': 'request', 'dlc': {'exact': 4}, 'fields': [{'name': 'magic', 'type': 'bytes', 'offset': 0, 'fixed': 'B0071D5A', 'length': 4}]},
     'start_update': {'id': 2033, 'role': 'request', 'dlc': {'exact': 8}, 'fields': [{'name': 'total_size', 'type': 'u32', 'offset': 0, 'width': 4}, {'name': 'hardware_id', 'type': 'u32', 'offset': 4, 'width': 4}]},
     'data': {'id': 2034, 'role': 'request', 'dlc': {'min': 1, 'max': 8}, 'fields': [{'name': 'data', 'type': 'bytes', 'offset': 0, 'rest': True}]},
@@ -1852,6 +1869,103 @@ def encode_version_patch_response(responder: int, patch: int, flags: int) -> tup
 def decode_version_patch_response(data: bytes, strict: bool = False) -> dict | None:
     """Fields of 0x7E9 (response), or None when the payload is too short."""
     return decode("version_patch_response", data, strict)
+
+
+def encode_bootloader_select_request_probe(nbits: int, prefix: int, operation: bytes | None = None) -> tuple[int, bytes]:
+    """Address one bootloader by its serial number (0x7EA, request, probe)."""
+    values = {k: v for k, v in dict(nbits=nbits, prefix=prefix, operation=operation).items() if v is not None}
+    return encode("bootloader_select_request_probe", **values)
+
+
+def decode_bootloader_select_request_probe(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x7EA (request, probe), or None when the payload is too short."""
+    return decode("bootloader_select_request_probe", data, strict)
+
+
+def encode_bootloader_select_request_select(serial: int, seq: int, operation: bytes | None = None) -> tuple[int, bytes]:
+    """Address one bootloader by its serial number (0x7EA, request, select)."""
+    values = {k: v for k, v in dict(serial=serial, seq=seq, operation=operation).items() if v is not None}
+    return encode("bootloader_select_request_select", **values)
+
+
+def decode_bootloader_select_request_select(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x7EA (request, select), or None when the payload is too short."""
+    return decode("bootloader_select_request_select", data, strict)
+
+
+def encode_bootloader_select_request_release(operation: bytes | None = None) -> tuple[int, bytes]:
+    """Address one bootloader by its serial number (0x7EA, request, release)."""
+    values = {k: v for k, v in dict(operation=operation).items() if v is not None}
+    return encode("bootloader_select_request_release", **values)
+
+
+def decode_bootloader_select_request_release(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x7EA (request, release), or None when the payload is too short."""
+    return decode("bootloader_select_request_release", data, strict)
+
+
+def encode_bootloader_select_request_uid(part: int, operation: bytes | None = None) -> tuple[int, bytes]:
+    """Address one bootloader by its serial number (0x7EA, request, uid)."""
+    values = {k: v for k, v in dict(part=part, operation=operation).items() if v is not None}
+    return encode("bootloader_select_request_uid", **values)
+
+
+def decode_bootloader_select_request_uid(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x7EA (request, uid), or None when the payload is too short."""
+    return decode("bootloader_select_request_uid", data, strict)
+
+
+def encode_bootloader_select_response_response_probe(operation: bytes | None = None, mark: bytes | None = None) -> tuple[int, bytes]:
+    """Answer to the addressing of a bootloader (0x7EB, response, probe)."""
+    values = {k: v for k, v in dict(operation=operation, mark=mark).items() if v is not None}
+    return encode("bootloader_select_response_response_probe", **values)
+
+
+def decode_bootloader_select_response_response_probe(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x7EB (response, probe), or None when the payload is too short."""
+    return decode("bootloader_select_response_response_probe", data, strict)
+
+
+def encode_bootloader_select_response_response_select(serial: int, seq: int, operation: bytes | None = None) -> tuple[int, bytes]:
+    """Answer to the addressing of a bootloader (0x7EB, response, select)."""
+    values = {k: v for k, v in dict(serial=serial, seq=seq, operation=operation).items() if v is not None}
+    return encode("bootloader_select_response_response_select", **values)
+
+
+def decode_bootloader_select_response_response_select(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x7EB (response, select), or None when the payload is too short."""
+    return decode("bootloader_select_response_response_select", data, strict)
+
+
+def encode_bootloader_select_response_response_uid(part: int, word: int, operation: bytes | None = None) -> tuple[int, bytes]:
+    """Answer to the addressing of a bootloader (0x7EB, response, uid)."""
+    values = {k: v for k, v in dict(part=part, word=word, operation=operation).items() if v is not None}
+    return encode("bootloader_select_response_response_uid", **values)
+
+
+def decode_bootloader_select_response_response_uid(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x7EB (response, uid), or None when the payload is too short."""
+    return decode("bootloader_select_response_response_uid", data, strict)
+
+
+def encode_bootloader_signature_chunk(index: int, data: bytes) -> tuple[int, bytes]:
+    """One chunk of the Ed25519 signature record (0x7EC, request)."""
+    return encode("bootloader_signature_chunk", index=index, data=data)
+
+
+def decode_bootloader_signature_chunk(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x7EC (request), or None when the payload is too short."""
+    return decode("bootloader_signature_chunk", data, strict)
+
+
+def encode_bootloader_key_id(key_id: bytes) -> tuple[int, bytes]:
+    """Identifier of the signing key a bootloader trusts (0x7ED, response)."""
+    return encode("bootloader_key_id", key_id=key_id)
+
+
+def decode_bootloader_key_id(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x7ED (response), or None when the payload is too short."""
+    return decode("bootloader_key_id", data, strict)
 
 
 def encode_enter_bootloader(magic: bytes | None = None) -> tuple[int, bytes]:

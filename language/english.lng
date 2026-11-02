@@ -297,6 +297,7 @@ LOG_VERSION_CHANGE=Installed v{installed} -> new v{new}.
 LOG_VERSION_CHANGE_UNKNOWN=Installed v{installed} -> new v{new} (a version could not be determined).
 LOG_VERSION_DOWNGRADE_WARNING=The new version is OLDER than the installed one: the bootloader refuses it unless the downgrade is allowed. Take a backup of the installed firmware first (Back up Firmware (CAN)).
 LOG_KEY_PRECHECK_MATCH=The board and the image use the same signing key ({fingerprint}).
+LOG_KEY_PRECHECK_NO_DATA=The bootloader does not publish the signing key it accepts: the key is not compared before the transfer.
 LOG_KEY_PRECHECK_MISMATCH=The board accepts signing key {board} but this image is signed with {image}: the update would fail at the end. Pick the right image, or set "key_id_precheck" to "off" in urtc_config.json to skip this check.
 LOG_END_UPDATE_WITH_PATCH=The bootloader reads the patch number: sending patch {patch} in the end-of-update frame.
 QTLOG_PORT_SCAN=Port scan

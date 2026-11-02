@@ -1,10 +1,10 @@
 {
   "format": 1,
-  "urtc_common_version": "0.1.6",
+  "urtc_common_version": "0.1.7",
   "files": {
     "__init__.py": {
       "from": "src/urtc_common/__init__.py",
-      "sha256": "2a00f926c1de3068be3964a9e17709814bf63f36a4b6a56efd18ee5087d77b02"
+      "sha256": "2c970c8cc98aafef86a195e90a980ee292fbe4dc67a32b09359b86e539ba4cdd"
     },
     "bus_scenario.py": {
       "from": "src/urtc_common/bus_scenario.py",
@@ -88,7 +88,7 @@
     },
     "protocol.py": {
       "from": "src/urtc_common/protocol.py",
-      "sha256": "24dff9846eabc817248e5959b3339c99454fa98c54f94ad3a5010a7e79da7ea8"
+      "sha256": "528281ee27edb18c2b7c586436aab90f7fdd725b16cc0b06607545d97988e164"
     },
     "quick_state.py": {
       "from": "src/urtc_common/quick_state.py",

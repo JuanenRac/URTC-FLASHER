@@ -87,6 +87,7 @@ MLX_SENSOR_VARIANTS = [
 ]
 ERASE_FRAM_MAGIC = protocol.MAGIC_ERASE_FRAM
 CAN_ID_BOOTLOADER_VERSION_RESPONSE = protocol.CAN_ID_BOOTLOADER_VERSION_RESPONSE  # sent only by the bootloader, alongside 0x7F9, when it's the one answering
+CAN_ID_BOOTLOADER_KEY_ID = protocol.CAN_ID_BOOTLOADER_KEY_ID  # DLC=8 (optional): sent by a bootloader that holds a trusted Ed25519 key right after its 0x7F9 answer: the identifier of that key
 CAN_ID_VERSION_PATCH_RESPONSE = protocol.CAN_ID_VERSION_PATCH_RESPONSE  # DLC=3 (optional): answering side, installed application PATCH (0xFF = unknown), flags (bit 0 = the bootloader reads the patch from the minor field of 0x7F4 / 0x214); sent right after 0x7F9 by boards that know their patch, never by older ones
 PATCH_UNKNOWN = 0xFF
 PATCH_FLAG = 0x80  # high byte of the 16-bit minor field of 0x7F4 / 0x214: 0x80 | PATCH (0-127), only towards a bootloader that announced support
@@ -529,13 +530,14 @@ THIS_HARDWARE_ID, HMAC_KEY, SLAVE_HMAC_KEY, APP_MAX_SIZE, BOOTLOADER_MAX_SIZE, F
 # official images in firmware/ are signed that way, so the default is off.
 REQUIRE_PRODUCTION_SIGNATURE = _config.get("require_production_signature") is True
 
-# Key check before the transfer: a bootloader that publishes the fingerprint of the signing key it accepts (the 11-byte 0x7FA) is compared with the
-# fingerprint the image's manifest declares ("signing_key_id"). "warn" (the default) logs a mismatch and goes on, "refuse" stops before a single data frame
-# is sent, "off" skips the comparison. A bootloader or a manifest without the fingerprint is never a mismatch: nothing is compared.
+# Key check before the transfer: a bootloader that publishes the fingerprint of the signing key it accepts (the eight bytes of 0x7ED, sent right after its
+# 0x7F9 answer; 0x7FA stays at the three bytes of the version) is compared with the fingerprint the image's manifest declares ("signing_key_id"). "warn" (the
+# default) logs a mismatch and goes on, "refuse" stops before a single data frame is sent, "off" skips the comparison. A bootloader that does not send 0x7ED (an
+# older one, or one without a key) or a manifest without the fingerprint is never a mismatch and never an error: there is nothing to compare.
 KEY_ID_PRECHECK = str(_config.get("key_id_precheck", "warn")).strip().lower()
 if KEY_ID_PRECHECK not in ("off", "warn", "refuse"):
     KEY_ID_PRECHECK = "warn"
-BOOTLOADER_KEY_ID_FRAME_BYTES = 11  # 0x7FA with the key fingerprint: major, minor, patch and eight bytes of fingerprint
+BOOTLOADER_KEY_ID_BYTES = 8  # the whole payload of 0x7ED
 
 # The banner image is a bundled asset, not a user-supplied file - a
 # genuinely different location than FIRMWARE_FOLDER above when frozen.
