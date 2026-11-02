@@ -108,30 +108,35 @@ Wie die Teile dieses Repositorys zusammenpassen: wer es nutzt, was es enthält u
 Dieses Programm kann nach einer neueren Version seiner selbst suchen: Die Schaltfläche „Nach Updates suchen“ fragt GitHub einmal und bietet ein signiertes Paket nur an, wenn es für Ihr System ist und neuer. Nichts wird von selbst geprüft oder installiert, solange Sie die Prüfung nicht einschalten, und ein Update braucht Ihre Bestätigung. Das Paket muss zu seinem SHA-256 und zur Signatur des im Programm angehefteten Release-Schlüssels passen; die vorherige Version bleibt erhalten und wird von selbst wiederhergestellt, wenn die neue nicht startet. `urtc-updater --cli package list|check|install|rollback` macht dasselbe auf der Kommandozeile für Flasher und Tester, und `install --file` funktioniert ohne Netzwerk.
 <!-- /urtc-section:updates -->
 
+<!-- urtc-section:screenshots -->
 ## 🖼️ Screenshots
 
-<!-- urtc-shots -->
-Aufgenommen mit 1920×1080 auf einem Prüfstand, mit Beispieldaten und ohne eine echte Anlage dahinter.
+Aufgenommen auf einem Prüfstand mit erfundenen Beispieldaten und ohne eine echte Anlage dahinter.
 
-<table>
-<tr>
-<td width="50%" valign="top"><img src="images/screenshots/deck.png" alt="Das Fenster beim Öffnen: die Verbindung, das Firmware-Inventar, die vier Kontrollpunkte einer CAN-OTA-Aktualisierung und die Gerätekonfiguration." width="100%"><br><sub>Das Fenster beim Öffnen: die Verbindung, das Firmware-Inventar, die vier Kontrollpunkte einer CAN-OTA-Aktualisierung und die Gerätekonfiguration.</sub></td>
-<td width="50%" valign="top"><img src="images/screenshots/heads.png" alt="Werkzeugköpfe am Bus: ein modellierter Bus mit sechs Köpfen, jeder in einem anderen möglichen Zustand (gewählt, Adresskonflikt, Fehler gehalten, im Bootloader, verloren und bereit)." width="100%"><br><sub>Werkzeugköpfe am Bus: ein modellierter Bus mit sechs Köpfen, jeder in einem anderen möglichen Zustand (gewählt, Adresskonflikt, Fehler gehalten, im Bootloader, verloren und bereit).</sub></td>
-</tr>
-<tr>
-<td width="50%" valign="top"><img src="images/screenshots/history.png" alt="Das Verlaufsfenster: alle Protokolle, die die Programme zu jeder Platine geschrieben haben, das neueste zuerst, jedes für sich geprüft, mit einer Spalte Signatur, die sagt, ob es signiert ist, mit welchem deiner Schlüssel, oder ob es ungültig ist." width="100%"><br><sub>Das Verlaufsfenster: alle Protokolle, die die Programme zu jeder Platine geschrieben haben, das neueste zuerst, jedes für sich geprüft, mit einer Spalte Signatur, die sagt, ob es signiert ist, mit welchem deiner Schlüssel, oder ob es ungültig ist.</sub></td>
-<td width="50%" valign="top"><img src="images/screenshots/help.png" alt="Das Hilfefenster: die Schritte zur Benutzung des Programms, in der Sprache des Fensters." width="100%"><br><sub>Das Hilfefenster: die Schritte zur Benutzung des Programms, in der Sprache des Fensters.</sub></td>
-</tr>
-<tr>
-<td width="50%" valign="top"><img src="images/screenshots/updates.png" alt="Das Update-Fenster: ein neueres signiertes Paket wird erst nach deiner Bestätigung installiert." width="100%"><br><sub>Das Update-Fenster: ein neueres signiertes Paket wird erst nach deiner Bestätigung installiert.</sub></td>
-<td width="50%"></td>
-</tr>
-</table>
-<!-- /urtc-shots -->
+<p align="center">
+  <img src="images/screenshots/deck.png" alt="Hauptfenster" width="100%">
+</p>
 
-Diese Bilder zeigen das echte Fenster, ohne Bildschirm gezeichnet, so wie es sich öffnet (nichts verbunden, nichts gesendet). Die Anleitung führt durch das Deck, das Hilfefenster und das Update-Fenster.
+<p align="center"><em>Das Fenster beim Öffnen: die Verbindung, das Firmware-Inventar, die vier Kontrollpunkte einer CAN-OTA-Aktualisierung und die Gerätekonfiguration.</em></p>
 
-[Anleitung mit Bildern](docs/WINDOW_GUIDE.md)
+<p align="center">
+  <img src="images/screenshots/heads.png" alt="Werkzeugköpfe am Bus" width="100%">
+</p>
+
+<p align="center"><em>Werkzeugköpfe am Bus: ein modellierter Bus mit sechs Köpfen, jeder in einem anderen möglichen Zustand (gewählt, Adresskonflikt, Fehler gehalten, im Bootloader, verloren und bereit).</em></p>
+
+<p align="center">
+  <img src="images/screenshots/history.png" alt="Verlauf" width="100%">
+</p>
+
+<p align="center"><em>Das Verlaufsfenster: alle Protokolle, die die Programme zu jeder Platine geschrieben haben, das neueste zuerst, jedes für sich geprüft, mit einer Spalte Signatur, die sagt, ob es signiert ist, mit welchem deiner Schlüssel, oder ob es ungültig ist.</em></p>
+
+<p align="center">
+  <img src="images/screenshots/updates.png" alt="Nach Updates suchen" width="100%">
+</p>
+
+<p align="center"><em>Das Update-Fenster: ein neueres signiertes Paket wird erst nach deiner Bestätigung installiert.</em></p>
+<!-- /urtc-section:screenshots -->
 
 ## ✨ Funktionen
 

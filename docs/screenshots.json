@@ -1,0 +1,96 @@
+{
+  "screens": [
+    {
+      "file": "deck.png",
+      "alt": {
+        "en": "Main window",
+        "es": "Ventana principal",
+        "fr": "Fenêtre principale",
+        "it": "Finestra principale",
+        "de": "Hauptfenster",
+        "zh": "主窗口",
+        "ja": "メインウィンドウ",
+        "pt": "Janela principal"
+      },
+      "caption": {
+        "en": "The window as it opens: the connection, the firmware inventory, the four checkpoints of a CAN-OTA update and the device configuration.",
+        "es": "La ventana al abrirse: la conexión, el inventario de firmware, los cuatro puntos de control de una actualización CAN-OTA y la configuración del dispositivo.",
+        "fr": "La fenêtre à l'ouverture : la connexion, l'inventaire des firmwares, les quatre points de contrôle d'une mise à jour CAN-OTA et la configuration de l'appareil.",
+        "it": "La finestra all'apertura: la connessione, l'inventario dei firmware, i quattro punti di controllo di un aggiornamento CAN-OTA e la configurazione del dispositivo.",
+        "de": "Das Fenster beim Öffnen: die Verbindung, das Firmware-Inventar, die vier Kontrollpunkte einer CAN-OTA-Aktualisierung und die Gerätekonfiguration.",
+        "zh": "刚打开时的窗口：连接、固件清单、CAN-OTA 更新的四个检查点以及设备配置。",
+        "ja": "起動直後のウィンドウ：接続、ファームウェアの一覧、CAN-OTA 更新の 4 つのチェックポイント、デバイス設定。",
+        "pt": "A janela ao abrir: a ligação, o inventário de firmware, os quatro pontos de controlo de uma atualização CAN-OTA e a configuração do dispositivo."
+      }
+    },
+    {
+      "file": "heads.png",
+      "alt": {
+        "en": "Tool heads on the bus",
+        "es": "Cabezales en el bus",
+        "fr": "Têtes d'outil sur le bus",
+        "it": "Teste utensile sul bus",
+        "de": "Werkzeugköpfe am Bus",
+        "zh": "总线上的工具头",
+        "ja": "バス上のツールヘッド",
+        "pt": "Cabeças de ferramenta no barramento"
+      },
+      "caption": {
+        "en": "Tool heads on the bus: a modelled bus with six heads, one in each state a head can be in (selected, address conflict, fault latched, in its bootloader, lost and ready).",
+        "es": "Cabezales en el bus: un bus modelado con seis cabezales, uno en cada estado posible (seleccionado, conflicto de dirección, fallo retenido, en su bootloader, perdido y listo).",
+        "fr": "Têtes d'outil sur le bus : un bus modélisé avec six têtes, une dans chaque état possible (sélectionnée, conflit d'adresse, défaut mémorisé, dans son bootloader, perdue et prête).",
+        "it": "Teste utensile sul bus: un bus modellato con sei teste, una per ogni stato possibile (selezionata, conflitto di indirizzo, guasto memorizzato, nel bootloader, persa e pronta).",
+        "de": "Werkzeugköpfe am Bus: ein modellierter Bus mit sechs Köpfen, jeder in einem anderen möglichen Zustand (gewählt, Adresskonflikt, Fehler gehalten, im Bootloader, verloren und bereit).",
+        "zh": "总线上的工具头：一条模拟总线上的六个工具头，每个处于一种可能的状态（已选择、地址冲突、故障锁定、处于引导程序、丢失和就绪）。",
+        "ja": "バス上のツールヘッド：6 つのヘッドを持つモデル化したバスで、各ヘッドが取り得る状態（選択中、アドレス競合、障害保持、ブートローダー中、喪失、準備完了）を 1 つずつ示します。",
+        "pt": "Cabeças de ferramenta no barramento: um barramento modelado com seis cabeças, cada uma num estado possível (selecionada, conflito de endereço, falha retida, no bootloader, perdida e pronta)."
+      }
+    },
+    {
+      "file": "history.png",
+      "alt": {
+        "en": "History",
+        "es": "Historial",
+        "fr": "Historique",
+        "it": "Cronologia",
+        "de": "Verlauf",
+        "zh": "历史记录",
+        "ja": "履歴",
+        "pt": "Histórico"
+      },
+      "caption": {
+        "en": "The history window: every record the programs wrote about each board, newest first, each checked on its own, with a Signature column that says whether it is signed, by which of your keys, or not valid.",
+        "es": "La ventana del historial: todos los registros que los programas escribieron de cada placa, el más reciente primero, cada uno comprobado por separado, con una columna Firma que dice si está firmado, con cuál de tus claves, o si no es válido.",
+        "fr": "La fenêtre de l'historique : tous les enregistrements que les programmes ont écrits pour chaque carte, le plus récent d'abord, chacun vérifié séparément, avec une colonne Signature qui dit s'il est signé, par laquelle de vos clés, ou s'il n'est pas valide.",
+        "it": "La finestra della cronologia: tutti i record che i programmi hanno scritto per ogni scheda, il più recente per primo, ciascuno verificato a sé, con una colonna Firma che dice se è firmato, con quale delle tue chiavi, o se non è valido.",
+        "de": "Das Verlaufsfenster: alle Protokolle, die die Programme zu jeder Platine geschrieben haben, das neueste zuerst, jedes für sich geprüft, mit einer Spalte Signatur, die sagt, ob es signiert ist, mit welchem deiner Schlüssel, oder ob es ungültig ist.",
+        "zh": "历史窗口：程序为每块板子写下的所有记录，最新的在前，每条单独校验；“签名”列显示它是否已签名、由您的哪把密钥签名，或是否无效。",
+        "ja": "履歴ウィンドウ：各ボードについてプログラムが書いた記録を新しい順に表示し、それぞれを個別に検証します。署名列には、署名の有無、どの鍵で署名されたか、または無効かが表示されます。",
+        "pt": "A janela do histórico: todos os registos que os programas escreveram sobre cada placa, o mais recente primeiro, cada um verificado por si, com uma coluna Assinatura que diz se está assinado, com qual das suas chaves, ou se não é válido."
+      }
+    },
+    {
+      "file": "updates.png",
+      "alt": {
+        "en": "Check for updates",
+        "es": "Buscar actualizaciones",
+        "fr": "Rechercher des mises à jour",
+        "it": "Cerca aggiornamenti",
+        "de": "Nach Updates suchen",
+        "zh": "检查更新",
+        "ja": "更新の確認",
+        "pt": "Procurar atualizações"
+      },
+      "caption": {
+        "en": "The update window: a newer signed package is installed only after you confirm it.",
+        "es": "La ventana de actualizaciones: un paquete firmado más reciente solo se instala después de que lo confirmes.",
+        "fr": "La fenêtre de mise à jour : un paquet signé plus récent n'est installé qu'après votre confirmation.",
+        "it": "La finestra degli aggiornamenti: un pacchetto firmato più recente viene installato solo dopo la tua conferma.",
+        "de": "Das Update-Fenster: ein neueres signiertes Paket wird erst nach deiner Bestätigung installiert.",
+        "zh": "更新窗口：只有在你确认之后，才会安装较新的已签名软件包。",
+        "ja": "更新ウィンドウ：新しい署名付きパッケージは、確認した後にのみインストールされます。",
+        "pt": "A janela de atualizações: um pacote assinado mais recente só é instalado depois de o confirmar."
+      }
+    }
+  ]
+}

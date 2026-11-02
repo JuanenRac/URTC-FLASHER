@@ -103,30 +103,35 @@ URTC-FLASHER 是把固件写入 URTC 板的程序。它通过 USB-CAN 适配器�
 本程序可以查找自身的较新版本：“检查更新”按钮只向 GitHub 查询一次，只有当包适用于您的系统且更新时才会提供已签名的包。除非您打开检查，否则不会自行检查或安装，更新需要您的确认。包必须与其 SHA-256 以及程序中固定的发布密钥签名一致；上一版本会保留，新版本无法启动时会自动恢复。`urtc-updater --cli package list|check|install|rollback` 可在命令行中为刷写器和测试器完成同样的操作，`install --file` 无需网络即可使用。
 <!-- /urtc-section:updates -->
 
+<!-- urtc-section:screenshots -->
 ## 🖼️ 屏幕截图
 
-<!-- urtc-shots -->
-在测试台上以 1920×1080 截取，使用示例数据，背后没有真实的安装。
+在测试台上使用虚构的示例数据截取，背后没有真实的安装。
 
-<table>
-<tr>
-<td width="50%" valign="top"><img src="images/screenshots/deck.png" alt="刚打开时的窗口：连接、固件清单、CAN-OTA 更新的四个检查点以及设备配置。" width="100%"><br><sub>刚打开时的窗口：连接、固件清单、CAN-OTA 更新的四个检查点以及设备配置。</sub></td>
-<td width="50%" valign="top"><img src="images/screenshots/heads.png" alt="总线上的工具头：一条模拟总线上的六个工具头，每个处于一种可能的状态（已选择、地址冲突、故障锁定、处于引导程序、丢失和就绪）。" width="100%"><br><sub>总线上的工具头：一条模拟总线上的六个工具头，每个处于一种可能的状态（已选择、地址冲突、故障锁定、处于引导程序、丢失和就绪）。</sub></td>
-</tr>
-<tr>
-<td width="50%" valign="top"><img src="images/screenshots/history.png" alt="历史窗口：程序为每块板子写下的所有记录，最新的在前，每条单独校验；“签名”列显示它是否已签名、由您的哪把密钥签名，或是否无效。" width="100%"><br><sub>历史窗口：程序为每块板子写下的所有记录，最新的在前，每条单独校验；“签名”列显示它是否已签名、由您的哪把密钥签名，或是否无效。</sub></td>
-<td width="50%" valign="top"><img src="images/screenshots/help.png" alt="帮助窗口：使用该程序的各个步骤，使用窗口的语言显示。" width="100%"><br><sub>帮助窗口：使用该程序的各个步骤，使用窗口的语言显示。</sub></td>
-</tr>
-<tr>
-<td width="50%" valign="top"><img src="images/screenshots/updates.png" alt="更新窗口：只有在你确认之后，才会安装较新的已签名软件包。" width="100%"><br><sub>更新窗口：只有在你确认之后，才会安装较新的已签名软件包。</sub></td>
-<td width="50%"></td>
-</tr>
-</table>
-<!-- /urtc-shots -->
+<p align="center">
+  <img src="images/screenshots/deck.png" alt="主窗口" width="100%">
+</p>
 
-这些图片是真实的窗口，在没有屏幕的情况下按打开时的样子绘制（未连接任何设备，未发送任何内容）。指南依次介绍面板、帮助窗口和更新窗口。
+<p align="center"><em>刚打开时的窗口：连接、固件清单、CAN-OTA 更新的四个检查点以及设备配置。</em></p>
 
-[图文指南](docs/WINDOW_GUIDE.md)
+<p align="center">
+  <img src="images/screenshots/heads.png" alt="总线上的工具头" width="100%">
+</p>
+
+<p align="center"><em>总线上的工具头：一条模拟总线上的六个工具头，每个处于一种可能的状态（已选择、地址冲突、故障锁定、处于引导程序、丢失和就绪）。</em></p>
+
+<p align="center">
+  <img src="images/screenshots/history.png" alt="历史记录" width="100%">
+</p>
+
+<p align="center"><em>历史窗口：程序为每块板子写下的所有记录，最新的在前，每条单独校验；“签名”列显示它是否已签名、由您的哪把密钥签名，或是否无效。</em></p>
+
+<p align="center">
+  <img src="images/screenshots/updates.png" alt="检查更新" width="100%">
+</p>
+
+<p align="center"><em>更新窗口：只有在你确认之后，才会安装较新的已签名软件包。</em></p>
+<!-- /urtc-section:screenshots -->
 
 ## ✨ 功能
 

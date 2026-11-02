@@ -106,30 +106,35 @@ Cómo encajan las partes de este repositorio: quién lo usa, qué contiene y de 
 Este programa puede buscar una versión más nueva de sí mismo: el botón «Buscar actualización» pregunta una vez a GitHub y ofrece un paquete firmado solo si es para tu sistema y más nuevo. Nada se comprueba ni se instala por su cuenta salvo que actives la comprobación, y una actualización necesita tu confirmación. El paquete debe coincidir con su SHA-256 y con la firma de la clave de las releases fijada en el programa; la versión anterior se conserva y se restaura sola si la nueva no arranca. `urtc-updater --cli package list|check|install|rollback` hace lo mismo desde la línea de órdenes para el flasher y el tester, y `install --file` funciona sin red.
 <!-- /urtc-section:updates -->
 
+<!-- urtc-section:screenshots -->
 ## 🖼️ Capturas de pantalla
 
-<!-- urtc-shots -->
-Capturadas a 1920×1080 en un banco de pruebas, con datos de ejemplo y sin ninguna instalación real detrás.
+Capturadas en un banco de pruebas con datos de ejemplo inventados y sin ninguna instalación real detrás.
 
-<table>
-<tr>
-<td width="50%" valign="top"><img src="images/screenshots/deck.png" alt="La ventana al abrirse: la conexión, el inventario de firmware, los cuatro puntos de control de una actualización CAN-OTA y la configuración del dispositivo." width="100%"><br><sub>La ventana al abrirse: la conexión, el inventario de firmware, los cuatro puntos de control de una actualización CAN-OTA y la configuración del dispositivo.</sub></td>
-<td width="50%" valign="top"><img src="images/screenshots/heads.png" alt="Cabezales en el bus: un bus modelado con seis cabezales, uno en cada estado posible (seleccionado, conflicto de dirección, fallo retenido, en su bootloader, perdido y listo)." width="100%"><br><sub>Cabezales en el bus: un bus modelado con seis cabezales, uno en cada estado posible (seleccionado, conflicto de dirección, fallo retenido, en su bootloader, perdido y listo).</sub></td>
-</tr>
-<tr>
-<td width="50%" valign="top"><img src="images/screenshots/history.png" alt="La ventana del historial: todos los registros que los programas escribieron de cada placa, el más reciente primero, cada uno comprobado por separado, con una columna Firma que dice si está firmado, con cuál de tus claves, o si no es válido." width="100%"><br><sub>La ventana del historial: todos los registros que los programas escribieron de cada placa, el más reciente primero, cada uno comprobado por separado, con una columna Firma que dice si está firmado, con cuál de tus claves, o si no es válido.</sub></td>
-<td width="50%" valign="top"><img src="images/screenshots/help.png" alt="La ventana de Ayuda: los pasos para usar el programa, escritos en el idioma de la ventana." width="100%"><br><sub>La ventana de Ayuda: los pasos para usar el programa, escritos en el idioma de la ventana.</sub></td>
-</tr>
-<tr>
-<td width="50%" valign="top"><img src="images/screenshots/updates.png" alt="La ventana de actualizaciones: un paquete firmado más reciente solo se instala después de que lo confirmes." width="100%"><br><sub>La ventana de actualizaciones: un paquete firmado más reciente solo se instala después de que lo confirmes.</sub></td>
-<td width="50%"></td>
-</tr>
-</table>
-<!-- /urtc-shots -->
+<p align="center">
+  <img src="images/screenshots/deck.png" alt="Ventana principal" width="100%">
+</p>
 
-Estas imágenes son la ventana real, dibujada sin pantalla tal como se abre (nada conectado, nada enviado). La guía recorre el panel, la ventana de Ayuda y la de actualización.
+<p align="center"><em>La ventana al abrirse: la conexión, el inventario de firmware, los cuatro puntos de control de una actualización CAN-OTA y la configuración del dispositivo.</em></p>
 
-[Guía con imágenes](docs/WINDOW_GUIDE.md)
+<p align="center">
+  <img src="images/screenshots/heads.png" alt="Cabezales en el bus" width="100%">
+</p>
+
+<p align="center"><em>Cabezales en el bus: un bus modelado con seis cabezales, uno en cada estado posible (seleccionado, conflicto de dirección, fallo retenido, en su bootloader, perdido y listo).</em></p>
+
+<p align="center">
+  <img src="images/screenshots/history.png" alt="Historial" width="100%">
+</p>
+
+<p align="center"><em>La ventana del historial: todos los registros que los programas escribieron de cada placa, el más reciente primero, cada uno comprobado por separado, con una columna Firma que dice si está firmado, con cuál de tus claves, o si no es válido.</em></p>
+
+<p align="center">
+  <img src="images/screenshots/updates.png" alt="Buscar actualizaciones" width="100%">
+</p>
+
+<p align="center"><em>La ventana de actualizaciones: un paquete firmado más reciente solo se instala después de que lo confirmes.</em></p>
+<!-- /urtc-section:screenshots -->
 
 ## ✨ Funciones
 

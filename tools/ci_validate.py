@@ -246,6 +246,16 @@ def _status_lights_ci(root: Path) -> list[str]:
     return status_lights.run_in_ci(root)
 
 
+def _screenshots_ci(root: Path) -> list[str]:
+    """The screenshots of the README (docs/screenshots.json, the pictures, their weight, the file tree); see tools/screenshots_check.py."""
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import screenshots_check
+    except ImportError:
+        return []
+    return screenshots_check.run_in_ci(root)
+
+
 def main() -> int:
     try:
         manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
@@ -323,6 +333,8 @@ def main() -> int:
         fail(_universal_problem)
     for _lights_problem in _status_lights_ci(ROOT):
         fail(_lights_problem)
+    for _shots_problem in _screenshots_ci(ROOT):
+        fail(_shots_problem)
     print(f"CI_VALIDATION=PASS project={manifest['name']} version={manifest['version']}")
     return 0
 

@@ -108,30 +108,35 @@ Come si incastrano le parti di questo repository: chi lo usa, che cosa contiene 
 Questo programma può cercare una versione più recente di sé stesso: il pulsante «Cerca aggiornamenti» interroga GitHub una volta e propone un pacchetto firmato solo se è per il tuo sistema e più recente. Nulla viene controllato o installato da solo a meno che tu non attivi il controllo, e un aggiornamento richiede la tua conferma. Il pacchetto deve corrispondere al suo SHA-256 e alla firma della chiave delle release fissata nel programma; la versione precedente viene conservata e ripristinata da sola se la nuova non si avvia. `urtc-updater --cli package list|check|install|rollback` fa lo stesso da riga di comando per il flasher e il tester, e `install --file` funziona senza rete.
 <!-- /urtc-section:updates -->
 
+<!-- urtc-section:screenshots -->
 ## 🖼️ Schermate
 
-<!-- urtc-shots -->
-Catturate a 1920×1080 su un banco di prova, con dati di esempio e senza alcuna installazione reale dietro.
+Catturate su un banco di prova con dati di esempio inventati e senza alcuna installazione reale dietro.
 
-<table>
-<tr>
-<td width="50%" valign="top"><img src="images/screenshots/deck.png" alt="La finestra all'apertura: la connessione, l'inventario dei firmware, i quattro punti di controllo di un aggiornamento CAN-OTA e la configurazione del dispositivo." width="100%"><br><sub>La finestra all'apertura: la connessione, l'inventario dei firmware, i quattro punti di controllo di un aggiornamento CAN-OTA e la configurazione del dispositivo.</sub></td>
-<td width="50%" valign="top"><img src="images/screenshots/heads.png" alt="Teste utensile sul bus: un bus modellato con sei teste, una per ogni stato possibile (selezionata, conflitto di indirizzo, guasto memorizzato, nel bootloader, persa e pronta)." width="100%"><br><sub>Teste utensile sul bus: un bus modellato con sei teste, una per ogni stato possibile (selezionata, conflitto di indirizzo, guasto memorizzato, nel bootloader, persa e pronta).</sub></td>
-</tr>
-<tr>
-<td width="50%" valign="top"><img src="images/screenshots/history.png" alt="La finestra della cronologia: tutti i record che i programmi hanno scritto per ogni scheda, il più recente per primo, ciascuno verificato a sé, con una colonna Firma che dice se è firmato, con quale delle tue chiavi, o se non è valido." width="100%"><br><sub>La finestra della cronologia: tutti i record che i programmi hanno scritto per ogni scheda, il più recente per primo, ciascuno verificato a sé, con una colonna Firma che dice se è firmato, con quale delle tue chiavi, o se non è valido.</sub></td>
-<td width="50%" valign="top"><img src="images/screenshots/help.png" alt="La finestra della Guida: i passi per usare il programma, scritti nella lingua della finestra." width="100%"><br><sub>La finestra della Guida: i passi per usare il programma, scritti nella lingua della finestra.</sub></td>
-</tr>
-<tr>
-<td width="50%" valign="top"><img src="images/screenshots/updates.png" alt="La finestra degli aggiornamenti: un pacchetto firmato più recente viene installato solo dopo la tua conferma." width="100%"><br><sub>La finestra degli aggiornamenti: un pacchetto firmato più recente viene installato solo dopo la tua conferma.</sub></td>
-<td width="50%"></td>
-</tr>
-</table>
-<!-- /urtc-shots -->
+<p align="center">
+  <img src="images/screenshots/deck.png" alt="Finestra principale" width="100%">
+</p>
 
-Queste immagini mostrano la finestra reale, disegnata senza schermo com'è quando si apre (niente collegato, niente inviato). La guida percorre il pannello, la finestra Aiuto e quella di aggiornamento.
+<p align="center"><em>La finestra all'apertura: la connessione, l'inventario dei firmware, i quattro punti di controllo di un aggiornamento CAN-OTA e la configurazione del dispositivo.</em></p>
 
-[Guida con immagini](docs/WINDOW_GUIDE.md)
+<p align="center">
+  <img src="images/screenshots/heads.png" alt="Teste utensile sul bus" width="100%">
+</p>
+
+<p align="center"><em>Teste utensile sul bus: un bus modellato con sei teste, una per ogni stato possibile (selezionata, conflitto di indirizzo, guasto memorizzato, nel bootloader, persa e pronta).</em></p>
+
+<p align="center">
+  <img src="images/screenshots/history.png" alt="Cronologia" width="100%">
+</p>
+
+<p align="center"><em>La finestra della cronologia: tutti i record che i programmi hanno scritto per ogni scheda, il più recente per primo, ciascuno verificato a sé, con una colonna Firma che dice se è firmato, con quale delle tue chiavi, o se non è valido.</em></p>
+
+<p align="center">
+  <img src="images/screenshots/updates.png" alt="Cerca aggiornamenti" width="100%">
+</p>
+
+<p align="center"><em>La finestra degli aggiornamenti: un pacchetto firmato più recente viene installato solo dopo la tua conferma.</em></p>
+<!-- /urtc-section:screenshots -->
 
 ## ✨ Funzionalità
 

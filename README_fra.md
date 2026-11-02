@@ -108,30 +108,35 @@ Comment les parties de ce dépôt s'articulent : qui l'utilise, ce qu'il contien
 Ce programme peut chercher une version plus récente de lui-même : le bouton « Rechercher une mise à jour » interroge GitHub une fois et ne propose un paquet signé que s'il est pour votre système et plus récent. Rien n'est vérifié ni installé tout seul tant que vous n'activez pas la vérification, et une mise à jour demande votre confirmation. Le paquet doit correspondre à son SHA-256 et à la signature de la clé des releases épinglée dans le programme ; la version précédente est conservée et rétablie d'elle-même si la nouvelle ne démarre pas. `urtc-updater --cli package list|check|install|rollback` fait la même chose en ligne de commande pour le flasher et le testeur, et `install --file` fonctionne sans réseau.
 <!-- /urtc-section:updates -->
 
+<!-- urtc-section:screenshots -->
 ## 🖼️ Captures d'écran
 
-<!-- urtc-shots -->
-Capturées en 1920×1080 sur un banc d'essai, avec des données d'exemple et sans installation réelle derrière.
+Capturées sur un banc d'essai avec des données d'exemple fictives et sans installation réelle derrière.
 
-<table>
-<tr>
-<td width="50%" valign="top"><img src="images/screenshots/deck.png" alt="La fenêtre à l'ouverture : la connexion, l'inventaire des firmwares, les quatre points de contrôle d'une mise à jour CAN-OTA et la configuration de l'appareil." width="100%"><br><sub>La fenêtre à l'ouverture : la connexion, l'inventaire des firmwares, les quatre points de contrôle d'une mise à jour CAN-OTA et la configuration de l'appareil.</sub></td>
-<td width="50%" valign="top"><img src="images/screenshots/heads.png" alt="Têtes d'outil sur le bus : un bus modélisé avec six têtes, une dans chaque état possible (sélectionnée, conflit d'adresse, défaut mémorisé, dans son bootloader, perdue et prête)." width="100%"><br><sub>Têtes d'outil sur le bus : un bus modélisé avec six têtes, une dans chaque état possible (sélectionnée, conflit d'adresse, défaut mémorisé, dans son bootloader, perdue et prête).</sub></td>
-</tr>
-<tr>
-<td width="50%" valign="top"><img src="images/screenshots/history.png" alt="La fenêtre de l'historique : tous les enregistrements que les programmes ont écrits pour chaque carte, le plus récent d'abord, chacun vérifié séparément, avec une colonne Signature qui dit s'il est signé, par laquelle de vos clés, ou s'il n'est pas valide." width="100%"><br><sub>La fenêtre de l'historique : tous les enregistrements que les programmes ont écrits pour chaque carte, le plus récent d'abord, chacun vérifié séparément, avec une colonne Signature qui dit s'il est signé, par laquelle de vos clés, ou s'il n'est pas valide.</sub></td>
-<td width="50%" valign="top"><img src="images/screenshots/help.png" alt="La fenêtre d'aide : les étapes d'utilisation du programme, dans la langue de la fenêtre." width="100%"><br><sub>La fenêtre d'aide : les étapes d'utilisation du programme, dans la langue de la fenêtre.</sub></td>
-</tr>
-<tr>
-<td width="50%" valign="top"><img src="images/screenshots/updates.png" alt="La fenêtre de mise à jour : un paquet signé plus récent n'est installé qu'après votre confirmation." width="100%"><br><sub>La fenêtre de mise à jour : un paquet signé plus récent n'est installé qu'après votre confirmation.</sub></td>
-<td width="50%"></td>
-</tr>
-</table>
-<!-- /urtc-shots -->
+<p align="center">
+  <img src="images/screenshots/deck.png" alt="Fenêtre principale" width="100%">
+</p>
 
-Ces images montrent la vraie fenêtre, dessinée sans écran telle qu'elle s'ouvre (rien de connecté, rien d'envoyé). Le guide parcourt le panneau, la fenêtre d'aide et celle de mise à jour.
+<p align="center"><em>La fenêtre à l'ouverture : la connexion, l'inventaire des firmwares, les quatre points de contrôle d'une mise à jour CAN-OTA et la configuration de l'appareil.</em></p>
 
-[Guide avec images](docs/WINDOW_GUIDE.md)
+<p align="center">
+  <img src="images/screenshots/heads.png" alt="Têtes d'outil sur le bus" width="100%">
+</p>
+
+<p align="center"><em>Têtes d'outil sur le bus : un bus modélisé avec six têtes, une dans chaque état possible (sélectionnée, conflit d'adresse, défaut mémorisé, dans son bootloader, perdue et prête).</em></p>
+
+<p align="center">
+  <img src="images/screenshots/history.png" alt="Historique" width="100%">
+</p>
+
+<p align="center"><em>La fenêtre de l'historique : tous les enregistrements que les programmes ont écrits pour chaque carte, le plus récent d'abord, chacun vérifié séparément, avec une colonne Signature qui dit s'il est signé, par laquelle de vos clés, ou s'il n'est pas valide.</em></p>
+
+<p align="center">
+  <img src="images/screenshots/updates.png" alt="Rechercher des mises à jour" width="100%">
+</p>
+
+<p align="center"><em>La fenêtre de mise à jour : un paquet signé plus récent n'est installé qu'après votre confirmation.</em></p>
+<!-- /urtc-section:screenshots -->
 
 ## ✨ Fonctionnalités
 

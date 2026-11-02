@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The screenshots of the README are listed in `docs/screenshots.json`:** each picture has a short name and a caption in the eight languages, the README section is written from that file, and `tools/capture_screenshots.py` takes the pictures again without opening a window on the desktop.
 - **The signing key is checked before the transfer:** a bootloader that publishes the fingerprint of the signing key it accepts (a `0x7FA` frame of eleven bytes) is compared with the `signing_key_id` of the image manifest, and a mismatch is logged before a single data frame goes out. `key_id_precheck` in `urtc_config.json` is `warn` by default, `refuse` stops the update and `off` skips the check; a bootloader or a manifest without the fingerprint is never a mismatch. Tried against a simulated bootloader only; no bootloader publishes the fingerprint yet.
 
 ## [0.4.9] - The flasher is tested against the real bootloader built for the host and the virtual board can be the receive path of the firmware itself

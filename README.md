@@ -107,30 +107,35 @@ How the parts of this repository fit together: who uses it, what it holds and wh
 This program can look for a newer version of itself: the "Check for updates" button asks GitHub once and offers a signed package only if it is for your system and newer. Nothing is checked or installed on its own unless you turn the check on, and an update needs your confirmation. The package must match its SHA-256 and the signature of the releases key pinned in the program; the previous version is kept, and it is restored by itself if the new one does not start. `urtc-updater --cli package list|check|install|rollback` does the same from the command line for the flasher and the tester, and `install --file` works without a network.
 <!-- /urtc-section:updates -->
 
+<!-- urtc-section:screenshots -->
 ## 🖼️ Screenshots
 
-<!-- urtc-shots -->
-Captured at 1920×1080 on a test bench, with sample data and no real installation behind them.
+Captured on a test bench with made-up sample data and no real installation behind them.
 
-<table>
-<tr>
-<td width="50%" valign="top"><img src="images/screenshots/deck.png" alt="The window as it opens: the connection, the firmware inventory, the four checkpoints of a CAN-OTA update and the device configuration." width="100%"><br><sub>The window as it opens: the connection, the firmware inventory, the four checkpoints of a CAN-OTA update and the device configuration.</sub></td>
-<td width="50%" valign="top"><img src="images/screenshots/heads.png" alt="Tool heads on the bus: a modelled bus with six heads, one in each state a head can be in (selected, address conflict, fault latched, in its bootloader, lost and ready)." width="100%"><br><sub>Tool heads on the bus: a modelled bus with six heads, one in each state a head can be in (selected, address conflict, fault latched, in its bootloader, lost and ready).</sub></td>
-</tr>
-<tr>
-<td width="50%" valign="top"><img src="images/screenshots/history.png" alt="The history window: every record the programs wrote about each board, newest first, each checked on its own, with a Signature column that says whether it is signed, by which of your keys, or not valid." width="100%"><br><sub>The history window: every record the programs wrote about each board, newest first, each checked on its own, with a Signature column that says whether it is signed, by which of your keys, or not valid.</sub></td>
-<td width="50%" valign="top"><img src="images/screenshots/help.png" alt="The Help window: the steps for using the program, written in the language of the window." width="100%"><br><sub>The Help window: the steps for using the program, written in the language of the window.</sub></td>
-</tr>
-<tr>
-<td width="50%" valign="top"><img src="images/screenshots/updates.png" alt="The update window: a newer signed package is installed only after you confirm it." width="100%"><br><sub>The update window: a newer signed package is installed only after you confirm it.</sub></td>
-<td width="50%"></td>
-</tr>
-</table>
-<!-- /urtc-shots -->
+<p align="center">
+  <img src="images/screenshots/deck.png" alt="Main window" width="100%">
+</p>
 
-These pictures are the real window, drawn without a screen as it opens (nothing connected, nothing sent). The guide goes through the deck, the Help window and the update window.
+<p align="center"><em>The window as it opens: the connection, the firmware inventory, the four checkpoints of a CAN-OTA update and the device configuration.</em></p>
 
-[Guide with pictures](docs/WINDOW_GUIDE.md)
+<p align="center">
+  <img src="images/screenshots/heads.png" alt="Tool heads on the bus" width="100%">
+</p>
+
+<p align="center"><em>Tool heads on the bus: a modelled bus with six heads, one in each state a head can be in (selected, address conflict, fault latched, in its bootloader, lost and ready).</em></p>
+
+<p align="center">
+  <img src="images/screenshots/history.png" alt="History" width="100%">
+</p>
+
+<p align="center"><em>The history window: every record the programs wrote about each board, newest first, each checked on its own, with a Signature column that says whether it is signed, by which of your keys, or not valid.</em></p>
+
+<p align="center">
+  <img src="images/screenshots/updates.png" alt="Check for updates" width="100%">
+</p>
+
+<p align="center"><em>The update window: a newer signed package is installed only after you confirm it.</em></p>
+<!-- /urtc-section:screenshots -->
 
 ## ✨ Features
 
