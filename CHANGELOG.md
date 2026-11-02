@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here.
 
-## [Unreleased]
+## [0.5.0] - The check of the signing key reads the fingerprint from 0x7ED and a missing fingerprint is never reported as a difference, the README shows screenshots of the windows and the texts of the serial number are in eight languages
 
 - **The screenshots of the README are listed in `docs/screenshots.json`:** each picture has a short name and a caption in the eight languages, the README section is written from that file, and `tools/capture_screenshots.py` takes the pictures again without opening a window on the desktop.
 - **The signing key is checked before the transfer:** a bootloader that publishes the fingerprint of the signing key it accepts (its identifier travels on `0x7ED`, see below) is compared with the `signing_key_id` of the image manifest, and a mismatch is logged before a single data frame goes out. `key_id_precheck` in `urtc_config.json` is `warn` by default, `refuse` stops the update and `off` skips the check; a bootloader or a manifest without the fingerprint is never a mismatch. Tried against a simulated bootloader only; no bootloader publishes the fingerprint yet.

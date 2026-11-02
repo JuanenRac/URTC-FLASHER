@@ -37,7 +37,7 @@
 
 | | |
 |---|---|
-| Version | `0.4.9` |
+| Version | `0.5.0` |
 | Maturity | Functional |
 | Tests | 638 (`python -m pytest tests -q`) |
 | Stack | Python / PySide6 / Qt Quick / CAN-OTA / SWD/JTAG |
