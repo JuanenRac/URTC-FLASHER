@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- **The signing key is checked before the transfer:** a bootloader that publishes the fingerprint of the signing key it accepts (a `0x7FA` frame of eleven bytes) is compared with the `signing_key_id` of the image manifest, and a mismatch is logged before a single data frame goes out. `key_id_precheck` in `urtc_config.json` is `warn` by default, `refuse` stops the update and `off` skips the check; a bootloader or a manifest without the fingerprint is never a mismatch. Tried against a simulated bootloader only; no bootloader publishes the fingerprint yet.
+
 ## [0.4.9] - The flasher is tested against the real bootloader built for the host and the virtual board can be the receive path of the firmware itself
 
 - **The flasher is tested against the real bootloader:** the copy of the virtual board from URTC-COMMON takes `--firmware-bootloader` (with `--firmware-repo`), which starts the bootloader of the master compiled for the host, and two new tests flash a signed image through it (the manifest names the board, the hash and the signature) and check that a signature with one bit changed is refused. They need the URTC repository next to this one (or `URTC_FIRMWARE_REPO`) and a host C compiler, WSL on Windows; the CI of this repository clones it.

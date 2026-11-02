@@ -42,6 +42,7 @@ from flasher_config import (
     CAN_ID_READBACK, CAN_ID_READBACK_PAGE_ACK,
     SLAVE_HARDWARE_ID, SLAVE_APP_MAX_SIZE,
     CAN_ID_VERSION_PATCH_RESPONSE, PATCH_UNKNOWN, PATCH_FLAG,
+    BOOTLOADER_KEY_ID_FRAME_BYTES, KEY_ID_PRECHECK,
 )
 
 class FlashError(Exception):
@@ -105,6 +106,7 @@ class URTCFlasher:
         # and 0.3s left too little margin for that.
         GRACE_WINDOW = 0.8
         pending_bootloader_version = None  # in case 0x7FA arrives before 0x7F9
+        pending_key_id = None  # the key fingerprint of a bootloader that sends it after the version (an 11-byte 0x7FA)
         pending_patch = None  # in case 0x7E9 arrives before 0x7F9: (patch byte, flags)
         while True:
             now = time.monotonic()
@@ -132,17 +134,23 @@ class URTCFlasher:
                     "patch_aware": False,
                     "accepts_patch_in_end_update": False,
                     "bootloader_version": pending_bootloader_version,
+                    "bootloader_key_id": pending_key_id,
                 }
                 got_7f9_at = time.monotonic()
                 if pending_patch is not None:
                     self._apply_patch_frame(result, pending_patch)
-            elif can_id == CAN_ID_BOOTLOADER_VERSION_RESPONSE and len(data) == 3:
+            elif can_id == CAN_ID_BOOTLOADER_VERSION_RESPONSE and len(data) in (3, BOOTLOADER_KEY_ID_FRAME_BYTES):
+                # 3 bytes: the version. 11 bytes: the version and, after it, the 8-byte fingerprint of the signing key the bootloader accepts (a bootloader
+                # that publishes it; older ones send 3 bytes and the key stays unknown).
+                key_id = bytes(data[3:11]).hex() if len(data) == BOOTLOADER_KEY_ID_FRAME_BYTES else None
                 if result is not None:
                     result["bootloader_version"] = (data[0], data[1], data[2])
+                    result["bootloader_key_id"] = key_id
                 else:
                     # 0x7F9 hasn't arrived yet - hold onto this until it does,
                     # rather than discarding it just because of arrival order.
                     pending_bootloader_version = (data[0], data[1], data[2])
+                    pending_key_id = key_id
             elif can_id == CAN_ID_VERSION_PATCH_RESPONSE and len(data) >= 3:  # longer frames: extra bytes are ignored
                 if result is not None:
                     self._apply_patch_frame(result, (data[1], data[2]))
@@ -312,6 +320,8 @@ class URTCFlasher:
         update."""
         installed = None
         installed_patch = None
+        board_key_id = None
+        self._key_mismatch = None
         try:
             if target == "slave":
                 info = self.query_slave_version(timeout=timeout)
@@ -323,6 +333,8 @@ class URTCFlasher:
                 if info is not None and not (info["responder"] == "bootloader" and info["hardware_id"] == 0):
                     installed = (info["version_major"], info["version_minor"])
                     installed_patch = info.get("version_patch")
+                if info is not None and info["responder"] == "bootloader":
+                    board_key_id = info.get("bootloader_key_id")
         except Exception:
             installed = None
             installed_patch = None
@@ -340,8 +352,33 @@ class URTCFlasher:
             self.log(_("LOG_VERSION_CHANGE", installed=installed_text, new=new_text))
         if downgrade:
             self.log(_("LOG_VERSION_DOWNGRADE_WARNING"))
+        key_check = self._check_key_id(firmware_path, board_key_id)
         return {"installed": installed, "new": new, "downgrade": downgrade,
-                "installed_patch": installed_patch, "new_patch": new_patch}
+                "installed_patch": installed_patch, "new_patch": new_patch, "key_check": key_check}
+
+    def _check_key_id(self, firmware_path, board_key_id):
+        """Compares the signing-key fingerprint the bootloader publishes with the one the image's manifest declares, before anything is sent. Returns
+        "off", "unknown" (one side does not say), "match" or "mismatch"; a mismatch is logged and, with key_id_precheck "refuse", stops flash()."""
+        if KEY_ID_PRECHECK == "off":
+            return "off"
+        declared = None
+        try:
+            with open(firmware_path + ".manifest.json", "r", encoding="utf-8") as stream:
+                manifest = json.load(stream)
+            if isinstance(manifest, dict):
+                declared = str(manifest.get("signing_key_id", "") or "").strip().lower().replace("0x", "") or None
+        except (OSError, ValueError):
+            declared = None
+        if not declared or not board_key_id:
+            return "unknown"
+        board = str(board_key_id).lower()
+        # the manifest may carry the whole fingerprint of the key: the board publishes the first eight bytes of it
+        if declared[:len(board)] == board or board[:len(declared)] == declared:
+            self.log(_("LOG_KEY_PRECHECK_MATCH", fingerprint=board))
+            return "match"
+        self._key_mismatch = (board, declared)
+        self.log(_("LOG_KEY_PRECHECK_MISMATCH", board=board, image=declared))
+        return "mismatch"
 
     @staticmethod
     def _version_text(version, patch=None):
@@ -488,6 +525,9 @@ class URTCFlasher:
         crc32 = zlib.crc32(firmware) & 0xFFFFFFFF
         actual_sha256 = hashlib.sha256(firmware).hexdigest()
         manifest_info = self._check_manifest(firmware_path, actual_sha256)
+        mismatch = getattr(self, "_key_mismatch", None)
+        if mismatch is not None and KEY_ID_PRECHECK == "refuse":
+            raise FlashError(_("ERR_KEY_PRECHECK_REFUSED", board=mismatch[0], image=mismatch[1]))
         signature = self._signature_for(firmware, manifest_info, HMAC_KEY, "master")
 
         self.log(_("LOG_FIRMWARE_PATH", path=firmware_path))

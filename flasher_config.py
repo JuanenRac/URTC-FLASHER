@@ -529,6 +529,14 @@ THIS_HARDWARE_ID, HMAC_KEY, SLAVE_HMAC_KEY, APP_MAX_SIZE, BOOTLOADER_MAX_SIZE, F
 # official images in firmware/ are signed that way, so the default is off.
 REQUIRE_PRODUCTION_SIGNATURE = _config.get("require_production_signature") is True
 
+# Key check before the transfer: a bootloader that publishes the fingerprint of the signing key it accepts (the 11-byte 0x7FA) is compared with the
+# fingerprint the image's manifest declares ("signing_key_id"). "warn" (the default) logs a mismatch and goes on, "refuse" stops before a single data frame
+# is sent, "off" skips the comparison. A bootloader or a manifest without the fingerprint is never a mismatch: nothing is compared.
+KEY_ID_PRECHECK = str(_config.get("key_id_precheck", "warn")).strip().lower()
+if KEY_ID_PRECHECK not in ("off", "warn", "refuse"):
+    KEY_ID_PRECHECK = "warn"
+BOOTLOADER_KEY_ID_FRAME_BYTES = 11  # 0x7FA with the key fingerprint: major, minor, patch and eight bytes of fingerprint
+
 # The banner image is a bundled asset, not a user-supplied file - a
 # genuinely different location than FIRMWARE_FOLDER above when frozen.
 # PyInstaller's --onefile mode extracts files added via --add-data to a
