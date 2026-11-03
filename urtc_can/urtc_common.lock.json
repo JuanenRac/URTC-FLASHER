@@ -50,6 +50,14 @@
       "from": "src/urtc_common/framing.py",
       "sha256": "b26b47e7fec0ed1eb04f560221f42dae1b0706952084fd0787440a35b153ce2f"
     },
+    "heater_model.json": {
+      "from": "src/urtc_common/heater_model.json",
+      "sha256": "8cc9363f3ba9857aeef1e815f09830a372414b549f83ea554e9a3354770e910d"
+    },
+    "heater_sim.py": {
+      "from": "src/urtc_common/heater_sim.py",
+      "sha256": "c8e1c79022de36071eaebeb57a78fc6156b29337901a776c4c5d103240f54e38"
+    },
     "help_qt.py": {
       "from": "src/urtc_common/help_qt.py",
       "sha256": "282578321477630ddd67ad29f9f8c619f6248dcac9a6d2793b1ac6221c88a91b"

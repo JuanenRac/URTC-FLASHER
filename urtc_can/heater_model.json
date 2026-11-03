@@ -1,0 +1,15 @@
+{
+  "_comment": "Parameters of the simulated soldering iron: a first-order thermal plant and the PID loop that drives it. Estimates for tests, not measurements of a real iron.",
+  "ambient_c": 25.0,
+  "heater_power_w": 65.0,
+  "heat_capacity_j_per_k": 1.8,
+  "loss_w_per_k": 0.16,
+  "step_s": 0.01,
+  "kp": 0.04,
+  "ki": 0.004,
+  "kd": 0.0,
+  "integral_limit": 1.0,
+  "setpoint_watchdog_ms": 250,
+  "telemetry_period_ms": 150,
+  "max_temperature_c": 445.0
+}
