@@ -1,0 +1,4 @@
+{
+  "workflow": "exe-build.yml",
+  "max_minutes": 120
+}

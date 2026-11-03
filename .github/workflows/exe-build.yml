@@ -1,0 +1,387 @@
+# =============================================================================
+# URTC-FLASHER - Windows program build (build here, sign locally)
+# Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+# GPL-3.0-or-later - see LICENSE
+# =============================================================================
+# Started by hand only (workflow_dispatch) and only by the owner of the repository: it never runs on a push or a pull request.
+# It builds the Windows program with PyInstaller (the same options as build_exe.bat, from the locked dependencies), puts next to it the files that must
+# stay editable, packs the folder as the unsigned update package urtc-pkg/1 (<app>-<version>-windows-x64.zip) and uploads it with SHA256SUMS and a build
+# manifest as one artifact with a build-provenance attestation. The program is not started in Actions (it is a window). LIMIT: PyInstaller on Windows is
+# not reproducible, so one build is made and the manifest says reproducible=false; the safeguard is the attestation of these very bytes, which are the
+# ones that get signed locally (urtc-pkg/1: Ed25519 by the key of the releases, which never leaves the maintainer's machine).
+# It holds no key and signs nothing: the Ed25519 layer, where this project has one, is made locally over the very bytes of this artifact.
+# With dry_run on (the default) nothing but the artifact is made; with it off a DRAFT release with the unsigned files is also prepared by a
+# separate job that waits for the approval of the owner (environment "release"). A failed or stuck build opens (or updates) the issue
+# "build-failed" or "build-stuck"; a later good build closes it.
+
+name: Windows program build (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run: build and check only, no draft release"
+        type: boolean
+        required: true
+        default: true
+      ref:
+        description: "Branch, tag or commit of this repository"
+        type: string
+        required: true
+        default: main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: exe-build-${{ inputs.ref }}
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    name: Plan the build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      version: ${{ steps.plan.outputs.version }}
+      sha: ${{ steps.plan.outputs.sha }}
+    steps:
+      - name: Check the inputs
+        shell: bash
+        env:
+          REF: ${{ inputs.ref }}
+          ACTOR: ${{ github.actor }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+          [ "$ACTOR" = "$OWNER" ] || { echo "::error::only the owner of the repository ($OWNER) may start this build, not $ACTOR"; exit 1; }
+          [[ "$REF" =~ ^[A-Za-z0-9._/-]{1,100}$ ]] || { echo "::error::the ref has characters that a branch, tag or commit does not have"; exit 1; }
+
+      - name: Check out this repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Make sure the commit belongs to the main branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          # only code that is already in main is built: a branch or a fork commit that is not in main is refused
+          git merge-base --is-ancestor HEAD refs/remotes/origin/main || { echo "::error::the commit $(git rev-parse --short HEAD) is not part of the main branch; merge it first"; exit 1; }
+
+      - name: Work out the version and pin the commit
+        id: plan
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "version=$(python3 -c "import json; print(json.load(open('urtc.project.json', encoding='utf-8'))['version'])")" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build the Windows program
+    needs: plan
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      VERSION: ${{ needs.plan.outputs.version }}
+    steps:
+      - name: Check out the exact commit that was planned
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: ${{ needs.plan.outputs.sha }}
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.12"
+
+      - name: Make sure the build has no private key to take
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -n "${URTC_RELEASE_KEY:-}" ]; then
+            echo "::error::a release key is set in this job; nothing is signed here"
+            exit 1
+          fi
+
+      - name: Make sure the source carries the version of urtc.project.json
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import os, re, sys
+          text = open("flasher_config.py", encoding="utf-8").read()
+          found = re.search(r'FLASHER_VERSION\s*=\s*"(\d+\.\d+\.\d+)"', text)
+          if not found or found.group(1) != os.environ["VERSION"]:
+              sys.exit("::error::flasher_config.py says " + (found.group(1) if found else "nothing") + ", urtc.project.json says " + os.environ["VERSION"] + " (raise the version BEFORE the build)")
+          print("source version ok:", found.group(1))
+          PY
+
+      - name: Install the locked dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --require-hashes -r requirements.lock
+          python -m pip install --require-hashes -r requirements-build.lock
+
+      - name: Compile the program with PyInstaller
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf build dist
+          python -m PyInstaller --onefile --windowed --noconfirm --name "URTC_Flasher" \
+            --icon "assets/urtc_icon.ico" \
+            --add-data "assets;assets" \
+            --hidden-import flasher_config \
+            --hidden-import flasher_transports \
+            --hidden-import flasher_swd_tools \
+            --hidden-import flasher_validation \
+            --hidden-import flasher_protocol \
+            --hidden-import flasher_github \
+            --hidden-import flasher_records \
+            --hidden-import flasher_integrity \
+            --hidden-import urtc_ui \
+            --hidden-import qt_flasher \
+            --hidden-import PySide6.QtQml \
+            --hidden-import PySide6.QtQuick \
+            --hidden-import PySide6.QtQuickControls2 \
+            --collect-all PySide6.QtQuick \
+            --collect-all PySide6.QtQuickControls2 \
+            urtc_flasher.py
+          test -f "dist/URTC_Flasher.exe" || { echo "::error::PyInstaller did not produce dist/URTC_Flasher.exe"; exit 1; }
+          python - <<'PY'
+          import os, sys
+          path = "dist/URTC_Flasher.exe"
+          size = os.path.getsize(path)
+          if size < 5_000_000 or open(path, "rb").read(2) != b"MZ":
+              sys.exit(f"::error::{path} is not a Windows program of a sensible size ({size} bytes)")
+          print("program ok:", path, size, "bytes")
+          PY
+
+      - name: Put next to the program the files that must not be inside it
+        shell: bash
+        run: |
+          set -euo pipefail
+          for folder in firmware language; do
+            if [ -d "$folder" ]; then mkdir -p "dist/$folder"; cp -r "$folder"/. "dist/$folder"/; fi
+          done
+          for file in README.md README_*.md LICENSE urtc_config.json.example; do
+            if [ -f "$file" ]; then cp "$file" dist/; fi
+          done
+
+      - name: Pack the program as an unsigned urtc-pkg/1 update package
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, os, sys
+          from pathlib import Path
+          sys.path.insert(0, "tools")
+          import make_update_package as m
+          version, app, platform, entry = os.environ["VERSION"], "urtc-flasher", "windows-x64", "URTC_Flasher.exe"
+          m.su.parse_version(version)
+          source = Path("dist")
+          files = m.collect(source)
+          if Path(entry) not in files:
+              sys.exit("::error::the entry " + entry + " is not in dist")
+          data = m.build_archive(source, files, {"name": app, "version": version, "platform": platform, "entry": entry}, platform)
+          out = Path("out")
+          out.mkdir()
+          name = m.su.package_name(app, version, platform)
+          (out / name).write_bytes(data)
+          print("package", name, len(data), "bytes sha256", hashlib.sha256(data).hexdigest())
+          PY
+          {
+            python --version
+            python -m PyInstaller --version | sed 's/^/PyInstaller /'
+            python -m pip show pyside6 | grep '^Version' | sed 's/^Version: /PySide6 /'
+          } | tr -d '\r' | tr '\n' ' ' > out/toolchain.txt.tmp
+          {
+            echo "### URTC-FLASHER $VERSION (unsigned Windows package)"
+            (cd out && sha256sum *.zip | sed 's/^/- /')
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the package
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: parts
+          path: |
+            out/*.zip
+            out/toolchain.txt.tmp
+          if-no-files-found: error
+          retention-days: 7
+
+  collect:
+    name: Collect, attest and prepare the artifact
+    needs: [plan, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    env:
+      VERSION: ${{ needs.plan.outputs.version }}
+      SHA: ${{ needs.plan.outputs.sha }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Download the build
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: parts
+          path: files
+
+      - name: Write SHA256SUMS and the build manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd files
+          mv toolchain.txt.tmp /tmp/toolchain.txt
+          sha256sum urtc-flasher-*.zip > SHA256SUMS
+          python3 - <<'PY'
+          import json, os
+          files = []
+          for line in open("SHA256SUMS", encoding="utf-8"):
+              digest, name = line.strip().split("  ", 1)
+              files.append({"name": name, "sha256": digest, "bytes": os.path.getsize(name)})
+          manifest = {
+              "schema": "urtc-build/1", "repository": os.environ["GITHUB_REPOSITORY"], "project": "urtc-flasher", "version": os.environ["VERSION"],
+              "commit": os.environ["SHA"], "built_on": "github-actions", "run_id": os.environ["GITHUB_RUN_ID"],
+              "run_url": f"{os.environ['GITHUB_SERVER_URL']}/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}",
+              "toolchain": open("/tmp/toolchain.txt", encoding="utf-8").read().strip(), "signed": False, "files": files,
+          }
+          manifest.update({"package_format": "urtc-pkg/1 unsigned", "app": "urtc-flasher", "platform": "windows-x64", "entry": "URTC_Flasher.exe", "reproducible": False, "reproducible_note": "PyInstaller on Windows is not reproducible; the attested bytes are the ones that are signed"})
+          json.dump(manifest, open("build-manifest.json", "w", encoding="utf-8"), indent=2)
+          PY
+          cat SHA256SUMS
+
+      - name: Attest the provenance of the files
+        uses: actions/attest-build-provenance@43d14bc2b83dec42d39ecae14e916627a18bb661 # v3
+        with:
+          subject-path: |
+            files/urtc-flasher-*.zip
+            files/SHA256SUMS
+
+      - name: Upload the build
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: exe-urtc-flasher-${{ needs.plan.outputs.version }}
+          path: files/*
+          if-no-files-found: error
+          retention-days: 30
+
+  draft:
+    name: Prepare the draft release (needs the approval of the owner)
+    if: ${{ !inputs.dry_run }}
+    needs: [plan, collect, verify]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: release
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ needs.plan.outputs.version }}
+      SHA: ${{ needs.plan.outputs.sha }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      ACTOR: ${{ github.actor }}
+      OWNER: ${{ github.repository_owner }}
+    steps:
+      - name: Download the build
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: exe-urtc-flasher-${{ needs.plan.outputs.version }}
+          path: files
+
+      - name: Prepare the draft release with the unsigned files
+        shell: bash
+        run: |
+          set -euo pipefail
+          [ "$ACTOR" = "$OWNER" ] || { echo "::error::only the owner may prepare a release"; exit 1; }
+          tag="v$VERSION"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "::error::the release $tag already exists: raise the version before a new build"
+            exit 1
+          fi
+          gh release create "$tag" files/* --draft --target "$SHA" --title "URTC-FLASHER $VERSION (unsigned build, to be completed locally)" \
+            --notes "Unsigned build made by GitHub Actions. It is completed, signed where this project signs, and published from the maintainer's machine; do not use these files before that."
+          echo "- draft release \`$tag\` prepared with the unsigned files" >> "$GITHUB_STEP_SUMMARY"
+
+  verify:
+    name: Verify the artifact as a stranger would
+    needs: [plan, collect]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      attestations: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Download the build
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: exe-urtc-flasher-${{ needs.plan.outputs.version }}
+          path: build
+
+      - name: Check hashes, manifest and attestation
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd build
+          sha256sum -c SHA256SUMS
+          python3 - <<'PY'
+          import json
+          manifest = json.load(open("build-manifest.json", encoding="utf-8"))
+          assert manifest["signed"] is False and manifest["files"], "unexpected manifest"
+          print("manifest ok:", manifest["project"], manifest["version"], len(manifest["files"]), "files")
+          PY
+          for file in urtc-flasher-*.zip SHA256SUMS; do
+            gh attestation verify "$file" --repo "$GITHUB_REPOSITORY" --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/exe-build.yml" --source-digest "$GITHUB_SHA" >/dev/null
+            echo "attestation ok: $file"
+          done
+
+  notify:
+    name: Tell the owner (issue build-failed)
+    if: ${{ always() }}
+    needs: [plan, build, collect, draft, verify]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RESULTS: ${{ needs.plan.result }} ${{ needs.build.result }} ${{ needs.collect.result }} ${{ (inputs.dry_run && needs.draft.result == 'skipped') && 'success' || needs.draft.result }} ${{ needs.verify.result }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - name: Open, update or close the issue
+        shell: bash
+        run: |
+          set -euo pipefail
+          number="$(gh issue list --repo "$GITHUB_REPOSITORY" --label build-failed --state open --json number --jq '.[0].number // empty')"
+          bad=""
+          for r in $RESULTS; do [ "$r" = "success" ] || bad="$bad $r"; done
+          if [ -n "$bad" ]; then
+            body="The Windows program build failed (plan / build / collect / draft / verify: $RESULTS; anything but success counts as a failure: failure, timed out, cancelled or skipped). Run: $RUN_URL"
+            if [ -n "$number" ]; then
+              gh issue comment "$number" --repo "$GITHUB_REPOSITORY" --body "$body"
+            else
+              gh label create build-failed --repo "$GITHUB_REPOSITORY" --color B60205 --description "A build in GitHub Actions failed" 2>/dev/null || true
+              gh issue create --repo "$GITHUB_REPOSITORY" --label build-failed --title "The Windows program build failed" --body "$body"
+            fi
+            echo "### The build failed: issue build-failed updated" >> "$GITHUB_STEP_SUMMARY"
+          elif [ -n "$number" ]; then
+            gh issue close "$number" --repo "$GITHUB_REPOSITORY" --comment "A later build passed: $RUN_URL"
+          fi
+
+      - name: The notice itself failed
+        if: ${{ failure() }}
+        shell: bash
+        run: |
+          echo "::error::The build did not pass (${RESULTS}) and the issue build-failed could not be written. Run: ${RUN_URL}"
+          echo "### The build did not pass and the issue could not be written" >> "$GITHUB_STEP_SUMMARY"
+          echo "Results: ${RESULTS}. Run: ${RUN_URL}" >> "$GITHUB_STEP_SUMMARY"
