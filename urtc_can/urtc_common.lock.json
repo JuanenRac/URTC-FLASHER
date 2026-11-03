@@ -1,10 +1,10 @@
 {
   "format": 1,
-  "urtc_common_version": "0.1.7",
+  "urtc_common_version": "0.1.9",
   "files": {
     "__init__.py": {
       "from": "src/urtc_common/__init__.py",
-      "sha256": "2c970c8cc98aafef86a195e90a980ee292fbe4dc67a32b09359b86e539ba4cdd"
+      "sha256": "d8b3f73bb29d5e23124e7abf220e137408b795c18733f2cc952efb99fc4e83ef"
     },
     "bus_scenario.py": {
       "from": "src/urtc_common/bus_scenario.py",
