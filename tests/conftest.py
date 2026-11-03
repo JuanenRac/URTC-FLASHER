@@ -25,13 +25,11 @@ import flasher_config  # noqa: E402
 import flasher_protocol  # noqa: E402
 
 BENCH_KEY = bytes(range(32))
-BENCH_SLAVE_KEY = bytes(range(32, 64))
 
 
 @pytest.fixture(autouse=True)
 def bench_signing_keys(monkeypatch):
     monkeypatch.setattr(flasher_protocol, "HMAC_KEY", BENCH_KEY)
-    monkeypatch.setattr(flasher_protocol, "SLAVE_HMAC_KEY", BENCH_SLAVE_KEY)
 
 
 # No test may touch the real urtc_config.json (it can hold a signing key): every test gets its own path for it and, at the end of the whole run, the real file must be

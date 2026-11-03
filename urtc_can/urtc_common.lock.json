@@ -88,7 +88,7 @@
     },
     "protocol.py": {
       "from": "src/urtc_common/protocol.py",
-      "sha256": "528281ee27edb18c2b7c586436aab90f7fdd725b16cc0b06607545d97988e164"
+      "sha256": "c19964189921d22176a3433878f61dac766edfcbe1c606165789b7d89dece089"
     },
     "quick_state.py": {
       "from": "src/urtc_common/quick_state.py",
@@ -136,7 +136,7 @@
     },
     "virtual_board.py": {
       "from": "src/urtc_common/virtual_board.py",
-      "sha256": "b0980b2cb8b2000db82c64d9adeeab14a103ebb99a2cc08b5b3d25b351834785"
+      "sha256": "c6d96286ef7f8d0aa49df7ee1a47fc1ce026b6b180a620a1b27f897ebf424059"
     }
   }
 }

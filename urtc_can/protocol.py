@@ -109,7 +109,7 @@ CAN_ID_CRIMPING_CMD = 0x1F0  # Crimping actuator motor
 CAN_ID_ULTRASONIC_WELD_CMD = 0x200  # Ultrasonic welder timed pulse
 CAN_ID_SLAVE_ENTER_BOOTLOADER = 0x210  # Enter the expansion slave's bootloader
 CAN_ID_SLAVE_START_UPDATE = 0x211  # Start the slave firmware update
-CAN_ID_SLAVE_HMAC_CHUNK = 0x212  # Slave HMAC-SHA256 signature chunk
+CAN_ID_SLAVE_HMAC_CHUNK = 0x212  # Slave image digest chunk (SHA-256; the name is historic)
 CAN_ID_SLAVE_DATA = 0x213  # Slave firmware data
 CAN_ID_SLAVE_END_UPDATE = 0x214  # End the slave update and verify
 CAN_ID_SLAVE_STATUS = 0x215  # Slave bootloader status
@@ -117,6 +117,7 @@ CAN_ID_SLAVE_PROGRESS = 0x216  # Slave update progress
 CAN_ID_SLAVE_VERSION_RESP_1 = 0x217  # Slave bootloader version, part 1
 CAN_ID_SLAVE_VERSION_RESP_2 = 0x218  # Slave bootloader version, part 2
 CAN_ID_SLAVE_VERIFY_FAIL_REASON = 0x219  # Slave verify-fail reason
+CAN_ID_SLAVE_RECORD_CHUNK = 0x21A  # One chunk of the Ed25519 signature record of the slave image
 CAN_ID_SLAVE_REG_WRITE = 0x220  # Write a slave application register (generic)
 CAN_ID_SLAVE_REG_READ = 0x221  # Read a slave application register (generic)
 CAN_ID_SLAVE_APP_PATCH = 0x222  # Patch number of the slave application (companion of 0x221)
@@ -199,6 +200,12 @@ VERIFY_FAIL_REASON_CRC32 = 0x02
 VERIFY_FAIL_REASON_HMAC = 0x03
 VERIFY_FAIL_REASON_HARDWARE_ID = 0x04
 VERIFY_FAIL_REASON_ROLLBACK = 0x05
+
+# Status values only the expansion slave bootloader reports (the others are bootloader_status)
+SLAVE_STATUS_AWAIT_CONFIRM = 0x08
+
+# Verify-fail reasons only the expansion slave bootloader reports (the others are verify_fail_reason)
+SLAVE_VERIFY_FAIL_REASON_NOT_CONFIRMED = 0x06
 
 # Answering side
 RESPONDER_APPLICATION = 0x00
@@ -327,6 +334,8 @@ ENUM_NAMES = {'tool': {0: 'SOLDERING_IRON',
                        5: 'VERIFY_FAIL',
                        255: 'ERROR'},
  'verify_fail_reason': {1: 'INCOMPLETE', 2: 'CRC32', 3: 'HMAC', 4: 'HARDWARE_ID', 5: 'ROLLBACK'},
+ 'slave_bootloader_status': {8: 'AWAIT_CONFIRM'},
+ 'slave_verify_fail_reason': {6: 'NOT_CONFIRMED'},
  'responder': {0: 'APPLICATION', 1: 'BOOTLOADER'},
  'thermal_fault': {0: 'NONE', 1: 'MAXTEMP', 2: 'HEATING_NO_RISE', 3: 'DROPPED_AT_TARGET'},
  'reset_cause': {1: 'IWDG', 2: 'WWDG', 4: 'SOFTWARE', 8: 'POWER_ON', 16: 'PIN', 32: 'LOW_POWER', 64: 'OPTION_BYTES'},
@@ -389,6 +398,9 @@ ENUM_TITLES = {'tool': {0: 'Soldering Iron',
                         3: 'HMAC signature mismatch',
                         4: 'HardwareID mismatch',
                         5: 'Rollback rejected'},
+ 'slave_bootloader_status': {8: "Image verified by the slave; waiting ten seconds for the master's confirmation"},
+ 'slave_verify_fail_reason': {6: 'The master did not confirm the image in time, or its confirmation does not match '
+                                 'this session and image'},
  'responder': {0: 'The running application', 1: 'The bootloader'},
  'thermal_fault': {0: 'None',
                    1: 'Temperature above the hard ceiling',
@@ -458,6 +470,10 @@ SLAVE_BOOT_REG_PROGRESS = 0x05
 SLAVE_BOOT_REG_QUERY_VERSION = 0x06
 SLAVE_BOOT_REG_VERIFY_FAIL_REASON = 0x07
 SLAVE_BOOT_REG_QUERY_VERSION_EXT = 0x08
+SLAVE_BOOT_REG_CHALLENGE = 0x09
+SLAVE_BOOT_REG_CONFIRM = 0x0A
+SLAVE_BOOT_REG_COUNTER_FLOOR = 0x0B
+SLAVE_BOOT_REG_RECORD_COUNTER = 0x0C
 SLAVE_APP_REG_APP_STATUS = 0x00
 SLAVE_APP_REG_APP_VERSION = 0x01
 SLAVE_APP_REG_ENTER_BOOTLOADER = 0x02
@@ -552,6 +568,7 @@ MESSAGES = {
     535: {'name': 'SLAVE_VERSION_RESP_1', 'group': 'slave_bridge', 'direction': 'both', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
     536: {'name': 'SLAVE_VERSION_RESP_2', 'group': 'slave_bridge', 'direction': 'board_to_host', 'handled_by': 'application', 'tools': None},
     537: {'name': 'SLAVE_VERIFY_FAIL_REASON', 'group': 'slave_bridge', 'direction': 'both', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
+    538: {'name': 'SLAVE_RECORD_CHUNK', 'group': 'slave_bridge', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
     544: {'name': 'SLAVE_REG_WRITE', 'group': 'slave_bridge', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
     545: {'name': 'SLAVE_REG_READ', 'group': 'slave_bridge', 'direction': 'both', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
     546: {'name': 'SLAVE_APP_PATCH', 'group': 'slave_bridge', 'direction': 'board_to_host', 'handled_by': 'application', 'tools': None},
@@ -668,6 +685,7 @@ LAYOUTS = {
     'slave_version_resp_2': {'id': 536, 'role': 'response', 'dlc': {'one_of': [2, 5]}, 'fields': [{'name': 'version_minor_low', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'bootloader_major', 'type': 'u8', 'offset': 1, 'width': 1}, {'name': 'app_patch', 'type': 'u8', 'offset': 2, 'width': 1, 'optional': True, 'present_from_dlc': 5}, {'name': 'bootloader_minor', 'type': 'u8', 'offset': 3, 'width': 1, 'optional': True, 'present_from_dlc': 5}, {'name': 'bootloader_patch', 'type': 'u8', 'offset': 4, 'width': 1, 'optional': True, 'present_from_dlc': 5}]},
     'slave_verify_fail_reason_request': {'id': 537, 'role': 'request', 'dlc': {'any': True}, 'fields': []},
     'slave_verify_fail_reason_response': {'id': 537, 'role': 'response', 'dlc': {'exact': 1}, 'fields': [{'name': 'reason', 'type': 'u8', 'offset': 0, 'width': 1}]},
+    'slave_record_chunk': {'id': 538, 'role': 'request', 'dlc': {'exact': 8}, 'fields': [{'name': 'index', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 10]}, {'name': 'data', 'type': 'bytes', 'offset': 1, 'length': 7}]},
     'slave_reg_write': {'id': 544, 'role': 'request', 'dlc': {'min': 2, 'max': 8}, 'fields': [{'name': 'register', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'payload', 'type': 'bytes', 'offset': 1, 'rest': True}]},
     'slave_reg_read_request': {'id': 545, 'role': 'request', 'dlc': {'exact': 2}, 'fields': [{'name': 'register', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'length', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [1, 8]}]},
     'slave_reg_read_response': {'id': 545, 'role': 'response', 'dlc': {'min': 1, 'max': 8}, 'fields': [{'name': 'data', 'type': 'bytes', 'offset': 0, 'rest': True}]},
@@ -1560,7 +1578,7 @@ def decode_slave_start_update(data: bytes, strict: bool = False) -> dict | None:
 
 
 def encode_slave_hmac_chunk(hmac_part: bytes) -> tuple[int, bytes]:
-    """Slave HMAC-SHA256 signature chunk (0x212, request)."""
+    """Slave image digest chunk (SHA-256; the name is historic) (0x212, request)."""
     return encode("slave_hmac_chunk", hmac_part=hmac_part)
 
 
@@ -1678,6 +1696,16 @@ def encode_slave_verify_fail_reason_response(reason: int) -> tuple[int, bytes]:
 def decode_slave_verify_fail_reason_response(data: bytes, strict: bool = False) -> dict | None:
     """Fields of 0x219 (response), or None when the payload is too short."""
     return decode("slave_verify_fail_reason_response", data, strict)
+
+
+def encode_slave_record_chunk(index: int, data: bytes) -> tuple[int, bytes]:
+    """One chunk of the Ed25519 signature record of the slave image (0x21A, request)."""
+    return encode("slave_record_chunk", index=index, data=data)
+
+
+def decode_slave_record_chunk(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x21A (request), or None when the payload is too short."""
+    return decode("slave_record_chunk", data, strict)
 
 
 def encode_slave_reg_write(register: int, payload: bytes) -> tuple[int, bytes]:

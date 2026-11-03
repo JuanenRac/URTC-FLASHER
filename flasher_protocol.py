@@ -34,8 +34,8 @@ from flasher_config import (
     CAN_ID_FRAM_STATE_RESP, CAN_ID_HEARTBEAT, CAN_ID_HMAC_CHUNK, CAN_ID_PAGE_ACK,
     CAN_ID_QUERY_VERSION, CAN_ID_START_UPDATE, CAN_ID_STATUS, CAN_ID_VERSION_RESPONSE,
     ERASE_FRAM_MAGIC, FLASH_PAGE_SIZE, REQUIRE_PRODUCTION_SIGNATURE,
-    HMAC_KEY, SLAVE_HMAC_KEY, STATUS_NAMES, THIS_HARDWARE_ID, VERIFY_FAIL_REASONS,
-    CAN_ID_SLAVE_ENTER_BOOTLOADER, CAN_ID_SLAVE_START_UPDATE, CAN_ID_SLAVE_HMAC_CHUNK,
+    HMAC_KEY, STATUS_NAMES, THIS_HARDWARE_ID, VERIFY_FAIL_REASONS,
+    CAN_ID_SLAVE_ENTER_BOOTLOADER, CAN_ID_SLAVE_START_UPDATE, CAN_ID_SLAVE_HMAC_CHUNK, CAN_ID_SLAVE_RECORD_CHUNK, CAN_ID_BOOTLOADER_SIGNATURE_CHUNK,
     CAN_ID_SLAVE_DATA, CAN_ID_SLAVE_END_UPDATE, CAN_ID_SLAVE_STATUS,
     CAN_ID_SLAVE_PROGRESS, CAN_ID_SLAVE_VERSION_RESP_1, CAN_ID_SLAVE_VERSION_RESP_2,
     CAN_ID_SLAVE_VERIFY_FAIL_REASON, CAN_ID_AUTHORIZE_DOWNGRADE,
@@ -521,6 +521,38 @@ class URTCFlasher:
             option="hmac_key_hex" if board == "master" else "slave_hmac_key_hex",
         ))
 
+    # The signature of an image is a RECORD made apart from the build (key id, counter, Ed25519 signature: 76 bytes), published next to it as <image>.imgsig
+    # (152 hexadecimal digits on one line). The bootloader of the main board verifies it itself; for the expansion slave the main board verifies it and confirms the
+    # image. The flasher only carries it: it holds no key and decides nothing about it.
+    RECORD_CHUNK_COUNT = 11
+    RECORD_CHUNK_BYTES = 7
+
+    def _record_for(self, firmware_path):
+        """The 76-byte record published next to the image, or None when there is none. A file that is there but is not a record is an error, never ignored."""
+        candidates = [firmware_path + ".imgsig"]
+        stem, ext = os.path.splitext(firmware_path)
+        if ext.lower() in (".bin", ".hex"):
+            candidates.append(stem + ".imgsig")
+        for path in candidates:
+            if not os.path.isfile(path):
+                continue
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    text = f.read().strip()
+            except (OSError, UnicodeDecodeError) as e:
+                raise FlashError(_("ERR_RECORD_BAD", name=os.path.basename(path), reason=str(e))) from e
+            if len(text) != 2 * (self.RECORD_CHUNK_COUNT * self.RECORD_CHUNK_BYTES - 1) or any(c not in "0123456789abcdefABCDEF" for c in text):
+                raise FlashError(_("ERR_RECORD_BAD", name=os.path.basename(path), reason="152 hexadecimal digits expected"))
+            return bytes.fromhex(text)
+        return None
+
+    def _send_record(self, can_id, record):
+        """The record in 11 frames: the index and 7 bytes of it (the last frame is padded with a zero)."""
+        padded = record + bytes(self.RECORD_CHUNK_COUNT * self.RECORD_CHUNK_BYTES - len(record))
+        for i in range(self.RECORD_CHUNK_COUNT):
+            self.can.send_frame(can_id, bytes([i]) + padded[i * self.RECORD_CHUNK_BYTES:(i + 1) * self.RECORD_CHUNK_BYTES])
+            time.sleep(0.01)
+
     def flash(self, firmware_path, allow_downgrade=False, version=None):
         self._last_heartbeat_pct = None  # a stale value from a prior flash()
         # call in this same session would otherwise always satisfy the
@@ -541,12 +573,20 @@ class URTCFlasher:
         mismatch = getattr(self, "_key_mismatch", None)
         if mismatch is not None and KEY_ID_PRECHECK == "refuse":
             raise FlashError(_("ERR_KEY_PRECHECK_REFUSED", board=mismatch[0], image=mismatch[1]))
-        signature = self._signature_for(firmware, manifest_info, HMAC_KEY, "master")
+        record = self._record_for(firmware_path)
+        try:
+            signature = self._signature_for(firmware, manifest_info, HMAC_KEY, "master")
+        except FlashError:
+            # A bootloader that verifies the record has no use for an HMAC; only an image with neither a record nor an HMAC cannot be sent.
+            if record is None:
+                raise
+            signature = None
 
         self.log(_("LOG_FIRMWARE_PATH", path=firmware_path))
         self.log(_("LOG_FIRMWARE_SIZE", size=size, kb=size/1024))
         self.log(_("LOG_FIRMWARE_CRC32", crc32=crc32))
-        self.log(_("LOG_FIRMWARE_HMAC", hmac=signature.hex()))
+        if signature is not None:
+            self.log(_("LOG_FIRMWARE_HMAC", hmac=signature.hex()))
         self.log(_("LOG_FIRMWARE_HARDWAREID", hw_id=THIS_HARDWARE_ID))
 
         # The version the bootloader records (and compares for the anti-rollback of the NEXT update) is the real version of this image: the manifest's, the one the caller gave, or the
@@ -559,12 +599,18 @@ class URTCFlasher:
         self.can.send_frame(CAN_ID_START_UPDATE, payload)
         self._wait_for(CAN_ID_STATUS, timeout=5.0, expected_status_value=0x03)  # STATUS_RECEIVING specifically - not just STATUS_ERASING, which arrives first but before the (up to ~2s) erase has actually finished
 
-        # --- 0x7F7 x4: HMAC signature chunks ---
-        self.log(_("LOG_SENDING_HMAC"))
-        for i in range(4):
-            chunk = signature[i*8:(i+1)*8]
-            self.can.send_frame(CAN_ID_HMAC_CHUNK, chunk)
-            time.sleep(0.01)
+        # --- 0x7EC x11: the Ed25519 record of the image (the bootloader verifies it) ---
+        if record is not None:
+            self.log(_("LOG_SENDING_RECORD", id="0x7EC"))
+            self._send_record(CAN_ID_BOOTLOADER_SIGNATURE_CHUNK, record)
+
+        # --- 0x7F7 x4: HMAC signature chunks (bootloaders of the earlier generation) ---
+        if signature is not None:
+            self.log(_("LOG_SENDING_HMAC"))
+            for i in range(4):
+                chunk = signature[i*8:(i+1)*8]
+                self.can.send_frame(CAN_ID_HMAC_CHUNK, chunk)
+                time.sleep(0.01)
 
         # --- 0x7F2: firmware data, page by page, waiting for each page ACK ---
         self.log(_("LOG_SENDING_FIRMWARE_DATA"))
@@ -947,15 +993,19 @@ class URTCFlasher:
 
         crc32 = zlib.crc32(firmware) & 0xFFFFFFFF
         actual_sha256 = hashlib.sha256(firmware).hexdigest()
-        # Published by the URTC build with the slave board's own key
-        # (different from the master's - see slaveboot_common.h).
-        manifest_info = self._check_manifest(firmware_path, actual_sha256, target="slave")
-        signature = self._signature_for(firmware, manifest_info, SLAVE_HMAC_KEY, "slave")
+        # The manifest published by the URTC build: checked against the image and against the board (nothing else of it is needed to flash the slave).
+        self._check_manifest(firmware_path, actual_sha256, target="slave")
+        # The slave bootloader holds no key: the 0x212 frames carry the plain SHA-256 of the image and the main board verifies the Ed25519 record (0x21A) before it
+        # confirms the image to the slave. An image with no record cannot be installed, so it is refused here, before anything is sent.
+        record = self._record_for(firmware_path)
+        if record is None:
+            raise FlashError(_("ERR_NO_RECORD", board="slave", name=os.path.basename(firmware_path) + ".imgsig"))
+        digest = bytes.fromhex(actual_sha256)
 
         self.log(_("LOG_FIRMWARE_PATH", path=firmware_path))
         self.log(_("LOG_FIRMWARE_SIZE", size=size, kb=size/1024))
         self.log(_("LOG_FIRMWARE_CRC32", crc32=crc32))
-        self.log(_("LOG_FIRMWARE_HMAC", hmac=signature.hex()))
+        self.log(_("LOG_FIRMWARE_SHA256", sha256=actual_sha256))
         self.log(_("LOG_SLAVE_FIRMWARE_HARDWAREID", hw_id=SLAVE_HARDWARE_ID))
 
         # The slave only takes START_UPDATE while its bootloader runs. An application that is still running ignores 0x211 (its register 0x01 is read-only), and the update then ends
@@ -970,12 +1020,16 @@ class URTCFlasher:
         self.can.send_frame(CAN_ID_SLAVE_START_UPDATE, payload)
         self._wait_for_slave_status(0x03, timeout=5.0)  # STATUS_RECEIVING
 
-        # --- 0x212 x4: HMAC signature chunks ---
-        self.log(_("LOG_SENDING_HMAC"))
+        # --- 0x212 x4: the SHA-256 of the image (the name of the frame is historic) ---
+        self.log(_("LOG_SENDING_DIGEST", id="0x212"))
         for i in range(4):
-            chunk = signature[i*8:(i+1)*8]
+            chunk = digest[i*8:(i+1)*8]
             self.can.send_frame(CAN_ID_SLAVE_HMAC_CHUNK, chunk)
             time.sleep(0.01)
+
+        # --- 0x21A x11: the Ed25519 record; the main board keeps it and checks it when END arrives ---
+        self.log(_("LOG_SENDING_RECORD", id="0x21A"))
+        self._send_record(CAN_ID_SLAVE_RECORD_CHUNK, record)
 
         # --- 0x213: firmware data, 8 bytes per I2C transaction, no
         # page-ACK equivalent - each write either lands or the whole

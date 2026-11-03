@@ -48,11 +48,13 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 from pathlib import Path
 from typing import Any, Callable, Iterable
 
 from . import protocol
 from .framing import FrameError
+from .heater_sim import SolderingIronModel
 from .slcan import decode_line, encode_line
 from .transports import MockCAN
 
@@ -81,7 +83,7 @@ class VirtualBoard:
     def __init__(self, hardware_id: int = protocol.HARDWARE_ID_MAIN, version: tuple[int, int] = (0, 4), patch: int | None = 0,
                  accepts_patch: bool = False, tool_id: int = 0, system_error: bool = False, can_error: bool = False,
                  booting: bool = False, thermal_fault: int | None = 0, reset_cause: int | None = 0,
-                 bootloader: bool = False, **bootloader_options) -> None:
+                 bootloader: bool = False, heater_config: dict | None = None, **bootloader_options) -> None:
         self.hardware_id = hardware_id
         self.version = version
         self.patch = patch
@@ -100,6 +102,15 @@ class VirtualBoard:
         self.bootloader_options.setdefault("accepts_patch", accepts_patch)
         self._bootloader = MockCAN(**self.bootloader_options)
         self.received: list[Frame] = []
+        # The soldering iron loop is built on the first setpoint: a board that never gets one carries no model.
+        self.heater: SolderingIronModel | None = None
+        self.heater_config = heater_config
+
+    def advance(self, seconds: float) -> list[Frame]:
+        """Let simulated time pass: the telemetry the heater loop sends meanwhile (none when it never got a setpoint)."""
+        if self.mode == BOOTLOADER or self.heater is None:
+            return []   # a head in its bootloader drives no heater
+        return self.heater.advance(seconds)
 
     # ---- the application -------------------------------------------------------------------------
     def _version_answer(self) -> list[Frame]:
@@ -118,6 +129,13 @@ class VirtualBoard:
             return self._version_answer()
         if can_id == protocol.CAN_ID_QUERY_ACTIVE_TOOL:
             return [self._quick_state()]
+        if can_id == protocol.CAN_ID_SOLDER_SETPOINT and self.tool_id == protocol.TOOL_SOLDERING_IRON and not self.system_error:
+            fields = protocol.decode_solder_setpoint(data)
+            if fields is not None:
+                if self.heater is None:
+                    self.heater = SolderingIronModel(self.heater_config)
+                self.heater.set_target(fields["setpoint_c"])
+            return []
         if can_id == protocol.CAN_ID_ENTER_BOOTLOADER and data == _magic("enter_bootloader"):
             self.enter_bootloader()
             # The bootloader opens its listening window with its first heartbeat: status "listening", progress not applicable.
@@ -126,6 +144,7 @@ class VirtualBoard:
 
     # ---- the bootloader --------------------------------------------------------------------------
     def enter_bootloader(self) -> None:
+        self.heater = None
         self._bootloader = MockCAN(**self.bootloader_options)
         self.mode = BOOTLOADER
 
@@ -309,6 +328,8 @@ class ProcessBackend:
 class VirtualBoardServer:
     """A TCP server whose every client talks SLCAN to one shared board, like several programs on one bus."""
 
+    TICK_SECONDS = 0.05  # how often real time is handed to the board (the heater loop of the soldering iron)
+
     def __init__(self, board: VirtualBoard | None = None, host: str = "127.0.0.1", port: int = 0, command: list[str] | None = None,
                  acknowledge_transmit: bool = True) -> None:
         self.board = board or VirtualBoard()
@@ -325,6 +346,8 @@ class VirtualBoardServer:
         self._stop = threading.Event()
         self._thread: threading.Thread | None = None
         self._clients: list[socket.socket] = []
+        self._adapters: dict[socket.socket, tuple[SlcanAdapter, Callable[[bytes], None]]] = {}
+        self._ticker: threading.Thread | None = None
 
     @property
     def url(self) -> str:
@@ -334,6 +357,9 @@ class VirtualBoardServer:
     def start(self) -> "VirtualBoardServer":
         self._thread = threading.Thread(target=self._accept_loop, daemon=True)
         self._thread.start()
+        if not self.command:
+            self._ticker = threading.Thread(target=self._tick_loop, daemon=True)
+            self._ticker.start()
         return self
 
     def stop(self) -> None:
@@ -349,6 +375,8 @@ class VirtualBoardServer:
             pass
         if self._thread is not None:
             self._thread.join(timeout=2)
+        if self._ticker is not None:
+            self._ticker.join(timeout=2)
 
     def __enter__(self) -> "VirtualBoardServer":
         return self.start()
@@ -367,6 +395,20 @@ class VirtualBoardServer:
             self._clients.append(client)
             threading.Thread(target=self._serve, args=(client,), daemon=True).start()
 
+    def _tick_loop(self) -> None:
+        """Let real time pass for the board: the telemetry of a running heater loop goes to every client whose channel is open."""
+        last = time.monotonic()
+        while not self._stop.wait(self.TICK_SECONDS):
+            now = time.monotonic()
+            with self._lock:
+                frames = self.board.advance(now - last)
+                targets = [(adapter, send) for adapter, send in self._adapters.values() if adapter.state in ("open", "listen")]
+            last = now
+            if frames:
+                data = SlcanAdapter._lines(frames)
+                for _adapter, send in targets:
+                    send(data)
+
     def _serve(self, client: socket.socket) -> None:
         send_lock = threading.Lock()
 
@@ -381,6 +423,7 @@ class VirtualBoardServer:
             backend: SlcanAdapter | ProcessBackend = ProcessBackend(self.command, send)
         else:
             backend = SlcanAdapter(self.board, self.acknowledge_transmit)
+            self._adapters[client] = (backend, send)
         try:
             client.settimeout(0.2)
             while not self._stop.is_set():
@@ -403,6 +446,7 @@ class VirtualBoardServer:
                 client.close()
             except OSError:
                 pass
+            self._adapters.pop(client, None)
             if client in self._clients:
                 self._clients.remove(client)
 

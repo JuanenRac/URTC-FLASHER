@@ -9,7 +9,6 @@ what it does with each way the slave can answer, and the guards in front."""
 from __future__ import annotations
 
 import hashlib
-import hmac
 import json
 import struct
 import sys
@@ -23,7 +22,6 @@ import pytest
 
 import flasher_config as cfg
 from flasher_protocol import FlashError, URTCFlasher
-from conftest import BENCH_SLAVE_KEY
 
 
 class SlavePeer:
@@ -81,9 +79,14 @@ class SlavePeer:
         return [data for frame_id, data in self.sent if frame_id == can_id]
 
 
-def _image(tmp_path, size=100, name="slave.bin"):
+RECORD = bytes((i * 5 + 3) & 0xFF for i in range(76))   # the flasher carries the record and never judges it: the main board verifies it
+
+
+def _image(tmp_path, size=100, name="slave.bin", record=RECORD):
     path = tmp_path / name
     path.write_bytes(bytes((i * 7 + 1) & 0xFF for i in range(size)))
+    if record is not None:
+        Path(str(path) + ".imgsig").write_text(record.hex() + "\n", encoding="utf-8")
     return str(path), path.read_bytes()
 
 
@@ -101,12 +104,16 @@ def test_a_successful_slave_update_sends_the_documented_sequence(tmp_path):
 
     ids = [frame_id for frame_id, _ in peer.sent]
     assert ids[0] == cfg.CAN_ID_SLAVE_VERSION_RESP_1
-    assert ids.index(cfg.CAN_ID_SLAVE_START_UPDATE) < ids.index(cfg.CAN_ID_SLAVE_HMAC_CHUNK) < ids.index(cfg.CAN_ID_SLAVE_DATA) < ids.index(cfg.CAN_ID_SLAVE_END_UPDATE)
+    assert ids.index(cfg.CAN_ID_SLAVE_START_UPDATE) < ids.index(cfg.CAN_ID_SLAVE_HMAC_CHUNK) < ids.index(cfg.CAN_ID_SLAVE_RECORD_CHUNK) < ids.index(cfg.CAN_ID_SLAVE_DATA) < ids.index(cfg.CAN_ID_SLAVE_END_UPDATE)
 
     assert peer.frames(cfg.CAN_ID_SLAVE_START_UPDATE) == [struct.pack(">II", 100, cfg.SLAVE_HARDWARE_ID)]
     chunks = peer.frames(cfg.CAN_ID_SLAVE_HMAC_CHUNK)
     assert len(chunks) == 4 and all(len(chunk) == 8 for chunk in chunks)
-    assert b"".join(chunks) == hmac.new(BENCH_SLAVE_KEY, image, hashlib.sha256).digest()
+    assert b"".join(chunks) == hashlib.sha256(image).digest()   # a plain SHA-256: the slave bootloader holds no key
+    record_frames = peer.frames(cfg.CAN_ID_SLAVE_RECORD_CHUNK)
+    assert len(record_frames) == 11 and all(len(frame) == 8 for frame in record_frames)
+    assert [frame[0] for frame in record_frames] == list(range(11))
+    assert b"".join(frame[1:] for frame in record_frames)[:76] == RECORD and b"".join(frame[1:] for frame in record_frames)[76:] == b"\x00"
     assert b"".join(peer.frames(cfg.CAN_ID_SLAVE_DATA)) == image
     assert [len(chunk) for chunk in peer.frames(cfg.CAN_ID_SLAVE_DATA)][-1] == 100 % 8
     assert peer.frames(cfg.CAN_ID_SLAVE_END_UPDATE) == [struct.pack(">IHH", zlib.crc32(image) & 0xFFFFFFFF, 0, 0)]
@@ -115,8 +122,7 @@ def test_a_successful_slave_update_sends_the_documented_sequence(tmp_path):
 
 def test_the_version_of_the_manifest_goes_into_the_end_frame(tmp_path):
     path, image = _image(tmp_path, 64)
-    manifest = {"version": "0.4.0", "component": "slave_application", "hardware_id": cfg.SLAVE_HARDWARE_ID, "sha256": hashlib.sha256(image).hexdigest(),
-                "hmac_sha256": hmac.new(BENCH_SLAVE_KEY, image, hashlib.sha256).hexdigest()}
+    manifest = {"version": "0.4.0", "component": "slave_application", "hardware_id": cfg.SLAVE_HARDWARE_ID, "sha256": hashlib.sha256(image).hexdigest()}
     Path(path + ".manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
     peer = SlavePeer()
     flasher, _logs = _flasher(peer)
@@ -126,8 +132,7 @@ def test_the_version_of_the_manifest_goes_into_the_end_frame(tmp_path):
 
 def test_the_patch_goes_into_the_minor_field_only_when_the_slave_bootloader_reads_it(tmp_path):
     path, image = _image(tmp_path, 64)
-    manifest = {"version": "0.4.6", "component": "slave_application", "hardware_id": cfg.SLAVE_HARDWARE_ID, "sha256": hashlib.sha256(image).hexdigest(),
-                "hmac_sha256": hmac.new(BENCH_SLAVE_KEY, image, hashlib.sha256).hexdigest()}
+    manifest = {"version": "0.4.6", "component": "slave_application", "hardware_id": cfg.SLAVE_HARDWARE_ID, "sha256": hashlib.sha256(image).hexdigest()}
     Path(path + ".manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
 
     legacy = SlavePeer(patch_extension=False)
@@ -224,3 +229,32 @@ def test_a_silent_slave_gives_no_version():
         def send_frame(self, can_id, data):
             self.sent.append((can_id, bytes(data)))
     assert _flasher(Silent())[0].query_slave_version(timeout=0.2) is None
+
+
+def test_an_image_without_a_signature_record_is_refused_before_any_frame(tmp_path):
+    path, _image_bytes = _image(tmp_path, 64, record=None)
+    peer = SlavePeer()
+    flasher, _logs = _flasher(peer)
+    with pytest.raises(FlashError, match="imgsig"):
+        flasher.flash_slave(path)
+    assert not peer.frames(cfg.CAN_ID_SLAVE_START_UPDATE)
+
+
+@pytest.mark.parametrize("text", ["", "00" * 75, "zz" * 76, "00" * 77])
+def test_a_file_that_is_not_a_record_is_an_error_and_not_ignored(tmp_path, text):
+    path, _image_bytes = _image(tmp_path, 64, record=None)
+    Path(path + ".imgsig").write_text(text, encoding="utf-8")
+    peer = SlavePeer()
+    flasher, _logs = _flasher(peer)
+    with pytest.raises(FlashError):
+        flasher.flash_slave(path)
+    assert not peer.frames(cfg.CAN_ID_SLAVE_START_UPDATE)
+
+
+def test_the_record_may_sit_next_to_the_image_without_its_extension(tmp_path):
+    path, _image_bytes = _image(tmp_path, 64, record=None)
+    Path(str(tmp_path / "slave.imgsig")).write_text(RECORD.hex(), encoding="utf-8")
+    peer = SlavePeer()
+    flasher, _logs = _flasher(peer)
+    assert flasher.flash_slave(path) is True
+    assert len(peer.frames(cfg.CAN_ID_SLAVE_RECORD_CHUNK)) == 11

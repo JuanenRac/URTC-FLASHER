@@ -36,7 +36,8 @@ CAN_ID_HMAC_CHUNK       = protocol.CAN_ID_HMAC_CHUNK
 # instead (polling 0x216).
 CAN_ID_SLAVE_ENTER_BOOTLOADER = protocol.CAN_ID_SLAVE_ENTER_BOOTLOADER
 CAN_ID_SLAVE_START_UPDATE     = protocol.CAN_ID_SLAVE_START_UPDATE
-CAN_ID_SLAVE_HMAC_CHUNK       = protocol.CAN_ID_SLAVE_HMAC_CHUNK
+CAN_ID_SLAVE_HMAC_CHUNK       = protocol.CAN_ID_SLAVE_HMAC_CHUNK   # the name is historic: the frames carry the SHA-256 of the image
+CAN_ID_SLAVE_RECORD_CHUNK     = protocol.CAN_ID_SLAVE_RECORD_CHUNK  # the 76-byte Ed25519 record of the slave image, 11 frames
 CAN_ID_SLAVE_DATA             = protocol.CAN_ID_SLAVE_DATA
 CAN_ID_SLAVE_END_UPDATE       = protocol.CAN_ID_SLAVE_END_UPDATE
 CAN_ID_SLAVE_STATUS           = protocol.CAN_ID_SLAVE_STATUS
@@ -87,6 +88,7 @@ MLX_SENSOR_VARIANTS = [
 ]
 ERASE_FRAM_MAGIC = protocol.MAGIC_ERASE_FRAM
 CAN_ID_BOOTLOADER_VERSION_RESPONSE = protocol.CAN_ID_BOOTLOADER_VERSION_RESPONSE  # sent only by the bootloader, alongside 0x7F9, when it's the one answering
+CAN_ID_BOOTLOADER_SIGNATURE_CHUNK = protocol.CAN_ID_BOOTLOADER_SIGNATURE_CHUNK  # the 76-byte Ed25519 record of the main-board image, 11 frames
 CAN_ID_BOOTLOADER_KEY_ID = protocol.CAN_ID_BOOTLOADER_KEY_ID  # DLC=8 (optional): sent by a bootloader that holds a trusted Ed25519 key right after its 0x7F9 answer: the identifier of that key
 CAN_ID_VERSION_PATCH_RESPONSE = protocol.CAN_ID_VERSION_PATCH_RESPONSE  # DLC=3 (optional): answering side, installed application PATCH (0xFF = unknown), flags (bit 0 = the bootloader reads the patch from the minor field of 0x7F4 / 0x214); sent right after 0x7F9 by boards that know their patch, never by older ones
 PATCH_UNKNOWN = 0xFF

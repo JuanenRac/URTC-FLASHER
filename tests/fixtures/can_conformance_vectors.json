@@ -1420,6 +1420,10 @@
       "name": "SLAVE_VERIFY_FAIL_REASON"
     },
     {
+      "id": "0x21A",
+      "name": "SLAVE_RECORD_CHUNK"
+    },
+    {
       "id": "0x220",
       "name": "SLAVE_REG_WRITE"
     },
@@ -2650,6 +2654,19 @@
       "frame": {
         "id": "0x219",
         "data": "02"
+      }
+    },
+    {
+      "name": "SLAVE_RECORD_CHUNK request: first chunk",
+      "message": "SLAVE_RECORD_CHUNK",
+      "layout": "slave_record_chunk",
+      "fields": {
+        "index": 0,
+        "data": "00000000000000"
+      },
+      "frame": {
+        "id": "0x21A",
+        "data": "0000000000000000"
       }
     },
     {
@@ -5506,6 +5523,29 @@
       "strict": true
     },
     {
+      "name": "SLAVE_RECORD_CHUNK request: first chunk",
+      "message": "SLAVE_RECORD_CHUNK",
+      "layout": "slave_record_chunk",
+      "frame": {
+        "id": "0x21A",
+        "data": "0000000000000000"
+      },
+      "fields": {
+        "index": 0,
+        "data": "00000000000000"
+      }
+    },
+    {
+      "name": "SLAVE_RECORD_CHUNK request: 7 bytes is too short",
+      "message": "SLAVE_RECORD_CHUNK",
+      "layout": "slave_record_chunk",
+      "frame": {
+        "id": "0x21A",
+        "data": "00000000000000"
+      },
+      "fields": null
+    },
+    {
       "name": "SLAVE_REG_WRITE request: PWM stop channel 1",
       "message": "SLAVE_REG_WRITE",
       "layout": "slave_reg_write",
@@ -7436,6 +7476,15 @@
       "layout": "slave_enter_bootloader",
       "fields": {
         "magic": "00000000"
+      }
+    },
+    {
+      "name": "SLAVE_RECORD_CHUNK: index above its maximum",
+      "message": "SLAVE_RECORD_CHUNK",
+      "layout": "slave_record_chunk",
+      "fields": {
+        "index": 11,
+        "data": "00000000000000"
       }
     },
     {

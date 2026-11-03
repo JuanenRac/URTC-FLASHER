@@ -69,12 +69,11 @@ def test_the_published_signature_is_sent_even_without_any_key(tmp_path, monkeypa
 
 def test_an_unsigned_image_without_a_key_is_refused_before_any_traffic(tmp_path, monkeypatch):
     monkeypatch.setattr(flasher_protocol, "HMAC_KEY", None)
-    monkeypatch.setattr(flasher_protocol, "SLAVE_HMAC_KEY", None)
     path = _image(tmp_path)
     flasher = URTCFlasher(_ExplodingCAN(), log=lambda m: None)
     with pytest.raises(FlashError, match="no published signature"):
         flasher.flash(str(path), version=(0, 3))
-    with pytest.raises(FlashError, match="no published signature"):
+    with pytest.raises(FlashError, match="no signature record"):
         flasher.flash_slave(str(path))
 
 
