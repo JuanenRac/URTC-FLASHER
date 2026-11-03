@@ -1,2 +1,2 @@
 # The packager of the executable. requirements-build.lock pins it with hashes (see requirements.lock).
-pyinstaller>=6,<7
+pyinstaller>=6.22.3,<7

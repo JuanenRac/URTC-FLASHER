@@ -1,7 +1,7 @@
 pyserial>=3.5
 # Qt Quick is the desktop renderer (the same engine as URTC-UPDATER) and the
 # only window of the program; --cli needs no window.
-PySide6>=6.8,<7
+PySide6>=6.12.0,<7
 
 # Recommended minimum interpreter: Python 3.11+. Not enforced by this file
 # (pip has no clean way to gate on interpreter version here without also
