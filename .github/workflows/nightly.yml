@@ -20,7 +20,6 @@ on:
 
 permissions:
   contents: read
-  issues: write
 
 jobs:
   baseline:
@@ -34,6 +33,9 @@ jobs:
     needs: baseline
     if: ${{ failure() }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
     steps:
       - name: Open an issue (or comment on the open one)
         env:
