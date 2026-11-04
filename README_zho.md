@@ -27,11 +27,11 @@
 
 ---
 
-**诚实核查 - 今天真正能运行的部分：** `tests/` 下有 55 个 pytest 文件（654 个测试：全部通过，其中 73 个在没有 PySide6 时跳过）——针对真实 `MockCAN` 传输（`flasher_transports.py`）的 CAN-OTA 协议测试，它会回放完整的模拟引导程序序列（开始／擦除／接收、页数据 + PAGE_ACK、HMAC 分块、以真实成功或特定 `VERIFY_FAIL_REASON` 结束更新）；签名规则（无需任何密钥即发送已发布的签名、拒绝未签名镜像、清单 sha256 不符时在任何总线通信前拒绝）；镜像完整性检查；以及随附 `firmware/` 与其清单的核对。GitHub Actions（`.github/workflows/ci.yml`）在每次推送时运行这套测试，`tools/build_test.py` 也会在 `build-test.sh`/`.bat` 中运行。它还会运行 `ruff check` 和 `python -m mypy`（对程序及共享代码副本的类型检查）。根目录下的三个 `verify_qt_*.py` 脚本是 pytest 之外的真实端到端检查（需要真实的 Qt 事件循环；用 `QT_QPA_PLATFORM=offscreen python verify_qt_*.py` 运行）；`verify_qt_swd_full_chip_flash.py` 只以 `dry_run=True` 构造 `PyOCDCLI`/`CubeProgrammerCLI` 命令。这些都没有在本环境中针对真实板卡运行过。已发布的内容请参见 `CHANGELOG.md`。 模拟的引导程序（`MockCAN`）只是根据协议说明编写的模型：它能重现页确认、不完整的最后一页和回读帧，但它不是真正的引导程序，所以测试全部通过并不能代替在真实板卡上的试验（官方 73476 字节镜像曾无法安装、备份的最后一帧曾被丢弃，而测试却是通过的，正是因为模拟比真正的引导程序更宽松）。
+**诚实核查 - 今天真正能运行的部分：** `tests/` 下有 55 个 pytest 文件（654 个测试：全部通过，其中 73 个在没有 PySide6 时跳过）——针对真实 `MockCAN` 传输（`flasher_transports.py`）的 CAN-OTA 协议测试，它会回放完整的模拟引导程序序列（开始／擦除／接收、页数据 + PAGE_ACK、签名记录帧、以真实成功或特定 `VERIFY_FAIL_REASON` 结束更新）；签名规则（无需任何密钥即发送已发布的签名、拒绝未签名镜像、清单 sha256 不符时在任何总线通信前拒绝）；镜像完整性检查；以及随附 `firmware/` 与其清单的核对。GitHub Actions（`.github/workflows/ci.yml`）在每次推送时运行这套测试，`tools/build_test.py` 也会在 `build-test.sh`/`.bat` 中运行。它还会运行 `ruff check` 和 `python -m mypy`（对程序及共享代码副本的类型检查）。根目录下的三个 `verify_qt_*.py` 脚本是 pytest 之外的真实端到端检查（需要真实的 Qt 事件循环；用 `QT_QPA_PLATFORM=offscreen python verify_qt_*.py` 运行）；`verify_qt_swd_full_chip_flash.py` 只以 `dry_run=True` 构造 `PyOCDCLI`/`CubeProgrammerCLI` 命令。这些都没有在本环境中针对真实板卡运行过。已发布的内容请参见 `CHANGELOG.md`。 模拟的引导程序（`MockCAN`）只是根据协议说明编写的模型：它能重现页确认、不完整的最后一页和回读帧，但它不是真正的引导程序，所以测试全部通过并不能代替在真实板卡上的试验（官方 73476 字节镜像曾无法安装、备份的最后一帧曾被丢弃，而测试却是通过的，正是因为模拟比真正的引导程序更宽松）。
 
 ---
 
-> **安全与安防现状:**本生态系统不是经认证的安全系统,目前也不存在已组装的 URTC 电路板。引导程序使用 CRC32 和共享密钥的 HMAC-SHA256 校验固件映像,而非非对称签名(计划中);已发布的应用映像使用公开的开发密钥签名(`signing_key_kind: dev`),因此任何人都可以生成引导程序接受的映像;尚未向任何真实电路板发送过任何内容。在依赖此处任何说法来保障人身安全之前,请先阅读[安全基线](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md)和[威胁模型](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md)。
+> **安全与安防现状:**本生态系统不是经认证的安全系统,目前也不存在已组装的 URTC 电路板。主板的引导程序用公钥表校验映像的 Ed25519 记录(`<image>.imgsig`),自身不保存任何机密;扩展从机的引导程序只检查普通 SHA-256,并且只安装主板确认过的映像;正式构建的公钥表在创建映像签名密钥之前为空,而台架构建信任一把公开的开发密钥,因此任何人都可以生成这类引导程序接受的映像;尚未向任何真实电路板发送过任何内容。在依赖此处任何说法来保障人身安全之前,请先阅读[安全基线](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md)和[威胁模型](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md)。
 
 ## 📋 速览
 
@@ -69,7 +69,7 @@
 `docs/CANBUS.TXT` 中的确切引导程序协议（位于本工具所对接的同级
 [URTC](https://github.com/JuanenRac/URTC) 仓库中——见本文档末尾附近的
 “相关项目”；本 README 中提到的每一个其他 `docs/*.TXT` 引用也都指向该处）：
-HardwareID 检查、共享密钥的 HMAC-SHA256（并非非对称签名）、黄金镜像备份槽更新流程、通过引导程序心跳
+HardwareID 检查、镜像的 Ed25519 记录、黄金镜像备份槽更新流程、通过引导程序心跳
 消息实现的实时进度，以及一次版本查询（本板卡的应用程序*或*引导程序是否通过
 CAN 自我标识），以便你在决定要刷写什么之前，先看看当前已安装的内容。
 
@@ -87,7 +87,7 @@ CAN 自我标识），以便你在决定要刷写什么之前，先看看当前�
 
 ## 🧩 在 URTC 中的角色
 
-URTC-FLASHER 是把固件写入 URTC 板的程序。它通过 USB-CAN 适配器（SLCAN 串口，或 Linux 上的 SocketCAN）使用 URTC 的引导程序协议（该仓库的 `docs/CANBUS.TXT`）：HardwareID 检查、共享密钥 HMAC-SHA256 数据块、带备份槽的黄金镜像流程，以及版本查询，让你在决定刷写什么之前先看到已安装的内容。对于没有可用引导程序的板子，或要编程整颗芯片时，它为 pyOCD 或 STM32CubeProgrammer 准备 SWD/JTAG 命令。它是 URTC-TESTER 的更新搭档，通过 URTC-COMMON 与其共享 CAN 代码，URTC-UPDATER 可以把已核对发布签名的固件镜像交给它。
+URTC-FLASHER 是把固件写入 URTC 板的程序。它通过 USB-CAN 适配器（SLCAN 串口，或 Linux 上的 SocketCAN）使用 URTC 的引导程序协议（该仓库的 `docs/CANBUS.TXT`）：HardwareID 检查、镜像的 Ed25519 记录、带备份槽的黄金镜像流程，以及版本查询，让你在决定刷写什么之前先看到已安装的内容。对于没有可用引导程序的板子，或要编程整颗芯片时，它为 pyOCD 或 STM32CubeProgrammer 准备 SWD/JTAG 命令。它是 URTC-TESTER 的更新搭档，通过 URTC-COMMON 与其共享 CAN 代码，URTC-UPDATER 可以把已核对发布签名的固件镜像交给它。
 
 ## 🏛️ 架构
 
@@ -225,7 +225,7 @@ MLX9064x 系列热传感器（或完全没有）中实际装配的是哪一种�
      进度条在传输期间逐页跟踪写入进度，然后在最后的备份到主槽复制期间
      跟踪复制进度。
 
-如果验证在任何时刻失败（CRC32、HMAC 或 HardwareID 不匹配），引导程序的
+如果验证在任何时刻失败（CRC32、签名或 HardwareID 不匹配），引导程序的
 主槽绝不会被触碰——板卡会继续运行它已有的任何固件。随时重试都是安全的。
 
 **备份固件（CAN）**：通过总线原样读回当前已安装的固件，并将其保存为一个
@@ -435,7 +435,7 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 
 **具体的验证失败原因**：如果在一次 CAN 更新期间验证失败，
 `bootloader_protocol.c` 会随状态 `0x05`（验证失败）一起发送一个原因字节——
-传输不完整、CRC32 不匹配、HMAC 不匹配，或 HardwareID 不匹配，而不是每一次
+传输不完整、CRC32 不匹配、签名不匹配，或 HardwareID 不匹配，而不是每一次
 失败看起来都一样。确切的帧格式见 `docs/CANBUS.TXT`（`0x7F5`，此特定状态
 下 DLC 为 2）。本工具与引导程序在这个帧格式上是一致的，因此如果你正在
 构建一个带有不同版本协议的自定义引导程序，请将两者一起刷写。
@@ -492,7 +492,7 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 | 更新失败让板子变砖 | 黄金镜像模型：备份槽保留之前的固件，丢失的确认帧通过再次询问版本来恢复，而不是报告错误的失败，并且可先回读主槽 |
 | 本程序的更新被篡改 | “检查更新”只接受 SHA-256 和 Ed25519 签名都有效的软件包（程序中固定的发布密钥），确认后才安装，绝不在传输期间安装，并保留之前的版本 |
 
-引导程序用 CRC32 和共享密钥 HMAC-SHA256 检查镜像，而不是非对称签名；已发布的应用镜像用公开的开发密钥签名，所以任何人都可以做出引导程序接受的镜像。这一切都没有在真实的板子上运行过。
+主板的引导程序用公钥表校验镜像的 Ed25519 记录，自身不保存任何机密；正式构建的公钥表在创建镜像签名密钥之前为空，而台架构建信任一把公开的开发密钥，所以任何人都可以做出这类引导程序接受的镜像。这一切都没有在真实的板子上运行过。
 
 ### CAN 更新期间的可靠性，以及会话日志
 
@@ -555,7 +555,7 @@ python3 urtc_flasher.py --cli --transport mock --file firmware.bin --no-trigger
 更新随附的 `firmware/` 文件夹（`--check` 用于校验）。默认从 URTC 最新发布版本的资源（assets）中获取这一组文件（`--release TAG` 可选择其他版本）；也可以改为传入本地文件夹作为参数，例如本地的 URTC 构建。只有在测试板上刷写没有
 清单的自建镜像时才需要密钥：在下方的 `urtc_config.json` 中设置
 `hmac_key_hex` / `slave_hmac_key_hex`——没有密钥时，此类镜像会被拒绝，而不是
-用引导程序不可能拥有的密钥签名。参见 URTC 的 `docs/FIRMWARE_SIGNING.TXT`。 已发布的镜像使用公开的开发密钥（`signing_key_kind: dev`）签名，因此这只是共享密钥校验：它表明镜像由持有该密钥的人生成，而不表明对方是谁；非对称签名（Ed25519）仍在计划中，尚未实现。
+用引导程序不可能拥有的密钥签名。参见 URTC 的 `docs/FIRMWARE_SIGNING.TXT`。 每个应用镜像的 Ed25519 记录是发布在其旁边的 `<image>.imgsig` 文件；刷写工具只负责把它转交给引导程序，由引导程序对照自己的公钥表进行验证（刷写工具不持有任何密钥，也不做任何决定）。台架构建的镜像使用公开的开发密钥（`signing_key_kind: dev`）签名：任何人都可以做出这样的镜像。
 
 **或者在不改动脚本的情况下覆盖这一切：** 一个位于 `firmware/` 旁边的
 可选 `urtc_config.json` 可以设置签名密钥、HardwareID，以及内存映射值——
@@ -651,7 +651,7 @@ python3 urtc_flasher.py
 
 #### 可视化控制台
 
-**Qt Quick** 控制台是程序唯一的窗口（仅针对模拟器测试；镜像检查使用共享密钥的 HMAC-SHA256）。使用以下命令启动：
+**Qt Quick** 控制台是程序唯一的窗口（仅针对模拟器测试；镜像检查使用 SHA-256 和 Ed25519 记录）。使用以下命令启动：
 ~~~
 python urtc_flasher.py
 ~~~
@@ -752,7 +752,7 @@ SocketCAN 没有这个特定的坑——访问一个类似 `can0` 的接口不�
 - **你仍然选择了一个看起来无效的文件** → 工具会先要求你确认。这项检查的
   存在是为了捕获明显的错误（错误的文件、下载不完整、一个空的占位符）——
   它不能捕获所有情况（一个损坏但看似合理的文件，或一个用错误密钥签名的
-  文件），这正是引导程序自身在真实传输过程中的 CRC32/HMAC 检查所要做的事。
+  文件），这正是引导程序自身在真实传输过程中的 CRC32/签名检查所要做的事。
 - **什么都没找到，或你想要一个完全来自其他地方的文件** → 使用**浏览 .bin...**
   按钮，无论该文件实际存放在哪里都可以使用（并且同样会运行相同的验证检查）。
 - **想要最新构建版本又不想自己去找** → **从 GitHub 下载...** 会列出
@@ -774,7 +774,7 @@ SocketCAN 没有这个特定的坑——访问一个类似 `can0` 的接口不�
 **与每个固件文件放在一起的 `<filename>.manifest.json` 和
 `<filename>.sha256`**——由 URTC 构建为每个镜像发布（从 GitHub 下载时会一并
 下载）。清单包含版本、`sha256`，对于应用镜像还包含引导程序期望的
-`hmac_sha256` 值（共享密钥的 HMAC-SHA256，并非非对称签名；`signing_key_kind: dev` 表示公开的开发密钥）：
+`hmac_sha256` 值（共享密钥的 HMAC-SHA256，仅上一代引导程序会检查；当前引导程序验证的 Ed25519 记录是镜像旁的 `<image>.imgsig` 文件；`signing_key_kind: dev` 表示公开的开发密钥）：
 
 ```json
 {"component": "main_application", "version": "<version>", "sha256": "b48d4cd5...", "hmac_sha256": "b63a701e...", "signing_key_kind": "dev"}
@@ -804,7 +804,7 @@ SocketCAN 没有这个特定的坑——访问一个类似 `can0` 的接口不�
 
 ## 🧪 测试
 
-测试套件在 55 个文件中共有 654 个测试（`python -m pytest tests -q`；在没有屏幕的机器上使用 Qt 时设置 `QT_QPA_PLATFORM=offscreen`；其中 73 个需要 PySide6，没有它时会被跳过）：针对真实 `MockCAN` 传输层的 CAN-OTA 协议（它回放完整的模拟引导程序：开始、擦除、接收、页数据和 ACK、HMAC 数据块、带真实成功或特定 `VERIFY_FAIL_REASON` 的更新结束）、签名规则、镜像完整性检查、`firmware/` 中内置的固件与其清单的核对、用 `dry_run` 构造的 SWD/JTAG 命令、语言文件和 Qt Quick 面板。根目录下的三个脚本（`verify_qt_*.py`）对 Qt 面板做端到端驱动。CI 还会运行 `ruff check`、`python -m mypy` 和 `tools/ci_validate.py`。`MockCAN` 只是根据协议写成的模型：它比真实的引导程序宽容，所以测试全绿并不能代替在真实板子上的试验。
+测试套件在 55 个文件中共有 654 个测试（`python -m pytest tests -q`；在没有屏幕的机器上使用 Qt 时设置 `QT_QPA_PLATFORM=offscreen`；其中 73 个需要 PySide6，没有它时会被跳过）：针对真实 `MockCAN` 传输层的 CAN-OTA 协议（它回放完整的模拟引导程序：开始、擦除、接收、页数据和 ACK、签名记录帧、带真实成功或特定 `VERIFY_FAIL_REASON` 的更新结束）、签名规则、镜像完整性检查、`firmware/` 中内置的固件与其清单的核对、用 `dry_run` 构造的 SWD/JTAG 命令、语言文件和 Qt Quick 面板。根目录下的三个脚本（`verify_qt_*.py`）对 Qt 面板做端到端驱动。CI 还会运行 `ruff check`、`python -m mypy` 和 `tools/ci_validate.py`。`MockCAN` 只是根据协议写成的模型：它比真实的引导程序宽容，所以测试全绿并不能代替在真实板子上的试验。
 
 ## 🏗️ 构建与发布
 

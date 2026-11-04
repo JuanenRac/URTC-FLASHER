@@ -109,7 +109,7 @@ CAN_ID_CRIMPING_CMD = 0x1F0  # Crimping actuator motor
 CAN_ID_ULTRASONIC_WELD_CMD = 0x200  # Ultrasonic welder timed pulse
 CAN_ID_SLAVE_ENTER_BOOTLOADER = 0x210  # Enter the expansion slave's bootloader
 CAN_ID_SLAVE_START_UPDATE = 0x211  # Start the slave firmware update
-CAN_ID_SLAVE_HMAC_CHUNK = 0x212  # Slave image digest chunk (SHA-256; the name is historic)
+CAN_ID_SLAVE_DIGEST_CHUNK = 0x212  # Slave image digest chunk (SHA-256, no key)
 CAN_ID_SLAVE_DATA = 0x213  # Slave firmware data
 CAN_ID_SLAVE_END_UPDATE = 0x214  # End the slave update and verify
 CAN_ID_SLAVE_STATUS = 0x215  # Slave bootloader status
@@ -463,7 +463,7 @@ MAGIC_PAYLOADS = {'enter_bootloader': {'id': 2032, 'data': 'B0071D5A'},
 # --- registers of the expansion slave over the I2C link bus ---
 SLAVE_BOOT_REG_STATUS = 0x00
 SLAVE_BOOT_REG_START_UPDATE = 0x01
-SLAVE_BOOT_REG_HMAC_EXPECTED = 0x02
+SLAVE_BOOT_REG_DIGEST_EXPECTED = 0x02
 SLAVE_BOOT_REG_DATA = 0x03
 SLAVE_BOOT_REG_END_UPDATE = 0x04
 SLAVE_BOOT_REG_PROGRESS = 0x05
@@ -488,6 +488,10 @@ SLAVE_APP_REG_ADS_READ = 0x22
 SLAVE_APP_REG_PWM_CONFIGURE = 0x30
 SLAVE_APP_REG_PWM_PULSE = 0x31
 SLAVE_APP_REG_PWM_STOP = 0x32
+
+# --- old names kept as aliases of the renamed ones (see legacy_aliases of the specification) ---
+CAN_ID_SLAVE_HMAC_CHUNK = CAN_ID_SLAVE_DIGEST_CHUNK
+SLAVE_BOOT_REG_HMAC_EXPECTED = SLAVE_BOOT_REG_DIGEST_EXPECTED
 
 # --- SLCAN ---
 SLCAN_BITRATES = [('10 kbit/s', '0'),
@@ -560,7 +564,7 @@ MESSAGES = {
     512: {'name': 'ULTRASONIC_WELD_CMD', 'group': 'welding', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': [24], 'gates': {'blocked_by_critical_error': True, 'blocked_during_boot_sequence': True}},
     528: {'name': 'SLAVE_ENTER_BOOTLOADER', 'group': 'slave_bridge', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True, 'needs_magic': 'enter_bootloader'}},
     529: {'name': 'SLAVE_START_UPDATE', 'group': 'slave_bridge', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
-    530: {'name': 'SLAVE_HMAC_CHUNK', 'group': 'slave_bridge', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
+    530: {'name': 'SLAVE_DIGEST_CHUNK', 'group': 'slave_bridge', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
     531: {'name': 'SLAVE_DATA', 'group': 'slave_bridge', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
     532: {'name': 'SLAVE_END_UPDATE', 'group': 'slave_bridge', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
     533: {'name': 'SLAVE_STATUS', 'group': 'slave_bridge', 'direction': 'both', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
@@ -673,7 +677,7 @@ LAYOUTS = {
     'ultrasonic_weld_cmd': {'id': 512, 'role': 'request', 'dlc': {'exact': 3}, 'fields': [{'name': 'fire', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [1, 1]}, {'name': 'duration_ms', 'type': 'u16', 'offset': 1, 'width': 2, 'range': [1, 2000]}]},
     'slave_enter_bootloader': {'id': 528, 'role': 'request', 'dlc': {'exact': 4}, 'fields': [{'name': 'magic', 'type': 'bytes', 'offset': 0, 'fixed': 'B0071D5A', 'length': 4}]},
     'slave_start_update': {'id': 529, 'role': 'request', 'dlc': {'exact': 8}, 'fields': [{'name': 'total_size', 'type': 'u32', 'offset': 0, 'width': 4}, {'name': 'hardware_id', 'type': 'u32', 'offset': 4, 'width': 4}]},
-    'slave_hmac_chunk': {'id': 530, 'role': 'request', 'dlc': {'exact': 8}, 'fields': [{'name': 'hmac_part', 'type': 'bytes', 'offset': 0, 'length': 8}]},
+    'slave_digest_chunk': {'id': 530, 'role': 'request', 'dlc': {'exact': 8}, 'fields': [{'name': 'digest_part', 'type': 'bytes', 'offset': 0, 'length': 8}]},
     'slave_data': {'id': 531, 'role': 'request', 'dlc': {'min': 1, 'max': 8}, 'fields': [{'name': 'data', 'type': 'bytes', 'offset': 0, 'rest': True}]},
     'slave_end_update': {'id': 532, 'role': 'request', 'dlc': {'exact': 8}, 'fields': [{'name': 'crc32', 'type': 'u32', 'offset': 0, 'width': 4}, {'name': 'version_major', 'type': 'u16', 'offset': 4, 'width': 2}, {'name': 'version_minor_field', 'type': 'u16', 'offset': 6, 'width': 2}]},
     'slave_status_request': {'id': 533, 'role': 'request', 'dlc': {'any': True}, 'fields': []},
@@ -1577,14 +1581,14 @@ def decode_slave_start_update(data: bytes, strict: bool = False) -> dict | None:
     return decode("slave_start_update", data, strict)
 
 
-def encode_slave_hmac_chunk(hmac_part: bytes) -> tuple[int, bytes]:
-    """Slave image digest chunk (SHA-256; the name is historic) (0x212, request)."""
-    return encode("slave_hmac_chunk", hmac_part=hmac_part)
+def encode_slave_digest_chunk(digest_part: bytes) -> tuple[int, bytes]:
+    """Slave image digest chunk (SHA-256, no key) (0x212, request)."""
+    return encode("slave_digest_chunk", digest_part=digest_part)
 
 
-def decode_slave_hmac_chunk(data: bytes, strict: bool = False) -> dict | None:
+def decode_slave_digest_chunk(data: bytes, strict: bool = False) -> dict | None:
     """Fields of 0x212 (request), or None when the payload is too short."""
-    return decode("slave_hmac_chunk", data, strict)
+    return decode("slave_digest_chunk", data, strict)
 
 
 def encode_slave_data(data: bytes) -> tuple[int, bytes]:

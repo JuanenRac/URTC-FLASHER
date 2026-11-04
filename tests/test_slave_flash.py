@@ -104,10 +104,10 @@ def test_a_successful_slave_update_sends_the_documented_sequence(tmp_path):
 
     ids = [frame_id for frame_id, _ in peer.sent]
     assert ids[0] == cfg.CAN_ID_SLAVE_VERSION_RESP_1
-    assert ids.index(cfg.CAN_ID_SLAVE_START_UPDATE) < ids.index(cfg.CAN_ID_SLAVE_HMAC_CHUNK) < ids.index(cfg.CAN_ID_SLAVE_RECORD_CHUNK) < ids.index(cfg.CAN_ID_SLAVE_DATA) < ids.index(cfg.CAN_ID_SLAVE_END_UPDATE)
+    assert ids.index(cfg.CAN_ID_SLAVE_START_UPDATE) < ids.index(cfg.CAN_ID_SLAVE_DIGEST_CHUNK) < ids.index(cfg.CAN_ID_SLAVE_RECORD_CHUNK) < ids.index(cfg.CAN_ID_SLAVE_DATA) < ids.index(cfg.CAN_ID_SLAVE_END_UPDATE)
 
     assert peer.frames(cfg.CAN_ID_SLAVE_START_UPDATE) == [struct.pack(">II", 100, cfg.SLAVE_HARDWARE_ID)]
-    chunks = peer.frames(cfg.CAN_ID_SLAVE_HMAC_CHUNK)
+    chunks = peer.frames(cfg.CAN_ID_SLAVE_DIGEST_CHUNK)
     assert len(chunks) == 4 and all(len(chunk) == 8 for chunk in chunks)
     assert b"".join(chunks) == hashlib.sha256(image).digest()   # a plain SHA-256: the slave bootloader holds no key
     record_frames = peer.frames(cfg.CAN_ID_SLAVE_RECORD_CHUNK)

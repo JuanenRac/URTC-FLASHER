@@ -36,7 +36,7 @@ CAN_ID_HMAC_CHUNK       = protocol.CAN_ID_HMAC_CHUNK
 # instead (polling 0x216).
 CAN_ID_SLAVE_ENTER_BOOTLOADER = protocol.CAN_ID_SLAVE_ENTER_BOOTLOADER
 CAN_ID_SLAVE_START_UPDATE     = protocol.CAN_ID_SLAVE_START_UPDATE
-CAN_ID_SLAVE_HMAC_CHUNK       = protocol.CAN_ID_SLAVE_HMAC_CHUNK   # the name is historic: the frames carry the SHA-256 of the image
+CAN_ID_SLAVE_DIGEST_CHUNK     = protocol.CAN_ID_SLAVE_DIGEST_CHUNK   # the frames carry the SHA-256 of the image
 CAN_ID_SLAVE_RECORD_CHUNK     = protocol.CAN_ID_SLAVE_RECORD_CHUNK  # the 76-byte Ed25519 record of the slave image, 11 frames
 CAN_ID_SLAVE_DATA             = protocol.CAN_ID_SLAVE_DATA
 CAN_ID_SLAVE_END_UPDATE       = protocol.CAN_ID_SLAVE_END_UPDATE

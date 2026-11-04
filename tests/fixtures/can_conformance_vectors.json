@@ -327,8 +327,8 @@
     {
       "id": "0x212",
       "names": {
-        "flasher": "CAN_ID_SLAVE_HMAC_CHUNK",
-        "web": "CAN_ID_SLAVE_HMAC_CHUNK"
+        "flasher": "CAN_ID_SLAVE_DIGEST_CHUNK",
+        "web": "CAN_ID_SLAVE_DIGEST_CHUNK"
       }
     },
     {
@@ -1389,7 +1389,7 @@
     },
     {
       "id": "0x212",
-      "name": "SLAVE_HMAC_CHUNK"
+      "name": "SLAVE_DIGEST_CHUNK"
     },
     {
       "id": "0x213",
@@ -2499,11 +2499,11 @@
       }
     },
     {
-      "name": "SLAVE_HMAC_CHUNK request: first of four",
-      "message": "SLAVE_HMAC_CHUNK",
-      "layout": "slave_hmac_chunk",
+      "name": "SLAVE_DIGEST_CHUNK request: first of four",
+      "message": "SLAVE_DIGEST_CHUNK",
+      "layout": "slave_digest_chunk",
       "fields": {
-        "hmac_part": "0001020304050607"
+        "digest_part": "0001020304050607"
       },
       "frame": {
         "id": "0x212",
@@ -5249,21 +5249,21 @@
       "fields": null
     },
     {
-      "name": "SLAVE_HMAC_CHUNK request: first of four",
-      "message": "SLAVE_HMAC_CHUNK",
-      "layout": "slave_hmac_chunk",
+      "name": "SLAVE_DIGEST_CHUNK request: first of four",
+      "message": "SLAVE_DIGEST_CHUNK",
+      "layout": "slave_digest_chunk",
       "frame": {
         "id": "0x212",
         "data": "0001020304050607"
       },
       "fields": {
-        "hmac_part": "0001020304050607"
+        "digest_part": "0001020304050607"
       }
     },
     {
-      "name": "SLAVE_HMAC_CHUNK request: 7 bytes is too short",
-      "message": "SLAVE_HMAC_CHUNK",
-      "layout": "slave_hmac_chunk",
+      "name": "SLAVE_DIGEST_CHUNK request: 7 bytes is too short",
+      "message": "SLAVE_DIGEST_CHUNK",
+      "layout": "slave_digest_chunk",
       "frame": {
         "id": "0x212",
         "data": "00010203040506"

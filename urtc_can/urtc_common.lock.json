@@ -96,7 +96,7 @@
     },
     "protocol.py": {
       "from": "src/urtc_common/protocol.py",
-      "sha256": "c19964189921d22176a3433878f61dac766edfcbe1c606165789b7d89dece089"
+      "sha256": "4b3dcdcb15acad0072e7e74f9c4186e3bd1b37c382549793942196e9be0844b9"
     },
     "quick_state.py": {
       "from": "src/urtc_common/quick_state.py",

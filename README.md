@@ -27,11 +27,11 @@
 
 ---
 
-**Honesty check - what actually runs today:** `tests/` holds 55 pytest files (654 tests: all pass; 73 of them skip without PySide6) - the CAN-OTA protocol against a real `MockCAN` transport (`flasher_transports.py`) that plays back a full simulated bootloader sequence (start/erase/receive, page data + PAGE_ACK, HMAC chunks, end-update with a real success or a specific `VERIFY_FAIL_REASON`), the signature rules (published signature sent without any key, unsigned image refused, manifest sha256 mismatch refused before any bus traffic), the image integrity checks and the bundled `firmware/` against its manifests. GitHub Actions (`.github/workflows/ci.yml`) runs this suite on every push, and `tools/build_test.py` runs it in `build-test.sh`/`.bat`. It also runs `ruff check` and `python -m mypy` (a type check of the program and of the copies of the shared code). The three `verify_qt_*.py` scripts at the repo root are real end-to-end checks kept outside pytest (they need a real Qt event loop; run them with `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`); `verify_qt_swd_full_chip_flash.py` only builds the `PyOCDCLI`/`CubeProgrammerCLI` commands with `dry_run=True`. None of this has been run against a real board over real hardware in this environment. See `CHANGELOG.md` for exactly what has shipped so far. The simulated bootloader (`MockCAN`) is only a model written from the protocol description: it reproduces the page acknowledgements, the partial last page and the readback frames, but it is not the real bootloader, so a green test run does not replace a trial on a real board (the official 73476-byte image could not be installed, and the last frame of a backup was dropped, while the tests passed, precisely because the simulation was more forgiving than the real bootloader).
+**Honesty check - what actually runs today:** `tests/` holds 55 pytest files (654 tests: all pass; 73 of them skip without PySide6) - the CAN-OTA protocol against a real `MockCAN` transport (`flasher_transports.py`) that plays back a full simulated bootloader sequence (start/erase/receive, page data + PAGE_ACK, signature record frames, end-update with a real success or a specific `VERIFY_FAIL_REASON`), the signature rules (published signature sent without any key, unsigned image refused, manifest sha256 mismatch refused before any bus traffic), the image integrity checks and the bundled `firmware/` against its manifests. GitHub Actions (`.github/workflows/ci.yml`) runs this suite on every push, and `tools/build_test.py` runs it in `build-test.sh`/`.bat`. It also runs `ruff check` and `python -m mypy` (a type check of the program and of the copies of the shared code). The three `verify_qt_*.py` scripts at the repo root are real end-to-end checks kept outside pytest (they need a real Qt event loop; run them with `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`); `verify_qt_swd_full_chip_flash.py` only builds the `PyOCDCLI`/`CubeProgrammerCLI` commands with `dry_run=True`. None of this has been run against a real board over real hardware in this environment. See `CHANGELOG.md` for exactly what has shipped so far. The simulated bootloader (`MockCAN`) is only a model written from the protocol description: it reproduces the page acknowledgements, the partial last page and the readback frames, but it is not the real bootloader, so a green test run does not replace a trial on a real board (the official 73476-byte image could not be installed, and the last frame of a backup was dropped, while the tests passed, precisely because the simulation was more forgiving than the real bootloader).
 
 ---
 
-> **Safety and security status:** this ecosystem is not a certified safety system, and no populated URTC board exists yet. The bootloaders check firmware images with CRC32 and a shared-key HMAC-SHA256, not with an asymmetric signature (planned); the published application images are signed with the public development key (`signing_key_kind: dev`), so anyone can produce an image the bootloader accepts; nothing has been transmitted to a real board. Read the [security baseline](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md) and the [threat model](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md) before relying on any statement here for the safety of a person.
+> **Safety and security status:** this ecosystem is not a certified safety system, and no populated URTC board exists yet. The main-board bootloader verifies an Ed25519 record of the image (`<image>.imgsig`) against a table of public keys and holds no secret, and the expansion-slave bootloader checks a plain SHA-256 and installs only an image that the main board confirms; the table of the official build is empty until the image-signing key is created, and a bench build trusts a public development key, so anyone can produce an image such a bootloader accepts; nothing has been transmitted to a real board. Read the [security baseline](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md) and the [threat model](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md) before relying on any statement here for the safety of a person.
 
 ## 📋 At a glance
 
@@ -70,7 +70,7 @@ bus. It implements the exact bootloader protocol from `docs/CANBUS.TXT` (in
 the sibling [URTC](https://github.com/JuanenRac/URTC) repository this tool
 implements against - see "Related Projects" near the end of this document;
 every other `docs/*.TXT` reference in this README points there too): the
-HardwareID check, shared-key HMAC-SHA256 chunks (not an asymmetric signature), the golden-image backup-slot update
+HardwareID check, the Ed25519 image record, the golden-image backup-slot update
 flow, live progress via the bootloader's heartbeat messages, and a
 version-query (does this board's application *or* bootloader identify
 itself over CAN) so you can see what's currently installed before deciding
@@ -91,7 +91,7 @@ Two ways to talk to the board, both speaking the same protocol underneath:
 
 ## 🧩 Role in URTC
 
-URTC-FLASHER is the program that puts firmware on a URTC board. It speaks the bootloader protocol of URTC (`docs/CANBUS.TXT` of that repository) over a USB-CAN adapter, as an SLCAN serial port or as SocketCAN on Linux: the HardwareID check, shared-key HMAC-SHA256 chunks, the golden-image backup-slot flow and a version query so that you see what is installed before you decide what to flash. For a board with no working bootloader, or to program the whole chip, it prepares the SWD/JTAG commands for pyOCD or STM32CubeProgrammer. It is the update companion of URTC-TESTER, shares its CAN code with it through URTC-COMMON, and URTC-UPDATER can hand it a firmware image whose release signature was already checked.
+URTC-FLASHER is the program that puts firmware on a URTC board. It speaks the bootloader protocol of URTC (`docs/CANBUS.TXT` of that repository) over a USB-CAN adapter, as an SLCAN serial port or as SocketCAN on Linux: the HardwareID check, the Ed25519 image record, the golden-image backup-slot flow and a version query so that you see what is installed before you decide what to flash. For a board with no working bootloader, or to program the whole chip, it prepares the SWD/JTAG commands for pyOCD or STM32CubeProgrammer. It is the update companion of URTC-TESTER, shares its CAN code with it through URTC-COMMON, and URTC-UPDATER can hand it a firmware image whose release signature was already checked.
 
 ## 🏛️ Architecture
 
@@ -253,7 +253,7 @@ expansion board type itself does.
      step; the progress bar tracks page-by-page write progress during
      transfer, then copy progress during the final backup-to-main copy.
 
-If verification fails at any point (CRC32, HMAC, or HardwareID mismatch),
+If verification fails at any point (CRC32, signature, or HardwareID mismatch),
 the bootloader's main slot is never touched - the board keeps running
 whatever firmware it already had. It's always safe to just try again.
 
@@ -516,7 +516,7 @@ just slow" from "something's actually wrong" at a glance.
 
 **Specific verify-failure reasons**: if verification fails during a CAN
 update, `bootloader_protocol.c` sends a reason byte alongside status `0x05`
-(verify failed) - incomplete transfer, CRC32 mismatch, HMAC mismatch, or
+(verify failed) - incomplete transfer, CRC32 mismatch, signature mismatch, or
 HardwareID mismatch, rather than every failure looking identical. See
 `docs/CANBUS.TXT` for the exact frame format (`0x7F5`, DLC 2 for this specific
 status). This tool and the bootloader agree on this frame format, so
@@ -583,7 +583,7 @@ A plan or an update can be run against a simulated bus that misbehaves the way a
 | A failed update that leaves the board dead | The golden-image model: the backup slot keeps the previous firmware, a lost confirmation frame is recovered by asking the version again instead of reporting a false failure, and the main slot can be read back first |
 | A tampered update of this program | "Check for updates" accepts only a package with a valid SHA-256 and Ed25519 signature (the key of the releases, pinned in the program), installs only after a confirmation and never during a transfer, and keeps the previous version |
 
-The bootloader checks images with CRC32 and a shared-key HMAC-SHA256, not with an asymmetric signature; the published application images are signed with the public development key, so anyone can make an image that the bootloader accepts. Nothing here has been run on a real board.
+The main-board bootloader verifies an Ed25519 record of the image against a table of public keys and holds no secret; the table of the official build is empty until the image-signing key is created, and a bench build trusts a public development key, so anyone can make an image that such a bootloader accepts. Nothing here has been run on a real board.
 
 ### Reliability during a CAN update, and session logs
 
@@ -660,7 +660,7 @@ from the URTC build (`--check` verifies it). By default it takes the set from th
 no manifest, on a bench board, needs a key: set `hmac_key_hex` /
 `slave_hmac_key_hex` in `urtc_config.json` below - without one such an image
 is refused instead of being signed with a key the bootloader cannot have.
-See URTC's `docs/FIRMWARE_SIGNING.TXT`. The published images are signed with the public development key (`signing_key_kind: dev`), so this is a shared-key check: it shows the image was made by someone holding that key, not who they are; asymmetric (Ed25519) signing is planned, not implemented.
+See URTC's `docs/FIRMWARE_SIGNING.TXT`. The Ed25519 record of each application image is the file `<image>.imgsig` published next to it; the flasher only carries it to the bootloader, which verifies it against its table of public keys (the flasher holds no key and decides nothing). The images of a bench build are signed with the public development key (`signing_key_kind: dev`): anyone can make such an image.
 
 **Or override any of this without touching the script:** an optional
 `urtc_config.json` next to `firmware/` can set the signing key, the
@@ -767,7 +767,7 @@ a "replace it?" prompt that's easy to miss in a script's output.
 
 #### Visual command deck
 
-The **Qt Quick** command deck is the only window of the program (tested against the simulator only; image checks use a shared-key HMAC-SHA256). Start it with:
+The **Qt Quick** command deck is the only window of the program (tested against the simulator only; image checks use SHA-256 and the Ed25519 record). Start it with:
 ~~~
 python urtc_flasher.py
 ~~~
@@ -883,7 +883,7 @@ in the list with a clear ✓ or ✗ and the reason why:
   confirm first. This check exists to catch obvious mistakes (wrong file,
   truncated download, an empty placeholder) - it can't catch everything
   (a corrupted-but-plausible file, or one signed with the wrong key), which
-  is what the bootloader's own CRC32/HMAC check during the real transfer
+  is what the bootloader's own CRC32/signature check during the real transfer
   is for.
 - **Nothing found, or you want a file from somewhere else entirely** → use
   the **Browse .bin...** button, which works regardless of where the file
@@ -910,7 +910,7 @@ Each file of an official release has a release signature (`<file>.sig`, Ed25519)
 **`<filename>.manifest.json` and `<filename>.sha256`, next to each firmware
 file** - published by the URTC build for every image (and downloaded
 together with it from GitHub). The manifest carries the version, the
-`sha256` and, for application images, the `hmac_sha256` value the bootloader expects (a shared-key HMAC-SHA256, not an asymmetric signature; `signing_key_kind: dev` marks the public development key):
+`sha256` and, for application images, the `hmac_sha256` value the bootloader expects (a shared-key HMAC-SHA256 that only the bootloaders of the earlier generation check; the Ed25519 record that the current ones verify is the file `<image>.imgsig` next to the image; `signing_key_kind: dev` marks the public development key):
 
 ```json
 {"component": "main_application", "version": "<version>", "sha256": "b48d4cd5...", "hmac_sha256": "b63a701e...", "signing_key_kind": "dev"}
@@ -943,7 +943,7 @@ Which versions of the URTC programs work together, and which protocol version ea
 
 ## 🧪 Testing
 
-The suite has 654 tests in 55 files (`python -m pytest tests -q`; with Qt on a machine with no screen, `QT_QPA_PLATFORM=offscreen`; the 73 that need PySide6 skip without it): the CAN-OTA protocol against a real `MockCAN` transport that plays back a full simulated bootloader (start, erase, receive, page data and ACK, HMAC chunks, end-update with a real success or a specific `VERIFY_FAIL_REASON`), the signature rules, the image integrity checks, the firmware bundled in `firmware/` against its manifests, the SWD/JTAG commands built with `dry_run`, the language files and the Qt Quick panels. Three scripts at the root (`verify_qt_*.py`) drive the Qt panels end to end. CI also runs `ruff check`, `python -m mypy` and `tools/ci_validate.py`. `MockCAN` is only a model written from the protocol: it is more forgiving than the real bootloader, so a green run does not replace a trial on a real board.
+The suite has 654 tests in 55 files (`python -m pytest tests -q`; with Qt on a machine with no screen, `QT_QPA_PLATFORM=offscreen`; the 73 that need PySide6 skip without it): the CAN-OTA protocol against a real `MockCAN` transport that plays back a full simulated bootloader (start, erase, receive, page data and ACK, signature record frames, end-update with a real success or a specific `VERIFY_FAIL_REASON`), the signature rules, the image integrity checks, the firmware bundled in `firmware/` against its manifests, the SWD/JTAG commands built with `dry_run`, the language files and the Qt Quick panels. Three scripts at the root (`verify_qt_*.py`) drive the Qt panels end to end. CI also runs `ruff check`, `python -m mypy` and `tools/ci_validate.py`. `MockCAN` is only a model written from the protocol: it is more forgiving than the real bootloader, so a green run does not replace a trial on a real board.
 
 ## 🏗️ Build & Release
 

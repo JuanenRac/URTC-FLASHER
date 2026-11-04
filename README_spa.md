@@ -27,11 +27,11 @@
 
 ---
 
-**Comprobación de honestidad - lo que realmente funciona hoy:** `tests/` contiene 55 archivos de pytest (654 tests: todos pasan; 73 de ellos se omiten sin PySide6) - el protocolo CAN-OTA contra un transporte `MockCAN` real (`flasher_transports.py`) que reproduce una secuencia completa de bootloader simulado (inicio/borrado/recepción, datos de página + PAGE_ACK, trozos HMAC, fin de actualización con un éxito real o un `VERIFY_FAIL_REASON` concreto), las reglas de firma (firma publicada enviada sin ninguna clave, imagen sin firmar rechazada, sha256 del manifiesto que no coincide rechazado antes de cualquier tráfico en el bus), las comprobaciones de integridad de imagen y la carpeta `firmware/` incluida contra sus manifiestos. GitHub Actions (`.github/workflows/ci.yml`) ejecuta esta suite en cada push, y `tools/build_test.py` la ejecuta en `build-test.sh`/`.bat`. También ejecuta `ruff check` y `python -m mypy` (una comprobación de tipos del programa y de las copias del código compartido). Los tres scripts `verify_qt_*.py` de la raíz son comprobaciones de extremo a extremo reales fuera de pytest (necesitan un bucle de eventos Qt real; se ejecutan con `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`); `verify_qt_swd_full_chip_flash.py` solo construye los comandos de `PyOCDCLI`/`CubeProgrammerCLI` con `dry_run=True`. Nada de esto se ha probado contra una placa real en este entorno. Ver `CHANGELOG.md` para saber exactamente qué se ha publicado. El bootloader simulado (`MockCAN`) es solo un modelo escrito a partir de la descripción del protocolo: reproduce los ACK de página, la última página parcial y las tramas de lectura, pero no es el bootloader real, así que una pasada de tests en verde no sustituye una prueba en una placa real (la imagen oficial de 73476 bytes no se podía instalar y la última trama de una copia se perdía mientras los tests pasaban, justamente porque la simulación era más permisiva que el bootloader real).
+**Comprobación de honestidad - lo que realmente funciona hoy:** `tests/` contiene 55 archivos de pytest (654 tests: todos pasan; 73 de ellos se omiten sin PySide6) - el protocolo CAN-OTA contra un transporte `MockCAN` real (`flasher_transports.py`) que reproduce una secuencia completa de bootloader simulado (inicio/borrado/recepción, datos de página + PAGE_ACK, tramas del registro de firma, fin de actualización con un éxito real o un `VERIFY_FAIL_REASON` concreto), las reglas de firma (firma publicada enviada sin ninguna clave, imagen sin firmar rechazada, sha256 del manifiesto que no coincide rechazado antes de cualquier tráfico en el bus), las comprobaciones de integridad de imagen y la carpeta `firmware/` incluida contra sus manifiestos. GitHub Actions (`.github/workflows/ci.yml`) ejecuta esta suite en cada push, y `tools/build_test.py` la ejecuta en `build-test.sh`/`.bat`. También ejecuta `ruff check` y `python -m mypy` (una comprobación de tipos del programa y de las copias del código compartido). Los tres scripts `verify_qt_*.py` de la raíz son comprobaciones de extremo a extremo reales fuera de pytest (necesitan un bucle de eventos Qt real; se ejecutan con `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`); `verify_qt_swd_full_chip_flash.py` solo construye los comandos de `PyOCDCLI`/`CubeProgrammerCLI` con `dry_run=True`. Nada de esto se ha probado contra una placa real en este entorno. Ver `CHANGELOG.md` para saber exactamente qué se ha publicado. El bootloader simulado (`MockCAN`) es solo un modelo escrito a partir de la descripción del protocolo: reproduce los ACK de página, la última página parcial y las tramas de lectura, pero no es el bootloader real, así que una pasada de tests en verde no sustituye una prueba en una placa real (la imagen oficial de 73476 bytes no se podía instalar y la última trama de una copia se perdía mientras los tests pasaban, justamente porque la simulación era más permisiva que el bootloader real).
 
 ---
 
-> **Estado de seguridad física y de ciberseguridad:** este ecosistema no es un sistema de seguridad certificado y todavía no existe ninguna placa URTC poblada. Los bootloaders comprueban las imágenes de firmware con CRC32 y un HMAC-SHA256 de clave compartida, no con una firma asimétrica (prevista); las imágenes de aplicación publicadas están firmadas con la clave pública de desarrollo (`signing_key_kind: dev`), así que cualquiera puede producir una imagen que el bootloader acepte; no se ha transmitido nada a una placa real. Lee la [línea base de seguridad](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md) y el [modelo de amenazas](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md) antes de fiarte de cualquier afirmación de aquí para la seguridad de una persona.
+> **Estado de seguridad física y de ciberseguridad:** este ecosistema no es un sistema de seguridad certificado y todavía no existe ninguna placa URTC poblada. El bootloader de la placa principal verifica un registro Ed25519 de la imagen (`<imagen>.imgsig`) contra una tabla de claves públicas y no guarda ningún secreto, y el bootloader del esclavo de expansión comprueba un SHA-256 simple e instala solo una imagen que la placa principal confirma; la tabla de la compilación oficial está vacía hasta que se cree la clave de firma de imágenes, y una compilación de banco confía en una clave pública de desarrollo, así que cualquiera puede producir una imagen que un bootloader así acepte; no se ha transmitido nada a una placa real. Lee la [línea base de seguridad](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md) y el [modelo de amenazas](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md) antes de fiarte de cualquier afirmación de aquí para la seguridad de una persona.
 
 ## 📋 De un vistazo
 
@@ -67,7 +67,7 @@
 
 Una pequeña herramienta GUI multiplataforma para actualizar el firmware
 de la placa URTC por bus CAN. Implementa exactamente el protocolo del
-bootloader de `docs/CANBUS.TXT` (en el repositorio hermano [URTC](https://github.com/JuanenRac/URTC) contra el que implementa esta herramienta - ver «Proyectos Relacionados» cerca del final de este documento; cualquier otra referencia a `docs/*.TXT` en este README apunta allí también): la verificación de HardwareID, el HMAC-SHA256 de clave compartida (no una firma asimétrica), el flujo de actualización con slot de respaldo de imagen
+bootloader de `docs/CANBUS.TXT` (en el repositorio hermano [URTC](https://github.com/JuanenRac/URTC) contra el que implementa esta herramienta - ver «Proyectos Relacionados» cerca del final de este documento; cualquier otra referencia a `docs/*.TXT` en este README apunta allí también): la verificación de HardwareID, el registro Ed25519 de la imagen, el flujo de actualización con slot de respaldo de imagen
 dorada, el progreso en vivo mediante los mensajes de latido del
 bootloader, y una consulta de versión (identifica si la aplicación *o*
 el bootloader de esta placa se anuncia por CAN) para que puedas ver qué
@@ -90,7 +90,7 @@ debajo:
 
 ## 🧩 Papel en URTC
 
-URTC-FLASHER es el programa que pone firmware en una placa URTC. Habla el protocolo del bootloader de URTC (`docs/CANBUS.TXT` de ese repositorio) a través de un adaptador USB-CAN, como puerto serie SLCAN o como SocketCAN en Linux: la comprobación del HardwareID, fragmentos con HMAC-SHA256 de clave compartida, el flujo de imagen dorada con ranura de respaldo y una consulta de versión para que veas lo que hay instalado antes de decidir qué flashear. Para una placa sin bootloader que funcione, o para programar el chip completo, prepara los comandos SWD/JTAG de pyOCD o STM32CubeProgrammer. Es el compañero de actualización de URTC-TESTER, comparte con él su código CAN a través de URTC-COMMON, y URTC-UPDATER puede entregarle una imagen de firmware cuya firma de release ya se comprobó.
+URTC-FLASHER es el programa que pone firmware en una placa URTC. Habla el protocolo del bootloader de URTC (`docs/CANBUS.TXT` de ese repositorio) a través de un adaptador USB-CAN, como puerto serie SLCAN o como SocketCAN en Linux: la comprobación del HardwareID, el registro Ed25519 de la imagen, el flujo de imagen dorada con ranura de respaldo y una consulta de versión para que veas lo que hay instalado antes de decidir qué flashear. Para una placa sin bootloader que funcione, o para programar el chip completo, prepara los comandos SWD/JTAG de pyOCD o STM32CubeProgrammer. Es el compañero de actualización de URTC-TESTER, comparte con él su código CAN a través de URTC-COMMON, y URTC-UPDATER puede entregarle una imagen de firmware cuya firma de release ya se comprobó.
 
 ## 🏛️ Arquitectura
 
@@ -269,7 +269,7 @@ de expansión ya lo requiere.
      la transferencia, y luego el progreso de copia durante la copia
      final de respaldo a principal.
 
-Si la verificación falla en cualquier punto (desajuste de CRC32, HMAC, o
+Si la verificación falla en cualquier punto (desajuste de CRC32, firma, o
 HardwareID), el slot principal del bootloader nunca se toca - la placa
 sigue ejecutando el firmware que ya tenía. Siempre es seguro simplemente
 volver a intentarlo.
@@ -569,7 +569,7 @@ un vistazo "esto simplemente va lento" de "algo realmente va mal".
 **Motivos específicos de fallo de verificación**: si la verificación
 falla durante una actualización CAN, `bootloader_protocol.c` envía un byte de
 motivo junto al estado `0x05` (verificación fallida) - transferencia
-incompleta, desajuste de CRC32, desajuste de HMAC, o desajuste de
+incompleta, desajuste de CRC32, desajuste de firma, o desajuste de
 HardwareID, en vez de que todo fallo parezca idéntico. Ver
 `docs/CANBUS.TXT` para el formato exacto de trama (`0x7F5`, DLC 2 para
 este estado específico). Esta herramienta y el bootloader coinciden en
@@ -642,7 +642,7 @@ Un plan o una actualización se puede ejecutar contra un bus simulado que se por
 | Una actualización fallida que deja la placa muerta | El modelo de imagen dorada: la ranura de respaldo conserva el firmware anterior, una trama de confirmación perdida se recupera preguntando de nuevo la versión en lugar de informar de un fallo falso, y la ranura principal puede leerse antes |
 | Una actualización manipulada de este programa | «Buscar actualización» solo acepta un paquete con SHA-256 y firma Ed25519 válidos (la clave de las releases, fijada en el programa), instala solo tras una confirmación y nunca durante una transferencia, y conserva la versión anterior |
 
-El bootloader comprueba las imágenes con CRC32 y un HMAC-SHA256 de clave compartida, no con una firma asimétrica; las imágenes de aplicación publicadas se firman con la clave pública de desarrollo, así que cualquiera puede hacer una imagen que el bootloader acepte. Nada de esto se ha ejecutado en una placa real.
+El bootloader de la placa principal verifica un registro Ed25519 de la imagen contra una tabla de claves públicas y no guarda ningún secreto; la tabla de la compilación oficial está vacía hasta que se cree la clave de firma de imágenes, y una compilación de banco confía en una clave pública de desarrollo, así que cualquiera puede hacer una imagen que un bootloader así acepte. Nada de esto se ha ejecutado en una placa real.
 
 ### Fiabilidad durante una actualización CAN, y registros de sesión
 
@@ -726,7 +726,7 @@ Solo una imagen compilada por ti sin manifiesto, en una placa de banco,
 necesita clave: define `hmac_key_hex` / `slave_hmac_key_hex` en
 `urtc_config.json` (abajo); sin ella esa imagen se rechaza en lugar de
 firmarse con una clave que el bootloader no puede tener. Ver
-`docs/FIRMWARE_SIGNING.TXT` de URTC. Las imágenes publicadas están firmadas con la clave pública de desarrollo (`signing_key_kind: dev`), así que es una comprobación de clave compartida: muestra que la imagen la hizo alguien que posee esa clave, no quién es; la firma asimétrica (Ed25519) está prevista, no implementada.
+`docs/FIRMWARE_SIGNING.TXT` de URTC. El registro Ed25519 de cada imagen de aplicación es el archivo `<imagen>.imgsig` publicado junto a ella; el flasher solo lo lleva al bootloader, que lo verifica contra su tabla de claves públicas (el flasher no guarda ninguna clave y no decide nada). Las imágenes de una compilación de banco están firmadas con la clave pública de desarrollo (`signing_key_kind: dev`): cualquiera puede hacer una imagen así.
 
 **O sustituye cualquiera de esto sin tocar el script:** un
 `urtc_config.json` opcional junto a `firmware/` puede establecer la
@@ -843,7 +843,7 @@ la salida de un script.
 
 #### Panel visual de control
 
-El panel de control **Qt Quick** es la única ventana del programa (probado solo contra el simulador; las comprobaciones de imagen usan un HMAC-SHA256 de clave compartida). Se inicia con:
+El panel de control **Qt Quick** es la única ventana del programa (probado solo contra el simulador; las comprobaciones de imagen usan SHA-256 y el registro Ed25519). Se inicia con:
 ~~~
 python urtc_flasher.py
 ~~~
@@ -970,7 +970,7 @@ aparece en la lista con un ✓ o ✗ claro y el motivo:
   detectar errores obvios (archivo equivocado, descarga truncada, un
   marcador de posición vacío) - no puede detectarlo todo (un archivo
   corrupto pero plausible, o uno firmado con la clave equivocada), que
-  es para lo que sirve la propia revisión de CRC32/HMAC del bootloader
+  es para lo que sirve la propia revisión de CRC32/firma del bootloader
   durante la transferencia real.
 - **No se encuentra nada, o quieres un archivo de otro sitio por
   completo** → usa el botón **Buscar .bin...**, que funciona sin
@@ -1000,7 +1000,7 @@ Cada archivo de una release oficial tiene una firma de release (`<archivo>.sig`,
 **`<nombredearchivo>.manifest.json` y `<nombredearchivo>.sha256`, junto a
 cada archivo de firmware** - los publica el build de URTC para cada imagen
 (y se descargan junto con ella desde GitHub). El manifiesto lleva la
-versión, el `sha256` y, en las imágenes de aplicación, el valor `hmac_sha256` que espera el bootloader (un HMAC-SHA256 de clave compartida, no una firma asimétrica; `signing_key_kind: dev` indica la clave pública de desarrollo):
+versión, el `sha256` y, en las imágenes de aplicación, el valor `hmac_sha256` que espera el bootloader (un HMAC-SHA256 de clave compartida que solo comprueban los bootloaders de la generación anterior; el registro Ed25519 que verifican los actuales es el archivo `<imagen>.imgsig` junto a la imagen; `signing_key_kind: dev` indica la clave pública de desarrollo):
 
 ```json
 {"component": "main_application", "version": "<version>", "sha256": "b48d4cd5...", "hmac_sha256": "b63a701e...", "signing_key_kind": "dev"}
@@ -1034,7 +1034,7 @@ Qué versiones de los programas de URTC funcionan juntas, y qué versión del pr
 
 ## 🧪 Pruebas
 
-La suite tiene 654 pruebas en 55 archivos (`python -m pytest tests -q`; con Qt en un equipo sin pantalla, `QT_QPA_PLATFORM=offscreen`; las 73 que necesitan PySide6 se omiten sin él): el protocolo CAN-OTA contra un transporte `MockCAN` real que reproduce un bootloader simulado completo (inicio, borrado, recepción, datos de página y ACK, fragmentos HMAC, fin de actualización con un éxito real o un `VERIFY_FAIL_REASON` concreto), las reglas de firma, las comprobaciones de integridad de la imagen, el firmware incluido en `firmware/` frente a sus manifiestos, los comandos SWD/JTAG construidos con `dry_run`, los archivos de idioma y los paneles Qt Quick. Tres scripts en la raíz (`verify_qt_*.py`) manejan los paneles Qt de extremo a extremo. La CI ejecuta además `ruff check`, `python -m mypy` y `tools/ci_validate.py`. `MockCAN` es solo un modelo escrito a partir del protocolo: es más permisivo que el bootloader real, así que una ejecución en verde no sustituye una prueba en una placa real.
+La suite tiene 654 pruebas en 55 archivos (`python -m pytest tests -q`; con Qt en un equipo sin pantalla, `QT_QPA_PLATFORM=offscreen`; las 73 que necesitan PySide6 se omiten sin él): el protocolo CAN-OTA contra un transporte `MockCAN` real que reproduce un bootloader simulado completo (inicio, borrado, recepción, datos de página y ACK, tramas del registro de firma, fin de actualización con un éxito real o un `VERIFY_FAIL_REASON` concreto), las reglas de firma, las comprobaciones de integridad de la imagen, el firmware incluido en `firmware/` frente a sus manifiestos, los comandos SWD/JTAG construidos con `dry_run`, los archivos de idioma y los paneles Qt Quick. Tres scripts en la raíz (`verify_qt_*.py`) manejan los paneles Qt de extremo a extremo. La CI ejecuta además `ruff check`, `python -m mypy` y `tools/ci_validate.py`. `MockCAN` es solo un modelo escrito a partir del protocolo: es más permisivo que el bootloader real, así que una ejecución en verde no sustituye una prueba en una placa real.
 
 ## 🏗️ Compilación y publicación
 
