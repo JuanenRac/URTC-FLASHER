@@ -30,6 +30,9 @@ runs:
     - name: Validate manifest, version, documentation and secret policy
       shell: bash
       run: python tools/ci_validate.py
+    - name: Light build check (the stack and the files the full check needs; nothing is built)
+      shell: bash
+      run: python tools/build_test.py --check
     - name: Compile Python sources without running versioning build scripts
       shell: bash
       run: |

@@ -1,0 +1,9 @@
+{
+  "pytest": {
+    "dir": "tests",
+    "pythonpath": [
+      "."
+    ],
+    "install": true
+  }
+}
