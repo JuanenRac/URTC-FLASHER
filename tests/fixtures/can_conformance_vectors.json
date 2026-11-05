@@ -1360,6 +1360,10 @@
       "name": "PID_STATE_RESP"
     },
     {
+      "id": "0x1BB",
+      "name": "HEALTH_INFO"
+    },
+    {
       "id": "0x1C0",
       "name": "SPOT_WELD_CMD"
     },
@@ -1502,6 +1506,14 @@
     {
       "id": "0x7ED",
       "name": "BOOTLOADER_KEY_ID"
+    },
+    {
+      "id": "0x7EE",
+      "name": "BOOTLOADER_SERIAL_CHUNK"
+    },
+    {
+      "id": "0x7EF",
+      "name": "BOOTLOADER_SERIAL_RESULT"
     },
     {
       "id": "0x7F0",
@@ -2410,6 +2422,23 @@
       }
     },
     {
+      "name": "HEALTH_INFO response: board running 0.4.4 for one hour after a power-on",
+      "message": "HEALTH_INFO",
+      "layout": "health_info",
+      "fields": {
+        "protocol_version": 1,
+        "reset_cause": 8,
+        "fw_minor": 4,
+        "fw_patch": 4,
+        "fw_build": 0,
+        "uptime_s": 3600
+      },
+      "frame": {
+        "id": "0x1BB",
+        "data": "0108040400000E10"
+      }
+    },
+    {
       "name": "SPOT_WELD_CMD request: 100 ms pulse",
       "message": "SPOT_WELD_CMD",
       "layout": "spot_weld_cmd",
@@ -3042,6 +3071,32 @@
       "frame": {
         "id": "0x7ED",
         "data": "0102030405060708"
+      }
+    },
+    {
+      "name": "BOOTLOADER_SERIAL_CHUNK request: first chunk",
+      "message": "BOOTLOADER_SERIAL_CHUNK",
+      "layout": "bootloader_serial_chunk",
+      "fields": {
+        "index": 0,
+        "data": "00000000000000"
+      },
+      "frame": {
+        "id": "0x7EE",
+        "data": "0000000000000000"
+      }
+    },
+    {
+      "name": "BOOTLOADER_SERIAL_RESULT response: written",
+      "message": "BOOTLOADER_SERIAL_RESULT",
+      "layout": "bootloader_serial_result",
+      "fields": {
+        "status": 0,
+        "serial": 12648430
+      },
+      "frame": {
+        "id": "0x7EF",
+        "data": "0000C0FFEE"
       }
     },
     {
@@ -5024,6 +5079,33 @@
       "fields": null
     },
     {
+      "name": "HEALTH_INFO response: board running 0.4.4 for one hour after a power-on",
+      "message": "HEALTH_INFO",
+      "layout": "health_info",
+      "frame": {
+        "id": "0x1BB",
+        "data": "0108040400000E10"
+      },
+      "fields": {
+        "protocol_version": 1,
+        "reset_cause": 8,
+        "fw_minor": 4,
+        "fw_patch": 4,
+        "fw_build": 0,
+        "uptime_s": 3600
+      }
+    },
+    {
+      "name": "HEALTH_INFO response: 7 bytes is too short",
+      "message": "HEALTH_INFO",
+      "layout": "health_info",
+      "frame": {
+        "id": "0x1BB",
+        "data": "0108040400000E"
+      },
+      "fields": null
+    },
+    {
       "name": "SPOT_WELD_CMD request: 100 ms pulse",
       "message": "SPOT_WELD_CMD",
       "layout": "spot_weld_cmd",
@@ -6336,6 +6418,63 @@
         "data": "01020304050607"
       },
       "fields": null
+    },
+    {
+      "name": "BOOTLOADER_SERIAL_CHUNK request: first chunk",
+      "message": "BOOTLOADER_SERIAL_CHUNK",
+      "layout": "bootloader_serial_chunk",
+      "frame": {
+        "id": "0x7EE",
+        "data": "0000000000000000"
+      },
+      "fields": {
+        "index": 0,
+        "data": "00000000000000"
+      }
+    },
+    {
+      "name": "BOOTLOADER_SERIAL_CHUNK request: 7 bytes is too short",
+      "message": "BOOTLOADER_SERIAL_CHUNK",
+      "layout": "bootloader_serial_chunk",
+      "frame": {
+        "id": "0x7EE",
+        "data": "00000000000000"
+      },
+      "fields": null
+    },
+    {
+      "name": "BOOTLOADER_SERIAL_RESULT response: written",
+      "message": "BOOTLOADER_SERIAL_RESULT",
+      "layout": "bootloader_serial_result",
+      "frame": {
+        "id": "0x7EF",
+        "data": "0000C0FFEE"
+      },
+      "fields": {
+        "status": 0,
+        "serial": 12648430
+      }
+    },
+    {
+      "name": "BOOTLOADER_SERIAL_RESULT response: 4 bytes is too short",
+      "message": "BOOTLOADER_SERIAL_RESULT",
+      "layout": "bootloader_serial_result",
+      "frame": {
+        "id": "0x7EF",
+        "data": "0000C0FF"
+      },
+      "fields": null
+    },
+    {
+      "name": "BOOTLOADER_SERIAL_RESULT response: one byte too many is refused when strict",
+      "message": "BOOTLOADER_SERIAL_RESULT",
+      "layout": "bootloader_serial_result",
+      "frame": {
+        "id": "0x7EF",
+        "data": "0000C0FFEE00"
+      },
+      "fields": null,
+      "strict": true
     },
     {
       "name": "ENTER_BOOTLOADER request: enter",
@@ -7705,6 +7844,15 @@
       "layout": "bootloader_signature_chunk",
       "fields": {
         "index": 11,
+        "data": "00000000000000"
+      }
+    },
+    {
+      "name": "BOOTLOADER_SERIAL_CHUNK: index above its maximum",
+      "message": "BOOTLOADER_SERIAL_CHUNK",
+      "layout": "bootloader_serial_chunk",
+      "fields": {
+        "index": 12,
         "data": "00000000000000"
       }
     },

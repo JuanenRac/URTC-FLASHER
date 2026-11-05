@@ -102,6 +102,7 @@ CAN_ID_ELECTROMAGNET_CMD = 0x1B0  # Electromagnet coil
 CAN_ID_HEALTH_PROFILE = 0x1B8  # Periodic health frame of the board (only while the health feature runs)
 CAN_ID_PID_CONFIG = 0x1B9  # Gains of the heater PID and start of its relay autotune
 CAN_ID_PID_STATE_RESP = 0x1BA  # The heater PID: gains in force, state and output
+CAN_ID_HEALTH_INFO = 0x1BB  # Identity and life of the board: protocol byte, last reset cause, firmware version and uptime (sent with the health frame)
 CAN_ID_SPOT_WELD_CMD = 0x1C0  # Spot welder timed pulse
 CAN_ID_UV_CURING_CMD = 0x1D0  # UV curing LED duty
 CAN_ID_HOTAIR_CMD = 0x1E0  # Hot-air nozzle setpoint and blower duty
@@ -138,6 +139,8 @@ CAN_ID_BOOTLOADER_SELECT = 0x7EA  # Address one bootloader by its serial number
 CAN_ID_BOOTLOADER_SELECT_RESPONSE = 0x7EB  # Answer to the addressing of a bootloader
 CAN_ID_BOOTLOADER_SIGNATURE_CHUNK = 0x7EC  # One chunk of the Ed25519 signature record
 CAN_ID_BOOTLOADER_KEY_ID = 0x7ED  # Identifier of the signing key a bootloader trusts
+CAN_ID_BOOTLOADER_SERIAL_CHUNK = 0x7EE  # One chunk of the signed command that programs the serial number
+CAN_ID_BOOTLOADER_SERIAL_RESULT = 0x7EF  # Result of the command that programs the serial number
 CAN_ID_ENTER_BOOTLOADER = 0x7F0  # Enter the bootloader
 CAN_ID_START_UPDATE = 0x7F1  # Start the firmware update
 CAN_ID_DATA = 0x7F2  # Firmware data
@@ -557,6 +560,7 @@ MESSAGES = {
     440: {'name': 'HEALTH_PROFILE', 'group': 'diagnostics', 'direction': 'board_to_host', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': False}, 'timing': {'period_ms': 1000}},
     441: {'name': 'PID_CONFIG', 'group': 'configuration', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
     442: {'name': 'PID_STATE_RESP', 'group': 'configuration', 'direction': 'both', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
+    443: {'name': 'HEALTH_INFO', 'group': 'diagnostics', 'direction': 'board_to_host', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': False}, 'timing': {'period_ms': 10000}},
     448: {'name': 'SPOT_WELD_CMD', 'group': 'welding', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': [14], 'gates': {'blocked_by_critical_error': True, 'blocked_during_boot_sequence': True}},
     464: {'name': 'UV_CURING_CMD', 'group': 'uv', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': [18], 'gates': {'blocked_by_critical_error': True, 'blocked_during_boot_sequence': True}, 'timing': {'watchdog_ms': 250}},
     480: {'name': 'HOTAIR_CMD', 'group': 'hotair', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': [19], 'gates': {'blocked_by_critical_error': True, 'blocked_during_boot_sequence': True}, 'timing': {'watchdog_ms': 250}},
@@ -593,6 +597,8 @@ MESSAGES = {
     2027: {'name': 'BOOTLOADER_SELECT_RESPONSE', 'group': 'bootloader', 'direction': 'board_to_host', 'handled_by': 'bootloader', 'tools': None},
     2028: {'name': 'BOOTLOADER_SIGNATURE_CHUNK', 'group': 'bootloader', 'direction': 'host_to_board', 'handled_by': 'bootloader', 'tools': None},
     2029: {'name': 'BOOTLOADER_KEY_ID', 'group': 'bootloader', 'direction': 'board_to_host', 'handled_by': 'bootloader', 'tools': None},
+    2030: {'name': 'BOOTLOADER_SERIAL_CHUNK', 'group': 'bootloader', 'direction': 'host_to_board', 'handled_by': 'bootloader', 'tools': None},
+    2031: {'name': 'BOOTLOADER_SERIAL_RESULT', 'group': 'bootloader', 'direction': 'board_to_host', 'handled_by': 'bootloader', 'tools': None},
     2032: {'name': 'ENTER_BOOTLOADER', 'group': 'bootloader', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': False, 'needs_magic': 'enter_bootloader'}},
     2033: {'name': 'START_UPDATE', 'group': 'bootloader', 'direction': 'host_to_board', 'handled_by': 'bootloader', 'tools': None},
     2034: {'name': 'DATA', 'group': 'bootloader', 'direction': 'host_to_board', 'handled_by': 'bootloader', 'tools': None},
@@ -670,6 +676,7 @@ LAYOUTS = {
     'pid_config': {'id': 441, 'role': 'request', 'dlc': {'exact': 7}, 'fields': [{'name': 'kp_x100', 'type': 'u16', 'offset': 0, 'width': 2}, {'name': 'ki_x100', 'type': 'u16', 'offset': 2, 'width': 2}, {'name': 'kd_x100', 'type': 'u16', 'offset': 4, 'width': 2}, {'name': 'action', 'type': 'u8', 'offset': 6, 'width': 1, 'allowed': [0, 1, 2, 3]}]},
     'pid_state_resp_request': {'id': 442, 'role': 'request', 'dlc': {'any': True}, 'fields': []},
     'pid_state_resp_response': {'id': 442, 'role': 'response', 'dlc': {'exact': 8}, 'fields': [{'name': 'kp_x100', 'type': 'u16', 'offset': 0, 'width': 2}, {'name': 'ki_x100', 'type': 'u16', 'offset': 2, 'width': 2}, {'name': 'kd_x100', 'type': 'u16', 'offset': 4, 'width': 2}, {'name': 'state', 'type': 'u8', 'offset': 6, 'width': 1}, {'name': 'duty_percent', 'type': 'u8', 'offset': 7, 'width': 1, 'range': [0, 100]}]},
+    'health_info': {'id': 443, 'role': 'response', 'dlc': {'exact': 8}, 'fields': [{'name': 'protocol_version', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'reset_cause', 'type': 'u8', 'offset': 1, 'width': 1}, {'name': 'fw_minor', 'type': 'u8', 'offset': 2, 'width': 1}, {'name': 'fw_patch', 'type': 'u8', 'offset': 3, 'width': 1}, {'name': 'fw_build', 'type': 'u8', 'offset': 4, 'width': 1}, {'name': 'uptime_s', 'type': 'u24', 'offset': 5, 'width': 3}]},
     'spot_weld_cmd': {'id': 448, 'role': 'request', 'dlc': {'exact': 3}, 'fields': [{'name': 'fire', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [1, 1]}, {'name': 'duration_ms', 'type': 'u16', 'offset': 1, 'width': 2, 'range': [1, 2000]}]},
     'uv_curing_cmd': {'id': 464, 'role': 'request', 'dlc': {'exact': 1}, 'fields': [{'name': 'duty', 'type': 'u8', 'offset': 0, 'width': 1}]},
     'hotair_cmd': {'id': 480, 'role': 'request', 'dlc': {'exact': 3}, 'fields': [{'name': 'setpoint_c', 'type': 'u16', 'offset': 0, 'width': 2, 'range': [0, 445]}, {'name': 'blower_duty', 'type': 'u8', 'offset': 2, 'width': 1}]},
@@ -718,6 +725,8 @@ LAYOUTS = {
     'bootloader_select_response_response_uid': {'id': 2027, 'role': 'response', 'dlc': {'exact': 6}, 'fields': [{'name': 'operation', 'type': 'bytes', 'offset': 0, 'fixed': '04', 'length': 1}, {'name': 'part', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 2]}, {'name': 'word', 'type': 'u32', 'offset': 2, 'width': 4}]},
     'bootloader_signature_chunk': {'id': 2028, 'role': 'request', 'dlc': {'exact': 8}, 'fields': [{'name': 'index', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 10]}, {'name': 'data', 'type': 'bytes', 'offset': 1, 'length': 7}]},
     'bootloader_key_id': {'id': 2029, 'role': 'response', 'dlc': {'exact': 8}, 'fields': [{'name': 'key_id', 'type': 'bytes', 'offset': 0, 'length': 8}]},
+    'bootloader_serial_chunk': {'id': 2030, 'role': 'request', 'dlc': {'exact': 8}, 'fields': [{'name': 'index', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 11]}, {'name': 'data', 'type': 'bytes', 'offset': 1, 'length': 7}]},
+    'bootloader_serial_result': {'id': 2031, 'role': 'response', 'dlc': {'exact': 5}, 'fields': [{'name': 'status', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'serial', 'type': 'u32', 'offset': 1, 'width': 4}]},
     'enter_bootloader': {'id': 2032, 'role': 'request', 'dlc': {'exact': 4}, 'fields': [{'name': 'magic', 'type': 'bytes', 'offset': 0, 'fixed': 'B0071D5A', 'length': 4}]},
     'start_update': {'id': 2033, 'role': 'request', 'dlc': {'exact': 8}, 'fields': [{'name': 'total_size', 'type': 'u32', 'offset': 0, 'width': 4}, {'name': 'hardware_id', 'type': 'u32', 'offset': 4, 'width': 4}]},
     'data': {'id': 2034, 'role': 'request', 'dlc': {'min': 1, 'max': 8}, 'fields': [{'name': 'data', 'type': 'bytes', 'offset': 0, 'rest': True}]},
@@ -1510,6 +1519,16 @@ def decode_pid_state_resp_response(data: bytes, strict: bool = False) -> dict | 
     return decode("pid_state_resp_response", data, strict)
 
 
+def encode_health_info(protocol_version: int, reset_cause: int, fw_minor: int, fw_patch: int, fw_build: int, uptime_s: int) -> tuple[int, bytes]:
+    """Identity and life of the board: protocol byte, last reset cause, firmware version and uptime (sent with the health frame) (0x1BB, response)."""
+    return encode("health_info", protocol_version=protocol_version, reset_cause=reset_cause, fw_minor=fw_minor, fw_patch=fw_patch, fw_build=fw_build, uptime_s=uptime_s)
+
+
+def decode_health_info(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x1BB (response), or None when the payload is too short."""
+    return decode("health_info", data, strict)
+
+
 def encode_spot_weld_cmd(fire: int, duration_ms: int) -> tuple[int, bytes]:
     """Spot welder timed pulse (0x1C0, request)."""
     return encode("spot_weld_cmd", fire=fire, duration_ms=duration_ms)
@@ -1998,6 +2017,26 @@ def encode_bootloader_key_id(key_id: bytes) -> tuple[int, bytes]:
 def decode_bootloader_key_id(data: bytes, strict: bool = False) -> dict | None:
     """Fields of 0x7ED (response), or None when the payload is too short."""
     return decode("bootloader_key_id", data, strict)
+
+
+def encode_bootloader_serial_chunk(index: int, data: bytes) -> tuple[int, bytes]:
+    """One chunk of the signed command that programs the serial number (0x7EE, request)."""
+    return encode("bootloader_serial_chunk", index=index, data=data)
+
+
+def decode_bootloader_serial_chunk(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x7EE (request), or None when the payload is too short."""
+    return decode("bootloader_serial_chunk", data, strict)
+
+
+def encode_bootloader_serial_result(status: int, serial: int) -> tuple[int, bytes]:
+    """Result of the command that programs the serial number (0x7EF, response)."""
+    return encode("bootloader_serial_result", status=status, serial=serial)
+
+
+def decode_bootloader_serial_result(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x7EF (response), or None when the payload is too short."""
+    return decode("bootloader_serial_result", data, strict)
 
 
 def encode_enter_bootloader(magic: bytes | None = None) -> tuple[int, bytes]:
