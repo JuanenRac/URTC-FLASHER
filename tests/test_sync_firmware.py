@@ -213,3 +213,85 @@ def test_a_release_with_only_some_signatures_is_refused_unless_unsigned_is_allow
     with pytest.raises(SystemExit) as info:
         sync_firmware.download_release(work, "v0.3.5", fetch=fake.fetch, download=fake.download)
     assert "no release signature" in str(info.value)
+
+
+RECORD = "ab" * 76
+
+
+def _record_set(folder: Path, record: str | None = RECORD, official: bool = False):
+    """A set of the current generation: no hmac_sha256 in the manifests, a .imgsig record next to each application image."""
+    _release_set(folder)
+    for name in FILES:
+        path = folder / (name + ".manifest.json")
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+        del manifest["hmac_sha256"]
+        if official:
+            manifest["signing_key_kind"] = "release"
+        path.write_text(json.dumps(manifest), encoding="utf-8")
+        if record is not None:
+            (folder / (name + ".imgsig")).write_text(record + "\n", encoding="ascii")
+
+
+def test_an_image_with_its_record_and_no_hmac_is_accepted_and_the_record_is_kept(tmp_path, dest):
+    source = tmp_path / "local"
+    _record_set(source)
+    assert sync_firmware.check(source) == []
+    sync_firmware.sync(source)
+    assert sync_firmware.check(dest) == []
+    for name in FILES:
+        assert (dest / (name + ".imgsig")).read_text(encoding="ascii").strip() == RECORD
+
+
+def test_an_image_with_neither_record_nor_hmac_is_refused(tmp_path, dest):
+    source = tmp_path / "local"
+    _record_set(source, record=None)
+    with pytest.raises(SystemExit) as info:
+        sync_firmware.sync(source)
+    assert "hmac_sha256" in str(info.value)
+    assert [p.name for p in dest.iterdir()] == ["URTC_OLD_FIRMWARE_v0.0.1.bin"]
+
+
+def test_an_official_image_without_its_record_is_refused_even_with_an_hmac(tmp_path, dest):
+    source = tmp_path / "local"
+    _record_set(source, record=None, official=True)
+    for name in FILES:
+        path = source / (name + ".manifest.json")
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+        manifest["hmac_sha256"] = "ab" * 32
+        path.write_text(json.dumps(manifest), encoding="utf-8")
+    assert any("without its signature record" in problem for problem in sync_firmware.check(source))
+
+
+@pytest.mark.parametrize("text", ["ab" * 75, "zz" * 76, "", "ab" * 76 + "\n\n"])
+def test_a_corrupt_record_is_refused(tmp_path, dest, text):
+    source = tmp_path / "local"
+    _record_set(source, record=None)
+    (source / "URTC_MAIN_FIRMWARE_v0.3.5.bin.imgsig").write_text(text, encoding="ascii")
+    with pytest.raises(SystemExit) as info:
+        sync_firmware.sync(source)
+    assert "not an image signature record" in str(info.value)
+
+
+def test_a_signed_release_with_records_downloads_and_checks_them(tmp_path, dest, test_key):
+    assets = tmp_path / "assets"
+    _record_set(assets, official=True)
+    _sign_set(assets, test_key)
+    fake = FakeRelease(assets)
+    work = tmp_path / "work"
+    work.mkdir()
+    sync_firmware.download_release(work, "v0.3.5", fetch=fake.fetch, download=fake.download)
+    assert "URTC_MAIN_FIRMWARE_v0.3.5.bin.imgsig.sig" in fake.downloaded
+    sync_firmware.sync(work)
+    assert (dest / "URTC_SLAVE_FIRMWARE_v0.1.9.bin.imgsig.sig").is_file()
+
+
+def test_a_wrong_signature_of_a_record_is_refused(tmp_path, dest, test_key):
+    assets = tmp_path / "assets"
+    _record_set(assets, official=True)
+    _sign_set(assets, test_key, wrong_for="URTC_MAIN_FIRMWARE_v0.3.5.bin.imgsig")
+    fake = FakeRelease(assets)
+    work = tmp_path / "work"
+    work.mkdir()
+    with pytest.raises(SystemExit) as info:
+        sync_firmware.download_release(work, "v0.3.5", fetch=fake.fetch, download=fake.download, allow_unsigned=True)
+    assert "does not match its release signature" in str(info.value)

@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import shutil
 import sys
 import tempfile
@@ -47,10 +48,28 @@ DEST = ROOT / "firmware"
 SIDECARS = (".sha256", ".manifest.json")
 SIGNATURE = ".sig"
 INDEX_NAME = "firmware_manifest.json"
+RECORD = ".imgsig"  # the Ed25519 image signature record of an application image: 76 bytes as 152 hexadecimal digits on one line
+RECORD_PATTERN = re.compile(r"[0-9a-f]{152}\n?")
+PRODUCTION_KEY_KINDS = ("release", "production")
 
 
 def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _record_problems(image: Path, manifest: dict) -> list[str]:
+    """What an application image needs besides its digest: its .imgsig record (the signature the bootloader of the current
+    generation checks, no HMAC then) or, for a set of the earlier generation, the hmac_sha256 of its manifest."""
+    record = image.with_name(image.name + RECORD)
+    if record.is_file():
+        if not RECORD_PATTERN.fullmatch(record.read_text(encoding="ascii", errors="replace")):
+            return [f"{record.name}: not an image signature record (152 hexadecimal digits on one line)"]
+        return []
+    if manifest.get("signing_key_kind") in PRODUCTION_KEY_KINDS:
+        return [f"{image.name}: image of an official release without its signature record ({record.name})"]
+    if not manifest.get("hmac_sha256"):
+        return [f"{image.name}: application image without a published hmac_sha256 or its signature record ({record.name})"]
+    return []
 
 
 def check(folder: Path) -> list[str]:
@@ -68,8 +87,8 @@ def check(folder: Path) -> list[str]:
             problems.append(f"{image.name}: sha256 {actual} does not match its manifest")
         if not sidecar_path.read_text(encoding="utf-8").startswith(actual):
             problems.append(f"{image.name}: sha256 does not match its .sha256 file")
-        if "FIRMWARE" in image.name and not manifest.get("hmac_sha256"):
-            problems.append(f"{image.name}: application image without a published hmac_sha256")
+        if "FIRMWARE" in image.name:
+            problems.extend(_record_problems(image, manifest))
     for signed in sorted(folder.glob("*" + SIGNATURE)):
         status = release_signature.check_file(str(signed)[: -len(SIGNATURE)])
         if status.state == "invalid":
@@ -81,7 +100,8 @@ def signature_problems(source: Path, names: list[str], allow_unsigned: bool) -> 
     """Release-signature problems of the files a sync would copy: a wrong signature always, a missing one unless `allow_unsigned`."""
     problems = []
     for name in names:
-        for suffix in ("",) + SIDECARS:
+        records = (RECORD,) if (source / (name + RECORD)).is_file() else ()
+        for suffix in ("",) + SIDECARS + records:
             status = release_signature.check_file(str(source / (name + suffix)))
             if status.state == "invalid" or (status.state == "unsigned" and not allow_unsigned):
                 problems.append(status.detail)
@@ -128,6 +148,9 @@ def download_release(target: Path, tag: str | None = None, fetch=None, download=
         for suffix in ("",) + SIDECARS:
             get(name + suffix)
             get_signature(name + suffix)
+        if "FIRMWARE" in name and name + RECORD in by_name:
+            get(name + RECORD)
+            get_signature(name + RECORD)
     problems = signature_problems(target, names, allow_unsigned)
     if problems:
         joined = ("\n  ").join(problems)
@@ -153,6 +176,10 @@ def sync(source: Path) -> list[str]:
             shutil.copy2(source / (name + suffix), DEST / (name + suffix))
             if (source / (name + suffix + SIGNATURE)).is_file():
                 shutil.copy2(source / (name + suffix + SIGNATURE), DEST / (name + suffix + SIGNATURE))
+        if (source / (name + RECORD)).is_file():
+            for suffix in (RECORD, RECORD + SIGNATURE):
+                if (source / (name + suffix)).is_file():
+                    shutil.copy2(source / (name + suffix), DEST / (name + suffix))
     return names
 
 
@@ -187,7 +214,7 @@ def main(argv: list[str]) -> int:
             print(f"release {tag_name or tag or 'latest'}")
             names = sync(Path(temp))
     for name in names:
-        print(f"synced {name} (+ .sha256, .manifest.json)")
+        print(f"synced {name} (+ .sha256, .manifest.json" + (f", {RECORD}" if (DEST / (name + RECORD)).is_file() else "") + ")")
     return 0
 
 

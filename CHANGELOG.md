@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- **An official release synchronizes without `hmac_sha256`:** `tools/sync_firmware.py` accepts an application image whose `.imgsig` record is there (152 hexadecimal digits on one line) with a manifest that has no `hmac_sha256`, because the images of the current generation of bootloaders are signed with the Ed25519 record and carry no HMAC. The HMAC is still required of a set of the earlier generation that has no record; an image of an official release (`signing_key_kind` `release`) without its record is refused whatever the manifest says, and so is a record that is not 152 hexadecimal digits. The sync downloads the `.imgsig` of each application image and its release signature, refuses a wrong signature, and keeps both in `firmware/` next to the image. Tests for a set with the record and without the HMAC (accepted), without either (refused), an official image without its record (refused), corrupt records (refused) and the signatures of the records.
+
 ## [0.5.1] - The full build check compiles only on CI or when allowed: tools/buildtest.py prints BUILDTEST=SKIPPED (exit status 2) for the stacks that compile unless it runs on a CI runner or ALLOWLOCALBUILD=1 says so; the light check is... (and 7 more changes)
 
 - **The full build check compiles only on CI or when allowed:** `tools/build_test.py` prints `BUILD_TEST=SKIPPED` (exit status 2) for the stacks that compile unless it runs on a CI runner or `ALLOW_LOCAL_BUILD=1` says so; the light check is not locked.
