@@ -82,6 +82,10 @@
       "from": "src/urtc_common/launcher.py",
       "sha256": "dbd8ebc1767b4af82cc651b23a78565d59c5b8c2f831296b7d3befa5688bde13"
     },
+    "local_build.py": {
+      "from": "src/urtc_common/local_build.py",
+      "sha256": "81e00ec830afd2ba77cf0a3eeb33cf7eb5ccc3848769e97072c4e169d35e169f"
+    },
     "multinode.py": {
       "from": "src/urtc_common/multinode.py",
       "sha256": "c00bbe35b5474e024a3b0818ce8907e0d91b68100b0453db90cfb519709bbbed"
@@ -156,7 +160,7 @@
     },
     "virtual_board.py": {
       "from": "src/urtc_common/virtual_board.py",
-      "sha256": "c6d96286ef7f8d0aa49df7ee1a47fc1ce026b6b180a620a1b27f897ebf424059"
+      "sha256": "1cf165ba9e198d3ac6c9f49e3c934cd355ece99810f4dd4f70ca541764ad45c1"
     }
   }
 }

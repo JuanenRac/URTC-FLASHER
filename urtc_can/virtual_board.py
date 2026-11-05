@@ -55,6 +55,7 @@ from typing import Any, Callable, Iterable
 from . import protocol
 from .framing import FrameError
 from .heater_sim import SolderingIronModel
+from .local_build import local_build_refusal
 from .slcan import decode_line, encode_line
 from .transports import MockCAN
 
@@ -258,6 +259,9 @@ def firmware_board_command(repo: Path, tool: int = 0, features: int = 0, build_d
         raise FirmwareBoardError(f"{script} not found: give the folder of the URTC repository")
     if not 0 <= tool <= 24:
         raise FirmwareBoardError("the tool profile must be between 0 and 24")
+    refusal = local_build_refusal()
+    if refusal is not None:
+        raise FirmwareBoardError(refusal)
     folder = build_dir or Path(tempfile.mkdtemp(prefix="urtc_virtual_board_"))
     try:
         done = subprocess.run([sys.executable, str(script), "--build-only", "--build-dir", str(folder)], capture_output=True, text=True, timeout=600)
