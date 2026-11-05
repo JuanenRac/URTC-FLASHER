@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The full build check compiles only on CI or when allowed:** `tools/build_test.py` prints `BUILD_TEST=SKIPPED` (exit status 2) for the stacks that compile unless it runs on a CI runner or `ALLOW_LOCAL_BUILD=1` says so; the light check is not locked.
+
 - **The virtual board refuses to compile on a plain PC:** the copy of the shared virtual board carries the lock on local builds (a CI runner, or `ALLOW_LOCAL_BUILD=1`, may build); the test of the bootloader twin is skipped with that reason elsewhere.
 
 - **A workshop tool makes the signed command that programs the serial number of a bootloader:** `tools/serial_command.py` takes the unique ID of the head, the serial it answers with now, the new serial and a counter, signs them with the seed in a key file that the person names (it never looks for a key by itself) and prints the twelve SLCAN lines of `0x7EE` and the answer to expect on `0x7EF`; without `--yes` it only describes what it would make. The copy of the shared code gains the reference of the command (`bl_serial.py`, with the Ed25519 it needs); the tests sign with ephemeral keys. Nothing is sent from here.
