@@ -37,7 +37,7 @@
 
 | | |
 |---|---|
-| 版本 | `0.5.0` |
+| 版本 | `0.5.1` |
 | 成熟度 | 可用 |
 | 测试 | 668 (`python -m pytest tests -q`) |
 | 技术栈 | Python / PySide6 / Qt Quick / CAN-OTA / SWD/JTAG |
