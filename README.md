@@ -818,7 +818,7 @@ installed module directly.
 
 ### Where firmware files go
 
-**The folder starts empty.** The firmware images are not kept in this repository: they are the assets of the releases of [URTC](https://github.com/JuanenRac/URTC). The window downloads them from the release you choose, and `python tools/sync_firmware.py` fills the folder from the newest official release (or `--release TAG`). Every file is checked against the release signature (`.sig`, Ed25519) and its digests before it is used. While no official release exists, GitHub's "latest" answers 404 and `firmware_release.json` names the release used instead (today the bench pre-release); delete the file, or change its tag, when an official one is published.
+**The folder starts empty.** The firmware images are not kept in this repository: they are the assets of the releases of [URTC](https://github.com/JuanenRac/URTC). The window downloads them from the release you choose, and `python tools/sync_firmware.py` fills the folder from the newest official release (or `--release TAG`). Every file is checked against the release signature (`.sig`, Ed25519) and its digests before it is used.
 
 This tool expects a `firmware/` folder right next to `urtc_flasher.py`,
 at this repository's own root:

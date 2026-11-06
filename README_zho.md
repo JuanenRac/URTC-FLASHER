@@ -694,7 +694,7 @@ SocketCAN 没有这个特定的坑——访问一个类似 `can0` 的接口不�
 
 ### 固件文件存放位置
 
-**该文件夹一开始是空的。** 固件镜像不保存在本仓库中：它们是 [URTC](https://github.com/JuanenRac/URTC) 各版本发布的附件。窗口会从你选择的发布版本下载，`python tools/sync_firmware.py` 会从最新的正式发布版本（或 `--release TAG`）填充该文件夹。每个文件在使用前都会用发布签名（`.sig`，Ed25519）和摘要进行校验。在没有正式发布版本期间，GitHub 的 “latest” 会返回 404，由 `firmware_release.json` 指定改用的发布版本（目前是台架预发布版）；发布正式版本后，请删除该文件或修改其标签。
+**该文件夹一开始是空的。** 固件镜像不保存在本仓库中：它们是 [URTC](https://github.com/JuanenRac/URTC) 各版本发布的附件。窗口会从你选择的发布版本下载，`python tools/sync_firmware.py` 会从最新的正式发布版本（或 `--release TAG`）填充该文件夹。每个文件在使用前都会用发布签名（`.sig`，Ed25519）和摘要进行校验。
 
 本工具期望在 `urtc_flasher.py` 旁边、也就是本仓库自身的根目录下，存在一个
 `firmware/` 文件夹：

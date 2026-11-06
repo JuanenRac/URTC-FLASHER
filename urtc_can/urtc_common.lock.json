@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "urtc_common_version": "0.1.9",
+  "urtc_common_version": "0.2.2",
   "files": {
     "__init__.py": {
       "from": "src/urtc_common/__init__.py",
@@ -57,6 +57,18 @@
     "evidence_report_strings.py": {
       "from": "src/urtc_common/evidence_report_strings.py",
       "sha256": "6a81ec49ff3a2b0f6274176cc33a87a9a46577af0c29dbfd3ed43fbd7ad2505f"
+    },
+    "firmware_check.py": {
+      "from": "src/urtc_common/firmware_check.py",
+      "sha256": "3097b77d7f826be333a726af86a26fdbf7a557ad03a8df70834d4847657e1921"
+    },
+    "firmware_check_strings.py": {
+      "from": "src/urtc_common/firmware_check_strings.py",
+      "sha256": "8480568e6eecba319d93eca841d9ea007b459f3963105740d7def81042d33093"
+    },
+    "firmware_names.py": {
+      "from": "src/urtc_common/firmware_names.py",
+      "sha256": "f87c9314fb1f8992056f3f699b8128698e0706c288ceb6bc6cd402dbb5007fc8"
     },
     "framing.py": {
       "from": "src/urtc_common/framing.py",

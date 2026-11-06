@@ -19,6 +19,10 @@ each GitHub release. The set therefore comes from
     python tools/sync_firmware.py path/to/folder     a local folder holding the set
                                                      (a local URTC build writes it to URTC/firmware)
     python tools/sync_firmware.py --check            exit 1 if firmware/ is inconsistent
+    python tools/sync_firmware.py --newer [--language spanish] [--refresh]
+                                                     compare the images of firmware/ with the newest official release
+                                                     (one request, kept for an hour; exit 1 when one is older or missing;
+                                                     nothing is downloaded)
     python tools/sync_firmware.py --release v0.3.5 --allow-unsigned
                                                      a release whose assets carry no release signature (.sig),
                                                      such as a bench pre-release
@@ -127,7 +131,7 @@ def download_release(target: Path, tag: str | None = None, fetch=None, download=
     if fetch is None or download is None:
         sys.path.insert(0, str(ROOT))
         import flasher_github
-        fetch = fetch or flasher_github.fetch_release_or_pinned
+        fetch = fetch or flasher_github.fetch_release
         download = download or flasher_github.download_file
     tag_name, assets = fetch(tag, only_firmware=False)
     by_name = {asset["name"]: asset for asset in assets}
@@ -183,8 +187,33 @@ def sync(source: Path) -> list[str]:
     return names
 
 
+def newer(args: list[str]) -> int:
+    """Says, in the language asked for, whether the images of firmware/ are the ones of the newest official release (exit 1 when one is older or missing)."""
+    from urtc_can import firmware_check as fc
+    from urtc_can import update_service as service
+
+    language = "english"
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # the texts may be Japanese or Chinese on a console that is not UTF-8
+    if "--language" in args:
+        index = args.index("--language")
+        language = args[index + 1] if index + 1 < len(args) else language
+    cache = Path(service.default_root("urtc-flasher")) / fc.CACHE_FILE
+    try:
+        latest, rows = fc.check(fc.images_in_folder(DEST), cache_file=cache, force="--refresh" in args)
+    except fc.FirmwareCheckError as error:
+        print(fc.describe_error(error, language))
+        return 2
+    minutes = int((fc.time.time() - latest.checked_at) // 60) if latest.from_cache else None
+    for line in fc.describe(rows, latest.tag, language, minutes):
+        print(line)
+    return 0 if all(row.state in (fc.CURRENT, fc.AHEAD) for row in rows) else 1
+
+
 def main(argv: list[str]) -> int:
     args = argv[1:]
+    if args and args[0] == "--newer":
+        return newer(args[1:])
     if args and args[0] == "--check":
         problems = check(DEST)
         for problem in problems:
@@ -196,7 +225,7 @@ def main(argv: list[str]) -> int:
     tag = None
     if args and args[0] == "--release":
         if len(args) < 2:
-            print("usage: sync_firmware.py [--release TAG | path/to/folder | --check]")
+            print("usage: sync_firmware.py [--release TAG | path/to/folder | --check | --newer]")
             return 2
         tag, args = args[1], args[2:]
     if args and tag is None:

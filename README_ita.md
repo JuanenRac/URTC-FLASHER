@@ -902,7 +902,7 @@ riuscita, mentre `-m pip` trova il modulo installato direttamente.
 
 ### Dove vanno i file di firmware
 
-**La cartella parte vuota.** Le immagini firmware non sono conservate in questo repository: sono i file delle release di [URTC](https://github.com/JuanenRac/URTC). La finestra le scarica dalla release scelta, e `python tools/sync_firmware.py` riempie la cartella dall'ultima release ufficiale (o `--release TAG`). Ogni file è verificato con la firma della release (`.sig`, Ed25519) e i suoi digest prima dell'uso. Finché non esiste una release ufficiale, il «latest» di GitHub risponde 404 e `firmware_release.json` indica la release usata al suo posto (oggi la pre-release da banco); eliminalo, o cambia il suo tag, quando ne verrà pubblicata una ufficiale.
+**La cartella parte vuota.** Le immagini firmware non sono conservate in questo repository: sono i file delle release di [URTC](https://github.com/JuanenRac/URTC). La finestra le scarica dalla release scelta, e `python tools/sync_firmware.py` riempie la cartella dall'ultima release ufficiale (o `--release TAG`). Ogni file è verificato con la firma della release (`.sig`, Ed25519) e i suoi digest prima dell'uso.
 Questo strumento si aspetta una cartella `firmware/` proprio accanto a
 `urtc_flasher.py`, nella radice di questo stesso repository:
 

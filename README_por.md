@@ -852,7 +852,7 @@ sempre está no PATH mesmo logo após uma instalação bem-sucedida, enquanto
 
 ### Onde colocar os ficheiros de firmware
 
-**A pasta começa vazia.** As imagens de firmware não ficam neste repositório: são os ficheiros das releases do [URTC](https://github.com/JuanenRac/URTC). A janela descarrega-as da release escolhida, e `python tools/sync_firmware.py` preenche a pasta a partir da última release oficial (ou `--release ETIQUETA`). Cada ficheiro é verificado com a assinatura da release (`.sig`, Ed25519) e os seus resumos antes de ser usado. Enquanto não existir uma release oficial, o «latest» do GitHub responde 404 e `firmware_release.json` indica a release usada em seu lugar (hoje a pré-release de bancada); apague-o, ou mude a sua etiqueta, quando for publicada uma oficial.
+**A pasta começa vazia.** As imagens de firmware não ficam neste repositório: são os ficheiros das releases do [URTC](https://github.com/JuanenRac/URTC). A janela descarrega-as da release escolhida, e `python tools/sync_firmware.py` preenche a pasta a partir da última release oficial (ou `--release ETIQUETA`). Cada ficheiro é verificado com a assinatura da release (`.sig`, Ed25519) e os seus resumos antes de ser usado.
 
 Esta ferramenta espera uma pasta `firmware/` mesmo ao lado de `urtc_flasher.py`,
 na raiz deste mesmo repositório:

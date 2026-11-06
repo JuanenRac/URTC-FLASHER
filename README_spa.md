@@ -898,7 +898,7 @@ directamente.
 
 ### Dónde van los archivos de firmware
 
-**La carpeta empieza vacía.** Las imágenes de firmware no se guardan en este repositorio: son los ficheros de las releases de [URTC](https://github.com/JuanenRac/URTC). La ventana las descarga de la release que elijas, y `python tools/sync_firmware.py` rellena la carpeta desde la última release oficial (o `--release ETIQUETA`). Cada fichero se comprueba con la firma de la release (`.sig`, Ed25519) y sus resúmenes antes de usarse. Mientras no exista una release oficial, el «latest» de GitHub responde 404 y `firmware_release.json` indica qué release se usa en su lugar (hoy la pre-release de banco); bórralo, o cambia su etiqueta, cuando se publique una oficial.
+**La carpeta empieza vacía.** Las imágenes de firmware no se guardan en este repositorio: son los ficheros de las releases de [URTC](https://github.com/JuanenRac/URTC). La ventana las descarga de la release que elijas, y `python tools/sync_firmware.py` rellena la carpeta desde la última release oficial (o `--release ETIQUETA`). Cada fichero se comprueba con la firma de la release (`.sig`, Ed25519) y sus resúmenes antes de usarse.
 Esta herramienta espera una carpeta `firmware/` justo al lado de
 `urtc_flasher.py`, en la raíz de este mismo repositorio:
 

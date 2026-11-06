@@ -67,8 +67,8 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   ├── test_bitrate_listen_only.py
 │   ├── test_bootloader_entry.py
 │   ├── test_can_conformance.py   <- shared CAN vectors (tests/fixtures/can_conformance_vectors.json)
+│   ├── test_firmware_newer.py      <- 6 tests: sync_firmware.py --newer against a faked release
 │   ├── test_github_download.py
-│   ├── test_pinned_release.py
 │   ├── test_language_files.py
 │   ├── test_manifest_target.py
 │   ├── test_mock_readback.py

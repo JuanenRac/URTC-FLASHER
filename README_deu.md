@@ -934,7 +934,7 @@ Modul direkt findet.
 
 ### Wohin die Firmware-Dateien gehören
 
-**Der Ordner ist anfangs leer.** Die Firmware-Images liegen nicht in diesem Repository: Sie sind die Dateien der Releases von [URTC](https://github.com/JuanenRac/URTC). Das Fenster lädt sie aus dem gewählten Release herunter, und `python tools/sync_firmware.py` füllt den Ordner aus dem neuesten offiziellen Release (oder `--release TAG`). Jede Datei wird vor der Verwendung gegen die Release-Signatur (`.sig`, Ed25519) und ihre Prüfsummen geprüft. Solange es kein offizielles Release gibt, antwortet GitHubs „latest“ mit 404, und `firmware_release.json` nennt das stattdessen verwendete Release (heute das Bench-Pre-Release); löschen Sie die Datei oder ändern Sie ihren Tag, wenn ein offizielles veröffentlicht wird.
+**Der Ordner ist anfangs leer.** Die Firmware-Images liegen nicht in diesem Repository: Sie sind die Dateien der Releases von [URTC](https://github.com/JuanenRac/URTC). Das Fenster lädt sie aus dem gewählten Release herunter, und `python tools/sync_firmware.py` füllt den Ordner aus dem neuesten offiziellen Release (oder `--release TAG`). Jede Datei wird vor der Verwendung gegen die Release-Signatur (`.sig`, Ed25519) und ihre Prüfsummen geprüft.
 Dieses Tool erwartet einen `firmware/`-Ordner direkt neben
 `urtc_flasher.py`, im Wurzelverzeichnis dieses Repositorys:
 
