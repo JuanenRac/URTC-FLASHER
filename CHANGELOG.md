@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here.
 
-## [Unreleased]
+## [0.5.3] - The firmware in the firmware/ folder can be compared with the newest official release: python tools/syncfirmware.py --newer (with --language for the text in one of the eight languages and --refresh to ask again) says, image by... (and 2 more changes)
 
 - **The firmware in the `firmware/` folder can be compared with the newest official release:** `python tools/sync_firmware.py --newer` (with `--language` for the text in one of the eight languages and `--refresh` to ask again) says, image by image, whether it is up to date, older, newer (a test build) or missing. It makes one request to GitHub, keeps the answer for an hour so the anonymous limit is not spent, does not repeat a failed request within a minute, downloads nothing and exits with 1 when an image is older or missing. The check is the shared `firmware_check` of URTC-COMMON (copied with its texts), and `tests/test_firmware_newer.py` holds it.
 - **The release list reads the official release and nothing else:** the window and `tools/sync_firmware.py` take GitHub's "latest" release of URTC (an official one exists now); the fallback to a release named in a `firmware_release.json` file, its reader, its test and its log line (in the eight languages) are gone. A release is chosen by its tag in the window or with `--release`.
