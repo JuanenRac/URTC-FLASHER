@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The repository check compares the manifest with what can be computed:** `tools/ci_validate.py` now also runs the shared `tools/sync_manifests.py` offline, which compares the shipped version, the newest released heading of this changelog, the presence of tests and the claimed level of evidence with the manifest. It is part of the shared set of tools, so the copy is pinned by the lock.
 - **The window compares the firmware folder with the newest official release:** the dialog that lists the files of a release has a button that says, image by image, whether `firmware/` holds the images of the newest official release (up to date, older, newer or missing), in the language of the window. It asks GitHub once, only when pressed, keeps the answer for an hour and downloads nothing.
 
 ## [0.5.3] - The firmware in the firmware/ folder can be compared with the newest official release: python tools/syncfirmware.py --newer (with --language for the text in one of the eight languages and --refresh to ask again) says, image by... (and 2 more changes)
