@@ -367,7 +367,7 @@ class URTCFlasher:
                 "installed_patch": installed_patch, "new_patch": new_patch, "key_check": key_check}
 
     def _check_key_id(self, firmware_path, board_key_id, board_is_bootloader=False):
-        """Compares the signing-key fingerprint the bootloader publishes with the one the image's manifest declares, before anything is sent. Returns
+        """Compares the signing-key fingerprint the bootloader publishes with the one the image declares (the key id of its .imgsig record, or else the manifest), before anything is sent. Returns
         "off", "unknown" (one side does not say), "match" or "mismatch"; a mismatch is logged and, with key_id_precheck "refuse", stops flash(). A
         bootloader that sent no 0x7ED gives "unknown" (it is said in the log, once): never a difference and never an error."""
         if KEY_ID_PRECHECK == "off":
@@ -380,6 +380,14 @@ class URTCFlasher:
                 declared = str(manifest.get("signing_key_id", "") or "").strip().lower().replace("0x", "") or None
         except (OSError, ValueError):
             declared = None
+        # The signature record published next to the image names the key that signed it in its first eight bytes: that is the key the bootloader will check, so
+        # it wins over what an older manifest says (the key of the earlier HMAC generation). A file that is not a record is reported by flash(), not here.
+        try:
+            record = self._record_for(firmware_path)
+        except FlashError:
+            record = None
+        if record is not None:
+            declared = record[:8].hex()
         if not declared or not board_key_id:
             if declared and board_is_bootloader:
                 self.log(_("LOG_KEY_PRECHECK_NO_DATA"))

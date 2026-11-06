@@ -187,3 +187,39 @@ def test_off_skips_the_comparison(tmp_path, monkeypatch):
 def test_the_default_is_warn_and_a_wrong_value_falls_back_to_it():
     import flasher_config
     assert flasher_config.KEY_ID_PRECHECK in ("off", "warn", "refuse")
+
+
+# --- the key named by the signature record (<image>.imgsig) ---------------------------------------------------------------------------------------
+def write_record(path, key_id: bytes):
+    """A 76-byte record (key id, counter, signature): only the key id matters to the precheck."""
+    Path(str(path) + ".imgsig").write_bytes((key_id + bytes(4) + bytes(64)).hex().encode("ascii") + b"\n")
+
+
+def test_the_key_id_of_the_signature_record_is_compared_when_the_manifest_declares_none(tmp_path, monkeypatch):
+    monkeypatch.setattr(flasher_protocol, "KEY_ID_PRECHECK", "warn")
+    path = image(tmp_path, None)
+    write_record(path, BOARD_KEY)
+    flasher = URTCFlasher(SimBootloader(BOARD_KEY), log=lambda m: None)
+    assert flasher.report_version_change(path)["key_check"] == "match"
+    write_record(path, bytes.fromhex("0011223344556677"))
+    flasher = URTCFlasher(SimBootloader(BOARD_KEY), log=lambda m: None)
+    assert flasher.report_version_change(path)["key_check"] == "mismatch"
+
+
+def test_the_record_wins_over_the_key_of_an_older_manifest(tmp_path, monkeypatch):
+    monkeypatch.setattr(flasher_protocol, "KEY_ID_PRECHECK", "refuse")
+    path = image(tmp_path, "0011223344556677")   # the key id of the earlier generation of bootloaders
+    write_record(path, BOARD_KEY)                  # the key the bootloader of today will check
+    flasher = URTCFlasher(SimBootloader(BOARD_KEY), log=lambda m: None)
+    assert flasher.report_version_change(path)["key_check"] == "match"
+    assert flasher._key_mismatch is None
+
+
+def test_a_file_that_is_not_a_record_does_not_hide_the_manifest_and_is_reported_when_flashing(tmp_path, monkeypatch):
+    monkeypatch.setattr(flasher_protocol, "KEY_ID_PRECHECK", "warn")
+    path = image(tmp_path, BOARD_KEY.hex())
+    Path(path + ".imgsig").write_text("not a record\n", encoding="ascii")
+    flasher = URTCFlasher(SimBootloader(BOARD_KEY), log=lambda m: None)
+    assert flasher.report_version_change(path)["key_check"] == "match"
+    with pytest.raises(FlashError):
+        flasher.flash(path)
