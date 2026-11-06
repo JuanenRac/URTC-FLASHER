@@ -99,6 +99,7 @@ class FlasherQtBridge(QObject):
     _releaseListed = Signal(str, object, str)
     _releaseProgressed = Signal(int)
     _releaseDownloaded = Signal(str, str)
+    _firmwareChecked = Signal("QVariantList", str)
     _busActivityResult = Signal(int, int)
     _bitrateDetected = Signal(str)
     _swdOptionByteResult = Signal(str, str)
@@ -155,6 +156,8 @@ class FlasherQtBridge(QObject):
         self._release_downloading = False
         self._release_progress = 0
         self._release_overwrite = ""
+        self._firmware_check_lines: list[str] = []
+        self._firmware_checking = False
         # Live transfer speed (kB/s, from URTCFlasher's speed_cb) plus a
         # reactive "still waiting" indicator driven by a plain QTimer -
         # deliberately not derived from _flashProgress/_flashSpeed alone,
@@ -201,6 +204,7 @@ class FlasherQtBridge(QObject):
         self._releaseListed.connect(self._on_release_listed)
         self._releaseProgressed.connect(self._on_release_progress)
         self._releaseDownloaded.connect(self._on_release_downloaded)
+        self._firmwareChecked.connect(self._on_firmware_checked)
         self._busActivityResult.connect(self._on_bus_activity_result)
         self._bitrateDetected.connect(self._on_bitrate_detected)
         self._swdOptionByteResult.connect(self._on_swd_option_byte_result)
@@ -505,6 +509,46 @@ class FlasherQtBridge(QObject):
             self._release_status = _("LBL_GITHUB_EMPTY")
         else:
             self._release_status = _("LBL_GITHUB_LOADED_RELEASE", count=len(images), tag=tag)
+        self.releaseChanged.emit()
+
+    # -- compare the images of firmware/ with the newest official release (one request, only when asked; nothing is downloaded) ---
+    @Property("QVariantList", notify=releaseChanged)
+    def firmwareCheckLines(self) -> list[str]:
+        return list(self._firmware_check_lines)
+
+    @Property(bool, notify=releaseChanged)
+    def firmwareChecking(self) -> bool:
+        return self._firmware_checking
+
+    @Slot()
+    def checkFirmwareNewer(self) -> None:
+        """Say, image by image, whether firmware/ holds the images of the newest official release (the answer is cached for an hour)."""
+        if self._firmware_checking or self.releaseBusy:
+            return
+        self._firmware_checking = True
+        self._firmware_check_lines = [_("LBL_FWC_CHECKING")]
+        self.releaseChanged.emit()
+        threading.Thread(target=self._firmware_check_worker, args=(_current_language,), daemon=True, name="urtc-qt-firmware-check").start()
+
+    def _firmware_check_worker(self, language: str) -> None:
+        from urtc_can import firmware_check as fc
+
+        try:
+            cache = os.path.join(update_service.default_root("urtc-flasher"), fc.CACHE_FILE)
+            latest, rows = fc.check(fc.images_in_folder(FIRMWARE_FOLDER), cache_file=cache)
+            minutes = int((fc.time.time() - latest.checked_at) // 60) if latest.from_cache else None
+            self._firmwareChecked.emit(fc.describe(rows, latest.tag, language, minutes), "")
+        except fc.FirmwareCheckError as exc:
+            self._firmwareChecked.emit([], fc.describe_error(exc, language))
+        except Exception as exc:  # never crash the deck on an unexpected answer
+            self._firmwareChecked.emit([], _("ERR_GITHUB_UNEXPECTED", e=exc))
+
+    @Slot("QVariantList", str)
+    def _on_firmware_checked(self, lines: list, error: str) -> None:
+        self._firmware_checking = False
+        self._firmware_check_lines = [error] if error else [str(line) for line in lines]
+        if error:
+            self._log(f"GITHUB_FAILED {error}")
         self.releaseChanged.emit()
 
     @Slot(str)

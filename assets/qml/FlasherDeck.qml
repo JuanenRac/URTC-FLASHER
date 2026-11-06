@@ -325,6 +325,9 @@ ApplicationWindow {
                 TextField { id: releaseTag; color: textPrimary; Layout.preferredWidth: 120; font.pixelSize: 11; onAccepted: flasherBackend.loadRelease(text); background: Rectangle { radius: 8; color: panelAlt; border.width: 1; border.color: panelBorder } }
                 GameButton { text: flasherBackend.uiText("BTN_GITHUB_LOAD"); accent: "#24465e"; enabled: !flasherBackend.releaseBusy; onClicked: flasherBackend.loadRelease(releaseTag.text) }
             }
+            GameButton { text: flasherBackend.uiText("BTN_GITHUB_CHECK_NEWER"); accent: "#24465e"; Layout.fillWidth: true; enabled: !flasherBackend.releaseBusy && !flasherBackend.firmwareChecking; onClicked: flasherBackend.checkFirmwareNewer() }
+            Text { visible: flasherBackend.firmwareCheckLines.length > 0; text: flasherBackend.firmwareCheckLines.join("
+"); color: muted; font.pixelSize: 10; wrapMode: Text.WordWrap; Layout.fillWidth: true }
             Text { text: flasherBackend.releaseStatus; color: muted; font.pixelSize: 10; wrapMode: Text.WordWrap; Layout.fillWidth: true }
             ListView {
                 id: releaseList
