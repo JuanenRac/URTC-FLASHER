@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here.
 
-## [Unreleased]
+## [0.5.2] - An official release synchronizes without hmacsha256: tools/syncfirmware.py accepts an application image whose .imgsig record is there (152 hexadecimal digits on one line) with a manifest that has no hmacsha256, because the... (and 1 more changes)
 
 - **An official release synchronizes without `hmac_sha256`:** `tools/sync_firmware.py` accepts an application image whose `.imgsig` record is there (152 hexadecimal digits on one line) with a manifest that has no `hmac_sha256`, because the images of the current generation of bootloaders are signed with the Ed25519 record and carry no HMAC. The HMAC is still required of a set of the earlier generation that has no record; an image of an official release (`signing_key_kind` `release`) without its record is refused whatever the manifest says, and so is a record that is not 152 hexadecimal digits. The sync downloads the `.imgsig` of each application image and its release signature, refuses a wrong signature, and keeps both in `firmware/` next to the image. Tests for a set with the record and without the HMAC (accepted), without either (refused), an official image without its record (refused), corrupt records (refused) and the signatures of the records.
 - **The text helpers and the simulated soldering iron are tested:** 87 new tests cover the identifier, frame, bitrate, size, duration and uptime text (every spelling it reads, every value it refuses) and the iron of the virtual board (parameter file and fall-backs, heating curve, ceiling of the target, watchdog, anti-windup, telemetry frame); the coverage floor of the CI follows the measurement (about 68 %), from 61 % to 67 %.
