@@ -60,7 +60,7 @@
     },
     "firmware_check.py": {
       "from": "src/urtc_common/firmware_check.py",
-      "sha256": "3097b77d7f826be333a726af86a26fdbf7a557ad03a8df70834d4847657e1921"
+      "sha256": "89e7121043fb8bb13275e8c929720946962160f0f677da52ecdfbb15d3d07d03"
     },
     "firmware_check_strings.py": {
       "from": "src/urtc_common/firmware_check_strings.py",

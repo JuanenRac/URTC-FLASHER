@@ -198,7 +198,7 @@ def latest_release(
 
 
 def _note_failure(path: Path | None, cache: dict[str, Any], stamp: float) -> None:
-    kept = {key: cache[key] for key in ("repo", "checked_at", "tag", "images") if key in cache}
+    kept: dict[str, Any] = {key: cache[key] for key in ("repo", "checked_at", "tag", "images") if key in cache}
     kept["failed_at"] = stamp
     _write_cache(path, kept)
 
