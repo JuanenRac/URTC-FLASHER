@@ -2,16 +2,16 @@
   "format": 1,
   "urtc_common_version": "0.2.4",
   "catalog": "spec/i18n/catalog/flasher.json",
-  "catalog_sha256": "47af46c302e41f973fdbfcb26e7630cc52aba9a06645cc28b2042216f9aa6dcd",
+  "catalog_sha256": "5a8e0533c33f47340a5e19ff43d9e58f5980d18a31c32f1cfef55381a7622916",
   "files": {
     "language/chinese.lng": "5216df0caa1566dbe1ff3f45b9874500c2909845458b8d76c4586f59651771ee",
     "language/english.lng": "efa2ceea82f30c04719c646d702a665afacd7c4c1b41ad5ed3157d32b982afb8",
-    "language/french.lng": "33c70ff0dc41626d61114020154925082438a75b95c3fdfc49a74168c0cd76bc",
-    "language/german.lng": "5c38dc743264a5c6e3089057085f103570b01aec0b1a6b08d0a567d514a9c4eb",
-    "language/italian.lng": "ce4bf9a0f7c7a4888d86d68673d50e19fe8ca8d49c629b40ab5f4aca1ac6f834",
+    "language/french.lng": "9b3dfb66e801ac32a6af3f3d5a888ef1ab260a68670c61472638e3af51908e40",
+    "language/german.lng": "06618098ffe91a5eb378c3d09bc8c7d6e6fe2aeb955805740a2395e1f59a442d",
+    "language/italian.lng": "9c229b8434e8ea5e5593104512dc9967d1a630eda40c91f17af38e0800cff3c4",
     "language/japanese.lng": "4d823d5aca6d2ac5866b783ce9c075568761cb4b7046c64aeb64d7574235ce74",
     "language/portuguese.lng": "14f5c246af0722484a67feb8bb74472992430688fb70fd63310b412b63ca9067",
-    "language/spanish.lng": "3eb83c3a0d286ae438ce539b9541d2b6d05c4a87869e13af1b01762116f5ebd6",
+    "language/spanish.lng": "3b9c8c92d1f37b317300f5b6d6a40f5a19cc7a913fd758ab599d0c2e0fd63573",
     "tests/test_i18n_generated.py": "2dbb1740abb41abb5dca047084ac545d4cb403687e599550a73e4e1174c1ce87"
   }
 }
