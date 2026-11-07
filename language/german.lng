@@ -1,5 +1,5 @@
 # URTC Flasher - Deutsche Sprachdatei
-# SCHLUESSEL=Wert, einer pro Zeile. Zeilen, die mit # beginnen, und leere
+# SCHLÜSSEL=Wert, einer pro Zeile. Zeilen, die mit # beginnen, und leere
 # Zeilen werden ignoriert. Ein wörtliches \n in einem Wert wird zu einem
 # echten Zeilenumbruch.
 

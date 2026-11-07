@@ -40,7 +40,7 @@
     },
     "evidence_history_strings.py": {
       "from": "src/urtc_common/evidence_history_strings.py",
-      "sha256": "630556c2a701718ee72e49a276acc44e338310033655cd3a657a3678d80b4cba"
+      "sha256": "ed342b7cae91f54ddf918bbbdbef56374d53ad39336a0762d64b6ec4068003b1"
     },
     "evidence_report.py": {
       "from": "src/urtc_common/evidence_report.py",
@@ -56,7 +56,7 @@
     },
     "evidence_report_strings.py": {
       "from": "src/urtc_common/evidence_report_strings.py",
-      "sha256": "6a81ec49ff3a2b0f6274176cc33a87a9a46577af0c29dbfd3ed43fbd7ad2505f"
+      "sha256": "16519edc0b3253b4bf861f48a31a4f7c9652c4aa148ca5c026c1d53da2aada65"
     },
     "firmware_check.py": {
       "from": "src/urtc_common/firmware_check.py",
@@ -88,7 +88,7 @@
     },
     "help_text.py": {
       "from": "src/urtc_common/help_text.py",
-      "sha256": "53b6a5d4094a2dec59bb5ded5d2c91072d269680c12bb6330e30b6959fe5e7b8"
+      "sha256": "252e296e06a5b802b2b32203b90ba5bc55a183d68ad077f19eb401a36c20784e"
     },
     "key_rotation.py": {
       "from": "src/urtc_common/key_rotation.py",

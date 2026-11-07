@@ -1,5 +1,5 @@
 # URTC Flasher - fichier de langue Français
-# CLE=Valeur, une par ligne. Les lignes commençant par # et les lignes
+# CLÉ=Valeur, une par ligne. Les lignes commençant par # et les lignes
 # vides sont ignorées. Un \n littéral dans une valeur devient un vrai
 # saut de ligne.
 

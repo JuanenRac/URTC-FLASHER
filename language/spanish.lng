@@ -1,7 +1,7 @@
 # URTC Flasher - archivo de idioma Español
-# CLAVE=Valor, uno por linea. Las lineas que empiezan por # y las lineas
+# CLAVE=Valor, uno por línea. Las líneas que empiezan por # y las líneas
 # en blanco se ignoran. Un \n literal dentro de un valor se convierte en
-# un salto de linea real.
+# un salto de línea real.
 
 CHK_ERASE_FRAM_BEFORE_FLASHING=También borrar la F-RAM de persistencia antes de flashear
 CHK_ALLOW_DOWNGRADE=Permitir downgrade (saltarse el anti-rollback) para esta actualización

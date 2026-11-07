@@ -31,7 +31,7 @@
 
 ---
 
-> **安全与安防现状:**本生态系统不是经认证的安全系统,目前也不存在已组装的 URTC 电路板。主板的引导程序用公钥表校验映像的 Ed25519 记录(`<image>.imgsig`),自身不保存任何机密;扩展从机的引导程序只检查普通 SHA-256,并且只安装主板确认过的映像;正式构建的公钥表在创建映像签名密钥之前为空,而台架构建信任一把公开的开发密钥,因此任何人都可以生成这类引导程序接受的映像;尚未向任何真实电路板发送过任何内容。在依赖此处任何说法来保障人身安全之前,请先阅读[安全基线](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md)和[威胁模型](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md)。
+> **安全与安防现状:**本生态系统不是经认证的安全系统,目前也不存在已组装的 URTC 板卡。主板的引导程序用公钥表校验映像的 Ed25519 记录(`<image>.imgsig`),自身不保存任何机密;扩展从机的引导程序只检查普通 SHA-256,并且只安装主板确认过的映像;正式构建的公钥表在创建映像签名密钥之前为空,而台架构建信任一把公开的开发密钥,因此任何人都可以生成这类引导程序接受的映像;尚未向任何真实板卡发送过任何内容。在依赖此处任何说法来保障人身安全之前,请先阅读[安全基线](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md)和[威胁模型](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md)。
 
 ## 📋 速览
 
@@ -53,10 +53,10 @@
 
 | 部分 | 状态 | 仓库能够证明的内容 |
 | --- | :---: | --- |
-| 软件 | 🟡 | 可在电脑上和模拟器上运行；从未在真实板子上运行过。 |
-| 界面 | 🟡 | 窗口可运行，并用模拟板子检查；未用真实适配器试过。 |
+| 软件 | 🟡 | 可在电脑上和模拟器上运行；从未在真实板卡上运行过。 |
+| 界面 | 🟡 | 窗口可运行，并用模拟板卡检查；未用真实适配器试过。 |
 | 测试 | 🟢 | 每次推送时测试套件都会在 CI 中通过。 |
-| 真实硬件 | 🟠 | 尚未在真实板子上运行：台架测试仍待进行。 |
+| 真实硬件 | 🟠 | 尚未在真实板卡上运行：台架测试仍待进行。 |
 | 安全 | 🟡 | 发布版使用 Ed25519 签名，并在使用前检查；密钥的处理没有他人审阅过。 |
 | 语言与无障碍 | 🟡 | 界面及其帮助有八种语言；键盘和屏幕阅读器的使用尚未测试 |
 | 文档 | 🟡 | 提供八种语言的 README 和参考文档；翻译未经母语者审阅。 |
@@ -79,7 +79,7 @@ CAN 自我标识），以便你在决定要刷写什么之前，先看看当前�
 
 - **串口 / SLCAN** —— 在 Windows 和 Linux 上均可使用。需要一个运行 SLCAN
   固件的 USB-CAN 适配器，作为虚拟串口连接。
-  - 没有适配器和硬件时，可由虚拟板代替：运行 `python -m urtc_can.virtual_board`，在启动程序之前把它的地址写入环境变量 `URTC_VIRTUAL_PORT`（例如 `socket://127.0.0.1:7777`），或在命令行中传给 `--port`。它会出现在端口列表中，并像真实板子一样响应，包括应用程序和引导程序。
+  - 没有适配器和硬件时，可由虚拟板代替：运行 `python -m urtc_can.virtual_board`，在启动程序之前把它的地址写入环境变量 `URTC_VIRTUAL_PORT`（例如 `socket://127.0.0.1:7777`），或在命令行中传给 `--port`。它会出现在端口列表中，并像真实板卡一样响应，包括应用程序和引导程序。
 - **SocketCAN** —— **仅限 Linux**，且仅在 Linux 上于工具界面中显示。直接与
   内核的 `can0`/`slcan0` 网络接口通信。如果你的适配器已经运行
   `gs_usb`/candleLight 固件（大多数 CANable 板卡开箱即用如此），这条路径
@@ -87,7 +87,7 @@ CAN 自我标识），以便你在决定要刷写什么之前，先看看当前�
 
 ## 🧩 在 URTC 中的角色
 
-URTC-FLASHER 是把固件写入 URTC 板的程序。它通过 USB-CAN 适配器（SLCAN 串口，或 Linux 上的 SocketCAN）使用 URTC 的引导程序协议（该仓库的 `docs/CANBUS.TXT`）：HardwareID 检查、镜像的 Ed25519 记录、带备份槽的黄金镜像流程，以及版本查询，让你在决定刷写什么之前先看到已安装的内容。对于没有可用引导程序的板子，或要编程整颗芯片时，它为 pyOCD 或 STM32CubeProgrammer 准备 SWD/JTAG 命令。它是 URTC-TESTER 的更新搭档，通过 URTC-COMMON 与其共享 CAN 代码，URTC-UPDATER 可以把已核对发布签名的固件镜像交给它。
+URTC-FLASHER 是把固件写入 URTC 板的程序。它通过 USB-CAN 适配器（SLCAN 串口，或 Linux 上的 SocketCAN）使用 URTC 的引导程序协议（该仓库的 `docs/CANBUS.TXT`）：HardwareID 检查、镜像的 Ed25519 记录、带备份槽的黄金镜像流程，以及版本查询，让你在决定刷写什么之前先看到已安装的内容。对于没有可用引导程序的板卡，或要编程整颗芯片时，它为 pyOCD 或 STM32CubeProgrammer 准备 SWD/JTAG 命令。它是 URTC-TESTER 的更新搭档，通过 URTC-COMMON 与其共享 CAN 代码，URTC-UPDATER 可以把已核对发布签名的固件镜像交给它。
 
 ## 🏛️ 架构
 
@@ -124,7 +124,7 @@ URTC-FLASHER 是把固件写入 URTC 板的程序。它通过 USB-CAN 适配器�
   <img src="images/screenshots/history.png" alt="历史记录" width="100%">
 </p>
 
-<p align="center"><em>历史窗口：程序为每块板子写下的所有记录，最新的在前，每条单独校验；“签名”列显示它是否已签名、由您的哪把密钥签名，或是否无效。</em></p>
+<p align="center"><em>历史窗口：程序为每块板卡写下的所有记录，最新的在前，每条单独校验；“签名”列显示它是否已签名、由您的哪把密钥签名，或是否无效。</em></p>
 
 <p align="center">
   <img src="images/screenshots/updates.png" alt="检查更新" width="100%">
@@ -137,7 +137,7 @@ URTC-FLASHER 是把固件写入 URTC 板的程序。它通过 USB-CAN 适配器�
 
 ### 检查当前已安装的内容
 
-> 在 Qt Quick 控制台中，两种传输方式的端口（串口适配器，以及 Linux 上的 SocketCAN 接口）都在同一个列表里，本节的查询由 **读取控制板状态** 完成：它一次性查询版本、CAN 错误计数器、扩展板类型、MLX9064x 型号和外设信息，并显示在板子快照中。设备配置一节中的保存按钮会写入这些值。
+> 在 Qt Quick 控制台中，两种传输方式的端口（串口适配器，以及 Linux 上的 SocketCAN 接口）都在同一个列表里，本节的查询由 **读取板卡状态** 完成：它一次性查询版本、CAN 错误计数器、扩展板类型、MLX9064x 型号和外设信息，并显示在板卡快照中。设备配置一节中的保存按钮会写入这些值。
 
 如果你在 Linux 上且 SocketCAN 可用，你会在顶部看到一个**传输方式**选项——
 在连接之前选择串口/SLCAN 或 SocketCAN。在 Windows 上根本不会出现这一行；
@@ -403,7 +403,7 @@ REC 保持平稳，通常指向本板卡自身的发送未被确认——总线�
 **检查选项字节**（同一个 SWD/JTAG 编程选项卡，仅限 STM32CubeProgrammer——
 pyOCD 没有以相同方式通过 CLI 公开这一功能）：一次只读的 `-ob displ`
 转储，不涉及擦除/写入。以本工具在 SWD 风险方面一贯的谨慎态度标记 RDP 级别：
-- **RDP0** —— 无保护，对开发板而言正常。
+- **RDP0** —— 无保护，对板卡而言正常。
 - **RDP1** —— 可通过 CubeProgrammer 的读出解除保护逆转，但那会作为解除
   保护的一部分批量擦除芯片——本工具不会为你自动执行此操作。
 - **RDP2** —— 整个项目中唯一真正**永久性**的锁定。与上文记录的每一项
@@ -473,7 +473,7 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 <!-- urtc-section:heads -->
 ### 一条总线上的多个工具头
 
-固件可以让多个工具头共用一条 CAN 总线（多节点扩展）。它**默认关闭**，只有一个工具头的总线与以前完全一样地工作。**工具头**窗口会查找工具头，列出每个工具头的地址、工具和序列号，并显示其状态：就绪、已选择、地址冲突、故障已锁定、处于引导程序或已丢失。您选择一个后，程序会先请您确认，之后才向该工具头发送任何内容；只要总线上有多个工具头，在选中一个并得到它的确认之前，命令都会被拒绝。如果所选工具头丢失，所有工具头都会进入安全状态（窗口中的复选框可关闭此行为）。目前只针对总线模型测试过，没有在电路板上试过。参见 URTC-COMMON 中的 `docs/MULTINODE.md`。
+固件可以让多个工具头共用一条 CAN 总线（多节点扩展）。它**默认关闭**，只有一个工具头的总线与以前完全一样地工作。**工具头**窗口会查找工具头，列出每个工具头的地址、工具和序列号，并显示其状态：就绪、已选择、地址冲突、故障已锁定、处于引导程序或已丢失。您选择一个后，程序会先请您确认，之后才向该工具头发送任何内容；只要总线上有多个工具头，在选中一个并得到它的确认之前，命令都会被拒绝。如果所选工具头丢失，所有工具头都会进入安全状态（窗口中的复选框可关闭此行为）。目前只针对总线模型测试过，没有在板卡上试过。参见 URTC-COMMON 中的 `docs/MULTINODE.md`。
 <!-- /urtc-section:heads -->
 
 <!-- urtc-section:bus_scenarios -->
@@ -486,13 +486,13 @@ pyOCD 自身的 `flash` 命令会跳过重写已经匹配的页面（这是一�
 
 | 风险 | 防御 |
 |---|---|
-| 把镜像刷到错误的板子上 | 引导程序协议的 HardwareID 检查，在写入任何内容之前进行 |
+| 把镜像刷到错误的板卡上 | 引导程序协议的 HardwareID 检查，在写入任何内容之前进行 |
 | 损坏、未签名或被篡改的镜像 | 镜像完整性检查；清单的 `sha256` 与文件不符会在任何总线通信之前被拒绝，未签名的镜像被拒绝，已发布的签名在不使用任何密钥的情况下发送；使用发布版镜像之前会核对发布签名（Ed25519） |
 | 误装较旧的镜像 | 引导程序的防回滚检查；有意回退需要降级授权 |
-| 更新失败让板子变砖 | 黄金镜像模型：备份槽保留之前的固件，丢失的确认帧通过再次询问版本来恢复，而不是报告错误的失败，并且可先回读主槽 |
+| 更新失败让板卡变砖 | 黄金镜像模型：备份槽保留之前的固件，丢失的确认帧通过再次询问版本来恢复，而不是报告错误的失败，并且可先回读主槽 |
 | 本程序的更新被篡改 | “检查更新”只接受 SHA-256 和 Ed25519 签名都有效的软件包（程序中固定的发布密钥），确认后才安装，绝不在传输期间安装，并保留之前的版本 |
 
-主板的引导程序用公钥表校验镜像的 Ed25519 记录，自身不保存任何机密；正式构建的公钥表在创建镜像签名密钥之前为空，而台架构建信任一把公开的开发密钥，所以任何人都可以做出这类引导程序接受的镜像。这一切都没有在真实的板子上运行过。
+主板的引导程序用公钥表校验镜像的 Ed25519 记录，自身不保存任何机密；正式构建的公钥表在创建镜像签名密钥之前为空，而台架构建信任一把公开的开发密钥，所以任何人都可以做出这类引导程序接受的镜像。这一切都没有在真实的板卡上运行过。
 
 ### CAN 更新期间的可靠性，以及会话日志
 
@@ -530,7 +530,7 @@ usage: urtc_flasher.py --cli [-h] [--transport {serial,socketcan,python-can,mock
 考虑到如果一次脚本化运行在无人监视的情况下弄错了文件/目标组合，风险会
 大得多。
 
-**`--transport python-can`** 使用可选的 `python-can` 包（`pip install python-can`），支持 PCAN、Kvaser、gs_usb/candleLight 及其支持的其他接口，因此无需把适配器重刷为 SLCAN：此时 `--port` 为 `<接口>:<通道>`（例如 `pcan:PCAN_USBBUS1`），总线以 500 kbit/s 打开。安装了 `python-can` 时，窗口也提供同样的适配器：python-can 为 PCAN、Kvaser 和 gs_usb 找到的适配器，以及环境变量 `URTC_PYTHON_CAN`（以逗号分隔的 `<接口>:<通道>`）中列出的适配器，显示为 `python-can:<接口>:<通道>`；该连接的总线速度固定为 500 kbit/s。窗口也可以用 `--firmware 路径` 启动，使镜像已被选中（在您连接并确认更新之前，不会向板子写入任何内容）。
+**`--transport python-can`** 使用可选的 `python-can` 包（`pip install python-can`），支持 PCAN、Kvaser、gs_usb/candleLight 及其支持的其他接口，因此无需把适配器重刷为 SLCAN：此时 `--port` 为 `<接口>:<通道>`（例如 `pcan:PCAN_USBBUS1`），总线以 500 kbit/s 打开。安装了 `python-can` 时，窗口也提供同样的适配器：python-can 为 PCAN、Kvaser 和 gs_usb 找到的适配器，以及环境变量 `URTC_PYTHON_CAN`（以逗号分隔的 `<接口>:<通道>`）中列出的适配器，显示为 `python-can:<接口>:<通道>`；该连接的总线速度固定为 500 kbit/s。窗口也可以用 `--firmware 路径` 启动，使镜像已被选中（在您连接并确认更新之前，不会向板卡写入任何内容）。
 
 **`--transport mock`** 针对一个模拟的、内存中的引导程序运行整个更新序列，
 而非真实板卡——不涉及适配器、端口，或任何物理设备：
@@ -544,7 +544,7 @@ python3 urtc_flasher.py --cli --transport mock --file firmware.bin --no-trigger
 （或 `docs/CANBUS.TXT` 中任何其他 `VERIFY_FAIL_REASON_*` 值）会让模拟更新
 验证失败而非成功，以便同样方式测试失败路径。
 
-- **操作历史。** 帮助旁边的**历史**按钮会打开 URTC-FLASHER 写入其日志文件夹的证据记录（`urtc-evidence/1`）。每一行显示类型、结果、工具、开发板和版本，最新的在前；写入后被编辑的记录、不是 JSON 的文件或其他格式的记录会显示为无效，并说明问题所在。列表可按结果和文本筛选，也可只显示失败的记录；每次打开都会重新读取文件夹，最多显示 500 行（并告知总数），不会更改磁盘上的任何内容。URTC-FLASHER、URTC-TESTER 和 URTC-UPDATER 使用同一个窗口，由 URTC-COMMON 共享，支持八种语言。命令行中，`python urtc_flasher.py --history FOLDER [--json]` 列出文件夹中的记录并逐条检查，只要有无效记录就以状态 1 退出；它不会打开任何总线。
+- **操作历史。** 帮助旁边的**历史**按钮会打开 URTC-FLASHER 写入其日志文件夹的证据记录（`urtc-evidence/1`）。每一行显示类型、结果、工具、板卡和版本，最新的在前；写入后被编辑的记录、不是 JSON 的文件或其他格式的记录会显示为无效，并说明问题所在。列表可按结果和文本筛选，也可只显示失败的记录；每次打开都会重新读取文件夹，最多显示 500 行（并告知总数），不会更改磁盘上的任何内容。URTC-FLASHER、URTC-TESTER 和 URTC-UPDATER 使用同一个窗口，由 URTC-COMMON 共享，支持八种语言。命令行中，`python urtc_flasher.py --history FOLDER [--json]` 列出文件夹中的记录并逐条检查，只要有无效记录就以状态 1 退出；它不会打开任何总线。
 
 ## ⚙️ 配置
 
@@ -657,7 +657,7 @@ python3 urtc_flasher.py
 ~~~
 python urtc_flasher.py
 ~~~
-它采用深海军蓝/青色界面，包含连接卡片、易读的固件表格、深色验证日志和清晰可见的进度条，并覆盖完整流程：对主板或扩展从机进行 CAN-OTA 更新（可选择目标；“板子正在运行应用程序”选项、F-RAM 擦除和降级授权仅适用于主板）、通过 CAN 备份已安装的固件、带仅监听搜索的总线速率选择器、下载 GitHub 发布版本、可选任意 `.bin` 的文件选择器、总线活动检查、Board Snapshot、4 项设备配置写入、只读的 SWD/JTAG 发现，以及通过 SWD/JTAG 对整个芯片编程（擦除/写入、试运行、擦除前备份、RDP 检查）。凡是写入板子的操作都会先请求确认，降级授权会再确认一次，传输过程中关闭窗口也会再次询问。这些都尚未在真实板子上试过。`python urtc_flasher.py --cli` 为无界面模式（第 7 节）。
+它采用深海军蓝/青色界面，包含连接卡片、易读的固件表格、深色验证日志和清晰可见的进度条，并覆盖完整流程：对主板或扩展从机进行 CAN-OTA 更新（可选择目标；“板卡正在运行应用程序”选项、F-RAM 擦除和降级授权仅适用于主板）、通过 CAN 备份已安装的固件、带仅监听搜索的总线速率选择器、下载 GitHub 发布版本、可选任意 `.bin` 的文件选择器、总线活动检查、Board Snapshot、4 项设备配置写入、只读的 SWD/JTAG 发现，以及通过 SWD/JTAG 对整个芯片编程（擦除/写入、试运行、擦除前备份、RDP 检查）。凡是写入板卡的操作都会先请求确认，降级授权会再确认一次，传输过程中关闭窗口也会再次询问。这些都尚未在真实板卡上试过。`python urtc_flasher.py --cli` 为无界面模式（第 7 节）。
 
 #### 标题栏与工具
 
@@ -792,10 +792,10 @@ SocketCAN 没有这个特定的坑——访问一个类似 `can0` 的接口不�
 <!-- urtc-section:first_flash -->
 ### 无硬件的首次运行
 
-1. 启动虚拟开发板：`python -m urtc_can.virtual_board`。
-2. 在另一个终端设置 `URTC_VIRTUAL_PORT=socket://127.0.0.1:7777` 并启动刷写器：虚拟开发板会出现在端口列表中。
+1. 启动虚拟板卡：`python -m urtc_can.virtual_board`。
+2. 在另一个终端设置 `URTC_VIRTUAL_PORT=socket://127.0.0.1:7777` 并启动刷写器：虚拟板卡会出现在端口列表中。
 3. 选中它，点击连接，从 `firmware/` 选择镜像（或浏览选择），然后点击开始 CAN-OTA。
-4. 虚拟开发板会接受完整更新，并像真实开发板一样检查大小、签名和版本。它只是一个模型：以上均未在开发板上运行过。
+4. 虚拟板卡会接受完整更新，并像真实板卡一样检查大小、签名和版本。它只是一个模型：以上均未在板卡上运行过。
 <!-- /urtc-section:first_flash -->
 
 <!-- urtc-section:compatibility -->
@@ -806,7 +806,7 @@ SocketCAN 没有这个特定的坑——访问一个类似 `can0` 的接口不�
 
 ## 🧪 测试
 
-测试套件在 61 个文件中共有 830 个测试（`python -m pytest tests -q`；在没有屏幕的机器上使用 Qt 时设置 `QT_QPA_PLATFORM=offscreen`；其中 101 个需要 PySide6，没有它时会被跳过）：针对真实 `MockCAN` 传输层的 CAN-OTA 协议（它回放完整的模拟引导程序：开始、擦除、接收、页数据和 ACK、签名记录帧、带真实成功或特定 `VERIFY_FAIL_REASON` 的更新结束）、签名规则、镜像完整性检查、`firmware/` 中内置的固件与其清单的核对、用 `dry_run` 构造的 SWD/JTAG 命令、语言文件和 Qt Quick 面板。根目录下的三个脚本（`verify_qt_*.py`）对 Qt 面板做端到端驱动。CI 还会运行 `ruff check`、`python -m mypy` 和 `tools/ci_validate.py`。`MockCAN` 只是根据协议写成的模型：它比真实的引导程序宽容，所以测试全绿并不能代替在真实板子上的试验。
+测试套件在 61 个文件中共有 830 个测试（`python -m pytest tests -q`；在没有屏幕的机器上使用 Qt 时设置 `QT_QPA_PLATFORM=offscreen`；其中 101 个需要 PySide6，没有它时会被跳过）：针对真实 `MockCAN` 传输层的 CAN-OTA 协议（它回放完整的模拟引导程序：开始、擦除、接收、页数据和 ACK、签名记录帧、带真实成功或特定 `VERIFY_FAIL_REASON` 的更新结束）、签名规则、镜像完整性检查、`firmware/` 中内置的固件与其清单的核对、用 `dry_run` 构造的 SWD/JTAG 命令、语言文件和 Qt Quick 面板。根目录下的三个脚本（`verify_qt_*.py`）对 Qt 面板做端到端驱动。CI 还会运行 `ruff check`、`python -m mypy` 和 `tools/ci_validate.py`。`MockCAN` 只是根据协议写成的模型：它比真实的引导程序宽容，所以测试全绿并不能代替在真实板卡上的试验。
 
 ## 🏗️ 构建与发布
 
@@ -876,14 +876,14 @@ README 和文本提供英语、西班牙语、法语、意大利语、德语、�
 URTC 由相互独立的仓库组成，每个仓库都有自己的版本、测试和 README。以下是按组划分的家族：
 
 * **URTC Tool Platform:**
-  * [URTC](https://github.com/JuanenRac/URTC) - 工具头电路板的固件(25 个工具配置、CAN 引导程序)以及 CAN 协议参考。
+  * [URTC](https://github.com/JuanenRac/URTC) - 工具头板卡的固件(25 个工具配置、CAN 引导程序)以及 CAN 协议参考。
   * [URTC-COMMON](https://github.com/JuanenRac/URTC-COMMON) - 只写一次的 CAN 协议数据(规范、生成的表格、一致性向量)以及各程序共享的代码。
-  * **URTC-FLASHER** (本仓库) - 通过 CAN 或 SWD/JTAG 更新电路板固件的桌面工具。
+  * **URTC-FLASHER** (本仓库) - 通过 CAN 或 SWD/JTAG 更新板卡固件的桌面工具。
   * [URTC-GATEWAY](https://github.com/JuanenRac/URTC-GATEWAY) - 位于 CAN 总线前的网关:只放行列表中的标识符,限制其速率,并要求会话密钥。
   * [URTC-SMART-RACK](https://github.com/JuanenRac/URTC-SMART-RACK) - 用于带预热和生命周期跟踪的工具架的、与硬件无关的 C 逻辑和命令协议。
-  * [URTC-TESTER](https://github.com/JuanenRac/URTC-TESTER) - 桌面实时 CAN 总线测试器,显示电路板所报告工具配置的控件和遥测。
+  * [URTC-TESTER](https://github.com/JuanenRac/URTC-TESTER) - 桌面实时 CAN 总线测试器,显示板卡所报告工具配置的控件和遥测。
   * [URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL) - C 语言的传感器帧协议,以及用于检测工具头的 Python 热成像/RGB 配套程序。
-  * [URTC-WEB-STUDIO](https://github.com/JuanenRac/URTC-WEB-STUDIO) - 通过 Web Serial 和 SLCAN 烧录并测试电路板的浏览器应用,无需安装。
+  * [URTC-WEB-STUDIO](https://github.com/JuanenRac/URTC-WEB-STUDIO) - 通过 Web Serial 和 SLCAN 烧录并测试板卡的浏览器应用,无需安装。
 * **Ecosystem Operations:**
   * [URTC-DEVTOOLS](https://github.com/JuanenRac/URTC-DEVTOOLS) - 家族共用的仓库工具，作为带版本的整套工具，并用锁文件区分被改动的副本和已过时的副本。
   * [URTC-DOCS](https://github.com/JuanenRac/URTC-DOCS) - 生态系统的架构、接口、安全基线和生成的目录,以及比较所有仓库的工具。
@@ -909,7 +909,7 @@ URTC 由相互独立的仓库组成，每个仓库都有自己的版本、测试
 * 提交 Pull Request 之前请运行 `URTC_CI=1 python tools/ci_validate.py`：必须通过。参见 [CONTRIBUTING.md](CONTRIBUTING.md) 和[行为准则](CODE_OF_CONDUCT.md)。
 * README 有八种语言：修改文字时要同步修改全部八个文件，与其他仓库共用的章节由 URTC-COMMON 的 `tools/readme_sections.py` 写入。
 * 对 CAN 协议的修改从 URTC-COMMON（`spec/can_protocol.json`）开始，并通过经过核对的副本进入本仓库。
-* 不要把仅仅构建过的东西描述为已在板子上运行。
+* 不要把仅仅构建过的东西描述为已在板卡上运行。
 * 请私下报告漏洞：[SECURITY.md](SECURITY.md)。问题、想法和报告：electrohobby3d@gmail.com（[SUPPORT.md](SUPPORT.md)）。
 
 ## 👤 作者

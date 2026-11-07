@@ -64,7 +64,7 @@
         "fr": "La fenêtre de l'historique : tous les enregistrements que les programmes ont écrits pour chaque carte, le plus récent d'abord, chacun vérifié séparément, avec une colonne Signature qui dit s'il est signé, par laquelle de vos clés, ou s'il n'est pas valide.",
         "it": "La finestra della cronologia: tutti i record che i programmi hanno scritto per ogni scheda, il più recente per primo, ciascuno verificato a sé, con una colonna Firma che dice se è firmato, con quale delle tue chiavi, o se non è valido.",
         "de": "Das Verlaufsfenster: alle Protokolle, die die Programme zu jeder Platine geschrieben haben, das neueste zuerst, jedes für sich geprüft, mit einer Spalte Signatur, die sagt, ob es signiert ist, mit welchem deiner Schlüssel, oder ob es ungültig ist.",
-        "zh": "历史窗口：程序为每块板子写下的所有记录，最新的在前，每条单独校验；“签名”列显示它是否已签名、由您的哪把密钥签名，或是否无效。",
+        "zh": "历史窗口：程序为每块板卡写下的所有记录，最新的在前，每条单独校验；“签名”列显示它是否已签名、由您的哪把密钥签名，或是否无效。",
         "ja": "履歴ウィンドウ：各ボードについてプログラムが書いた記録を新しい順に表示し、それぞれを個別に検証します。署名列には、署名の有無、どの鍵で署名されたか、または無効かが表示されます。",
         "pt": "A janela do histórico: todos os registos que os programas escreveram sobre cada placa, o mais recente primeiro, cada um verificado por si, com uma coluna Assinatura que diz se está assinado, com qual das suas chaves, ou se não é válido."
       }
