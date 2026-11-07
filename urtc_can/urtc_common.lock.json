@@ -128,7 +128,7 @@
     },
     "node_picker_strings.py": {
       "from": "src/urtc_common/node_picker_strings.py",
-      "sha256": "c6f5ddfdddecc5a414bafdb8738b29b9240d3db945e2f2f46f3ab91f48a6fdf7"
+      "sha256": "814032414bda76141818f27cfe33bed82261388654babde5781c8aad96b353c6"
     },
     "protocol.py": {
       "from": "src/urtc_common/protocol.py",
