@@ -720,9 +720,11 @@ LAYOUTS = {
     'bootloader_select_request_select': {'id': 2026, 'role': 'request', 'dlc': {'exact': 6}, 'fields': [{'name': 'operation', 'type': 'bytes', 'offset': 0, 'fixed': '02', 'length': 1}, {'name': 'serial', 'type': 'u32', 'offset': 1, 'width': 4}, {'name': 'seq', 'type': 'u8', 'offset': 5, 'width': 1}]},
     'bootloader_select_request_release': {'id': 2026, 'role': 'request', 'dlc': {'exact': 1}, 'fields': [{'name': 'operation', 'type': 'bytes', 'offset': 0, 'fixed': '03', 'length': 1}]},
     'bootloader_select_request_uid': {'id': 2026, 'role': 'request', 'dlc': {'exact': 2}, 'fields': [{'name': 'operation', 'type': 'bytes', 'offset': 0, 'fixed': '04', 'length': 1}, {'name': 'part', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 2]}]},
+    'bootloader_select_request_rotation_status': {'id': 2026, 'role': 'request', 'dlc': {'exact': 1}, 'fields': [{'name': 'operation', 'type': 'bytes', 'offset': 0, 'fixed': '05', 'length': 1}]},
     'bootloader_select_response_response_probe': {'id': 2027, 'role': 'response', 'dlc': {'exact': 2}, 'fields': [{'name': 'operation', 'type': 'bytes', 'offset': 0, 'fixed': '01', 'length': 1}, {'name': 'mark', 'type': 'bytes', 'offset': 1, 'fixed': 'A5', 'length': 1}]},
     'bootloader_select_response_response_select': {'id': 2027, 'role': 'response', 'dlc': {'exact': 6}, 'fields': [{'name': 'operation', 'type': 'bytes', 'offset': 0, 'fixed': '02', 'length': 1}, {'name': 'serial', 'type': 'u32', 'offset': 1, 'width': 4}, {'name': 'seq', 'type': 'u8', 'offset': 5, 'width': 1}]},
     'bootloader_select_response_response_uid': {'id': 2027, 'role': 'response', 'dlc': {'exact': 6}, 'fields': [{'name': 'operation', 'type': 'bytes', 'offset': 0, 'fixed': '04', 'length': 1}, {'name': 'part', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 2]}, {'name': 'word', 'type': 'u32', 'offset': 2, 'width': 4}]},
+    'bootloader_select_response_response_rotation_status': {'id': 2027, 'role': 'response', 'dlc': {'exact': 7}, 'fields': [{'name': 'operation', 'type': 'bytes', 'offset': 0, 'fixed': '05', 'length': 1}, {'name': 'key_count', 'type': 'u8', 'offset': 1, 'width': 1}, {'name': 'flags', 'type': 'u8', 'offset': 2, 'width': 1}, {'name': 'seconds_left', 'type': 'u32', 'offset': 3, 'width': 4}]},
     'bootloader_signature_chunk': {'id': 2028, 'role': 'request', 'dlc': {'exact': 8}, 'fields': [{'name': 'index', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 10]}, {'name': 'data', 'type': 'bytes', 'offset': 1, 'length': 7}]},
     'bootloader_key_id': {'id': 2029, 'role': 'response', 'dlc': {'exact': 8}, 'fields': [{'name': 'key_id', 'type': 'bytes', 'offset': 0, 'length': 8}]},
     'bootloader_serial_chunk': {'id': 2030, 'role': 'request', 'dlc': {'exact': 8}, 'fields': [{'name': 'index', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 11]}, {'name': 'data', 'type': 'bytes', 'offset': 1, 'length': 7}]},
@@ -1966,6 +1968,17 @@ def decode_bootloader_select_request_uid(data: bytes, strict: bool = False) -> d
     return decode("bootloader_select_request_uid", data, strict)
 
 
+def encode_bootloader_select_request_rotation_status(operation: bytes | None = None) -> tuple[int, bytes]:
+    """Address one bootloader by its serial number (0x7EA, request, rotation_status)."""
+    values = {k: v for k, v in dict(operation=operation).items() if v is not None}
+    return encode("bootloader_select_request_rotation_status", **values)
+
+
+def decode_bootloader_select_request_rotation_status(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x7EA (request, rotation_status), or None when the payload is too short."""
+    return decode("bootloader_select_request_rotation_status", data, strict)
+
+
 def encode_bootloader_select_response_response_probe(operation: bytes | None = None, mark: bytes | None = None) -> tuple[int, bytes]:
     """Answer to the addressing of a bootloader (0x7EB, response, probe)."""
     values = {k: v for k, v in dict(operation=operation, mark=mark).items() if v is not None}
@@ -1997,6 +2010,17 @@ def encode_bootloader_select_response_response_uid(part: int, word: int, operati
 def decode_bootloader_select_response_response_uid(data: bytes, strict: bool = False) -> dict | None:
     """Fields of 0x7EB (response, uid), or None when the payload is too short."""
     return decode("bootloader_select_response_response_uid", data, strict)
+
+
+def encode_bootloader_select_response_response_rotation_status(key_count: int, flags: int, seconds_left: int, operation: bytes | None = None) -> tuple[int, bytes]:
+    """Answer to the addressing of a bootloader (0x7EB, response, rotation_status)."""
+    values = {k: v for k, v in dict(key_count=key_count, flags=flags, seconds_left=seconds_left, operation=operation).items() if v is not None}
+    return encode("bootloader_select_response_response_rotation_status", **values)
+
+
+def decode_bootloader_select_response_response_rotation_status(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x7EB (response, rotation_status), or None when the payload is too short."""
+    return decode("bootloader_select_response_response_rotation_status", data, strict)
 
 
 def encode_bootloader_signature_chunk(index: int, data: bytes) -> tuple[int, bytes]:

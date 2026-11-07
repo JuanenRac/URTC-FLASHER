@@ -3008,6 +3008,18 @@
       }
     },
     {
+      "name": "BOOTLOADER_SELECT request rotation_status: ask for the key status",
+      "message": "BOOTLOADER_SELECT",
+      "layout": "bootloader_select_request_rotation_status",
+      "fields": {
+        "operation": "05"
+      },
+      "frame": {
+        "id": "0x7EA",
+        "data": "05"
+      }
+    },
+    {
       "name": "BOOTLOADER_SELECT_RESPONSE response probe: someone matches",
       "message": "BOOTLOADER_SELECT_RESPONSE",
       "layout": "bootloader_select_response_response_probe",
@@ -3046,6 +3058,21 @@
       "frame": {
         "id": "0x7EB",
         "data": "040011111111"
+      }
+    },
+    {
+      "name": "BOOTLOADER_SELECT_RESPONSE response rotation_status: rotating, one hour left",
+      "message": "BOOTLOADER_SELECT_RESPONSE",
+      "layout": "bootloader_select_response_response_rotation_status",
+      "fields": {
+        "operation": "05",
+        "key_count": 2,
+        "flags": 1,
+        "seconds_left": 3600
+      },
+      "frame": {
+        "id": "0x7EB",
+        "data": "05020100000E10"
       }
     },
     {
@@ -6271,6 +6298,39 @@
       "strict": true
     },
     {
+      "name": "BOOTLOADER_SELECT request rotation_status: ask for the key status",
+      "message": "BOOTLOADER_SELECT",
+      "layout": "bootloader_select_request_rotation_status",
+      "frame": {
+        "id": "0x7EA",
+        "data": "05"
+      },
+      "fields": {
+        "operation": "05"
+      }
+    },
+    {
+      "name": "BOOTLOADER_SELECT request: 0 bytes is too short",
+      "message": "BOOTLOADER_SELECT",
+      "layout": "bootloader_select_request_rotation_status",
+      "frame": {
+        "id": "0x7EA",
+        "data": ""
+      },
+      "fields": null
+    },
+    {
+      "name": "BOOTLOADER_SELECT request: one byte too many is refused when strict",
+      "message": "BOOTLOADER_SELECT",
+      "layout": "bootloader_select_request_rotation_status",
+      "frame": {
+        "id": "0x7EA",
+        "data": "0500"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
       "name": "BOOTLOADER_SELECT_RESPONSE response probe: someone matches",
       "message": "BOOTLOADER_SELECT_RESPONSE",
       "layout": "bootloader_select_response_response_probe",
@@ -6370,6 +6430,42 @@
       "frame": {
         "id": "0x7EB",
         "data": "04001111111100"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "BOOTLOADER_SELECT_RESPONSE response rotation_status: rotating, one hour left",
+      "message": "BOOTLOADER_SELECT_RESPONSE",
+      "layout": "bootloader_select_response_response_rotation_status",
+      "frame": {
+        "id": "0x7EB",
+        "data": "05020100000E10"
+      },
+      "fields": {
+        "operation": "05",
+        "key_count": 2,
+        "flags": 1,
+        "seconds_left": 3600
+      }
+    },
+    {
+      "name": "BOOTLOADER_SELECT_RESPONSE response: 6 bytes is too short",
+      "message": "BOOTLOADER_SELECT_RESPONSE",
+      "layout": "bootloader_select_response_response_rotation_status",
+      "frame": {
+        "id": "0x7EB",
+        "data": "05020100000E"
+      },
+      "fields": null
+    },
+    {
+      "name": "BOOTLOADER_SELECT_RESPONSE response: one byte too many is refused when strict",
+      "message": "BOOTLOADER_SELECT_RESPONSE",
+      "layout": "bootloader_select_response_response_rotation_status",
+      "frame": {
+        "id": "0x7EB",
+        "data": "05020100000E1000"
       },
       "fields": null,
       "strict": true
@@ -7791,6 +7887,14 @@
       }
     },
     {
+      "name": "BOOTLOADER_SELECT: a payload that is not the magic one",
+      "message": "BOOTLOADER_SELECT",
+      "layout": "bootloader_select_request_rotation_status",
+      "fields": {
+        "operation": "00"
+      }
+    },
+    {
       "name": "BOOTLOADER_SELECT_RESPONSE: a payload that is not the magic one",
       "message": "BOOTLOADER_SELECT_RESPONSE",
       "layout": "bootloader_select_response_response_probe",
@@ -7836,6 +7940,17 @@
         "operation": "04",
         "part": 3,
         "word": 286331153
+      }
+    },
+    {
+      "name": "BOOTLOADER_SELECT_RESPONSE: a payload that is not the magic one",
+      "message": "BOOTLOADER_SELECT_RESPONSE",
+      "layout": "bootloader_select_response_response_rotation_status",
+      "fields": {
+        "operation": "00",
+        "key_count": 2,
+        "flags": 1,
+        "seconds_left": 3600
       }
     },
     {
