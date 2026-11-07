@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The copy of the CAN identifiers and vectors is refreshed:** the shared tables now list `0x1BC` (ask for the crash record) and `0x1BD` (the six frames of the record), the identifiers a firmware built with the crash capture answers; this program neither sends nor reads them.
+
 - **The README states how many tests need PySide6, as measured:** the 830 tests all pass with PySide6 (820 passed and 10 skipped for other reasons) and 719 pass without it, so 101 of them need PySide6 (the earlier figure of 73 was not what the runs show).
 
 - **The pause between the data frames of a transfer is a setting:** `frame_gap_ms` in `urtc_config.json` (a number of milliseconds, default 1.0, from 0 to 50; 0 sends the frames back to back). A value that is not a number or lies outside the limits falls back to the default and the log says why. The measured speed of every page and of the whole transfer is already in the log, so a value can be tried and compared. New tests cover the limits, the fall-back, the example file and that the transfer uses the value.

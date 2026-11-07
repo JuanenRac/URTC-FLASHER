@@ -1364,6 +1364,14 @@
       "name": "HEALTH_INFO"
     },
     {
+      "id": "0x1BC",
+      "name": "CRASH_DUMP_QUERY"
+    },
+    {
+      "id": "0x1BD",
+      "name": "CRASH_DUMP_RESP"
+    },
+    {
       "id": "0x1C0",
       "name": "SPOT_WELD_CMD"
     },
@@ -2436,6 +2444,30 @@
       "frame": {
         "id": "0x1BB",
         "data": "0108040400000E10"
+      }
+    },
+    {
+      "name": "CRASH_DUMP_QUERY request: read the capture",
+      "message": "CRASH_DUMP_QUERY",
+      "layout": "crash_dump_query",
+      "fields": {
+        "operation": 0
+      },
+      "frame": {
+        "id": "0x1BC",
+        "data": "00"
+      }
+    },
+    {
+      "name": "CRASH_DUMP_RESP response: one of the six frames",
+      "message": "CRASH_DUMP_RESP",
+      "layout": "crash_dump_resp",
+      "fields": {
+        "data": "4352534800000000"
+      },
+      "frame": {
+        "id": "0x1BD",
+        "data": "4352534800000000"
       }
     },
     {
@@ -5133,6 +5165,50 @@
       "fields": null
     },
     {
+      "name": "CRASH_DUMP_QUERY request: read the capture",
+      "message": "CRASH_DUMP_QUERY",
+      "layout": "crash_dump_query",
+      "frame": {
+        "id": "0x1BC",
+        "data": "00"
+      },
+      "fields": {
+        "operation": 0
+      }
+    },
+    {
+      "name": "CRASH_DUMP_QUERY request: 0 bytes is too short",
+      "message": "CRASH_DUMP_QUERY",
+      "layout": "crash_dump_query",
+      "frame": {
+        "id": "0x1BC",
+        "data": ""
+      },
+      "fields": null
+    },
+    {
+      "name": "CRASH_DUMP_RESP response: one of the six frames",
+      "message": "CRASH_DUMP_RESP",
+      "layout": "crash_dump_resp",
+      "frame": {
+        "id": "0x1BD",
+        "data": "4352534800000000"
+      },
+      "fields": {
+        "data": "4352534800000000"
+      }
+    },
+    {
+      "name": "CRASH_DUMP_RESP response: 7 bytes is too short",
+      "message": "CRASH_DUMP_RESP",
+      "layout": "crash_dump_resp",
+      "frame": {
+        "id": "0x1BD",
+        "data": "43525348000000"
+      },
+      "fields": null
+    },
+    {
       "name": "SPOT_WELD_CMD request: 100 ms pulse",
       "message": "SPOT_WELD_CMD",
       "layout": "spot_weld_cmd",
@@ -7613,6 +7689,14 @@
         "kd_x100": 150,
         "state": 1,
         "duty_percent": 101
+      }
+    },
+    {
+      "name": "CRASH_DUMP_QUERY: operation above its maximum",
+      "message": "CRASH_DUMP_QUERY",
+      "layout": "crash_dump_query",
+      "fields": {
+        "operation": 1
       }
     },
     {
