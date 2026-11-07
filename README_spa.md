@@ -909,24 +909,24 @@ Esta herramienta espera una carpeta `firmware/` justo al lado de
 ├── assets/
 │   └── URTC_LOGO_FLASHER.svg      <- fuente del banner (vectorial)
 ├── firmware/
-│   ├── URTC_MAIN_FIRMWARE_v<version>.bin  <- pon los archivos .bin nuevos aqui
+│   ├── URTC_MAIN_FIRMWARE_v<version>.bin  <- pon los archivos .bin nuevos aquí
 │   ├── URTC_*  <- tools/sync_firmware.py sustituye los archivos URTC_* de esta carpeta por los de una release; los demás archivos se quedan
-│   └── URTC_SLAVE_FIRMWARE_v<version>.bin    <- app del chip esclavo de expansion, si aplica
-├── logs/                          <- se crea automaticamente, un archivo por sesion
-├── urtc_config.json               <- opcional, no incluido por defecto (ver "Cambiar la clave HMAC" mas abajo)
+│   └── URTC_SLAVE_FIRMWARE_v<version>.bin    <- app del chip esclavo de expansión, si aplica
+├── logs/                          <- se crea automáticamente, un archivo por sesión
+├── urtc_config.json               <- opcional, no incluido por defecto (ver "Cambiar la clave HMAC" más abajo)
 ├── urtc_flasher.py                <- punto de entrada: argumentos de la CLI e inicio de la ventana Qt Quick
-├── flasher_config.py              <- E/S del archivo de configuracion, carga de idioma, constantes del protocolo
+├── flasher_config.py              <- E/S del archivo de configuración, carga de idioma, constantes del protocolo
 ├── flasher_transports.py          <- SLCAN, SocketCAN, MockCAN
 ├── flasher_swd_tools.py           <- envoltorios de STM32CubeProgrammer / pyOCD
-├── flasher_validation.py          <- validacion de archivos de firmware (.bin/.hex/.elf)
-├── flasher_protocol.py            <- la propia maquina de estados de CAN OTA, tanto para la placa principal como (relevado a traves de su propio puente I2C) el chip esclavo de expansion
+├── flasher_validation.py          <- validación de archivos de firmware (.bin/.hex/.elf)
+├── flasher_protocol.py            <- la propia máquina de estados de CAN OTA, tanto para la placa principal como (relevado a través de su propio puente I2C) el chip esclavo de expansión
 ├── flasher_github.py               <- lista y descarga los assets de una release de GitHub de URTC
 ├── flasher_records.py             <- registros de sesión (ubicación, retención) e informes de actualización
 ├── flasher_scenario.py            <- una actualización tras un escenario de bus simulado, con reloj virtual y su registro de evidencia
 ├── pytest.ini / ruff.toml          <- ajustes de pytest y ruff (comprobaciones estáticas)
 ├── requirements.txt
-├── build_exe.bat                  <- compilacion independiente para Windows
-├── build_exe.sh                   <- compilacion independiente para Linux
+├── build_exe.bat                  <- compilación independiente para Windows
+├── build_exe.sh                   <- compilación independiente para Linux
 └── README.md
 ```
 

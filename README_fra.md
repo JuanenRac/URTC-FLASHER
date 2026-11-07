@@ -936,19 +936,19 @@ Cet outil s'attend à un dossier `firmware/` juste à côté de
 
 ```
 ├── assets/
-│   └── URTC_LOGO_FLASHER.svg      <- source de la banniere (vectorielle)
+│   └── URTC_LOGO_FLASHER.svg      <- source de la bannière (vectorielle)
 ├── firmware/
 │   ├── URTC_MAIN_FIRMWARE_v<version>.bin  <- placez les nouveaux fichiers .bin ici
 │   ├── URTC_*  <- tools/sync_firmware.py remplace les fichiers URTC_* de ce dossier par ceux d'une release ; les autres fichiers restent
-│   └── URTC_SLAVE_FIRMWARE_v<version>.bin    <- application du chip esclave d'extension, le cas echeant
-├── logs/                          <- cree automatiquement, un fichier par session
-├── urtc_config.json               <- optionnel, non inclus par defaut (voir "Changer la cle HMAC" ci-dessous)
+│   └── URTC_SLAVE_FIRMWARE_v<version>.bin    <- application du chip esclave d'extension, le cas échéant
+├── logs/                          <- créé automatiquement, un fichier par session
+├── urtc_config.json               <- optionnel, non inclus par défaut (voir "Changer la clé HMAC" ci-dessous)
 ├── urtc_flasher.py                <- point d'entrée : arguments CLI et démarrage de la fenêtre Qt Quick
 ├── flasher_config.py              <- E/S du fichier de configuration, chargement de la langue, constantes du protocole
 ├── flasher_transports.py          <- SLCAN, SocketCAN, MockCAN
 ├── flasher_swd_tools.py           <- wrappers STM32CubeProgrammer / pyOCD
 ├── flasher_validation.py          <- validation des fichiers firmware (.bin/.hex/.elf)
-├── flasher_protocol.py            <- la machine a etats CAN OTA elle-meme, tant pour la carte principale que (relayee via son propre pont I2C) l'esclave d'extension
+├── flasher_protocol.py            <- la machine à états CAN OTA elle-même, tant pour la carte principale que (relayée via son propre pont I2C) l'esclave d'extension
 ├── flasher_github.py               <- liste et télécharge les assets d'une release GitHub d'URTC
 ├── flasher_records.py             <- journaux de session (emplacement, conservation) et rapports de mise à jour
 ├── flasher_scenario.py            <- une mise à jour derrière un scénario de bus simulé, sur une horloge virtuelle, avec son enregistrement de preuve

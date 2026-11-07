@@ -950,7 +950,7 @@ Dieses Tool erwartet einen `firmware/`-Ordner direkt neben
 │   ├── URTC_*  <- tools/sync_firmware.py ersetzt die URTC_*-Dateien dieses Ordners durch die eines Releases; andere Dateien bleiben
 │   └── URTC_SLAVE_FIRMWARE_v<version>.bin    <- Anwendung des Erweiterungs-Slave-Chips, falls zutreffend
 ├── logs/                          <- automatisch erstellt, eine Datei pro Sitzung
-├── urtc_config.json               <- optional, nicht standardmaessig enthalten (siehe "Den HMAC-Schluessel aendern" unten)
+├── urtc_config.json               <- optional, nicht standardmäßig enthalten (siehe "Den HMAC-Schlüssel ändern" unten)
 ├── urtc_flasher.py                <- Einstiegspunkt: CLI-Argumente und Start des Qt-Quick-Fensters
 ├── flasher_config.py              <- Konfigurationsdatei-E/A, Sprachladen, Protokollkonstanten
 ├── flasher_transports.py          <- SLCAN, SocketCAN, MockCAN
@@ -962,8 +962,8 @@ Dieses Tool erwartet einen `firmware/`-Ordner direkt neben
 ├── flasher_scenario.py            <- eine Aktualisierung hinter einem simulierten Bus-Szenario, mit virtueller Uhr und ihrem Nachweis
 ├── pytest.ini / ruff.toml          <- Einstellungen für pytest und ruff (statische Prüfungen)
 ├── requirements.txt
-├── build_exe.bat                  <- eigenstandiger Build fuer Windows
-├── build_exe.sh                   <- eigenstandiger Build fuer Linux
+├── build_exe.bat                  <- eigenständiger Build für Windows
+├── build_exe.sh                   <- eigenständiger Build für Linux
 └── README.md
 ```
 
