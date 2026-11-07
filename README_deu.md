@@ -392,7 +392,7 @@ durchsucht, falls der Exit-Code eines Tools allein in irgendeiner
 anderen Situation ebenfalls nicht vertrauenswürdig wäre.
 
 **Der Testlauf ist standardmäßig aktiviert.** Lassen Sie ihn beim
-ersten Mal markiert und drücken Sie "Flash Complete Chip" - er druckt
+ersten Mal markiert und drücken Sie "Kompletten Chip flashen" - er druckt
 die genauen Befehle ins Protokoll, ohne die Platine zu berühren. Lesen
 Sie sie durch, bestätigen Sie, dass Pfade und Adressen richtig
 aussehen, *dann* deaktivieren Sie den Testlauf und tun es wirklich.

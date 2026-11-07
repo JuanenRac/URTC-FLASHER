@@ -148,7 +148,7 @@ Se estiver em Linux e o SocketCAN estiver disponível, verá uma escolha de
 **Transport** no topo - escolha Serial/SLCAN ou SocketCAN antes de ligar. Em
 Windows esta linha nem sequer aparece; Serial/SLCAN é a única opção.
 
-Clique em **Connect**, e a ferramenta pergunta automaticamente à placa o que
+Clique em **Ligar**, e a ferramenta pergunta automaticamente à placa o que
 está atualmente a correr (CAN ID `0x7F8` → `0x7F9` - consulte
 `docs/CANBUS.TXT`). Isto funciona quer a placa esteja a correr a sua aplicação
 normalmente *quer* esteja parada no bootloader, pelo que não precisa de
@@ -226,7 +226,7 @@ expansão.
 
 ### Gravação
 
-1. **Connect**: escolha Serial/SLCAN ou SocketCAN (apenas Linux), depois a
+1. **Ligar**: escolha Serial/SLCAN ou SocketCAN (apenas Linux), depois a
    porta/interface, e clique em Connect. Para Serial/SLCAN isto abre o canal
    CAN a 500 kbit/s (a velocidade fixa do barramento do URTC); para SocketCAN
    espera-se que a interface já esteja a esse bitrate (passo 1 acima) - esta
@@ -312,7 +312,7 @@ acima:
 | Precisa de | Um adaptador USB-CAN | Uma sonda SWD/JTAG (ST-Link ou semelhante) |
 | Uso típico | Atualizações de firmware de rotina | Primeiro bring-up num chip em branco, ou recuperar uma placa inutilizada (bricked) |
 
-**Target chip:** "Esta placa (principal)" ou "Escravo de expansão" - as mesmas 2 opções
+**Chip de destino:** "Esta placa (principal)" ou "Escravo de expansão" - as mesmas 2 opções
 do seletor do próprio separador CAN-OTA, mas uma escolha genuinamente separada
 aqui: o SWD/JTAG precisa de uma sonda fisicamente ligada ao chip para o qual
 isto está definido, uma vez que não há uma ponte (ao contrário do CAN-OTA) que
@@ -364,7 +364,7 @@ falha conhecido como segunda camada, caso o código de saída de uma ferramenta
 por si só não seja de confiança noutra situação qualquer.
 
 **O dry run vem ativado por defeito.** Na primeira vez, deixe-o marcado e
-clique em "Flash Complete Chip" - imprime os comandos exatos no registo sem
+clique em "Flashar chip completo" - imprime os comandos exatos no registo sem
 tocar na placa. Leia-os, confirme que os caminhos e os endereços parecem
 certos, *e só depois* desmarque o dry run e faça-o a sério.
 
@@ -397,7 +397,7 @@ que isto assume.
 **Seletor de bitrate + auto-deteção** (apenas Serial/SLCAN): o barramento do
 URTC é fixo a 500 kbit/s, que continua a ser o valor por defeito - isto serve
 para um adaptador mal configurado ou para diagnosticar uma placa não standard.
-**Auto-detect** apenas *escuta*: abre o adaptador no modo de apenas escuta do
+**Deteção automática** apenas *escuta*: abre o adaptador no modo de apenas escuta do
 SLCAN (`L`) em cada bitrate standard por vez e pára no primeiro em que ouve
 uma trama CAN válida, pelo que nunca transmite e não pode perturbar um
 barramento em funcionamento. Por isso precisa que outros nós estejam a enviar
@@ -491,7 +491,7 @@ errado é apanhado e bloqueado, não aceite silenciosamente. A mesma lógica
 aplica-se a `.hex`/`.elf`, verificada contra o seu próprio endereço de carga
 embutido.
 
-**Check Option Bytes** (mesmo separador SWD/JTAG Programming, apenas
+**Verificar Option Bytes** (mesmo separador SWD/JTAG Programming, apenas
 STM32CubeProgrammer - o pyOCD não expõe isto da mesma forma através da CLI):
 um dump `-ob displ` só de leitura, sem apagar/escrever. Assinala o nível de
 RDP com o mesmo cuidado que toda esta ferramenta tem em torno do risco SWD:
@@ -897,7 +897,7 @@ encontra, e os binários de bootloader (qualquer coisa com "BOOTLOADER" no nome
 do ficheiro - `URTC_BOOTLOADER.bin`, `URTC_SLAVE_BOOTLOADER.bin`) são
 completamente filtrados desta lista, uma vez que o CAN-OTA só grava firmware de
 aplicação; uma atualização do bootloader precisa antes de SWD/JTAG (secção 6
-abaixo). No arranque (e sempre que clicar em **Refresh**), cada `.bin`
+abaixo). No arranque (e sempre que clicar em **Atualizar**), cada `.bin`
 restante em `firmware/` é verificado com o mesmo teste de plausibilidade que o
 próprio bootloader aplica a uma imagem nova (os seus primeiros 4 bytes têm de
 parecer um verdadeiro stack pointer inicial para a RAM deste chip, e o seu
@@ -923,7 +923,7 @@ tamanho tem de caber no slot principal). Cada ficheiro aparece na lista com um
   chave errada), que é para o que servem as próprias verificações CRC32/assinatura do
   bootloader durante a transferência real.
 - **Nada encontrado, ou quer um ficheiro de um local completamente diferente**
-  → use o botão **Browse .bin...**, que funciona independentemente de onde o
+  → use o botão **Procurar .bin...**, que funciona independentemente de onde o
   ficheiro realmente esteja (e executa a mesma verificação de validação em
   qualquer dos casos).
 - **Quer a build mais recente sem a procurar por si** → **Download
@@ -964,7 +964,7 @@ gravado se uma chave de assinatura estiver definida em `urtc_config.json` -
 consulte "Changing the HMAC key" abaixo.
 
 Adicionar uma nova build mais tarde: basta largá-la em `firmware/` e clicar em
-**Refresh** - sem necessidade de reiniciar.
+**Atualizar** - sem necessidade de reiniciar.
 
 <!-- urtc-section:first_flash -->
 ### Primeiro arranque sem hardware

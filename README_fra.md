@@ -391,7 +391,7 @@ code de sortie d'un outil à lui seul ne serait pas fiable dans une autre
 situation non plus.
 
 **Le dry run est activé par défaut.** La première fois, laissez-le
-coché et appuyez sur "Flash Complete Chip" - il imprime les commandes
+coché et appuyez sur "Programmer la puce complète" - il imprime les commandes
 exactes dans le journal sans toucher la carte. Lisez-les, confirmez que
 les chemins et adresses semblent corrects, *puis* décochez le dry run et
 faites-le pour de vrai.

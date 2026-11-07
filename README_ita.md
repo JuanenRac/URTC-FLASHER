@@ -382,7 +382,7 @@ il codice di uscita di uno strumento da solo non sia affidabile in
 qualche altra situazione.
 
 **Il dry run è attivo di default.** La prima volta, lascialo spuntato e
-premi "Flash Complete Chip" - stampa i comandi esatti nel registro senza
+premi "Programma chip completo" - stampa i comandi esatti nel registro senza
 toccare la scheda. Leggili, conferma che percorsi e indirizzi sembrino
 corretti, *poi* deseleziona il dry run e fallo per davvero.
 

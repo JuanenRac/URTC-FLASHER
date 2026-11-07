@@ -379,7 +379,7 @@ como una segunda capa, por si el código de salida de una herramienta por
 sí solo no fuera fiable en alguna otra situación tampoco.
 
 **El simulacro (dry run) está activado por defecto.** La primera vez,
-déjalo marcado y pulsa "Flash Complete Chip" - imprime los comandos
+déjalo marcado y pulsa "Flashear chip completo" - imprime los comandos
 exactos en el registro sin tocar la placa. Léelos, confirma que las
 rutas y direcciones parecen correctas, *luego* desmarca el simulacro y
 hazlo de verdad.
