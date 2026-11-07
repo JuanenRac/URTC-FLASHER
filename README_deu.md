@@ -130,13 +130,13 @@ Aufgenommen auf einem Prüfstand mit erfundenen Beispieldaten und ohne eine echt
   <img src="images/screenshots/history.png" alt="Verlauf" width="100%">
 </p>
 
-<p align="center"><em>Das Verlaufsfenster: alle Protokolle, die die Programme zu jeder Platine geschrieben haben, das neueste zuerst, jedes für sich geprüft, mit einer Spalte Signatur, die sagt, ob es signiert ist, mit welchem deiner Schlüssel, oder ob es ungültig ist.</em></p>
+<p align="center"><em>Das Verlaufsfenster: alle Protokolle, die die Programme zu jeder Platine geschrieben haben, das neueste zuerst, jedes für sich geprüft, mit einer Spalte Signatur, die sagt, ob es signiert ist, mit welchem Ihrer Schlüssel, oder ob es ungültig ist.</em></p>
 
 <p align="center">
   <img src="images/screenshots/updates.png" alt="Nach Updates suchen" width="100%">
 </p>
 
-<p align="center"><em>Das Update-Fenster: ein neueres signiertes Paket wird erst nach deiner Bestätigung installiert.</em></p>
+<p align="center"><em>Das Update-Fenster: ein neueres signiertes Paket wird erst nach Ihrer Bestätigung installiert.</em></p>
 <!-- /urtc-section:screenshots -->
 
 ## ✨ Funktionen
