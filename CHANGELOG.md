@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here.
 
-## [Unreleased]
+## [0.5.4] - Tests of an update that is cut or damaged half way: the adapter unplugged during the transfer, a board that stops hearing, a lost or repeated page acknowledgement and a bus that dies after the end of the update are played... (and 4 more changes)
 
 - **Tests of an update that is cut or damaged half way:** the adapter unplugged during the transfer, a board that stops hearing, a lost or repeated page acknowledgement and a bus that dies after the end of the update are played against the simulated bootloader behind a bus scenario; none of them can end in a finished progress bar. The copy of the shared transports now ignores a start frame cut short, as the bootloader does.
 
