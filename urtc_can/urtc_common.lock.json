@@ -90,6 +90,14 @@
       "from": "src/urtc_common/help_text.py",
       "sha256": "19278017e10bb03aad8083f8203aa65b7466c4cc47e75092f667aa3669a00427"
     },
+    "key_rotation.py": {
+      "from": "src/urtc_common/key_rotation.py",
+      "sha256": "c43d769595490772c7e59a9e034d9da58e3f5f3e475dc6fd3bfc8edb6713387e"
+    },
+    "key_rotation_command.py": {
+      "from": "src/urtc_common/key_rotation_command.py",
+      "sha256": "b707909f1738aded0dea2f29c2753c7879f4f9152bd4adaca2dd1977d0adaed0"
+    },
     "launcher.py": {
       "from": "src/urtc_common/launcher.py",
       "sha256": "dbd8ebc1767b4af82cc651b23a78565d59c5b8c2f831296b7d3befa5688bde13"
@@ -172,7 +180,7 @@
     },
     "virtual_board.py": {
       "from": "src/urtc_common/virtual_board.py",
-      "sha256": "1cf165ba9e198d3ac6c9f49e3c934cd355ece99810f4dd4f70ca541764ad45c1"
+      "sha256": "3541afacc4b32df6f6134ec68420ca84e5744a732206fe3633222dcdd8bc98ff"
     }
   }
 }

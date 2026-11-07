@@ -49,10 +49,11 @@ import sys
 import tempfile
 import threading
 import time
+from dataclasses import replace
 from pathlib import Path
 from typing import Any, Callable, Iterable
 
-from . import protocol
+from . import key_rotation as kr, key_rotation_command as krc, protocol
 from .framing import FrameError
 from .heater_sim import SolderingIronModel
 from .local_build import local_build_refusal
@@ -84,7 +85,7 @@ class VirtualBoard:
     def __init__(self, hardware_id: int = protocol.HARDWARE_ID_MAIN, version: tuple[int, int] = (0, 4), patch: int | None = 0,
                  accepts_patch: bool = False, tool_id: int = 0, system_error: bool = False, can_error: bool = False,
                  booting: bool = False, thermal_fault: int | None = 0, reset_cause: int | None = 0,
-                 bootloader: bool = False, heater_config: dict | None = None, **bootloader_options) -> None:
+                 bootloader: bool = False, heater_config: dict | None = None, key_rotation: krc.State | None = None, **bootloader_options) -> None:
         self.hardware_id = hardware_id
         self.version = version
         self.patch = patch
@@ -106,9 +107,16 @@ class VirtualBoard:
         # The soldering iron loop is built on the first setpoint: a board that never gets one carries no model.
         self.heater: SolderingIronModel | None = None
         self.heater_config = heater_config
+        # The signing keys this bootloader trusts (None: it announces nothing, as the bootloaders that predate the rotation). ``uptime_s`` is its own clock, which
+        # restarts at zero on every reset; the time of the HOST arrives only inside a signed rotation command, never from this clock.
+        self.key_rotation = key_rotation
+        self.uptime_s = 0.0
+        self.last_rotation_result: str | None = None
+        self._assembler = krc.Assembler()
 
     def advance(self, seconds: float) -> list[Frame]:
         """Let simulated time pass: the telemetry the heater loop sends meanwhile (none when it never got a setpoint)."""
+        self.uptime_s += seconds
         if self.mode == BOOTLOADER or self.heater is None:
             return []   # a head in its bootloader drives no heater
         return self.heater.advance(seconds)
@@ -152,15 +160,49 @@ class VirtualBoard:
     def reboot(self) -> None:
         """Back to the application, as after the board resets."""
         self.mode = APPLICATION
+        self.uptime_s = 0.0   # the clock does not survive a reset; what the rotation command stored (the window and the offset) does, in the state
+        self._assembler = krc.Assembler()
+        if self.key_rotation is not None:
+            # The offset belonged to the previous uptime: a bootloader that lost its clock cannot place the window until the host sends a new command.
+            self.key_rotation = self._after_reset(self.key_rotation)
+
+    @staticmethod
+    def _after_reset(state: krc.State) -> krc.State:
+        return replace(state, clock_offset=0)
+
+    def rotation_now(self) -> int:
+        return krc.now_of(self.key_rotation, int(self.uptime_s)) if self.key_rotation is not None else 0
+
+    def _rotation_frames(self, can_id: int, data: bytes) -> list[Frame] | None:
+        """The answers of the key rotation (None: this frame is not about it). The status is asked with 0x7EA operation 05; the command comes on 0x7EC."""
+        state = self.key_rotation
+        if state is None:
+            return None
+        if can_id == protocol.CAN_ID_BOOTLOADER_SELECT and data[:1] == bytes([kr.STATUS_OP]) and len(data) == 1:
+            ids, status = kr.announce(state.rotation, self.rotation_now())
+            return [(protocol.CAN_ID_BOOTLOADER_KEY_ID, kid) for kid in ids] + [(protocol.CAN_ID_BOOTLOADER_SELECT_RESPONSE, status)]
+        if can_id == protocol.CAN_ID_BOOTLOADER_SIGNATURE_CHUNK and krc.is_chunk(data):
+            record = self._assembler.feed(data)
+            if record is not None:
+                self.key_rotation, self.last_rotation_result = krc.decide(state, record, int(self.uptime_s))
+            return []
+        return None
 
     def _bootloader_frames(self, can_id: int, data: bytes) -> list[Frame]:
+        rotation = self._rotation_frames(can_id, data)
+        if rotation is not None:
+            return rotation
         self._bootloader.send_frame(can_id, data)
         out: list[Frame] = []
         while True:
             frame = self._bootloader.read_frame()
             if frame is None:
-                return out
+                break
             out.append(frame)
+            if self.key_rotation is not None and frame[0] == protocol.CAN_ID_VERSION_RESPONSE:
+                # A bootloader with trusted keys announces them right after its 0x7F9 answer (the current one first).
+                out.extend((protocol.CAN_ID_BOOTLOADER_KEY_ID, kid) for kid in kr.announce(self.key_rotation.rotation, self.rotation_now())[0])
+        return out
 
     # ---- the bus ---------------------------------------------------------------------------------
     def handle(self, can_id: int, data: bytes = b"") -> list[Frame]:

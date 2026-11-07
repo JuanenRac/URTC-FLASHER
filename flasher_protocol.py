@@ -45,6 +45,12 @@ from flasher_config import (
     BOOTLOADER_KEY_ID_BYTES, CAN_ID_BOOTLOADER_KEY_ID, KEY_ID_PRECHECK,
 )
 
+from urtc_can import protocol as _wire
+
+ROTATION_STATUS_OP = 0x05           # operation of 0x7EA that asks which signing keys the bootloader trusts now
+ROTATION_ANSWER_WAIT = 0.3          # seconds to listen for the answer (0x7ED frames and one 0x7EB)
+
+
 class FlashError(Exception):
     pass
 
@@ -330,6 +336,7 @@ class URTCFlasher:
         installed_patch = None
         board_key_id = None
         board_is_bootloader = False
+        rotation = None
         self._key_mismatch = None
         try:
             if target == "slave":
@@ -345,6 +352,12 @@ class URTCFlasher:
                 if info is not None and info["responder"] == "bootloader":
                     board_is_bootloader = True
                     board_key_id = info.get("bootloader_key_id")
+                    try:
+                        rotation = self.query_key_rotation()
+                    except Exception:
+                        rotation = None     # a bootloader that predates the rotation says nothing: the key is compared as before
+                    if rotation is not None:
+                        self._log_key_rotation(rotation)
         except Exception:
             installed = None
             installed_patch = None
@@ -362,11 +375,56 @@ class URTCFlasher:
             self.log(_("LOG_VERSION_CHANGE", installed=installed_text, new=new_text))
         if downgrade:
             self.log(_("LOG_VERSION_DOWNGRADE_WARNING"))
-        key_check = self._check_key_id(firmware_path, board_key_id, board_is_bootloader)
+        key_check = self._check_key_id(firmware_path, board_key_id, board_is_bootloader, rotation)
         return {"installed": installed, "new": new, "downgrade": downgrade,
-                "installed_patch": installed_patch, "new_patch": new_patch, "key_check": key_check}
+                "installed_patch": installed_patch, "new_patch": new_patch, "key_check": key_check, "key_rotation": rotation}
 
-    def _check_key_id(self, firmware_path, board_key_id, board_is_bootloader=False):
+    def query_key_rotation(self, timeout=ROTATION_ANSWER_WAIT):
+        """Asks the bootloader which signing keys it trusts now (0x7EA operation 05). Returns None when nothing usable answers, else
+        {"keys": [current, previous?] as hex, "rotating", "current_revoked", "seconds_left" (None without a window)}.
+        Anything ambiguous gives None, never a guess: several different status frames (several heads, none selected), a status that is not well formed, or a
+        number of fingerprints that does not match the count it announces."""
+        self.can.send_frame(_wire.CAN_ID_BOOTLOADER_SELECT, bytes([ROTATION_STATUS_OP]))
+        deadline = time.monotonic() + timeout
+        keys = []
+        statuses = set()
+        while time.monotonic() < deadline:
+            frame = self.can.read_frame(timeout=0.05)
+            if frame is None:
+                continue
+            can_id, data = frame
+            if can_id == _wire.CAN_ID_BOOTLOADER_KEY_ID and len(data) == BOOTLOADER_KEY_ID_BYTES:
+                if bytes(data).hex() not in keys:
+                    keys.append(bytes(data).hex())
+            elif can_id == _wire.CAN_ID_BOOTLOADER_SELECT_RESPONSE and len(data) == 7 and data[0] == ROTATION_STATUS_OP:
+                statuses.add(bytes(data))
+        if len(statuses) != 1:
+            return None
+        status = next(iter(statuses))
+        count, flags = status[1], status[2]
+        if count > 2 or flags & ~0x03 or len(keys) != count:
+            return None
+        left = int.from_bytes(status[3:7], "big")
+        return {"keys": keys, "rotating": bool(flags & 0x01), "current_revoked": bool(flags & 0x02), "seconds_left": None if left == 0xFFFFFFFF else left}
+
+    def _log_key_rotation(self, rotation):
+        """Says in the log which keys the bootloader trusts (both fingerprints while a rotation is in progress)."""
+        if not rotation["keys"]:
+            if rotation["current_revoked"]:
+                self.log(_("LOG_KEY_ROTATION_REVOKED", current="-"))
+            return
+        if rotation["current_revoked"]:
+            self.log(_("LOG_KEY_ROTATION_REVOKED", current=rotation["keys"][0]))
+        elif len(rotation["keys"]) == 2:
+            self.log(_("LOG_KEY_ROTATION_STATUS", current=rotation["keys"][0], previous=rotation["keys"][1], minutes=self._minutes(rotation["seconds_left"])))
+        else:
+            self.log(_("LOG_KEY_ROTATION_SINGLE", current=rotation["keys"][0]))
+
+    @staticmethod
+    def _minutes(seconds):
+        return 0 if seconds is None else max(1, -(-int(seconds) // 60))
+
+    def _check_key_id(self, firmware_path, board_key_id, board_is_bootloader=False, rotation=None):
         """Compares the signing-key fingerprint the bootloader publishes with the one the image declares (the key id of its .imgsig record, or else the manifest), before anything is sent. Returns
         "off", "unknown" (one side does not say), "match" or "mismatch"; a mismatch is logged and, with key_id_precheck "refuse", stops flash(). A
         bootloader that sent no 0x7ED gives "unknown" (it is said in the log, once): never a difference and never an error."""
@@ -388,6 +446,15 @@ class URTCFlasher:
             record = None
         if record is not None:
             declared = record[:8].hex()
+        if rotation is not None and rotation["keys"] and declared:
+            # While a rotation is in progress the bootloader trusts two keys: the image matches if it names either of them.
+            for position, fingerprint in enumerate(rotation["keys"]):
+                if declared[:len(fingerprint)] == fingerprint or fingerprint[:len(declared)] == declared:
+                    self.log(_("LOG_KEY_PRECHECK_MATCH", fingerprint=fingerprint))
+                    if position == 1:
+                        self.log(_("LOG_KEY_ROTATION_OLD_KEY", previous=fingerprint, current=rotation["keys"][0], minutes=self._minutes(rotation["seconds_left"])))
+                    return "match"
+            board_key_id = rotation["keys"][0]
         if not declared or not board_key_id:
             if declared and board_is_bootloader:
                 self.log(_("LOG_KEY_PRECHECK_NO_DATA"))
