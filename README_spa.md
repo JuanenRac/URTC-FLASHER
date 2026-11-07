@@ -159,12 +159,12 @@ nueva realmente se aplicó).
 **Cuando el propio bootloader responde** (la placa está en el
 bootloader, sin ejecutar su aplicación), también informa de su propia
 versión - algo separado de la versión de la aplicación instalada,
-controlada mediante su propio `BOOTLOADER_VERSION_MAJOR/MINOR/PATCH` en
-`bootloader_common.h` y enviada como una segunda trama (`0x7FA`) justo junto a
+registrada mediante su propio `BOOTLOADER_VERSION_MAJOR/MINOR/PATCH` en
+`bootloader_common.h` y enviada como una segunda trama (`0x7FA`) justo al lado de
 `0x7F9`. La aplicación en ejecución nunca envía esto - no tiene forma de
 saber la versión de un bootloader actualmente grabado salvo
 preguntándole al propio bootloader, así que esto solo aparece cuando la
-placa realmente está ahí sentada (justo después de `0x7F0`, o en un
+placa está realmente presente (justo después de `0x7F0`, o en un
 arranque nuevo antes de saltar a la aplicación).
 
 **El número de parche.** Una placa con firmware 0.3.5 o posterior envía
@@ -192,7 +192,7 @@ Lo que verás:
   bootloader v0.1.2`** - la placa está atascada en el bootloader sin
   nada a lo que saltar (chip en blanco, o cada comprobación en el slot
   principal falló). Esta es exactamente la situación para la que existe
-  esta herramienta - flashéalo. La versión de bootloader mostrada aquí
+  esta herramienta - grábalo. La versión de bootloader mostrada aquí
   es la del propio bootloader, sin relación con la versión de aplicación
   que haya fallado sus comprobaciones.
 - **`⚠ HardwareID mismatch!`** mostrado en rojo - algo respondió, pero

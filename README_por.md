@@ -197,7 +197,7 @@ O que verá:
   perceber primeiro porquê; o bootloader rejeitaria a atualização de qualquer
   forma, mas uma discrepância aqui pode também significar que está a apontar
   para a placa completamente errada.
-- **Sem resposta** (vermelho) - placa sem resposta, bitrate errado, ou não
+- **Sem resposta** (vermelho) - placa sem resposta, velocidade do barramento errada, ou não
   realmente ligada. Verifique a ligação física e, no caminho SocketCAN, que a
   interface está realmente ativa (`ip link show`).
 
@@ -229,7 +229,7 @@ expansão.
 1. **Ligar**: escolha Serial/SLCAN ou SocketCAN (apenas Linux), depois a
    porta/interface, e clique em Connect. Para Serial/SLCAN isto abre o canal
    CAN a 500 kbit/s (a velocidade fixa do barramento do URTC); para SocketCAN
-   espera-se que a interface já esteja a esse bitrate (passo 1 acima) - esta
+   espera-se que a interface já esteja a essa velocidade (passo 1 acima) - esta
    ferramenta não o define. Em ambos os casos, a versão atual é consultada
    automaticamente - consulte a secção 4 acima.
 2. **Escolha um alvo de gravação**: "Esta placa (principal)" ou "Escravo de expansão" -
@@ -238,7 +238,7 @@ expansão.
    (TMC2209+STM32F303CBT6 ou TMC5160A+STM32F303CBT6) - a atualização é
    retransmitida através da própria ponte I2C da placa principal para o chip
    slave (os próprios `0x210`-`0x219` de `CANBUS.TXT`), não por uma ligação
-   física separada. "Erase F-RAM before flashing" (passo 4 abaixo) desativa-se
+   física separada. "Apagar também a F-RAM de persistência antes de flashar" (passo 4 abaixo) desativa-se
    automaticamente quando Slave é escolhido - o chip slave não tem F-RAM
    própria para apagar.
 3. **Selecione o firmware**: escolha da lista detetada, ou use Browse -
@@ -392,19 +392,19 @@ contingência (a própria ferramenta de gravação do STM32CubeIDE, ou `st-flash
 caso algo na sua versão específica do pyOCD ou na sua sonda não corresponda ao
 que isto assume.
 
-### Diagnostics — atividade do barramento, bitrate e pacotes de depuração
+### Diagnósticos — atividade e velocidade do barramento e pacotes de depuração
 
-**Seletor de bitrate + auto-deteção** (apenas Serial/SLCAN): o barramento do
+**Seletor da velocidade do barramento + auto-deteção** (apenas Serial/SLCAN): o barramento do
 URTC é fixo a 500 kbit/s, que continua a ser o valor por defeito - isto serve
 para um adaptador mal configurado ou para diagnosticar uma placa não standard.
 **Deteção automática** apenas *escuta*: abre o adaptador no modo de apenas escuta do
-SLCAN (`L`) em cada bitrate standard por vez e pára no primeiro em que ouve
+SLCAN (`L`) em cada velocidade standard por vez e pára no primeiro em que ouve
 uma trama CAN válida, pelo que nunca transmite e não pode perturbar um
 barramento em funcionamento. Por isso precisa que outros nós estejam a enviar
 e que o adaptador suporte o modo de apenas escuta; num barramento em silêncio
-(ou com um adaptador sem esse modo) não encontra nada e escolhe-se o bitrate
-manualmente. Ainda sem ligação quando clica nele. O bitrate do SocketCAN é
-definido ao nível do SO (`ip link`), pelo que este controlo está desativado
+(ou com um adaptador sem esse modo) não encontra nada e escolhe-se a velocidade
+manualmente. Ainda sem ligação quando clica nele. A velocidade do barramento do SocketCAN é
+definida ao nível do SO (`ip link`), pelo que este controlo está desativado
 para esse transporte - não há nada aqui para ele experimentar.
 
 **Atividade do barramento** ("Verificar (2s)", ao lado de Query): conta as tramas
@@ -443,11 +443,11 @@ nenhuma resposta (firmware/bootloader mais antigo que ainda não implementa
 `0x7FB`, ou placa não ligada). Um TEC a subir de forma constante com um REC
 estável aponta tipicamente para as transmissões da própria placa a não serem
 reconhecidas - nenhum outro nó no barramento, ou um problema de
-cablagem/terminação/bitrate específico da ligação desta placa.
+cablagem/terminação/velocidade do barramento específico da ligação desta placa.
 
 **Export Debug Bundle** (acima do registo): guarda um `.zip` com o registo
 atual do ecrã, diagnósticos básicos do sistema (SO, versão do Python, que
-ferramentas foram encontradas, transporte/porta/bitrate atuais), e o ficheiro
+ferramentas foram encontradas, transporte/porta/velocidade do barramento atuais), e o ficheiro
 de firmware CAN atualmente selecionado - útil para entregar um quadro completo
 a quem escreveu o firmware se algo correr mal no terreno, em vez de copiar o
 texto do registo à mão.

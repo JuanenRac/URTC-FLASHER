@@ -203,7 +203,7 @@ Cosa vedrai:
   strumento. Non flashare senza prima capire perché; il bootloader
   rifiuterebbe comunque l'aggiornamento, ma una discrepanza qui può
   anche significare che stai puntando alla scheda sbagliata del tutto.
-- **Nessuna risposta** (rosso) - scheda non risponde, bitrate sbagliato,
+- **Nessuna risposta** (rosso) - scheda non risponde, velocità del bus sbagliata,
   o non effettivamente collegata. Controlla la connessione fisica e, sul
   percorso SocketCAN, che l'interfaccia sia effettivamente attiva
   (`ip link show`).
@@ -414,19 +414,19 @@ piano di riserva (lo strumento di flash stesso di STM32CubeIDE, o
 `st-flash`) nel caso qualcosa della tua specifica versione di pyOCD o
 sonda non corrisponda a ciò che si assume qui.
 
-### Diagnostica — attività bus, bitrate, e pacchetti di debug
+### Diagnostica — attività del bus, velocità del bus e pacchetti di debug
 
-**Selettore bitrate + auto-rilevamento** (solo Seriale/SLCAN): il bus di
+**Selettore della velocità del bus + auto-rilevamento** (solo Seriale/SLCAN): il bus di
 URTC è fisso a 500 kbit/s, che rimane il default - questo serve per un
 adattatore mal configurato o per il debug di una scheda non standard.
 **Auto-rilevamento** si limita ad *ascoltare*: apre l'adattatore in modalità
-solo ascolto SLCAN (`L`) a ogni bitrate standard a turno e si ferma al primo
+solo ascolto SLCAN (`L`) a ogni velocità standard a turno e si ferma al primo
 in cui sente una trama CAN valida, quindi non trasmette mai e non può
 disturbare un bus in funzione. Richiede perciò che altri nodi stiano
 trasmettendo e che l'adattatore supporti la modalità solo ascolto; su un
 bus silenzioso (o con un adattatore senza tale modalità) non trova nulla e
-scegli il bitrate a mano. Non ancora connesso quando ci clicchi. Il bitrate
-di SocketCAN è impostato a livello di sistema operativo (`ip link`), quindi
+scegli la velocità a mano. Non ancora connesso quando ci clicchi. La velocità del bus
+di SocketCAN è impostata a livello di sistema operativo (`ip link`), quindi
 questo controllo è disabilitato per quel trasporto - non c'è nulla qui da
 provare.
 
@@ -470,13 +470,13 @@ peggio) o nessuna risposta (firmware/bootloader datato che non
 implementa ancora `0x7FB`, o scheda non connessa). Un TEC in costante
 salita con un REC piatto in genere indica che le trasmissioni di questa
 scheda non ricevono conferma - nessun altro nodo sul bus, o un problema
-di cablaggio/terminazione/bitrate specifico della connessione di questa
+di cablaggio/terminazione/velocità del bus specifico della connessione di questa
 scheda.
 
 **Esporta Pacchetto Debug** (sopra il registro): salva uno `.zip` con il
 registro attuale a schermo, diagnostica di base del sistema (SO,
 versione Python, quali strumenti sono stati trovati, trasporto/porta/
-bitrate attuale), e il file firmware CAN attualmente selezionato - utile
+velocità del bus attuale), e il file firmware CAN attualmente selezionato - utile
 per consegnare un quadro completo a chi ha scritto il firmware se
 qualcosa va storto sul campo, invece di copiare il registro
 a mano.

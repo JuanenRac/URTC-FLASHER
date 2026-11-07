@@ -205,7 +205,7 @@ Was Sie sehen werden:
   Bootloader würde das Update sowieso ablehnen, aber eine Abweichung
   hier kann auch bedeuten, dass Sie komplett auf die falsche Platine
   zielen.
-- **Keine Antwort** (Rot) - Platine reagiert nicht, falsche Bitrate,
+- **Keine Antwort** (Rot) - Platine reagiert nicht, falsche Busgeschwindigkeit,
   oder nicht tatsächlich verbunden. Prüfen Sie die physische
   Verbindung und, im SocketCAN-Weg, dass die Schnittstelle tatsächlich
   aktiv ist (`ip link show`).
@@ -242,7 +242,7 @@ erfordert.
    dann den Port/die Schnittstelle, dann klicken Sie auf Verbinden. Für
    Seriell/SLCAN öffnet dies den CAN-Kanal mit 500 kbit/s (URTCs feste
    Bus-Geschwindigkeit); für SocketCAN wird erwartet, dass die
-   Schnittstelle bereits mit dieser Bitrate läuft (Schritt 1 oben) -
+   Schnittstelle bereits mit dieser Busgeschwindigkeit läuft (Schritt 1 oben) -
    dieses Tool stellt sie nicht ein. So oder so wird die aktuelle
    Version automatisch abgefragt - siehe Abschnitt 4 oben.
 2. **Wählen Sie ein Flash-Ziel**: "Diese Platine (Haupt)" oder
@@ -427,19 +427,19 @@ STM32CubeIDE, oder `st-flash`) im Hinterkopf, falls etwas an Ihrer
 spezifischen pyOCD-Version oder Sonde nicht dem entspricht, was hier
 angenommen wird.
 
-### Diagnose — Busaktivität, Bitrate, und Debug-Pakete
+### Diagnose — Busaktivität, Busgeschwindigkeit und Debug-Pakete
 
-**Bitrate-Auswahl + Auto-Erkennung** (nur Seriell/SLCAN): der Bus von
+**Auswahl der Busgeschwindigkeit + Auto-Erkennung** (nur Seriell/SLCAN): der Bus von
 URTC ist fest auf 500 kbit/s, was der Standard bleibt - dies ist für
 einen falsch konfigurierten Adapter oder zur Fehlersuche bei einer
 nicht standardmäßigen Platine gedacht. **Auto-Erkennung** hört nur *zu*:
 Sie öffnet den Adapter im SLCAN-Nur-Hören-Modus (`L`) nacheinander bei
-jeder Standard-Bitrate und stoppt bei der ersten, bei der sie einen
+jeder Standard-Busgeschwindigkeit und stoppt bei der ersten, bei der sie einen
 gültigen CAN-Frame hört; sie sendet also nie und kann einen laufenden Bus
 nicht stören. Deshalb müssen andere Knoten senden und der Adapter muss den
 Nur-Hören-Modus unterstützen; bei ruhigem Bus (oder mit einem Adapter ohne
-diesen Modus) findet sie nichts, und Sie wählen die Bitrate von Hand. Noch
-nicht verbunden, wenn Sie darauf klicken. Die Bitrate von SocketCAN wird
+diesen Modus) findet sie nichts, und Sie wählen die Busgeschwindigkeit von Hand. Noch
+nicht verbunden, wenn Sie darauf klicken. Die Busgeschwindigkeit von SocketCAN wird
 auf Betriebssystemebene festgelegt (`ip link`), daher ist dieses
 Steuerelement für diesen Transport deaktiviert - es gibt hier nichts zu
 versuchen.
@@ -484,13 +484,13 @@ Bootloader, der `0x7FB` noch nicht implementiert, oder Platine nicht
 verbunden). Ein stetig steigender TEC bei flachem REC deutet
 typischerweise darauf hin, dass die eigenen Übertragungen dieser
 Platine unbestätigt bleiben - kein anderer Knoten am Bus, oder ein
-Verkabelungs-/Terminierungs-/Bitrate-Problem speziell bei der
+Verkabelungs-, Terminierungs- oder Busgeschwindigkeitsproblem speziell bei der
 Verbindung dieser Platine.
 
 **Debug-Paket exportieren** (über dem Protokoll): speichert eine
 `.zip`-Datei mit dem aktuellen Bildschirmprotokoll, grundlegender
 Systemdiagnose (Betriebssystem, Python-Version, welche Tools gefunden
-wurden, aktueller Transport/Port/Bitrate), und der aktuell ausgewählten
+wurden, aktueller Transport/Port/Busgeschwindigkeit), und der aktuell ausgewählten
 CAN-Firmware-Datei - nützlich, um ein vollständiges Bild an denjenigen
 weiterzugeben, der die Firmware geschrieben hat, falls im Feld etwas
 schiefgeht, statt das Protokoll
