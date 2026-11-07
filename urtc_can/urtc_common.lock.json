@@ -88,7 +88,7 @@
     },
     "help_text.py": {
       "from": "src/urtc_common/help_text.py",
-      "sha256": "e84296fcc5c92af11d0956c2b3e17af828ae80fbd6543b5cd9628a0c07737c95"
+      "sha256": "e7465c8d08daea5873f30570ffae833b319d140438445db01e92d4733a0f85d2"
     },
     "key_rotation.py": {
       "from": "src/urtc_common/key_rotation.py",

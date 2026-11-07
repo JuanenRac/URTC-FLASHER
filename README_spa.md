@@ -71,7 +71,7 @@ bootloader de `docs/CANBUS.TXT` (en el repositorio hermano [URTC](https://github
 dorada, el progreso en vivo mediante los mensajes de latido del
 bootloader, y una consulta de versión (identifica si la aplicación *o*
 el bootloader de esta placa se anuncia por CAN) para que puedas ver qué
-hay instalado actualmente antes de decidir qué flashear.
+hay instalado actualmente antes de decidir qué grabar.
 
 **Buscar actualización.** El botón «Buscar actualización» pregunta una vez a GitHub por la última release y solo ofrece descargarla si trae un paquete para este sistema más nuevo que la versión instalada. El paquete solo se acepta si su SHA-256 y su firma Ed25519 (la clave de las releases, fijada en el programa) son válidos; se instala únicamente tras tu confirmación, nunca mientras hay una transferencia en marcha, y se conserva la versión anterior para poder volver (y se restaura sola si la nueva no arranca). Nada se comprueba ni se instala por su cuenta: la comprobación al abrir es una opción, apagada por defecto, y la confirmación solo se desactiva en la misma ventana tras un aviso.
 
@@ -85,12 +85,12 @@ debajo:
   herramienta en Linux. Habla directamente con una interfaz de red del
   kernel `can0`/`slcan0`. Si tu adaptador ya ejecuta firmware
   `gs_usb`/candleLight (la mayoría de las placas CANable lo hacen de
-  fábrica), esta ruta **no necesita reflashear el adaptador en
+  fábrica), esta ruta **no necesita volver a grabar el adaptador en
   absoluto** — el propio driver de Linux lo gestiona de forma nativa.
 
 ## 🧩 Papel en URTC
 
-URTC-FLASHER es el programa que pone firmware en una placa URTC. Habla el protocolo del bootloader de URTC (`docs/CANBUS.TXT` de ese repositorio) a través de un adaptador USB-CAN, como puerto serie SLCAN o como SocketCAN en Linux: la comprobación del HardwareID, el registro Ed25519 de la imagen, el flujo de imagen dorada con ranura de respaldo y una consulta de versión para que veas lo que hay instalado antes de decidir qué flashear. Para una placa sin bootloader que funcione, o para programar el chip completo, prepara los comandos SWD/JTAG de pyOCD o STM32CubeProgrammer. Es el compañero de actualización de URTC-TESTER, comparte con él su código CAN a través de URTC-COMMON, y URTC-UPDATER puede entregarle una imagen de firmware cuya firma de release ya se comprobó.
+URTC-FLASHER es el programa que pone firmware en una placa URTC. Habla el protocolo del bootloader de URTC (`docs/CANBUS.TXT` de ese repositorio) a través de un adaptador USB-CAN, como puerto serie SLCAN o como SocketCAN en Linux: la comprobación del HardwareID, el registro Ed25519 de la imagen, el flujo de imagen dorada con ranura de respaldo y una consulta de versión para que veas lo que hay instalado antes de decidir qué grabar. Para una placa sin bootloader que funcione, o para programar el chip completo, prepara los comandos SWD/JTAG de pyOCD o STM32CubeProgrammer. Es el compañero de actualización de URTC-TESTER, comparte con él su código CAN a través de URTC-COMMON, y URTC-UPDATER puede entregarle una imagen de firmware cuya firma de release ya se comprobó.
 
 ## 🏛️ Arquitectura
 
@@ -153,7 +153,7 @@ la placa qué está ejecutando actualmente (CAN ID `0x7F8` → `0x7F9` - ver
 aplicación normalmente *como* si está en el bootloader, así que no
 necesitas provocar un reinicio solo para averiguarlo. Haz clic en
 **Consultar** en cualquier momento después para volver a comprobar (útil
-justo después de que termine un flasheo, para confirmar que la versión
+justo después de que termine una grabación, para confirmar que la versión
 nueva realmente se aplicó).
 
 **Cuando el propio bootloader responde** (la placa está en el
@@ -162,7 +162,7 @@ versión - algo separado de la versión de la aplicación instalada,
 controlada mediante su propio `BOOTLOADER_VERSION_MAJOR/MINOR/PATCH` en
 `bootloader_common.h` y enviada como una segunda trama (`0x7FA`) justo junto a
 `0x7F9`. La aplicación en ejecución nunca envía esto - no tiene forma de
-saber la versión de un bootloader actualmente flasheado salvo
+saber la versión de un bootloader actualmente grabado salvo
 preguntándole al propio bootloader, así que esto solo aparece cuando la
 placa realmente está ahí sentada (justo después de `0x7F0`, o en un
 arranque nuevo antes de saltar a la aplicación).
@@ -197,10 +197,10 @@ Lo que verás:
   que haya fallado sus comprobaciones.
 - **`⚠ HardwareID mismatch!`** mostrado en rojo - algo respondió, pero
   su HardwareID no coincide con lo que espera esta herramienta. No
-  flashees sin entender por qué primero; el bootloader rechazaría la
+  grabes sin entender por qué primero; el bootloader rechazaría la
   actualización de todas formas, pero un desajuste aquí también puede
   significar que apuntas a la placa equivocada por completo.
-- **Sin respuesta** (rojo) - placa no responde, bitrate equivocado, o no
+- **Sin respuesta** (rojo) - placa no responde, velocidad de bus equivocada, o no
   está realmente conectada. Revisa la conexión física y, en la ruta
   SocketCAN, que la interfaz realmente esté activa (`ip link show`).
 
@@ -229,7 +229,7 @@ con un MLX90640 real conectado necesita esto establecido
 explícitamente, una vez, de la misma forma que el propio tipo de placa
 de expansión ya lo requiere.
 
-### Flasheando
+### Grabando
 
 1. **Conectar**: elige Serie/SLCAN o SocketCAN (solo Linux), luego el
    puerto/interfaz, luego haz clic en Conectar. Para Serie/SLCAN esto
@@ -238,20 +238,20 @@ de expansión ya lo requiere.
    (paso 1 de arriba) - esta herramienta no la establece. De cualquier
    forma, la versión actual se consulta automáticamente - ver sección 4
    de arriba.
-2. **Elige un objetivo de flasheo**: "Esta placa (principal)" o
+2. **Elige un objetivo de grabación**: "Esta placa (principal)" o
    "Esclavo de expansión" - por defecto la placa principal, el caso más
    común con diferencia. La opción de esclavo solo alcanza algo en una
    variante de placa de expansión Advanced (TMC2209+STM32F303CBT6 o
    TMC5160A+STM32F303CBT6) - la actualización se relevada a través del
    propio puente I2C de la placa principal hacia el chip esclavo (los
    propios `0x210`-`0x219` de `CANBUS.TXT`), no una conexión física
-   separada. "Borrar F-RAM antes de flashear" (paso 4 abajo) se
+   separada. "Borrar F-RAM antes de grabar" (paso 4 abajo) se
    deshabilita automáticamente al elegir Esclavo - el chip esclavo no
    tiene F-RAM propia que borrar.
 3. **Seleccionar firmware**: elige de la lista detectada, o Buscar - ver
    sección 3 de arriba para saber exactamente cómo funcionan la
    detección y la validación.
-4. **Flashear**:
+4. **Grabar**:
    - Deja marcado "La placa está ejecutando actualmente la aplicación"
      si la placa está encendida y funcionando con normalidad - la
      herramienta envía primero el disparador de payload mágico `0x7F0`
@@ -260,10 +260,10 @@ de expansión ya lo requiere.
      reiniciar hacia el
      bootloader.
    - Desmárcalo si la placa ya está en el bootloader (justo después de
-     un flasheo JTAG nuevo, o si la comprobación de versión de arriba
+     una grabación JTAG nueva, o si la comprobación de versión de arriba
      mostró "no valid firmware currently installed").
-   - Haz clic en **Flashear Firmware** y confirma - el diálogo de
-     confirmación nombra qué objetivo estás a punto de flashear, así
+   - Haz clic en **Grabar Firmware** y confirma - el diálogo de
+     confirmación nombra qué objetivo estás a punto de grabar, así
      que verifica que coincide con lo que realmente pretendías
      seleccionar. El registro muestra cada paso del protocolo; la barra
      de progreso sigue el progreso de escritura página a página durante
@@ -296,7 +296,7 @@ versión anterior a la ya instalada (razón de fallo de verificación
 vulnerabilidad ya descubierta. Si genuinamente necesitas revertir a una
 versión anterior en la que confíes, marca **"Permitir downgrade
 (saltarse el anti-rollback) para esta actualización"** (solo para el
-board principal) antes de flashear - aparece un segundo diálogo de
+board principal) antes de grabar - aparece un segundo diálogo de
 confirmación, ya que esto salta deliberadamente una comprobación de
 seguridad. Esto sigue subiendo la imagen antigua completa a través de
 la transferencia normal, solo levanta la comprobación de orden de
@@ -310,7 +310,7 @@ una suposición silenciosa.
 ### Programar el chip completo por SWD/JTAG (avanzado)
 
 La sección "4. Program complete chip via SWD/JTAG" en la herramienta
-hace un flasheo de puesta en marcha completo - borra todo el chip por
+hace una grabación de puesta en marcha completa - borra todo el chip por
 completo, luego escribe desde cero tanto la imagen del bootloader como
 la de la aplicación, en las direcciones reales del chip que corresponda
 según la selección de **Chip objetivo** (ver abajo). Esto es un
@@ -319,7 +319,7 @@ según la selección de **Chip objetivo** (ver abajo). Esto es un
 |  | Actualización CAN OTA (secciones 1-5) | SWD/JTAG chip completo (sección 6) |
 |---|---|---|
 | Auto-reparable si se interrumpe | Sí - el slot de respaldo de imagen dorada garantiza que el firmware en ejecución sobrevive | No - no ejecutará nada hasta que se reprograme |
-| Recuperable | Automáticamente, sin acción necesaria | Sí - solo reconecta y flashea de nuevo por SWD; el puerto de depuración no depende del contenido de la flash. Solo un bloqueo verdaderamente permanente (option byte RDP2) impediría esto, y nada en esta herramienta establece option bytes |
+| Recuperable | Automáticamente, sin acción necesaria | Sí - solo reconecta y graba de nuevo por SWD; el puerto de depuración no depende del contenido de la flash. Solo un bloqueo verdaderamente permanente (option byte RDP2) impediría esto, y nada en esta herramienta establece option bytes |
 | Toca el bootloader | Nunca | Sí, por diseño |
 | Necesita | Un adaptador USB-CAN | Una sonda SWD/JTAG (ST-Link o similar) |
 | Uso típico | Actualizaciones de firmware rutinarias | Primera puesta en marcha en un chip en blanco, o recuperar una placa inutilizada |
@@ -342,7 +342,7 @@ Ambas cadenas de target de arriba son la mejor conjetura de este
 proyecto sobre el nombre real de target de pyOCD para cada chip, no
 confirmado contra una instalación real de pyOCD mientras se escribía
 esto (la cobertura de STM32 en pyOCD llega en gran parte a través de
-CMSIS-Packs en vez de targets integrados) - si el flasheo falla con un
+CMSIS-Packs en vez de targets integrados) - si la grabación falla con un
 error del estilo "target not found", ejecuta tú mismo `pyocd list
 --targets --name stm32f303` y `pyocd pack install <el nombre real>`
 descarga el CMSIS-Pack correcto.
@@ -380,7 +380,7 @@ como una segunda capa, por si el código de salida de una herramienta por
 sí solo no fuera fiable en alguna otra situación tampoco.
 
 **El simulacro (dry run) está activado por defecto.** La primera vez,
-déjalo marcado y pulsa "Flashear chip completo" - imprime los comandos
+déjalo marcado y pulsa "Grabar chip completo" - imprime los comandos
 exactos en el registro sin tocar la placa. Léelos, confirma que las
 rutas y direcciones parecen correctas, *luego* desmarca el simulacro y
 hazlo de verdad.
@@ -407,23 +407,23 @@ ST-Link real y un STM32F303CC real todavía no se ha ejercitado de
 principio a fin - el entorno que escribió esto no tiene acceso USB. Trata
 un primer intento real completo con la precaución apropiada - una placa
 de repuesto/prueba primero si tienes una, y ten en mente un plan de
-respaldo (la propia herramienta de flasheo de STM32CubeIDE, o
+respaldo (la propia herramienta de grabación de STM32CubeIDE, o
 `st-flash`) por si algo de tu versión específica de pyOCD o sonda no
 coincide con lo que se asume aquí.
 
-### Diagnósticos — actividad de bus, bitrate, y paquetes de depuración
+### Diagnósticos — actividad de bus, velocidad de bus, y paquetes de depuración
 
-**Selector de bitrate + autodetección** (solo Serie/SLCAN): el bus de
+**Selector de velocidad de bus + autodetección** (solo Serie/SLCAN): el bus de
 URTC está fijo a 500 kbit/s, que sigue siendo el valor por defecto -
 esto es para un adaptador mal configurado o para depurar una placa no
 estándar. **Autodetección** solo *escucha*: abre el adaptador en modo
-solo escucha de SLCAN (`L`) en cada bitrate estándar por turno y se
+solo escucha de SLCAN (`L`) en cada velocidad de bus estándar por turno y se
 detiene en el primero donde oye una trama CAN válida, así que nunca
 transmite y no puede perturbar un bus en marcha. Por eso necesita que
 otros nodos estén enviando y que el adaptador admita el modo solo
 escucha; con el bus en silencio (o con un adaptador sin ese modo) no
-encuentra nada y eliges el bitrate a mano. No conectado todavía cuando
-haces clic en él. El bitrate de SocketCAN se establece a nivel del
+encuentra nada y eliges la velocidad de bus a mano. No conectado todavía cuando
+haces clic en él. La velocidad de bus de SocketCAN se establece a nivel del
 sistema operativo (`ip link`), así que este control está deshabilitado
 para ese transporte - no hay nada aquí para que lo intente.
 
@@ -467,13 +467,13 @@ ninguna respuesta en absoluto (firmware/bootloader antiguo que aún no
 implementa `0x7FB`, o la placa no conectada). Un TEC que sube de forma
 constante con un REC plano suele apuntar a que las propias transmisiones
 de esta placa no reciben confirmación - ningún otro nodo en el bus, o un
-problema de cableado/terminación/bitrate específico de la conexión de
+problema de cableado/terminación/velocidad de bus específica de la conexión de
 esta placa.
 
 **Exportar paquete de depuración** (arriba del registro): guarda un
 `.zip` con el registro actual en pantalla, diagnósticos básicos del
 sistema (SO, versión de Python, qué herramientas se encontraron,
-transporte/puerto/bitrate actual), y el archivo de firmware CAN
+transporte/puerto/velocidad de bus actual), y el archivo de firmware CAN
 seleccionado actualmente - útil para entregar un panorama completo a
 quien escribió el firmware si algo sale mal en el campo, en vez de
 copiar el registro
@@ -541,7 +541,7 @@ conectado a la vez, todo comando exige elegir uno explícitamente del
 desplegable de Sonda - no hay "el que sea que el sistema operativo
 enumere primero". Con exactamente una sonda conectada, se auto-selecciona;
 con cero o varias, pulsa Actualizar y elige. Esto se aplica tanto al
-flasheo de chip completo como a la comprobación de option bytes, ya que
+grabación de chip completo como a la comprobación de option bytes, ya que
 ambos son lo bastante cercanos a destructivos como para que adivinar la
 placa equivocada sea un riesgo real en un banco con varios dispositivos.
 
@@ -554,7 +554,7 @@ una comprobación genuina byte a byte, igual que ya hace el flag `-v` de
 STM32CubeProgrammer. Solo para `.bin`: `compare` comprueba el contenido
 de la flash contra los bytes en bruto del archivo, lo cual no
 coincidiría correctamente con la propia codificación de un archivo
-`.hex`/`.elf` incluso tras un flasheo exitoso, así que esos 2 formatos
+`.hex`/`.elf` incluso tras una grabación correcta, así que esos 2 formatos
 se saltan este paso específico y confían en la propia verificación
 interna en tiempo de escritura de pyOCD en su lugar.
 
@@ -564,7 +564,7 @@ interna en tiempo de escritura de pyOCD en su lugar.
 y el tiempo transcurrido por página durante una actualización CAN, más
 una línea de resumen al final (tiempo total, KB/s promedio, cuántos
 reintentos de ACK de página ocurrieron). Puramente informativo - no
-cambia el comportamiento de flasheo, solo hace más fácil distinguir de
+cambia el comportamiento de grabación, solo hace más fácil distinguir de
 un vistazo "esto simplemente va lento" de "algo realmente va mal".
 
 **Motivos específicos de fallo de verificación**: si la verificación
@@ -574,7 +574,7 @@ incompleta, desajuste de CRC32, desajuste de firma, o desajuste de
 HardwareID, en vez de que todo fallo parezca idéntico. Ver
 `docs/CANBUS.TXT` para el formato exacto de trama (`0x7F5`, DLC 2 para
 este estado específico). Esta herramienta y el bootloader coinciden en
-este formato de trama, así que flashea ambos juntos si estás
+este formato de trama, así que graba ambos juntos si estás
 construyendo un bootloader personalizado con una versión distinta del
 protocolo.
 
@@ -589,10 +589,10 @@ ello); un bootloader esclavo más antiguo simplemente no responde a esa
 consulta, y esta herramienta cae de vuelta al mensaje genérico de
 "verificación fallida".
 
-### Borrado opcional de la F-RAM antes de flashear
+### Borrado opcional de la F-RAM antes de grabar
 
 La sección 3 tiene una casilla, **"También borrar la F-RAM de
-persistencia antes de flashear"** - desactivada por defecto. Si está
+persistencia antes de grabar"** - desactivada por defecto. Si está
 marcada, envía el comando de borrado con payload mágico (`0x192` - ver
 `docs/CANBUS.TXT`) a la F-RAM de persistencia FM24CL64B de la placa
 antes de que empiece la secuencia de actualización, borrando cualquier
@@ -612,7 +612,7 @@ por qué) si la casilla "la placa está ejecutando actualmente la
 aplicación" de arriba no está marcada, ya que en ese caso se asume que
 la placa ya está en el bootloader.
 
-**Una confirmación ausente no detiene el flasheo.** Si la propia trama
+**Una confirmación ausente no detiene la grabación.** Si la propia trama
 de confirmación del comando de borrado no vuelve dentro de 2 segundos,
 esto se registra como una advertencia y la actualización de firmware
 real procede de todas formas - borrar es un paso secundario y opcional
@@ -637,7 +637,7 @@ Un plan o una actualización se puede ejecutar contra un bus simulado que se por
 
 | Riesgo | Defensa |
 |---|---|
-| Flashear una imagen en la placa equivocada | La comprobación del HardwareID del protocolo del bootloader, hecha antes de escribir nada |
+| Grabar una imagen en la placa equivocada | La comprobación del HardwareID del protocolo del bootloader, hecha antes de escribir nada |
 | Una imagen corrupta, sin firmar o manipulada | Las comprobaciones de integridad de la imagen; un manifiesto cuyo `sha256` no coincide con el archivo se rechaza antes de cualquier tráfico en el bus, una imagen sin firmar se rechaza y se envía la firma publicada sin ninguna clave; la firma de release (Ed25519) se comprueba antes de usar la imagen de una release |
 | Instalar una imagen más antigua por error | La comprobación anti-retroceso del bootloader; volver a una versión anterior a propósito necesita la autorización de bajada |
 | Una actualización fallida que deja la placa muerta | El modelo de imagen dorada: la ranura de respaldo conserva el firmware anterior, una trama de confirmación perdida se recupera preguntando de nuevo la versión en lugar de informar de un fallo falso, y la ranura principal puede leerse antes |
@@ -687,7 +687,7 @@ usage: urtc_flasher.py --cli [-h] [--transport {serial,socketcan,python-can,mock
 
 Códigos de salida: `0` éxito, `1` error de protocolo/conexión, `2`
 argumentos incorrectos o un archivo de firmware que falla la validación
-(pasa `--force` para flashearlo de todas formas), `130` cancelado con
+(pasa `--force` para grabarlo de todas formas), `130` cancelado con
 Ctrl+C. Solo cubre la ruta de actualización CAN OTA (secciones 1-3) - la
 ruta completa SWD/JTAG del chip es deliberadamente solo-GUI por ahora,
 dado lo mucho más que está en juego si una ejecución con script obtiene
@@ -779,7 +779,7 @@ Cuál de estos necesitas depende de tu plataforma y de qué transporte
 vayas a usar:
 
 **Linux, ruta SocketCAN (recomendada si tu adaptador la soporta):**
-Nada que flashear en el adaptador mismo. Levanta la interfaz una vez por
+Nada que grabar en el adaptador mismo. Levanta la interfaz una vez por
 arranque (o añádela a tu configuración de red para que persista):
 ```
 sudo modprobe can vcan gs_usb   # gs_usb cubre la mayoria de placas de la familia CANable
@@ -808,7 +808,7 @@ opcional en Linux):
 2. Pon el adaptador en modo DFU/bootloader (normalmente un botón BOOT
    mantenido durante el encendido, o un jumper — revisa la documentación
    de tu adaptador).
-3. Flashea el firmware SLCAN usando la herramienta de flasheo del
+3. Graba el firmware SLCAN usando la herramienta de grabación del
    fabricante de tu adaptador o `dfu-util`.
 4. Reconecta — ahora debería enumerarse como puerto serie: un puerto COM
    en Windows, o al estilo `/dev/ttyACM0`/`/dev/ttyUSB0` en Linux.
@@ -934,11 +934,11 @@ Esta herramienta está organizada en los módulos de arriba por
 responsabilidad, puramente por legibilidad - no hay ninguna diferencia
 funcional entre tenerlos como archivos separados o como uno grande, y no
 existe una forma monolítica que mantener sincronizada como sí ocurre con
-el firmware (esto es una herramienta de PC, no algo que se flashea en la
+el firmware (esto es una herramienta de PC, no algo que se graba en la
 placa, así que solo hay una forma).
 
 Esto es deliberado: este repositorio entero es autocontenido. Si solo
-quieres flashear una placa — en un PC de taller, desde una memoria USB,
+quieres grabar una placa — en un PC de taller, desde una memoria USB,
 donde sea — puedes copiar este repositorio por sí solo, y sigue
 funcionando.
 
@@ -947,7 +947,7 @@ aplicación se revisa y se lista - la herramienta no coge simplemente lo
 primero que encuentra, y los binarios de bootloader (cualquiera con
 "BOOTLOADER" en el nombre - `URTC_BOOTLOADER.bin`,
 `URTC_SLAVE_BOOTLOADER.bin`) se filtran por completo de esta lista, ya
-que CAN-OTA solo flashea firmware de aplicación; una actualización de
+que CAN-OTA solo graba firmware de aplicación; una actualización de
 bootloader necesita SWD/JTAG en su lugar (sección 6 abajo). Al arrancar
 (y cada vez que hagas clic en **Actualizar**), cada `.bin` restante en
 `firmware/` se revisa contra la misma prueba de plausibilidad que
@@ -1009,7 +1009,7 @@ versión, el `sha256` y, en las imágenes de aplicación, el valor `hmac_sha256`
 {"component": "main_application", "version": "<version>", "sha256": "b48d4cd5...", "hmac_sha256": "b63a701e...", "signing_key_kind": "dev"}
 ```
 
-Ambos resúmenes se comprueban justo antes de flashear y una discrepancia
+Ambos resúmenes se comprueban justo antes de grabar y una discrepancia
 **rechaza la grabación** antes de enviar nada por el bus (archivo
 equivocado, descarga corrupta o manifiesto desactualizado). La firma
 publicada es la que se envía al bootloader, y la versión del manifiesto es
@@ -1098,7 +1098,7 @@ bootloader, y el empaquetado de tramas SocketCAN se verificó contra el
 formato `struct can_frame` de Linux con una prueba de empaquetado/
 desempaquetado de ida y vuelta. Lo que **no** se ha probado en ninguna
 de las 2 plataformas es una placa real sobre hardware real — trata el
-primer intento real de flasheo con la misma precaución que darías a
+primer intento real de grabación con la misma precaución que darías a
 cualquier herramienta nueva que hable con un bootloader: ten JTAG a mano
 como respaldo. Todo lo demás descrito aquí se ha ejercitado solo contra `MockCAN`, un bootloader simulado, nunca contra una placa real.
 
@@ -1180,7 +1180,7 @@ realmente cubre:
    International (CC BY-SA 4.0)**. Texto completo en
    https://creativecommons.org/licenses/by-sa/4.0/.
 
-Esta herramienta es el compañero de flasheo CAN-OTA/SWD-JTAG del
+Esta herramienta es el compañero de grabación CAN-OTA/SWD-JTAG del
 proyecto [URTC (Universal Robot Tool Controller)](https://github.com/JuanenRac/URTC)
 - ver el propio repositorio de ese proyecto para el firmware de la
 placa, los diseños de hardware, y la documentación completa del
