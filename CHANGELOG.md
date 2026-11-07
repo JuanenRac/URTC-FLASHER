@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The manifest says which version of the shared contracts it needs:** `min_common` in `urtc.project.json` is the oldest version of URTC-COMMON among the copies this repository carries, the value the updater compares with what is installed (a warning only). `tools/min_common.py` of URTC-COMMON checks it and a new copy brings it up to date.
+
 - **The note on the Qt Quick deck no longer swallows the next paragraph in the Spanish, German, French and Italian READMEs:** a blank line was missing after the quoted note, so the paragraph about the transport choice was drawn inside the quotation.
 
 - **The README quotes the buttons as the application shows them:** `Flash Complete Chip`, `Auto-detect`, `Browse .bin...`, `Check Option Bytes`, `Target chip:`, `Connect` and `Refresh` are written in each language as the language file of the application has them (Portuguese and the four languages that still had the English name of the chip button).
