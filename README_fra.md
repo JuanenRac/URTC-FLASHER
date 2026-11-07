@@ -143,6 +143,7 @@ Capturées sur un banc d'essai avec des données d'exemple fictives et sans inst
 ### Vérifier ce qui est actuellement installé
 
 > Dans la console Qt Quick, les ports des deux transports (adaptateurs série et, sous Linux, interfaces SocketCAN) sont dans une seule liste, et les interrogations de cette section sont faites par **LIRE L'ETAT DE LA CARTE**, qui demande d'un coup la version, les compteurs d'erreurs CAN, le type de carte d'extension, la variante MLX9064x et les infos du périphérique, et les affiche dans l'instantané de la carte. Les enregistrements de la section de configuration de l'appareil écrivent les valeurs.
+
 Si vous êtes sous Linux et que SocketCAN est disponible, vous verrez un
 choix de **Transport** en haut - choisissez Série/SLCAN ou SocketCAN
 avant de vous connecter. Sous Windows cette ligne n'apparaît pas du

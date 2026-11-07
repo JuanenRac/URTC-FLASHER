@@ -144,6 +144,7 @@ Aufgenommen auf einem Prüfstand mit erfundenen Beispieldaten und ohne eine echt
 ### Prüfen, was aktuell installiert ist
 
 > Im Qt-Quick-Steuerpult stehen die Ports beider Transporte (serielle Adapter und unter Linux SocketCAN-Schnittstellen) in einer Liste, und die Abfragen dieses Abschnitts erledigt **PLATINENSTATUS LESEN**: Es fragt Version, CAN-Fehlerzähler, Erweiterungsplatinentyp, MLX9064x-Variante und Peripherieinfo auf einmal ab und zeigt sie im Board-Snapshot. Die Speichern-Schaltflächen der Gerätekonfiguration schreiben die Werte.
+
 Wenn Sie unter Linux sind und SocketCAN verfügbar ist, sehen Sie oben
 eine **Transport**-Auswahl - wählen Sie Seriell/SLCAN oder SocketCAN
 vor dem Verbinden. Unter Windows erscheint diese Zeile überhaupt

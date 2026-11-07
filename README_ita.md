@@ -143,6 +143,7 @@ Catturate su un banco di prova con dati di esempio inventati e senza alcuna inst
 ### Controllare cosa è attualmente installato
 
 > Nella console Qt Quick le porte di entrambi i trasporti (adattatori seriali e, su Linux, interfacce SocketCAN) sono in un'unica lista, e le interrogazioni di questa sezione le fa **LEGGI STATO SCHEDA**, che chiede in una volta versione, contatori di errore CAN, tipo di scheda di espansione, variante MLX9064x e info della periferica e li mostra nell'istantanea della scheda. I salvataggi della sezione di configurazione del dispositivo scrivono i valori.
+
 Se sei su Linux e SocketCAN è disponibile, vedrai una scelta di
 **Trasporto** in alto - scegli Seriale/SLCAN o SocketCAN prima di
 connettere. Su Windows questa riga non appare affatto; Seriale/SLCAN è

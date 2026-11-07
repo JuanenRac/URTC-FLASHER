@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The note on the Qt Quick deck no longer swallows the next paragraph in the Spanish, German, French and Italian READMEs:** a blank line was missing after the quoted note, so the paragraph about the transport choice was drawn inside the quotation.
+
 - **The README quotes the buttons as the application shows them:** `Flash Complete Chip`, `Auto-detect`, `Browse .bin...`, `Check Option Bytes`, `Target chip:`, `Connect` and `Refresh` are written in each language as the language file of the application has them (Portuguese and the four languages that still had the English name of the chip button).
 
 - **The copy of the CAN identifiers and vectors is refreshed:** the shared tables now list `0x1BC` (ask for the crash record) and `0x1BD` (the six frames of the record), the identifiers a firmware built with the crash capture answers; this program neither sends nor reads them.

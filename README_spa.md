@@ -141,6 +141,7 @@ Capturadas en un banco de pruebas con datos de ejemplo inventados y sin ninguna 
 ### Comprobar qué hay instalado actualmente
 
 > En el panel Qt Quick los puertos de ambos transportes (adaptadores serie y, en Linux, interfaces SocketCAN) están en una sola lista, y las consultas de esta sección las hace **LEER ESTADO DE PLACA**, que pide de una vez la versión, los contadores de error CAN, el tipo de placa de expansión, la variante MLX9064x y la información del periférico y los muestra en la instantánea de la placa. Los guardados de la sección de configuración del dispositivo escriben los valores.
+
 Si estás en Linux y SocketCAN está disponible, verás una opción de
 **Transporte** en la parte superior - elige Serie/SLCAN o SocketCAN
 antes de conectar. En Windows esta fila no aparece en absoluto;
