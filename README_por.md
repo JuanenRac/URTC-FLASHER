@@ -232,7 +232,7 @@ expansão.
    espera-se que a interface já esteja a esse bitrate (passo 1 acima) - esta
    ferramenta não o define. Em ambos os casos, a versão atual é consultada
    automaticamente - consulte a secção 4 acima.
-2. **Escolha um alvo de gravação**: "This board (main)" ou "Expansion slave" -
+2. **Escolha um alvo de gravação**: "Esta placa (principal)" ou "Escravo de expansão" -
    por defeito a placa principal, o caso de longe mais comum. A opção slave
    só alcança alguma coisa numa variante de placa de expansão Advanced
    (TMC2209+STM32F303CBT6 ou TMC5160A+STM32F303CBT6) - a atualização é
@@ -245,9 +245,9 @@ expansão.
    consulte a secção 3 acima para saber exatamente como funcionam a deteção e
    a validação.
 4. **Flash**:
-   - Deixe "Board is currently running the application" marcado se a placa
+   - Deixe "A placa está atualmente a executar a aplicação" marcado se a placa
      estiver ligada e a funcionar normalmente - a ferramenta envia primeiro o
-     trigger de payload mágico `0x7F0` (ou `0x210`, retransmitido ao slave, se
+     disparador de payload mágico `0x7F0` (ou `0x210`, retransmitido ao slave, se
      Slave for o alvo selecionado), que desliga em segurança todos os
      atuadores antes de reiniciar para o bootloader.
    - Desmarque-o se a placa já estiver parada no bootloader (logo após uma
@@ -283,8 +283,8 @@ rejeita uma imagem validamente assinada se esta declarar uma versão mais antiga
 do que a já instalada (motivo de falha de verificação "rollback rejected") -
 isto impede que uma versão com uma vulnerabilidade entretanto descoberta seja
 reintroduzida. Se precisar genuinamente de reverter para uma versão mais
-antiga e ainda de confiança, marque **"Allow downgrade (bypass anti-rollback)
-for this update"** (Target: apenas placa principal) antes de gravar - aparece
+antiga e ainda de confiança, marque **"Permitir downgrade (ignorar o anti-rollback)
+para esta atualização"** (Destino: apenas placa principal) antes de gravar - aparece
 um segundo diálogo de confirmação, uma vez que isto contorna deliberadamente
 uma verificação de segurança. Isto continua a enviar a imagem antiga completa
 através da transferência normal, apenas levanta a verificação da ordem de
@@ -312,7 +312,7 @@ acima:
 | Precisa de | Um adaptador USB-CAN | Uma sonda SWD/JTAG (ST-Link ou semelhante) |
 | Uso típico | Atualizações de firmware de rotina | Primeiro bring-up num chip em branco, ou recuperar uma placa inutilizada (bricked) |
 
-**Target chip:** "This board (main)" ou "Expansion slave" - as mesmas 2 opções
+**Target chip:** "Esta placa (principal)" ou "Escravo de expansão" - as mesmas 2 opções
 do seletor do próprio separador CAN-OTA, mas uma escolha genuinamente separada
 aqui: o SWD/JTAG precisa de uma sonda fisicamente ligada ao chip para o qual
 isto está definido, uma vez que não há uma ponte (ao contrário do CAN-OTA) que
@@ -407,7 +407,7 @@ manualmente. Ainda sem ligação quando clica nele. O bitrate do SocketCAN é
 definido ao nível do SO (`ip link`), pelo que este controlo está desativado
 para esse transporte - não há nada aqui para ele experimentar.
 
-**Atividade do barramento** ("Check (2s)", ao lado de Query): conta as tramas
+**Atividade do barramento** ("Verificar (2s)", ao lado de Query): conta as tramas
 de protocolo reais efetivamente vistas durante uma janela fixa de 2 segundos
 no transporte que estiver ligado. Isto deliberadamente **não** é a mesma coisa
 que uma verdadeira percentagem de carga do barramento CAN - isso precisaria de
@@ -547,7 +547,7 @@ se estiver a construir um bootloader personalizado com uma versão diferente do
 protocolo.
 
 **O mesmo detalhe para o slave de expansão**: uma atualização de slave falhada
-(Target: "Expansion slave") consulta `0x219` logo depois de `0x215` reportar
+(Target: "Escravo de expansão") consulta `0x219` logo depois de `0x215` reportar
 `STATUS_VERIFY_FAIL`, retransmitindo o `REG_VERIFY_FAIL_REASON` do próprio
 bootloader do slave - os mesmos 5 motivos que acima, apenas alcançados através
 da ponte I2C em vez de lidos diretamente de uma trama CAN. Requer um
@@ -558,8 +558,8 @@ mensagem genérica "verification failed".
 
 ### Apagamento opcional da F-RAM antes de gravar
 
-A secção 3 tem uma caixa de seleção, **"Also erase the persistence F-RAM before
-flashing"** - desligada por defeito. Se marcada, envia o comando de
+A secção 3 tem uma caixa de seleção, **"Apagar também a F-RAM de persistência antes
+de flashar"** - desligada por defeito. Se marcada, envia o comando de
 apagamento de payload mágico (`0x192` - consulte `docs/CANBUS.TXT`) à F-RAM de
 persistência FM24CL64B integrada na placa antes de a sequência de atualização
 começar, apagando qualquer estado de parâmetros da ferramenta que tivesse
@@ -574,7 +574,7 @@ genuinamente limpa, não porque saltá-la deixasse algo avariado.
 **Só funciona enquanto a aplicação está em execução** - o próprio bootloader
 não trata de todo o `0x192`, apenas o `firmware_can_global_post.c` o faz. Esta
 caixa é silenciosamente ignorada (com uma linha de registo a explicar porquê)
-se a caixa "board is currently running the application" acima dela estiver
+se a caixa "A placa está atualmente a executar a aplicação" acima dela estiver
 desmarcada, uma vez que nesse caso se assume que a placa já está parada no
 bootloader.
 
