@@ -73,10 +73,10 @@ LOG_DRY_RUN_NOTHING_TO_VERIFY=  (simulação - não executado, nada a verificar)
 LOG_DRY_RUN_NOT_EXECUTED=  (simulação - não executado)
 LOG_MANIFEST_SHA256_MATCHES=  O SHA-256 do manifesto corresponde a este ficheiro.
 LOG_MANIFEST_NO_SHA256_FIELD=  manifest.json presente mas sem campo sha256 - nada a comparar.
-LOG_READING_OPTION_BYTES_HEADER=== A ler Option Bytes (só de leitura, sem apagar/escrever) ===
-LOG_CUBE_FULLCHIP_HEADER=== Programação de chip completo com STM32CubeProgrammer ===
-LOG_CUBE_FULLCHIP_COMPLETE=== Programação de chip completo com STM32CubeProgrammer concluída ===
-LOG_PYOCD_FULLCHIP_COMPLETE=== Programação de chip completo com pyOCD concluída ===
+LOG_READING_OPTION_BYTES_HEADER==== A ler Option Bytes (só de leitura, sem apagar/escrever) ===
+LOG_CUBE_FULLCHIP_HEADER==== Programação de chip completo com STM32CubeProgrammer ===
+LOG_CUBE_FULLCHIP_COMPLETE==== Programação de chip completo com STM32CubeProgrammer concluída ===
+LOG_PYOCD_FULLCHIP_COMPLETE==== Programação de chip completo com pyOCD concluída ===
 LOG_CHECKING_PROBE_AND_TARGET=A verificar a sonda e o destino ligados...
 LOG_CHECKING_PROBE=A verificar a sonda ligada...
 LOG_CONNECTION_CONFIRMED=Ligação confirmada - a continuar.
@@ -120,7 +120,7 @@ LBL_COULD_NOT_PARSE_RDP=não foi possível interpretar com confiança - veja a s
 LOG_RDP_LEVEL_DETECTED=Nível de RDP detetado: {level}
 LOG_FRAM_ERASE_NO_CONFIRM_CONTINUING=Apagamento da F-RAM enviado, mas não chegou confirmação em 2s - a continuar o flash mesmo assim. Verifique o estado da F-RAM em separado (p. ex. com o URTC Tester) se isto for importante.
 LOG_MANIFEST_UNREADABLE=  manifest.json encontrado mas não foi possível lê-lo ({e}) - a ignorá-lo.
-LOG_MANIFEST_INFO=  Manifesto: version={version}, data_compilação={build_date}
+LOG_MANIFEST_INFO=  Manifesto: version={version}, build_date={build_date}
 LOG_FIRMWARE_PATH=Firmware: {path}
 LOG_FIRMWARE_SIZE=  tamanho: {size} bytes ({kb:.1f} KB)
 LOG_FIRMWARE_CRC32=  CRC32: 0x{crc32:08X}
@@ -151,7 +151,7 @@ MENU_SAVE_LOGS=Guardar registos...
 MENU_README=Readme
 MENU_GITHUB=GitHub do URTC
 MENU_LICENSE=Licença
-MSG_LICENSE_FALLBACK=Esta ferramenta está licenciada sob a Licença Pública Geral GNU v3.0 (GPL-3.0-or-later).\nTexto completo: https://www.gnu.org/licenses/gpl-3.0.html\n\nCopyright (C) 2026 JuanenRac (Electro Hobby 3D)
+MSG_LICENSE_FALLBACK=Esta ferramenta está licenciada sob a Licença Pública Geral GNU v3.0 ou posterior (GPL-3.0-or-later).\nTexto completo: https://www.gnu.org/licenses/gpl-3.0.html\n\nCopyright (C) 2026 JuanenRac (Electro Hobby 3D)
 TITLE_ABOUT=Acerca do URTC Flasher
 ABOUT_TAGLINE=Ferramenta de ambiente de trabalho para flash CAN-OTA + SWD/JTAG de placas URTC.
 ABOUT_DESCRIPTION=Liga-se através do mesmo adaptador USB-CAN que o tester usa, descarrega ou carrega uma imagem de firmware e faz o flash para uma placa URTC em funcionamento via CAN-OTA - ou, para um chip virgem/inutilizado, diretamente via SWD/JTAG.
@@ -256,12 +256,12 @@ QT_CONFIRM_CAN_OTA=Confirmar atualização CAN-OTA
 QT_CONFIRM_CAN_OTA_BODY=O firmware de aplicação selecionado será enviado para a placa ligada. Continuar?
 QT_CONFIRM_FLASH=CONFIRMAR FLASH
 QT_ADVANCED_DIAGNOSTICS=DIAGNÓSTICO AVANÇADO
-QT_SWD_JTAG_READONLY=DESCOBERTA SWD/JTAG SÓ DE LEITURA
+QT_SWD_JTAG_READONLY=DETEÇÃO SWD/JTAG SÓ DE LEITURA
 QT_SWD_FULL_CHIP_SECTION=PROGRAMAÇÃO COMPLETA DO CHIP (SWD/JTAG)
 QT_SCAN_PROBES=PROCURAR SONDAS
 QT_NOT_INSTALLED=NÃO INSTALADO
 QT_NO_PROBES=Não foi detetada nenhuma sonda de depuração USB.
-QT_SWD_SAFETY_NOTE=A descoberta é só de leitura. A programação completa do chip abaixo fala diretamente com o destino via SWD/JTAG (não a ligação CAN-OTA desta aplicação) - apaga e reprograma mesmo o chip completo. O modo de teste (dry run) está ativo por predefinição; reveja o registo antes de o desativar.
+QT_SWD_SAFETY_NOTE=A deteção é só de leitura. A programação completa do chip abaixo fala diretamente com o destino via SWD/JTAG (não a ligação CAN-OTA desta aplicação) - apaga e reprograma mesmo o chip completo. O modo de simulação está ativo por predefinição; reveja o registo antes de o desativar.
 QT_BOARD_SNAPSHOT=ESTADO DA PLACA
 QT_READ_BOARD_STATE=LER ESTADO DA PLACA
 QT_BOARD_SNAPSHOT_HELP=Os diagnósticos ativos só enviam consultas documentadas de leitura. Não é alterada nenhuma definição persistente, firmware nem byte de opção.
@@ -283,13 +283,13 @@ LOG_DEV_KEY_NOTE=NOTA: assinado com a chave de desenvolvimento PÚBLICA - só o 
 LOG_SIGNING_LOCALLY=Sem assinatura publicada - a assinar localmente com a chave {board} de urtc_config.json.
 ERR_NO_SIGNATURE_NO_KEY=Esta imagem não tem assinatura publicada (hmac_sha256 em <ficheiro>.manifest.json) e não há chave de assinatura de {board} configurada. Use uma imagem da compilação URTC (inclui o seu .manifest.json) ou, para uma imagem própria numa placa de bancada, defina "{option}" em urtc_config.json.
 ERR_FIRMWARE_EMPTY=O ficheiro de firmware está vazio
-ERR_FIRMWARE_TOO_BIG_MAIN=O firmware tem {size} bytes e excede o espaço principal de {max} bytes - não se envia uma atualização que o bootloader rejeitaria na mesma
+ERR_FIRMWARE_TOO_BIG_MAIN=O firmware tem {size} bytes e excede o slot principal de {max} bytes - não se envia uma atualização que o bootloader rejeitaria na mesma
 ERR_PAGE_ACK_SHORT=O ACK da página {page} tinha apenas {got} bytes (esperados pelo menos 4) - provavelmente ruído no barramento corrompeu a trama
 ERR_PAGE_ACK_MISMATCH=ACK de página não corresponde: esperada a página {expected}, o bootloader confirmou a {got}
 ERR_BOOTLOADER_FAILURE_REASON=O bootloader comunicou uma falha: {name} - {reason}
 ERR_BOOTLOADER_FAILURE=O bootloader comunicou uma falha: {name}
 ERR_TIMEOUT_FINAL_VERIFICATION=Tempo esgotado à espera do resultado da verificação final
-ERR_FIRMWARE_TOO_BIG_SLAVE=O firmware tem {size} bytes e excede o espaço principal de {max} bytes do escravo de expansão - não se envia uma atualização que o seu bootloader rejeitaria na mesma
+ERR_FIRMWARE_TOO_BIG_SLAVE=O firmware tem {size} bytes e excede o slot principal de {max} bytes do escravo de expansão - não se envia uma atualização que o seu bootloader rejeitaria na mesma
 ERR_SLAVE_BRIDGE_STALLED=A ponte I2C do escravo de expansão deixou de responder ({count} consultas de progresso 0x216 seguidas sem resposta) depois de enviar {offset} de {size} bytes - aborta-se em vez de continuar a enviar o resto da imagem para uma ponte bloqueada ou desligada. Verifique se o chip escravo está presente e a ligação I2C intacta, e tente de novo.
 ERR_TIMEOUT_SLAVE_FINAL_VERIFICATION=Tempo esgotado à espera do resultado da verificação final do próprio escravo de expansão
 ERR_TIMEOUT_SLAVE_STATUS=Tempo esgotado à espera de que o escravo de expansão comunique o estado 0x{status}
@@ -361,16 +361,16 @@ QTLOG_FLASH_UNEXPECTED=Erro inesperado durante a atualização
 QTLOG_AUTODETECT_FAILED=A deteção da velocidade do barramento falhou
 QTLOG_GITHUB_FAILED=A transferência do GitHub falhou
 QTLOG_GITHUB_DOWNLOAD_BLOCKED=Transferência do GitHub bloqueada: outra operação em curso
-QTLOG_DOWNGRADE_NOT_CONFIRMED=Atualização bloqueada: a descida de versão não foi confirmada
+QTLOG_DOWNGRADE_NOT_CONFIRMED=Atualização bloqueada: o downgrade não foi confirmada
 QTLOG_FRAM_ERASE_SKIPPED=Apagamento da F-RAM ignorado: precisa da opção de entrada no bootloader
 QTLOG_READBACK_BLOCKED=Cópia bloqueada: ligue à placa principal e aguarde o fim da operação em curso
 QTLOG_READBACK_STARTED=Cópia do firmware por CAN iniciada
 QTLOG_READBACK_COMPLETE=Cópia do firmware concluída
 QTLOG_READBACK_FAILED=A cópia do firmware falhou
 QTLOG_READBACK_UNEXPECTED=Erro inesperado durante a cópia do firmware
-QTLOG_BUS_ACTIVITY_BLOCKED=Verificação da atividade do bus bloqueada: ligue primeiro e aguarde a operação em curso
-QTLOG_BUS_ACTIVITY_FAILED=A verificação da atividade do bus falhou
-QTLOG_BUS_ACTIVITY=Atividade do bus
+QTLOG_BUS_ACTIVITY_BLOCKED=Verificação da atividade do barramento bloqueada: ligue primeiro e aguarde a operação em curso
+QTLOG_BUS_ACTIVITY_FAILED=A verificação da atividade do barramento falhou
+QTLOG_BUS_ACTIVITY=Atividade do barramento
 QTLOG_DEBUG_BUNDLE_EXPORTED=Pacote de depuração guardado
 QTLOG_DEBUG_BUNDLE_FAILED=Não foi possível guardar o pacote de depuração
 QTLOG_UPDATE_REPORT_WRITTEN=Relatório de atualização escrito
@@ -397,9 +397,9 @@ QTSTATUS_CONNECTION_FAILED=FALHA NA LIGAÇÃO
 QTSTATUS_DISCONNECTED=DESLIGADO
 QTSTATUS_READING_BOARD_STATE=A LER O ESTADO DA PLACA
 QTSTATUS_BOARD_STATE_COMPLETE=ESTADO DA PLACA LIDO
-QTSTATUS_BOARD_STATE_FAILED=LEITURA DO ESTADO FALHADA
+QTSTATUS_BOARD_STATE_FAILED=FALHA NA LEITURA DO ESTADO
 QTSTATUS_READBACK_IN_PROGRESS=LEITURA DE RETORNO EM CURSO
 QTSTATUS_CHECKING_OPTION_BYTES=A VERIFICAR OS BYTES DE OPÇÃO
-QTSTATUS_OPTION_BYTE_CHECK_FAILED=VERIFICAÇÃO DOS BYTES DE OPÇÃO FALHADA
+QTSTATUS_OPTION_BYTE_CHECK_FAILED=FALHA NA VERIFICAÇÃO DOS BYTES DE OPÇÃO
 QTSTATUS_CAN_OTA_IN_PROGRESS=CAN-OTA EM CURSO
 QTSTATUS_BUS_ACTIVITY_CHECK=VERIFICAÇÃO DA ATIVIDADE DO BARRAMENTO
