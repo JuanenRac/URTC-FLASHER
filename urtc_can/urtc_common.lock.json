@@ -156,7 +156,7 @@
     },
     "transports.py": {
       "from": "src/urtc_common/transports.py",
-      "sha256": "3fb0d9a6db95de1131e5a26919695817ad0ccd277e00c269b74ec234c6b8d1ce"
+      "sha256": "0c30d5ed8709cc76cd22e39779494e692f1ee4707609b02698fffc0eeb2a3b69"
     },
     "update_controller.py": {
       "from": "src/urtc_common/update_controller.py",

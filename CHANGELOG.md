@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **Tests of an update that is cut or damaged half way:** the adapter unplugged during the transfer, a board that stops hearing, a lost or repeated page acknowledgement and a bus that dies after the end of the update are played against the simulated bootloader behind a bus scenario; none of them can end in a finished progress bar. The copy of the shared transports now ignores a start frame cut short, as the bootloader does.
+
 - **Both signing keys are shown while a rotation is in progress:** before an update the flasher asks the bootloader which keys it trusts (`0x7EA` operation `05`), writes both fingerprints and the minutes left of the window in the log, accepts an image signed with either of them and warns when it uses the previous one; a revoked current key is said too. Anything ambiguous (several different answers, a count that does not match) is treated as no data. Tried against the virtual bootloader; texts in the eight languages.
 
 - **The copy of the CAN protocol (generated module and conformance vectors) is refreshed:** it now includes the key rotation status frames (operation `05` of `0x7EA` and its seven-byte answer on `0x7EB`). Nothing in this program sends or needs them yet.

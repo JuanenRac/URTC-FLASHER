@@ -494,6 +494,8 @@ class MockCAN:
         elif can_id == protocol.CAN_ID_READBACK_PAGE_ACK:
             self._queue_readback_page()
         elif can_id == protocol.CAN_ID_START_UPDATE:
+            if len(data) < 4:
+                return  # a start frame without its size is ignored, as the bootloader ignores a frame shorter than its minimum
             self._update_total_size = struct.unpack(">I", data[0:4])[0]
             self._update_bytes_received = 0
             self._next_page_index = 0
