@@ -48,7 +48,7 @@
     },
     "evidence_report_fonts.py": {
       "from": "src/urtc_common/evidence_report_fonts.py",
-      "sha256": "9227703e24a96605b2f71d2ad9f4c3bfa9458f315f2cee845fe22947d84a3830"
+      "sha256": "9fae968dc76d38ac54aa391e97c8899f889b57b849fd70894801246b47669c35"
     },
     "evidence_report_fonts_OFL.txt": {
       "from": "src/urtc_common/evidence_report_fonts_OFL.txt",
@@ -88,7 +88,7 @@
     },
     "help_text.py": {
       "from": "src/urtc_common/help_text.py",
-      "sha256": "252e296e06a5b802b2b32203b90ba5bc55a183d68ad077f19eb401a36c20784e"
+      "sha256": "e84296fcc5c92af11d0956c2b3e17af828ae80fbd6543b5cd9628a0c07737c95"
     },
     "key_rotation.py": {
       "from": "src/urtc_common/key_rotation.py",
