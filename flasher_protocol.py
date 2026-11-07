@@ -43,6 +43,7 @@ from flasher_config import (
     SLAVE_HARDWARE_ID, SLAVE_APP_MAX_SIZE,
     CAN_ID_VERSION_PATCH_RESPONSE, PATCH_UNKNOWN, PATCH_FLAG,
     BOOTLOADER_KEY_ID_BYTES, CAN_ID_BOOTLOADER_KEY_ID, KEY_ID_PRECHECK,
+    FRAME_GAP_S, FRAME_GAP_PROBLEM,
 )
 
 from urtc_can import protocol as _wire
@@ -689,6 +690,8 @@ class URTCFlasher:
 
         # --- 0x7F2: firmware data, page by page, waiting for each page ACK ---
         self.log(_("LOG_SENDING_FIRMWARE_DATA"))
+        if FRAME_GAP_PROBLEM:
+            self.log(f"WARNING: {FRAME_GAP_PROBLEM} - using the default of 1 ms between data frames")
         total_pages = (size + FLASH_PAGE_SIZE - 1) // FLASH_PAGE_SIZE
         offset = 0
         page_index = 0
@@ -722,7 +725,8 @@ class URTCFlasher:
                 # reason - not enforced here, since a slower-than-ideal
                 # transfer degrading gracefully is preferable to this tool
                 # refusing to run at all on an older interpreter.
-                time.sleep(0.001)
+                if FRAME_GAP_S > 0:
+                    time.sleep(FRAME_GAP_S)  # "frame_gap_ms" of urtc_config.json, 1 ms unless set
             # wait for this page's ACK before sending the next one - retries
             # the WAIT itself (not a resend of the page data) up to 2 extra
             # times with a short backoff, recovering from an ACK that was

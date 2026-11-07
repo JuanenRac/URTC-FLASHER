@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "urtc_common_version": "0.2.3",
+  "urtc_common_version": "0.2.4",
   "files": {
     "can_conformance_vectors.json": {
       "from": "conformance/can_vectors.json",

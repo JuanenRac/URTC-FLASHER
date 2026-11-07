@@ -389,7 +389,8 @@ def _load_config_overrides(log=None):
           "bootloader_max_size": 32768,
           "flash_page_size": 2048,
           "bootloader_flash_addr": "0x08000000",
-          "app_flash_addr": "0x08008000"
+          "app_flash_addr": "0x08008000",
+          "frame_gap_ms": 1.0
         }
     """
     log = log or (lambda msg: None)
@@ -540,6 +541,29 @@ KEY_ID_PRECHECK = str(_config.get("key_id_precheck", "warn")).strip().lower()
 if KEY_ID_PRECHECK not in ("off", "warn", "refuse"):
     KEY_ID_PRECHECK = "warn"
 BOOTLOADER_KEY_ID_BYTES = 8  # the whole payload of 0x7ED
+
+# Pacing between the 8-byte data frames of a transfer: "frame_gap_ms" in urtc_config.json (a number of milliseconds, default 1.0). 0 sends the frames back to back
+# (the adapter's own queue then sets the pace), the ceiling of 50 ms keeps a typo from turning a 112 KB image into a quarter-hour wait. Anything that is not a
+# number inside the limits (text, a boolean, NaN, a negative or too large value) falls back to the default and is reported once by frame_gap_problem().
+FRAME_GAP_MS_DEFAULT = 1.0
+FRAME_GAP_MS_MIN = 0.0
+FRAME_GAP_MS_MAX = 50.0
+
+
+def parse_frame_gap_ms(value):
+    """Return (gap in milliseconds, problem or None) for a raw configuration value; a missing value (None) is the default and not a problem."""
+    if value is None:
+        return FRAME_GAP_MS_DEFAULT, None
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return FRAME_GAP_MS_DEFAULT, f"frame_gap_ms must be a number of milliseconds, not {value!r}"
+    gap = float(value)
+    if gap != gap or not (FRAME_GAP_MS_MIN <= gap <= FRAME_GAP_MS_MAX):
+        return FRAME_GAP_MS_DEFAULT, f"frame_gap_ms {value!r} is outside {FRAME_GAP_MS_MIN:g}-{FRAME_GAP_MS_MAX:g} ms"
+    return gap, None
+
+
+FRAME_GAP_MS, FRAME_GAP_PROBLEM = parse_frame_gap_ms(_config.get("frame_gap_ms"))
+FRAME_GAP_S = FRAME_GAP_MS / 1000.0
 
 # The banner image is a bundled asset, not a user-supplied file - a
 # genuinely different location than FIRMWARE_FOLDER above when frozen.

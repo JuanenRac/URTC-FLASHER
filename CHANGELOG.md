@@ -2,6 +2,11 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- **The pause between the data frames of a transfer is a setting:** `frame_gap_ms` in `urtc_config.json` (a number of milliseconds, default 1.0, from 0 to 50; 0 sends the frames back to back). A value that is not a number or lies outside the limits falls back to the default and the log says why. The measured speed of every page and of the whole transfer is already in the log, so a value can be tried and compared. New tests cover the limits, the fall-back, the example file and that the transfer uses the value.
+- **The copies of the shared repository are refreshed:** the generated protocol module, the user-interface helpers, the vectors, the tools and the signature file name table (`.imgsig`) are at the current version of URTC-COMMON again.
+
 ## [0.5.4] - Tests of an update that is cut or damaged half way: the adapter unplugged during the transfer, a board that stops hearing, a lost or repeated page acknowledgement and a bus that dies after the end of the update are played... (and 4 more changes)
 
 - **Tests of an update that is cut or damaged half way:** the adapter unplugged during the transfer, a board that stops hearing, a lost or repeated page acknowledgement and a bus that dies after the end of the update are played against the simulated bootloader behind a bus scenario; none of them can end in a finished progress bar. The copy of the shared transports now ignores a start frame cut short, as the bootloader does.

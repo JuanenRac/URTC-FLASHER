@@ -12,7 +12,7 @@ PREFIX = 'URTC'
 BOARDS = ('MAIN', 'SLAVE')
 KINDS = ('FIRMWARE', 'BOOTLOADER')
 IMAGE_EXTENSION = '.bin'
-SIDECAR_SUFFIXES = ('.sha256', '.manifest.json', '.sig')
+SIDECAR_SUFFIXES = ('.sha256', '.manifest.json', '.sig', '.imgsig')
 IMAGE_NAME = re.compile('^URTC_(MAIN|SLAVE)_(FIRMWARE|BOOTLOADER)_v(\\d+(?:\\.\\d+)+)\\.bin$', re.IGNORECASE)
 
 

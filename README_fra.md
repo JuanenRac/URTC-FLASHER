@@ -21,13 +21,13 @@
   <img src="https://img.shields.io/badge/Licence-GPL%203.0-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Langage-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-668-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-830-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocole-CAN--OTA-orange.svg" alt="CAN-OTA">
 </p>
 
 ---
 
-**Vérification d'honnêteté - ce qui fonctionne réellement aujourd'hui :** `tests/` contient 56 fichiers pytest (668 tests : tous réussis ; 73 d'entre eux sont ignorés sans PySide6) - le protocole CAN-OTA face à un vrai transport `MockCAN` (`flasher_transports.py`) qui rejoue une séquence complète de bootloader simulé (démarrage/effacement/réception, données de page + PAGE_ACK, trames du registre de signature, fin de mise à jour avec un vrai succès ou un `VERIFY_FAIL_REASON` précis), les règles de signature (signature publiée envoyée sans aucune clé, image non signée refusée, sha256 du manifeste non conforme refusé avant tout trafic sur le bus), les contrôles d'intégrité d'image et le dossier `firmware/` fourni par rapport à ses manifestes. GitHub Actions (`.github/workflows/ci.yml`) exécute cette suite à chaque push, et `tools/build_test.py` l'exécute dans `build-test.sh`/`.bat`. Elle exécute aussi `ruff check` et `python -m mypy` (un contrôle des types du programme et des copies du code partagé). Les trois scripts `verify_qt_*.py` à la racine sont de vrais contrôles de bout en bout hors pytest (ils nécessitent une vraie boucle d'événements Qt ; lancement avec `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`) ; `verify_qt_swd_full_chip_flash.py` construit seulement les commandes `PyOCDCLI`/`CubeProgrammerCLI` avec `dry_run=True`. Rien de tout cela n'a été exécuté sur une vraie carte dans cet environnement. Voir `CHANGELOG.md` pour ce qui a réellement été publié. Le bootloader simulé (`MockCAN`) n'est qu'un modèle écrit à partir de la description du protocole : il reproduit les ACK de page, la dernière page partielle et les trames de relecture, mais ce n'est pas le vrai bootloader, donc une exécution de tests au vert ne remplace pas un essai sur une vraie carte (l'image officielle de 73476 octets ne pouvait pas être installée et la dernière trame d'une sauvegarde était perdue alors que les tests passaient, justement parce que la simulation était plus indulgente que le vrai bootloader).
+**Vérification d'honnêteté - ce qui fonctionne réellement aujourd'hui :** `tests/` contient 61 fichiers pytest (830 tests : tous réussis ; 73 d'entre eux sont ignorés sans PySide6) - le protocole CAN-OTA face à un vrai transport `MockCAN` (`flasher_transports.py`) qui rejoue une séquence complète de bootloader simulé (démarrage/effacement/réception, données de page + PAGE_ACK, trames du registre de signature, fin de mise à jour avec un vrai succès ou un `VERIFY_FAIL_REASON` précis), les règles de signature (signature publiée envoyée sans aucune clé, image non signée refusée, sha256 du manifeste non conforme refusé avant tout trafic sur le bus), les contrôles d'intégrité d'image et le dossier `firmware/` fourni par rapport à ses manifestes. GitHub Actions (`.github/workflows/ci.yml`) exécute cette suite à chaque push, et `tools/build_test.py` l'exécute dans `build-test.sh`/`.bat`. Elle exécute aussi `ruff check` et `python -m mypy` (un contrôle des types du programme et des copies du code partagé). Les trois scripts `verify_qt_*.py` à la racine sont de vrais contrôles de bout en bout hors pytest (ils nécessitent une vraie boucle d'événements Qt ; lancement avec `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`) ; `verify_qt_swd_full_chip_flash.py` construit seulement les commandes `PyOCDCLI`/`CubeProgrammerCLI` avec `dry_run=True`. Rien de tout cela n'a été exécuté sur une vraie carte dans cet environnement. Voir `CHANGELOG.md` pour ce qui a réellement été publié. Le bootloader simulé (`MockCAN`) n'est qu'un modèle écrit à partir de la description du protocole : il reproduit les ACK de page, la dernière page partielle et les trames de relecture, mais ce n'est pas le vrai bootloader, donc une exécution de tests au vert ne remplace pas un essai sur une vraie carte (l'image officielle de 73476 octets ne pouvait pas être installée et la dernière trame d'une sauvegarde était perdue alors que les tests passaient, justement parce que la simulation était plus indulgente que le vrai bootloader).
 
 ---
 
@@ -39,7 +39,7 @@
 |---|---|
 | Version | `0.5.4` |
 | Maturité | Fonctionnel |
-| Tests | 668 (`python -m pytest tests -q`) |
+| Tests | 830 (`python -m pytest tests -q`) |
 | Technologie | Python / PySide6 / Qt Quick / CAN-OTA / SWD/JTAG |
 | Cible | Le PC de la personne qui l'utilise |
 | Sur matériel réel | Simulé seulement : testé avec des émulateurs, des doubles de test ou des simulateurs ; aucune exécution sur du matériel réel n'est consignée pour cette version |
@@ -765,9 +765,11 @@ de script par déploiement :
   "bootloader_max_size": 32768,
   "flash_page_size": 2048,
   "bootloader_flash_addr": "0x08000000",
-  "app_flash_addr": "0x08008000"
+  "app_flash_addr": "0x08008000",
+  "frame_gap_ms": 1.0
 }
 ```
+`frame_gap_ms` est la pause en millisecondes entre les trames de données de 8 octets d'un transfert (1,0 par défaut, de 0 à 50 ; 0 les envoie à la suite) ; une valeur hors de ces limites revient à la valeur par défaut.
 Chaque champ est optionnel - ne remplacez que ce qui change réellement.
 Un fichier manquant retombe silencieusement sur les valeurs par défaut
 compilées ; un fichier présent mais cassé enregistre un avertissement
@@ -1065,7 +1067,7 @@ Les versions des programmes URTC qui fonctionnent ensemble, et la version du pro
 
 ## 🧪 Tests
 
-La suite compte 668 tests dans 56 fichiers (`python -m pytest tests -q` ; avec Qt sur une machine sans écran, `QT_QPA_PLATFORM=offscreen` ; les 73 qui ont besoin de PySide6 sont ignorés sans lui) : le protocole CAN-OTA face à un vrai transport `MockCAN` qui rejoue un bootloader simulé complet (démarrage, effacement, réception, données de page et ACK, trames du registre de signature, fin de mise à jour avec un vrai succès ou un `VERIFY_FAIL_REASON` précis), les règles de signature, les contrôles d'intégrité de l'image, le firmware inclus dans `firmware/` face à ses manifestes, les commandes SWD/JTAG construites avec `dry_run`, les fichiers de langue et les panneaux Qt Quick. Trois scripts à la racine (`verify_qt_*.py`) pilotent les panneaux Qt de bout en bout. La CI exécute aussi `ruff check`, `python -m mypy` et `tools/ci_validate.py`. `MockCAN` n'est qu'un modèle écrit à partir du protocole : il est plus indulgent que le vrai bootloader, donc une exécution verte ne remplace pas un essai sur une vraie carte.
+La suite compte 830 tests dans 61 fichiers (`python -m pytest tests -q` ; avec Qt sur une machine sans écran, `QT_QPA_PLATFORM=offscreen` ; les 73 qui ont besoin de PySide6 sont ignorés sans lui) : le protocole CAN-OTA face à un vrai transport `MockCAN` qui rejoue un bootloader simulé complet (démarrage, effacement, réception, données de page et ACK, trames du registre de signature, fin de mise à jour avec un vrai succès ou un `VERIFY_FAIL_REASON` précis), les règles de signature, les contrôles d'intégrité de l'image, le firmware inclus dans `firmware/` face à ses manifestes, les commandes SWD/JTAG construites avec `dry_run`, les fichiers de langue et les panneaux Qt Quick. Trois scripts à la racine (`verify_qt_*.py`) pilotent les panneaux Qt de bout en bout. La CI exécute aussi `ruff check`, `python -m mypy` et `tools/ci_validate.py`. `MockCAN` n'est qu'un modèle écrit à partir du protocole : il est plus indulgent que le vrai bootloader, donc une exécution verte ne remplace pas un essai sur une vraie carte.
 
 ## 🏗️ Compilation et publication
 
@@ -1089,7 +1091,7 @@ URTC-FLASHER/
 ├── urtc_can/                                          protocole, transports et mises à jour (copie)
 ├── urtc_ui/                                           aides d'interface (copie)
 ├── firmware/                                          où vont les images (vide au départ)
-├── tests/                                             47 fichiers de test, un par domaine
+├── tests/                                             61 fichiers de test, un par domaine
 ├── language/                                          les huit fichiers de langue .lng
 ├── assets/                                            QML, bannière et icône
 ├── docs/                                              architecture, compilation et exécution
