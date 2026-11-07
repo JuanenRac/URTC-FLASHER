@@ -662,7 +662,7 @@ transferencia. Mientras espera, se compara el propio latido del
 bootloader (enviado aproximadamente una vez por segundo) con el progreso
 que implicaría la página y el registro indica cuándo coinciden; el latido
 es un porcentaje entero, así que es solo una pista, no una prueba de que
-la página llegara, y nunca cambia el resultado.
+la página llegará, y nunca cambia el resultado.
 
 Cada sesión también escribe un archivo de registro con marca de tiempo
 en `logs/` (`urtc_flasher_YYYYMMDD_HHMMSS.log`),

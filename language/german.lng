@@ -163,7 +163,7 @@ BTN_ACCEPT=Akzeptieren
 
 # --- Freie Werkzeugkonfiguration (0x1A2/0x1A3) - siehe EEPROM.TXT Abschnitt 5 ---
 TITLE_CONFIRM_FREE_TOOL_CONFIG=Freie Werkzeugkonfiguration bestaetigen
-MSG_CONFIRM_FREE_TOOL_CONFIG=Die freie Werkzeugkonfiguration festlegen und speichern auf:\n\n  {tool}\n\nDies wirkt sich nur auf ein Board aus, dessen ID-Jumper 11111 lesen (alle 5 installiert) - auf jedes andere Board hat es keine Auswirkung. Bleibt uber Stromzyklen hinweg bestehen, bis sie explizit erneut geaendert wird. Fortfahren?
+MSG_CONFIRM_FREE_TOOL_CONFIG=Die freie Werkzeugkonfiguration festlegen und speichern auf:\n\n  {tool}\n\nDies wirkt sich nur auf ein Board aus, dessen ID-Jumper 11111 lesen (alle 5 installiert) - auf jedes andere Board hat es keine Auswirkung. Bleibt über Stromzyklen hinweg bestehen, bis sie explizit erneut geaendert wird. Fortfahren?
 LOG_FREE_TOOL_SAVED_CONFIRMED=Freie Werkzeugkonfiguration gespeichert und bestaetigt: {tool}
 LOG_FREE_TOOL_MISMATCH=Freie Werkzeugkonfiguration auf {value} gesetzt, aber Board meldet {confirmed} - das Schreiben hat moeglicherweise nicht funktioniert. Erneut abfragen zur Ueberpruefung.
 LOG_FREE_TOOL_NO_CONFIRMATION=Freie Werkzeugkonfiguration: gesendet, aber keine Bestaetigung erhalten (aeltere Firmware, oder Board nicht verbunden).
