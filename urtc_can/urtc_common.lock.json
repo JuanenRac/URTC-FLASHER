@@ -128,7 +128,7 @@
     },
     "node_picker_strings.py": {
       "from": "src/urtc_common/node_picker_strings.py",
-      "sha256": "c23a6027911a165e35032882fbde3e031433680fc17035369931479452f04682"
+      "sha256": "c6f5ddfdddecc5a414bafdb8738b29b9240d3db945e2f2f46f3ab91f48a6fdf7"
     },
     "protocol.py": {
       "from": "src/urtc_common/protocol.py",
@@ -172,7 +172,7 @@
     },
     "update_strings.py": {
       "from": "src/urtc_common/update_strings.py",
-      "sha256": "82269d46a2b48dc0576fa0e305e3c26d9bd6d87889b0667305f6c7bd49734584"
+      "sha256": "031a074bfb004675c5dad5f0fd69e255d6fc51394160da7bb62457b5264ad2e7"
     },
     "versioning.py": {
       "from": "src/urtc_common/versioning.py",
