@@ -42,6 +42,7 @@ import re
 import shutil
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -210,6 +211,25 @@ def newer(args: list[str]) -> int:
     return 0 if all(row.state in (fc.CURRENT, fc.AHEAD) for row in rows) else 1
 
 
+def download_with_retries(work, tag, *, allow_unsigned=False, attempts=4, pause=20, download=None, sleep=time.sleep):
+    """download_release, tried again after a network error (a timeout or a gateway error of the host is not a verdict
+    on the release). A missing asset or a refused signature (SystemExit) is final and is never retried."""
+    run = download or download_release
+    for attempt in range(1, attempts + 1):
+        try:
+            return run(work, tag, allow_unsigned=allow_unsigned)
+        except SystemExit:
+            raise
+        except Exception as error:
+            if attempt == attempts:
+                raise
+            print(f"download attempt {attempt} of {attempts} failed ({error}); trying again")
+            for stale in Path(work).iterdir():
+                if stale.is_file():
+                    stale.unlink()
+            sleep(pause * attempt)
+
+
 def main(argv: list[str]) -> int:
     args = argv[1:]
     if args and args[0] == "--newer":
@@ -233,7 +253,7 @@ def main(argv: list[str]) -> int:
     else:
         with tempfile.TemporaryDirectory(prefix="urtc_release_") as temp:
             try:
-                tag_name = download_release(Path(temp), tag, allow_unsigned=allow_unsigned)
+                tag_name = download_with_retries(Path(temp), tag, allow_unsigned=allow_unsigned)
             except SystemExit as error:  # a missing asset or a refused signature
                 print(f"could not use the release: {error}")
                 return 1

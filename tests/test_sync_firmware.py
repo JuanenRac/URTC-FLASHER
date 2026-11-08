@@ -295,3 +295,35 @@ def test_a_wrong_signature_of_a_record_is_refused(tmp_path, dest, test_key):
     with pytest.raises(SystemExit) as info:
         sync_firmware.download_release(work, "v0.3.5", fetch=fake.fetch, download=fake.download, allow_unsigned=True)
     assert "does not match its release signature" in str(info.value)
+
+
+def test_a_network_error_is_tried_again_and_a_refusal_is_not(tmp_path):
+    calls = []
+    pauses = []
+
+    def flaky(work, tag, allow_unsigned=False):
+        calls.append(tag)
+        (Path(work) / "half.bin").write_bytes(b"partial")
+        if len(calls) < 3:
+            raise OSError("Connection to GitHub timed out.")
+        return "v9.9.9"
+
+    work = tmp_path / "work"
+    work.mkdir()
+    assert sync_firmware.download_with_retries(work, None, download=flaky, sleep=pauses.append) == "v9.9.9"
+    assert len(calls) == 3 and pauses == [20, 40]
+
+    def refused(work, tag, allow_unsigned=False):
+        calls.append("refused")
+        raise SystemExit("does not match its release signature")
+
+    before = len(calls)
+    with pytest.raises(SystemExit):
+        sync_firmware.download_with_retries(work, None, download=refused, sleep=pauses.append)
+    assert len(calls) == before + 1
+
+    def down(work, tag, allow_unsigned=False):
+        raise OSError("down")
+
+    with pytest.raises(OSError):
+        sync_firmware.download_with_retries(work, None, download=down, sleep=pauses.append, attempts=2)
