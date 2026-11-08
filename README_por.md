@@ -69,7 +69,7 @@ Uma pequena ferramenta GUI multiplataforma para atualizar o firmware das
 placas URTC através do barramento CAN. Implementa o protocolo exato do
 bootloader descrito em `docs/CANBUS.TXT` (no repositório irmão
 [URTC](https://github.com/JuanenRac/URTC) contra o qual esta ferramenta é
-implementada - consulte "Projetos Relacionados" perto do fim deste documento;
+implementada - consulte «Projetos relacionados» perto do fim deste documento;
 todas as outras referências a `docs/*.TXT` neste README apontam também para
 lá): a verificação do HardwareID, o registo Ed25519 da imagem, o fluxo de
 atualização golden-image com slot de backup, o progresso em direto através das
@@ -142,17 +142,17 @@ Capturadas numa bancada de testes com dados de exemplo inventados e sem qualquer
 
 ### Verificar o que está atualmente instalado
 
-> No painel Qt Quick, as portas dos dois transportes (adaptadores série e, em Linux, interfaces SocketCAN) estão numa só lista, e as consultas desta secção são feitas por **LER ESTADO DA PLACA**, que pede de uma vez a versão, os contadores de erro CAN, o tipo de placa de expansão, a variante MLX9064x e a informação do periférico e os mostra no instantâneo da placa. Os guardados da secção de configuração do dispositivo escrevem os valores.
+> No painel Qt Quick, as portas dos dois transportes (adaptadores série e, em Linux, interfaces SocketCAN) estão numa só lista, e as consultas desta secção são feitas por **LER ESTADO DA PLACA**, que pede de uma vez a versão, os contadores de erro CAN, o tipo de placa de expansão, a variante MLX9064x e a informação do periférico e os mostra no painel ESTADO DA PLACA. Os botões Guardar da secção de configuração do dispositivo escrevem os valores.
 
 Se estiver em Linux e o SocketCAN estiver disponível, verá uma escolha de
-**Transport** no topo - escolha Serial/SLCAN ou SocketCAN antes de ligar. Em
+**Transporte** no topo - escolha Serial/SLCAN ou SocketCAN antes de ligar. Em
 Windows esta linha nem sequer aparece; Serial/SLCAN é a única opção.
 
 Clique em **Ligar**, e a ferramenta pergunta automaticamente à placa o que
 está atualmente a correr (CAN ID `0x7F8` → `0x7F9` - consulte
 `docs/CANBUS.TXT`). Isto funciona quer a placa esteja a correr a sua aplicação
 normalmente *quer* esteja parada no bootloader, pelo que não precisa de
-provocar um reset só para descobrir. Clique em **Query** a qualquer momento
+provocar um reset só para descobrir. Clique em **Consultar** a qualquer momento
 depois para verificar novamente (útil logo após a conclusão de uma gravação,
 para confirmar que a nova versão realmente ficou).
 
@@ -172,8 +172,8 @@ seguir a `0x7F9`), pelo que a janela e o registo mostram o
 `maior.menor.patch` completo (por exemplo `v0.3.5`) em vez de
 `maior.menor`; o patch de uma imagem é a terceira parte da versão do seu
 manifesto. Antes de uma atualização, o registo mostra `instalada -> nova`
-nesse formato, e o patch só entra no aviso "mais antiga do que a
-instalada" quando ambos os lados o têm. Uma placa anterior ao patch
+nesse formato, e o patch só entra no aviso «mais antiga do que a
+instalada» quando ambos os lados o têm. Uma placa anterior ao patch
 responde sem ele e é mostrada exatamente como antes. Quando o bootloader
 anuncia (indicador na mesma trama) que lê o patch, a trama de fim de
 atualização transporta-o no byte alto do campo menor; qualquer outro
@@ -201,25 +201,25 @@ O que verá:
   realmente ligada. Verifique a ligação física e, no caminho SocketCAN, que a
   interface está realmente ativa (`ip link show`).
 
-**Placa de expansão:** uma lista pendente e um par Query/Save separados,
+**Placa de expansão:** uma lista pendente e um par Consultar/Guardar separados,
 mesmo abaixo da verificação de versão. Lê e define qual das 7 configurações
 possíveis de `CONN_EXPANSION` (nenhuma, ou uma de 6 variantes reais - consulte
 `EXPANSION.TXT`) está fisicamente instalada, através do CAN
 (`0x1A0`/`0x1A1`). Não existe forma elétrica de a placa detetar isto por si,
 pelo que tem de lhe ser indicado - isto vive aqui (e não apenas no `URTC
 Tester`) uma vez que é um passo único de configuração de hardware mais
-naturalmente feito juntamente com uma atualização de firmware. **Save** pede
+naturalmente feito juntamente com uma atualização de firmware. **Guardar** pede
 primeiro confirmação, uma vez que isto persiste entre ciclos de alimentação
 até ser explicitamente alterado outra vez.
 
 **Variante do sensor MLX9064x:** com a mesma forma que o controlo da placa de
-expansão logo acima - uma lista pendente e um par Query/Save que lê/define qual
+expansão logo acima - uma lista pendente e um par Consultar/Guardar que lê/define qual
 dos 3 sensores térmicos da família MLX9064x (ou nenhum) está realmente
 montado, através do CAN (`0x1A6`/`0x1A7` - consulte `CANBUS.TXT`). Só tem
 significado quando a placa de expansão acima está definida para uma variante
 Advanced ou para Basic+MLX9064x; o próprio firmware da placa ignora
-totalmente esta definição em qualquer outro tipo de placa de expansão. "None
-installed" (o valor seguro por defeito) deliberadamente não recorre a assumir
+totalmente esta definição em qualquer outro tipo de placa de expansão. «Nenhum
+instalado» (o valor seguro por defeito) deliberadamente não recorre a assumir
 MLX90640 - uma placa com um MLX90640 real ligado precisa que isto seja
 definido explicitamente, uma vez, da mesma forma que o próprio tipo de placa de
 expansão.
@@ -227,33 +227,33 @@ expansão.
 ### Gravação
 
 1. **Ligar**: escolha Serial/SLCAN ou SocketCAN (apenas Linux), depois a
-   porta/interface, e clique em Connect. Para Serial/SLCAN isto abre o canal
+   porta/interface, e clique em Ligar. Para Serial/SLCAN isto abre o canal
    CAN a 500 kbit/s (a velocidade fixa do barramento do URTC); para SocketCAN
    espera-se que a interface já esteja a essa velocidade (passo 1 acima) - esta
    ferramenta não o define. Em ambos os casos, a versão atual é consultada
    automaticamente - consulte a secção 4 acima.
-2. **Escolha um alvo de gravação**: "Esta placa (principal)" ou "Escravo de expansão" -
-   por defeito a placa principal, o caso de longe mais comum. A opção slave
+2. **Escolha um alvo de gravação**: «Esta placa (principal)» ou «Escravo de expansão» -
+   por defeito a placa principal, o caso de longe mais comum. A opção escravo
    só alcança alguma coisa numa variante de placa de expansão Advanced
    (TMC2209+STM32F303CBT6 ou TMC5160A+STM32F303CBT6) - a atualização é
    retransmitida através da própria ponte I2C da placa principal para o chip
-   slave (os próprios `0x210`-`0x219` de `CANBUS.TXT`), não por uma ligação
-   física separada. "Apagar também a F-RAM de persistência antes de flashar" (passo 4 abaixo) desativa-se
-   automaticamente quando Slave é escolhido - o chip slave não tem F-RAM
+   escravo (os próprios `0x210`-`0x219` de `CANBUS.TXT`), não por uma ligação
+   física separada. «Apagar também a F-RAM de persistência antes de flashar» (passo 4 abaixo) desativa-se
+   automaticamente quando Escravo é escolhido - o chip escravo não tem F-RAM
    própria para apagar.
-3. **Selecione o firmware**: escolha da lista detetada, ou use Browse -
+3. **Selecione o firmware**: escolha da lista detetada, ou use Procurar -
    consulte a secção 3 acima para saber exatamente como funcionam a deteção e
    a validação.
 4. **Flash**:
-   - Deixe "A placa está atualmente a executar a aplicação" marcado se a placa
+   - Deixe «A placa está atualmente a executar a aplicação» marcado se a placa
      estiver ligada e a funcionar normalmente - a ferramenta envia primeiro o
-     disparador de payload mágico `0x7F0` (ou `0x210`, retransmitido ao slave, se
-     Slave for o alvo selecionado), que desliga em segurança todos os
+     disparador de payload mágico `0x7F0` (ou `0x210`, retransmitido ao escravo, se
+     Escravo for o alvo selecionado), que desliga em segurança todos os
      atuadores antes de reiniciar para o bootloader.
    - Desmarque-o se a placa já estiver parada no bootloader (logo após uma
-     gravação JTAG nova, ou se a verificação de versão acima mostrou "no
-     valid firmware currently installed").
-   - Clique em **Flash Firmware** e confirme - o diálogo de confirmação indica
+     gravação JTAG nova, ou se a verificação de versão acima mostrou «no
+     valid firmware currently installed»).
+   - Clique em **Gravar firmware** e confirme - o diálogo de confirmação indica
      qual o alvo que está prestes a gravar, por isso confirme duas vezes que
      corresponde ao que realmente pretendia selecionar. O registo mostra cada
      passo do protocolo; a barra de progresso acompanha o progresso da escrita
@@ -264,9 +264,9 @@ Se a verificação falhar em qualquer ponto (CRC32, assinatura, ou discrepância
 HardwareID), o slot principal do bootloader nunca é tocado - a placa continua a
 correr o firmware que já tinha. É sempre seguro simplesmente tentar outra vez.
 
-**Back up Firmware (CAN)**: lê de volta, através do barramento e sem
+**Cópia de segurança do firmware (CAN)**: lê de volta, através do barramento e sem
 modificações, o firmware atualmente instalado e guarda-o como um ficheiro
-`.bin` - o equivalente CAN do próprio "back up entire flash before erasing" da
+`.bin` - o equivalente CAN do próprio «back up entire flash before erasing» da
 secção SWD (secção 6 abaixo), pela mesma razão. Vale a pena fazê-lo antes de
 qualquer atualização, especialmente antes de um downgrade deliberado (abaixo),
 uma vez que é a única forma de recuperar mais tarde os bytes exatos de hoje se
@@ -276,15 +276,15 @@ que implemente `0x7FE`/`0x7FF` (consulte `docs/CANBUS.TXT`); um mais antigo
 simplesmente nunca responde, o que se manifesta como um timeout claro em vez
 de um ficheiro silenciosamente vazio. Na prática, isto significa que a cópia funciona numa placa sem aplicação válida ou que ficou a meio de uma atualização: com uma aplicação válida o bootloader salta para ela cerca de 600 ms depois do reset, a menos que chegue uma trama de início de atualização (`0x7F1`), e esta ferramenta não tem nenhum botão que mantenha o bootloader à espera (isso exigiria uma alteração no bootloader). Para uma placa a funcionar normalmente, faça a cópia da flash por SWD/JTAG (secção 6).
 
-**Avisos de versão e de assinatura**: antes da transferência a ferramenta pergunta à placa o que está instalado e regista "instalada vX.Y -> nova vA.B"; se a versão nova for mais antiga, avisa que o bootloader a recusará a menos que o downgrade seja permitido e sugere fazer primeiro uma cópia de segurança. Uma imagem cujo manifesto diz estar assinada com a chave de desenvolvimento PÚBLICA (as imagens oficiais incluídas estão) mostra um aviso a vermelho por baixo do nome do ficheiro; defina `"require_production_signature": true` em `urtc_config.json` para recusar totalmente essas imagens. Um bootloader que publica a impressão digital da chave de assinatura que aceita é comparado com o `signing_key_id` do manifesto da imagem antes da transferência: uma diferença é registada (`"key_id_precheck": "warn"`, o valor por omissão), recusada (`"refuse"`) ou não verificada (`"off"`) em `urtc_config.json`; um bootloader ou um manifesto sem impressão digital nunca conta como diferença. Experimentado apenas com um bootloader simulado. Quando a placa responde a partir do bootloader sem firmware válido, é selecionada a imagem oficial mais recente da placa principal encontrada em `firmware/`, para a verificar e gravar. Depois de cada atualização bem-sucedida é escrito um pequeno relatório (`logs/urtc_update_report_*.json`: versão da ferramenta, operador, nome, tamanho e SHA-256 da imagem, versões antes e depois); leva o seu próprio SHA-256 para que uma edição se note, mas não é uma assinatura.
+**Avisos de versão e de assinatura**: antes da transferência a ferramenta pergunta à placa o que está instalado e regista «instalada vX.Y -> nova vA.B»; se a versão nova for mais antiga, avisa que o bootloader a recusará a menos que o downgrade seja permitido e sugere fazer primeiro uma cópia de segurança. Uma imagem cujo manifesto diz estar assinada com a chave de desenvolvimento PÚBLICA (as imagens oficiais incluídas estão) mostra um aviso a vermelho por baixo do nome do ficheiro; defina `"require_production_signature": true` em `urtc_config.json` para recusar totalmente essas imagens. Um bootloader que publica a impressão digital da chave de assinatura que aceita é comparado com o `signing_key_id` do manifesto da imagem antes da transferência: uma diferença é registada (`"key_id_precheck": "warn"`, o valor por omissão), recusada (`"refuse"`) ou não verificada (`"off"`) em `urtc_config.json`; um bootloader ou um manifesto sem impressão digital nunca conta como diferença. Experimentado apenas com um bootloader simulado. Quando a placa responde a partir do bootloader sem firmware válido, é selecionada a imagem oficial mais recente da placa principal encontrada em `firmware/`, para a verificar e gravar. Depois de cada atualização bem-sucedida é escrito um pequeno relatório (`logs/urtc_update_report_*.json`: versão da ferramenta, operador, nome, tamanho e SHA-256 da imagem, versões antes e depois); leva o seu próprio SHA-256 para que uma edição se note, mas não é uma assinatura.
 
 **Instalar deliberadamente uma versão mais antiga**: o bootloader normalmente
 rejeita uma imagem validamente assinada se esta declarar uma versão mais antiga
-do que a já instalada (motivo de falha de verificação "rollback rejected") -
+do que a já instalada (motivo de falha de verificação «rollback rejected») -
 isto impede que uma versão com uma vulnerabilidade entretanto descoberta seja
-reintroduzida. Se precisar genuinamente de reverter para uma versão mais
-antiga e ainda de confiança, marque **"Permitir downgrade (ignorar o anti-rollback)
-para esta atualização"** (Destino: apenas placa principal) antes de gravar - aparece
+reintroduzida. Se precisar mesmo de reverter para uma versão mais
+antiga e ainda de confiança, marque **«Permitir downgrade (ignorar o anti-rollback)
+para esta atualização»** (Destino: apenas placa principal) antes de gravar - aparece
 um segundo diálogo de confirmação, uma vez que isto contorna deliberadamente
 uma verificação de segurança. Isto continua a enviar a imagem antiga completa
 através da transferência normal, apenas levanta a verificação da ordem de
@@ -297,11 +297,11 @@ silencioso.
 
 ### Programar o chip completo através de SWD/JTAG (avançado)
 
-O painel "Program complete chip via SWD/JTAG (advanced)" do separador **SWD/JTAG
-Programming** faz uma gravação completa de bring-up - apaga o chip inteiro
+O painel «Programar o chip completo através de SWD/JTAG (avançado)» do separador **Programação
+SWD/JTAG** faz uma gravação completa de bring-up - apaga o chip inteiro
 (mass-erase), e depois escreve de novo as imagens do bootloader e da
-aplicação, nos endereços reais do chip que correspondem à seleção de **Target
-chip** (ver abaixo). Isto é um **tipo de operação diferente** das secções 1-5
+aplicação, nos endereços reais do chip que correspondem à seleção de **Chip de
+destino** (ver abaixo). Isto é um **tipo de operação diferente** das secções 1-5
 acima:
 
 |  | Atualização CAN OTA (secções 1-5) | SWD/JTAG de chip completo (secção 6) |
@@ -312,14 +312,14 @@ acima:
 | Precisa de | Um adaptador USB-CAN | Uma sonda SWD/JTAG (ST-Link ou semelhante) |
 | Uso típico | Atualizações de firmware de rotina | Primeiro bring-up num chip em branco, ou recuperar uma placa inutilizada (bricked) |
 
-**Chip de destino:** "Esta placa (principal)" ou "Escravo de expansão" - as mesmas 2 opções
-do seletor do próprio separador CAN-OTA, mas uma escolha genuinamente separada
+**Chip de destino:** «Esta placa (principal)» ou «Escravo de expansão» - as mesmas 2 opções
+do seletor do próprio separador CAN-OTA, mas uma escolha realmente separada
 aqui: o SWD/JTAG precisa de uma sonda fisicamente ligada ao chip para o qual
 isto está definido, uma vez que não há uma ponte (ao contrário do CAN-OTA) que
 permita a uma ligação alcançar ambos. Mudar isto altera automaticamente os
 endereços de flash usados:
 
-| | Placa principal (STM32F303CC) | Slave de expansão (STM32F303CBT6) |
+| | Placa principal (STM32F303CC) | Escravo de expansão (STM32F303CBT6) |
 |---|---|---|
 | Endereço do bootloader | `0x08000000` (região de 32K) | `0x08000000` (região de 18K) |
 | Endereço da aplicação | `0x08008000` (região de 112K) | `0x08005000` (região de 54K) |
@@ -329,8 +329,8 @@ Ambas as strings de alvo acima são a melhor estimativa do próprio projeto para
 o nome real do alvo pyOCD de cada chip, não confirmadas contra uma instalação
 pyOCD real enquanto isto foi escrito (a cobertura STM32 no pyOCD vem em grande
 parte através de CMSIS-Packs em vez de alvos incorporados) - se a gravação
-falhar com um erro do tipo "target not found", execute manualmente `pyocd list
---targets --name stm32f303` e `pyocd pack install <the real name>` obtém o
+falhar com um erro do tipo «target not found», execute manualmente `pyocd list
+--targets --name stm32f303` e `pyocd pack install <o nome real>` obtém o
 CMSIS-Pack certo.
 
 **Requer um de** (a ferramenta deteta automaticamente qual está disponível e
@@ -364,11 +364,11 @@ falha conhecido como segunda camada, caso o código de saída de uma ferramenta
 por si só não seja de confiança noutra situação qualquer.
 
 **O dry run vem ativado por defeito.** Na primeira vez, deixe-o marcado e
-clique em "Flashar chip completo" - imprime os comandos exatos no registo sem
+clique em «Flashar chip completo» - imprime os comandos exatos no registo sem
 tocar na placa. Leia-os, confirme que os caminhos e os endereços parecem
 certos, *e só depois* desmarque o dry run e faça-o a sério.
 
-**"Back up entire flash before erasing"** lê primeiro toda a região de flash
+**«Back up entire flash before erasing»** lê primeiro toda a região de flash
 de 256KB para um ficheiro `.bin`, através do comando de leitura de memória
 para ficheiro da própria ferramenta (`-r` para o STM32CubeProgrammer,
 `commander savemem` para o pyOCD) - um seguro real aqui, uma vez que, ao
@@ -380,8 +380,8 @@ está a correr alguma coisa. Se a leitura não produzir realmente um ficheiro, o
 apagamento é recusado em vez de prosseguir sem o backup que pediu.
 
 **Estado dos testes:** a lógica de verificação de ligação acima foi verificada
-contra saída real do STM32CubeProgrammer (tanto um registo genuíno de ligação
-bem-sucedida como uma falha documentada de "No target connected", ambos
+contra saída real do STM32CubeProgrammer (tanto um registo real de ligação
+bem-sucedida como uma falha documentada de «No target connected», ambos
 obtidos do fórum comunitário da própria ST) e contra o cenário exato de falso
 sucesso em que um utilizador real caiu. A sequência completa de
 apagar/programar/verificar contra um ST-Link real e um STM32F303CC real ainda
@@ -407,22 +407,22 @@ manualmente. Ainda sem ligação quando clica nele. A velocidade do barramento d
 definida ao nível do SO (`ip link`), pelo que este controlo está desativado
 para esse transporte - não há nada aqui para ele experimentar.
 
-**Atividade do barramento** ("Verificar (2s)", ao lado de Query): conta as tramas
+**Atividade do barramento** («Verificar (2s)», ao lado de Consultar): conta as tramas
 de protocolo reais efetivamente vistas durante uma janela fixa de 2 segundos
 no transporte que estiver ligado. Isto deliberadamente **não** é a mesma coisa
 que uma verdadeira percentagem de carga do barramento CAN - isso precisaria de
 uma consulta netlink (SocketCAN) ou de extensões específicas do adaptador
 (SLCAN) para as quais esta ferramenta não tem uma forma standard e sem
 dependências de obter para o controlador *do próprio adaptador*. O que dá: um
-sinal genuíno e medido diretamente de "há algo a falar neste barramento, e
-aproximadamente com que frequência", em qualquer dos transportes. Para o
+sinal autêntico e medido diretamente de «há algo a falar neste barramento, e
+aproximadamente com que frequência», em qualquer dos transportes. Para o
 SocketCAN em particular, mostra também o delta de 2 segundos das estatísticas
 de interface do próprio Linux (`/sys/class/net/<iface>/statistics/`) -
 contadores básicos de rx/tx/erro/drop que toda a interface expõe, lidos como
 ficheiros simples, sem dependências adicionais. Ligar por SocketCAN lê também
 `/sys/class/net/<iface>/carrier` - um ficheiro simples 0/1 que toda a
 interface Linux expõe. Quando um controlador CAN entra em bus-off, o driver do
-kernel chama `netif_carrier_off()`, pelo que "no carrier" aqui é prova real de
+kernel chama `netif_carrier_off()`, pelo que «sem portadora» aqui é prova real de
 um bus-off ou de uma ligação igualmente morta, registada como aviso com o
 comando de recuperação exato (`sudo ip link set <iface> down && sudo ip link
 set <iface> up type can bitrate 500000 restart-ms 100`). Esta ferramenta não
@@ -431,7 +431,7 @@ ser desligada e voltar a ligar ao nível do kernel, o que precisa de root e
 conta como alterar a configuração de rede do sistema, não algo a fazer
 silenciosamente no seu nome.
 
-**Contadores de erro (TEC/REC)** (ao lado de Bus activity): ao contrário dos
+**Contadores de erro (TEC/REC)** (ao lado de Atividade do barramento): ao contrário dos
 contadores do lado do adaptador acima, isto pergunta à **própria placa** pelo
 Transmit/Receive Error Counter do seu controlador CAN (`0x7FB`/`0x7FC` -
 consulte `docs/CANBUS.TXT`), respondido por quem estiver em execução, a
@@ -445,7 +445,7 @@ estável aponta tipicamente para as transmissões da própria placa a não serem
 reconhecidas - nenhum outro nó no barramento, ou um problema de
 cablagem/terminação/velocidade do barramento específico da ligação desta placa.
 
-**Export Debug Bundle** (acima do registo): guarda um `.zip` com o registo
+**Exportar pacote de depuração** (acima do registo): guarda um `.zip` com o registo
 atual do ecrã, diagnósticos básicos do sistema (SO, versão do Python, que
 ferramentas foram encontradas, transporte/porta/velocidade do barramento atuais), e o ficheiro
 de firmware CAN atualmente selecionado - útil para entregar um quadro completo
@@ -471,7 +471,7 @@ bloco de firmware real mais um bloco distante e separado de bytes de opção ou
 dados de calibração, que algumas toolchains STM32 juntam numa única
 exportação) valida pelo seu conteúdo real e não pelo intervalo entre eles. Uma
 imagem de firmware em bruto com uma extensão que não `.bin` (`.img`, `.rom`, ou
-sem qualquer extensão - selecionável através da opção "All files" do seletor
+sem qualquer extensão - selecionável através da opção «Todos os ficheiros» do seletor
 de ficheiros) obtém o seu endereço base a partir do slot para o qual a está a
 carregar, tal como um `.bin` obteria.
 
@@ -499,7 +499,7 @@ RDP com o mesmo cuidado que toda esta ferramenta tem em torno do risco SWD:
 - **RDP1** - reversível através do Read Unprotect do CubeProgrammer, mas isso
   faz mass-erase do chip como parte da remoção - não é algo que esta
   ferramenta faça por si automaticamente.
-- **RDP2** - o único bloqueio genuinamente **permanente** em todo este
+- **RDP2** - o único bloqueio verdadeiramente **permanente** em todo este
   projeto. Ao contrário de todos os outros riscos documentados acima (todos
   recuperáveis por SWD), o RDP2 desativa a porta de depuração para sempre por
   desenho da própria ST. Esta verificação existe para o apanhar antes de uma
@@ -507,9 +507,9 @@ RDP com o mesmo cuidado que toda esta ferramenta tem em torno do risco SWD:
 
 **Seleção de sonda** (mesmo separador): se mais do que um ST-Link/sonda estiver
 ligado ao mesmo tempo, todos os comandos exigem escolher uma explicitamente na
-lista pendente Probe - não existe "a que o SO calhar enumerar primeiro". Com
+lista pendente Sonda - não existe «a que o SO calhar enumerar primeiro». Com
 exatamente uma sonda ligada, é selecionada automaticamente; com zero ou várias,
-clique em Refresh e escolha. Isto aplica-se tanto à gravação do chip completo
+clique em Atualizar e escolha. Isto aplica-se tanto à gravação do chip completo
 como à verificação dos bytes de opção, uma vez que ambas são suficientemente
 próximas do destrutivo para que adivinhar a placa errada seja um risco real
 numa bancada com vários dispositivos.
@@ -519,7 +519,7 @@ não apenas confiadas no código de saída. O próprio comando `flash` do pyOCD
 salta a reescrita de páginas que já coincidem (uma otimização de velocidade,
 não um relatório de verificação), pelo que esta ferramenta acrescenta um passo
 `commander compare` contra ambas as imagens depois de escrever - uma
-verificação genuína byte a byte, igual ao que a flag `-v` do
+verificação autêntica byte a byte, igual ao que a flag `-v` do
 STM32CubeProgrammer já faz. Apenas para `.bin`: o `compare` verifica o
 conteúdo da flash contra os bytes em bruto do ficheiro, o que não
 corresponderia corretamente à codificação própria de um ficheiro `.hex`/`.elf`
@@ -533,12 +533,12 @@ próprio pyOCD.
 decorrido por página durante uma atualização CAN, mais uma linha de resumo no
 fim (tempo total, KB/s médios, quantas repetições de ACK de página
 ocorreram). Puramente informativo - não altera o comportamento de gravação,
-apenas facilita distinguir "isto é só lento" de "algo está realmente errado"
+apenas facilita distinguir «isto é só lento» de «algo está realmente errado»
 num relance.
 
 **Motivos específicos de falha de verificação**: se a verificação falhar durante
 uma atualização CAN, o `bootloader_protocol.c` envia um byte de motivo junto
-com o estado `0x05` (verify failed) - transferência incompleta, discrepância de
+com o estado `0x05` (verificação falhada) - transferência incompleta, discrepância de
 CRC32, discrepância de assinatura, ou discrepância de HardwareID, em vez de todas as
 falhas parecerem idênticas. Consulte `docs/CANBUS.TXT` para o formato exato da
 trama (`0x7F5`, DLC 2 para este estado específico). Esta ferramenta e o
@@ -546,20 +546,20 @@ bootloader concordam neste formato de trama, pelo que grave ambos em conjunto
 se estiver a construir um bootloader personalizado com uma versão diferente do
 protocolo.
 
-**O mesmo detalhe para o slave de expansão**: uma atualização de slave falhada
-(Target: "Escravo de expansão") consulta `0x219` logo depois de `0x215` reportar
+**O mesmo detalhe para o escravo de expansão**: uma atualização de escravo falhada
+(Destino: «Escravo de expansão») consulta `0x219` logo depois de `0x215` reportar
 `STATUS_VERIFY_FAIL`, retransmitindo o `REG_VERIFY_FAIL_REASON` do próprio
-bootloader do slave - os mesmos 5 motivos que acima, apenas alcançados através
+bootloader do escravo - os mesmos 5 motivos que acima, apenas alcançados através
 da ponte I2C em vez de lidos diretamente de uma trama CAN. Requer um
-bootloader de slave que implemente `0x219` (acrescentado juntamente com o
-suporte desta própria ferramenta para ele); um bootloader de slave mais antigo
+bootloader de escravo que implemente `0x219` (acrescentado juntamente com o
+suporte desta própria ferramenta para ele); um bootloader de escravo mais antigo
 simplesmente não responde a essa consulta, e esta ferramenta recorre à
-mensagem genérica "verification failed".
+mensagem genérica «verificação falhada».
 
 ### Apagamento opcional da F-RAM antes de gravar
 
-A secção 3 tem uma caixa de seleção, **"Apagar também a F-RAM de persistência antes
-de flashar"** - desligada por defeito. Se marcada, envia o comando de
+A secção 3 tem uma caixa de seleção, **«Apagar também a F-RAM de persistência antes
+de flashar»** - desligada por defeito. Se marcada, envia o comando de
 apagamento de payload mágico (`0x192` - consulte `docs/CANBUS.TXT`) à F-RAM de
 persistência FM24CL64B integrada na placa antes de a sequência de atualização
 começar, apagando qualquer estado de parâmetros da ferramenta que tivesse
@@ -568,13 +568,13 @@ guardado.
 **Não é necessário numa atualização normal.** Uma discrepância de versão no
 layout do próprio registo guardado já é detetada e ignorada em segurança no
 arranque seguinte (consulte a secção de persistência de parâmetros de
-`src/F303-master/README.md`) - esta caixa existe para uma ardósia
-genuinamente limpa, não porque saltá-la deixasse algo avariado.
+`src/F303-master/README.md`) - esta caixa existe para um recomeço
+verdadeiramente limpo, não porque saltá-la deixasse algo avariado.
 
 **Só funciona enquanto a aplicação está em execução** - o próprio bootloader
 não trata de todo o `0x192`, apenas o `firmware_can_global_post.c` o faz. Esta
 caixa é silenciosamente ignorada (com uma linha de registo a explicar porquê)
-se a caixa "A placa está atualmente a executar a aplicação" acima dela estiver
+se a caixa «A placa está atualmente a executar a aplicação» acima dela estiver
 desmarcada, uma vez que nesse caso se assume que a placa já está parada no
 bootloader.
 
@@ -585,7 +585,7 @@ prossegue na mesma - apagar é um passo secundário e opcional ao lado do
 verdadeiro objetivo desta ferramenta, não algo que deva abortar uma
 atualização que de outra forma teve sucesso por a sua própria trama de
 confirmação se ter perdido. Verifique o estado da F-RAM em separado (o próprio
-botão Query State do `URTC Tester`) se isso lhe importar.
+botão Consultar estado do `URTC Tester`) se isso lhe importar.
 
 <!-- urtc-section:heads -->
 ### Várias cabeças de ferramenta num barramento
@@ -674,7 +674,7 @@ em hardware real - não é algo que comunique com uma placa verdadeira.
 `docs/CANBUS.TXT`) faz a atualização simulada falhar a verificação em vez de ter
 sucesso, para testar o caminho de falha da mesma forma.
 
-- **Histórico das operações.** O botão **Histórico**, junto de Ajuda, abre os registos de evidência (`urtc-evidence/1`) que o URTC-FLASHER escreveu na sua pasta de registos. Cada linha mostra o tipo, o resultado, a ferramenta, a placa e as versões, da mais recente para a mais antiga; um registo editado depois de escrito, um ficheiro que não é JSON ou um registo de outro formato é apresentado como não válido, com o que está errado. A lista pode ser filtrada por resultado e por texto ou reduzida aos registos que falham; lê a pasta de cada vez que abre, mostra no máximo 500 linhas (e indica quantas há) e não altera nada no disco. É a mesma janela no URTC-FLASHER, no URTC-TESTER e no URTC-UPDATER, partilhada a partir do URTC-COMMON, nos oito idiomas. Na linha de comandos, `python urtc_flasher.py --history FOLDER [--json]` lista os registos de uma pasta, verifica cada um e termina com o estado 1 se algum não for válido; não abre nenhum bus.
+- **Histórico das operações.** O botão **Histórico**, junto de Ajuda, abre os registos de evidência (`urtc-evidence/1`) que o URTC-FLASHER escreveu na sua pasta de registos. Cada linha mostra o tipo, o resultado, a ferramenta, a placa e as versões, da mais recente para a mais antiga; um registo editado depois de escrito, um ficheiro que não é JSON ou um registo de outro formato é apresentado como não válido, com o que está errado. A lista pode ser filtrada por resultado e por texto ou reduzida aos registos que falham; lê a pasta de cada vez que abre, mostra no máximo 500 linhas (e indica quantas há) e não altera nada no disco. É a mesma janela no URTC-FLASHER, no URTC-TESTER e no URTC-UPDATER, partilhada a partir do URTC-COMMON, nos oito idiomas. Na linha de comandos, `python urtc_flasher.py --history FOLDER [--json]` lista os registos de uma pasta, verifica cada um e termina com o estado 1 se algum não for válido; não abre nenhum barramento.
 
 ## ⚙️ Configuração
 
@@ -711,7 +711,7 @@ diferente, sem precisar de uma nova versão do script por implementação:
 `frame_gap_ms` é a pausa em milissegundos entre as tramas de dados de 8 bytes de uma transferência (predefinição 1,0, de 0 a 50; 0 envia-as seguidas); um valor fora desses limites volta à predefinição.
 Todos os campos são opcionais - substitua apenas o que realmente está a mudar.
 Os campos em falta recorrem aos valores por defeito incorporados desta
-ferramenta. **As substituições do mapa de memória e do HardwareID aplicam-se apenas às constantes da própria placa principal** (a única exceção é `slave_hmac_key_hex`, a chave de assinatura do escravo de expansão, que também pode ser definida aqui) - os equivalentes do próprio chip slave de expansão
+ferramenta. **As substituições do mapa de memória e do HardwareID aplicam-se apenas às constantes da própria placa principal** (a única exceção é `slave_hmac_key_hex`, a chave de assinatura do escravo de expansão, que também pode ser definida aqui) - os equivalentes do próprio chip escravo de expansão
 (`SLAVE_BOOTLOADER_FLASH_ADDR`, `SLAVE_APP_FLASH_ADDR`, `SLAVE_HARDWARE_ID`,
 etc.) estão fixos no próprio `flasher_config.py`, uma vez que os valores reais
 desse hardware já estão confirmados contra os seus próprios linker scripts, em
@@ -734,14 +734,14 @@ adaptada a uma variante de chip ou esquema de partições diferente.
 
 ### Fazer o seu adaptador falar CAN
 
-O que precisa de entre isto depende da sua plataforma e do transporte que vai
+Qual destes passos precisa depende da sua plataforma e do transporte que vai
 usar:
 
 **Linux, caminho SocketCAN (recomendado se o seu adaptador o suportar):**
 Nada para gravar no próprio adaptador. Ative a interface uma vez por arranque
 (ou adicione-a à sua configuração de rede para persistir):
 ```
-sudo modprobe can vcan gs_usb   # gs_usb covers most CANable-family boards
+sudo modprobe can vcan gs_usb   # gs_usb cobre a maioria das placas da família CANable
 sudo ip link set can0 type can bitrate 500000
 sudo ip link set can0 up
 ```
@@ -761,7 +761,7 @@ apresenta como porta série, que é o que este caminho precisa. Para usar
 Serial/SLCAN em vez disso (obrigatório em Windows; opcional em Linux):
 
 1. Descarregue firmware compatível com SLCAN para o seu adaptador (pesquise
-   "canable slcan firmware" — existem alguns forks mantidos; use aquele para o
+   «canable slcan firmware» — existem alguns forks mantidos; use aquele para o
    qual a própria documentação do seu adaptador aponta).
 2. Coloque o adaptador em modo DFU/bootloader (normalmente um botão BOOT
    premido durante o arranque, ou um jumper — consulte a documentação do seu
@@ -807,7 +807,7 @@ O painel **Qt Quick** é a única janela do programa (testado apenas contra o si
 ~~~
 python urtc_flasher.py
 ~~~
-Tem uma superfície escura azul-marinho/ciano com um cartão de ligação, tabelas de firmware legíveis, um registo de verificação escuro e um canal de progresso visível, e cobre todo o fluxo: a atualização CAN-OTA da placa principal ou do escravo de expansão (a escolha do destino; a opção «a placa está a executar a aplicação», o apagamento da F-RAM e a autorização de descida de versão são só para a placa principal), uma cópia de segurança por CAN do firmware instalado, o seletor de velocidade do bus com a pesquisa só de escuta, a transferência de uma release do GitHub, um seletor de ficheiros para qualquer `.bin`, a verificação da atividade do bus, o Board Snapshot, as 4 escritas de configuração do dispositivo, a descoberta SWD/JTAG só de leitura e a programação do chip completo por SWD/JTAG (apagar/escrever, ensaio, cópia de segurança antes de apagar, verificação RDP). Cada ação que escreve na placa pede confirmação antes, a autorização de descida de versão pede uma segunda, e fechar a janela durante uma transferência volta a perguntar. Nada disto foi experimentado numa placa real. `python urtc_flasher.py --cli` é o modo sem interface (secção 7).
+Tem uma superfície escura azul-marinho/ciano com um cartão de ligação, tabelas de firmware legíveis, um registo de verificação escuro e um canal de progresso visível, e cobre todo o fluxo: a atualização CAN-OTA da placa principal ou do escravo de expansão (a escolha do destino; a opção «a placa está a executar a aplicação», o apagamento da F-RAM e a autorização de descida de versão são só para a placa principal), uma cópia de segurança por CAN do firmware instalado, o seletor de velocidade do barramento com a pesquisa só de escuta, a transferência de uma release do GitHub, um seletor de ficheiros para qualquer `.bin`, a verificação da atividade do barramento, o estado da placa, as 4 escritas de configuração do dispositivo, a descoberta SWD/JTAG só de leitura e a programação do chip completo por SWD/JTAG (apagar/escrever, ensaio, cópia de segurança antes de apagar, verificação RDP). Cada ação que escreve na placa pede confirmação antes, a autorização de descida de versão pede uma segunda, e fechar a janela durante uma transferência volta a perguntar. Nada disto foi experimentado numa placa real. `python urtc_flasher.py --cli` é o modo sem interface (secção 7).
 
 #### Cabeçalho e ferramentas
 
@@ -820,20 +820,20 @@ Alterado com o seletor de idioma no cabeçalho da janela - guarda em `urtc_confi
 técnicas de hardware — a preferência de idioma fica simplesmente a seu lado),
 aplicado no próximo arranque. As traduções vivem em ficheiros de texto simples
 em `language/` (`english.lng`, `spanish.lng`, `italian.lng`,
-`french.lng`, `german.lng`, `japanese.lng`, `chinese.lng`, `portuguese.lng`) como simples pares `KEY=Value`, um por linha -
+`french.lng`, `german.lng`, `japanese.lng`, `chinese.lng`, `portuguese.lng`) como simples pares `CHAVE=Valor`, um por linha -
 as linhas que começam por `#` e as linhas em branco são ignoradas, e um `\n`
 literal dentro de um valor torna-se uma quebra de linha real (usado pelas
 poucas mensagens de diálogo de várias linhas). Gerados a partir do catálogo do URTC-COMMON (uma tradução corrige-se lá e os ficheiros são escritos de novo, nunca à mão), ou como ponto de partida para outro idioma
-(adicione `language/<name>.lng`, adicione `("<name>", "Native Name")` a
+(adicione `language/<nome>.lng`, adicione `("<nome>", "Nome nativo")` a
 `AVAILABLE_LANGUAGES` perto do topo de `flasher_config.py`, e defina
-`"language": "<name>"` em `urtc_config.json`). Uma chave em falta num ficheiro
+`"language": "<nome>"` em `urtc_config.json`). Uma chave em falta num ficheiro
 de idioma recorre a mostrar o próprio nome da chave em vez de falhar, e um
 ficheiro de idioma em falta ou ilegível (edição errada, nome de ficheiro
 errado) recorre ao inglês para toda a interface - em qualquer dos casos a
 ferramenta continua utilizável enquanto a discrepância é resolvida.
 
 **Permissões série em Linux:** se estiver a usar o caminho Serial/SLCAN e a
-ligação falhar com "Permission denied", o seu utilizador precisa de pertencer
+ligação falhar com «Permission denied», o seu utilizador precisa de pertencer
 ao grupo que é dono dos dispositivos série (`dialout` em Debian/Ubuntu; varia
 noutras distribuições):
 ```
@@ -916,7 +916,7 @@ tamanho tem de caber no slot principal). Cada ficheiro aparece na lista com um
   com ele.
 - **Mais do que um ficheiro válido** → nada é selecionado automaticamente;
   escolha da lista o que pretende.
-- **Seleciona um ficheiro de aspeto inválido mesmo assim** → a ferramenta pede
+- **Selecione um ficheiro de aspeto inválido mesmo assim** → a ferramenta pede
   primeiro confirmação. Esta verificação existe para apanhar erros óbvios
   (ficheiro errado, transferência truncada, um marcador vazio) - não consegue
   apanhar tudo (um ficheiro corrompido mas plausível, ou um assinado com a
@@ -926,8 +926,8 @@ tamanho tem de caber no slot principal). Cada ficheiro aparece na lista com um
   → use o botão **Procurar .bin...**, que funciona independentemente de onde o
   ficheiro realmente esteja (e executa a mesma verificação de validação em
   qualquer dos casos).
-- **Quer a build mais recente sem a procurar por si** → **Download
-  from GitHub...** lista os ficheiros anexados à última release do GitHub
+- **Quer a build mais recente sem a procurar por si** → **Descarregar do
+  GitHub...** lista os ficheiros anexados à última release do GitHub
   do repositório URTC (`github.com/JuanenRac/URTC/releases`; os binários de
   firmware são publicados como assets da release, não são guardados no
   git) e deixa-o escolher um para descarregar diretamente para a sua pasta
@@ -961,7 +961,7 @@ Ambos os digests são verificados mesmo antes da gravação e uma discrepância
 assinatura publicada é a que é enviada ao bootloader, e a versão do manifesto
 é a que lhe é reportada. Um ficheiro sem manifesto (a sua própria build) só é
 gravado se uma chave de assinatura estiver definida em `urtc_config.json` -
-consulte "Changing the HMAC key" abaixo.
+consulte «Alterar a chave HMAC» abaixo.
 
 Adicionar uma nova build mais tarde: basta largá-la em `firmware/` e clicar em
 **Atualizar** - sem necessidade de reiniciar.
@@ -1101,8 +1101,8 @@ O URTC é feito de repositórios independentes, cada um com a sua versão, os se
 ## 📜 LICENÇA
 
 Licença: **GPL-3.0-or-later** para o código-fonte, **CC BY-SA 4.0** para esta
-documentação - consulte `LICENSE` neste repositório, ou a secção "License and
-Copyright Notices" no fim deste documento.
+documentação - consulte `LICENSE` neste repositório, ou a secção «Licença e
+Avisos de Direitos de Autor» no fim deste documento.
 
 URTC Flasher é (c) 2026 JuanenRac (Electro Hobby 3D). Este aviso tem de ser
 incluído em quaisquer distribuições deste projeto ou trabalhos derivados.
@@ -1114,7 +1114,7 @@ efetivamente cobre:
 1. O código-fonte (`urtc_flasher.py` e todos os módulos `flasher_*.py`)
    e qualquer binário compilado a partir dele através de
    `build_exe.bat`/`build_exe.sh` estão disponíveis sob a
-   **GNU General Public License v3.0 or later (GPL-3.0-or-later)**. Texto completo em
+   **GNU General Public License v3.0 ou posterior (GPL-3.0-or-later)**. Texto completo em
    https://www.gnu.org/licenses/gpl-3.0.html.
 
 2. A documentação (este README e as suas próprias traduções -

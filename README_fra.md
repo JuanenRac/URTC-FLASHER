@@ -67,7 +67,7 @@
 
 Un petit outil graphique multiplateforme pour mettre à jour le firmware
 de la carte URTC via le bus CAN. Il implémente exactement le protocole
-du bootloader de `docs/CANBUS.TXT` (dans le dépôt frère [URTC](https://github.com/JuanenRac/URTC) auquel cet outil se conforme - voir « Projets Liés » vers la fin de ce document ; toute autre référence à `docs/*.TXT` dans ce README y renvoie aussi) : la vérification du HardwareID, l'enregistrement Ed25519 de l'image, le flux de mise à jour avec emplacement de
+du bootloader de `docs/CANBUS.TXT` (dans le dépôt frère [URTC](https://github.com/JuanenRac/URTC) auquel cet outil se conforme - voir « Projets liés » vers la fin de ce document ; toute autre référence à `docs/*.TXT` dans ce README y renvoie aussi) : la vérification du HardwareID, l'enregistrement Ed25519 de l'image, le flux de mise à jour avec emplacement de
 sauvegarde à image dorée, la progression en direct via les messages de
 battement de cœur du bootloader, et une requête de version (identifie si
 l'application *ou* le bootloader de cette carte s'annonce via CAN) pour
@@ -142,7 +142,7 @@ Capturées sur un banc d'essai avec des données d'exemple fictives et sans inst
 
 ### Vérifier ce qui est actuellement installé
 
-> Dans la console Qt Quick, les ports des deux transports (adaptateurs série et, sous Linux, interfaces SocketCAN) sont dans une seule liste, et les interrogations de cette section sont faites par **LIRE L'ETAT DE LA CARTE**, qui demande d'un coup la version, les compteurs d'erreurs CAN, le type de carte d'extension, la variante MLX9064x et les infos du périphérique, et les affiche dans l'instantané de la carte. Les enregistrements de la section de configuration de l'appareil écrivent les valeurs.
+> Dans la console Qt Quick, les ports des deux transports (adaptateurs série et, sous Linux, interfaces SocketCAN) sont dans une seule liste, et les interrogations de cette section sont faites par **LIRE L'ÉTAT DE LA CARTE**, qui demande d'un coup la version, les compteurs d'erreurs CAN, le type de carte d'extension, la variante MLX9064x et les infos du périphérique, et les affiche dans le panneau ÉTAT DE LA CARTE. Les enregistrements de la section de configuration de l'appareil écrivent les valeurs.
 
 Si vous êtes sous Linux et que SocketCAN est disponible, vous verrez un
 choix de **Transport** en haut - choisissez Série/SLCAN ou SocketCAN
@@ -259,7 +259,7 @@ carte d'extension lui-même le requiert déjà.
    Parcourir - voir la section 3 ci-dessus pour savoir exactement
    comment fonctionnent la détection et la validation.
 4. **Flasher** :
-   - Laissez coché "La carte exécute actuellement l'application" si la
+   - Laissez coché « La carte exécute actuellement l'application » si la
      carte est allumée et fonctionne normalement - l'outil envoie
      d'abord le déclencheur à charge utile magique `0x7F0` (ou `0x210`,
      relayé vers l'esclave, si Esclave est la cible sélectionnée), qui
@@ -267,7 +267,7 @@ carte d'extension lui-même le requiert déjà.
      bootloader.
    - Décochez si la carte est déjà dans le bootloader (juste après un
      flash JTAG frais, ou si la vérification de version ci-dessus a
-     montré "no valid firmware currently installed").
+     montré « no valid firmware currently installed »).
    - Cliquez sur **Flasher le Firmware** et confirmez - la boîte de
      dialogue de confirmation nomme quelle cible vous êtes sur le point
      de flasher, alors vérifiez que cela correspond à ce que vous
@@ -292,7 +292,7 @@ d'aujourd'hui plus tard si vous n'avez plus le fichier qui les a
 produits. Carte principale uniquement, et seulement pendant que la carte
 est réellement dans le bootloader - nécessite un bootloader qui
 implémente `0x7FE`/`0x7FF` (voir `docs/CANBUS.TXT`) ; un ancien ne
-répond simplement jamais, signalé comme un délai dépassé clair plutôt
+répond simplement jamais, signalé comme un dépassement de délai clair plutôt
 qu'un fichier silencieusement vide. En pratique, cela signifie que la sauvegarde fonctionne sur une carte sans application valide ou restée à mi-chemin d'une mise à jour : avec une application valide, le bootloader y saute environ 600 ms après le reset sauf si une trame de démarrage de mise à jour (`0x7F1`) arrive, et cet outil n'a aucun bouton qui maintienne le bootloader en attente (cela demanderait une modification du bootloader). Pour une carte qui fonctionne normalement, sauvegardez la flash par SWD/JTAG (section 6).
 
 **Indications de version et de signature** : avant le transfert, l'outil demande à la carte ce qui est installé et journalise « installée vX.Y -> nouvelle vA.B » ; si la nouvelle version est plus ancienne, il avertit que le bootloader la refusera sans downgrade autorisé et suggère de faire d'abord une sauvegarde. Une image dont le manifeste indique qu'elle est signée avec la clé de développement PUBLIQUE (les images officielles incluses le sont) affiche un avertissement rouge sous le nom du fichier ; mettez `"require_production_signature": true` dans `urtc_config.json` pour refuser totalement ces images. Un bootloader qui publie l'empreinte de la clé de signature qu'il accepte est comparé au `signing_key_id` du manifeste de l'image avant le transfert : une différence est consignée (`"key_id_precheck": "warn"`, la valeur par défaut), refusée (`"refuse"`) ou non vérifiée (`"off"`) dans `urtc_config.json` ; un bootloader ou un manifeste sans empreinte n'est jamais une différence. Essayé uniquement avec un bootloader simulé. Quand la carte répond depuis son bootloader sans firmware valide, l'image officielle de la carte principale la plus récente trouvée dans `firmware/` est sélectionnée pour que vous la vérifiiez et la flashiez. Après chaque mise à jour réussie, un petit rapport est écrit (`logs/urtc_update_report_*.json` : version de l'outil, opérateur, nom, taille et SHA-256 de l'image, versions avant et après) ; il porte son propre SHA-256 pour qu'une modification soit visible, mais ce n'est pas une signature.
@@ -318,8 +318,8 @@ ne soit jamais une supposition silencieuse.
 
 ### Programmer la puce complète via SWD/JTAG (avancé)
 
-La section "4. Program complete chip via SWD/JTAG" dans l'outil fait un
-flash complet de mise en route - efface en masse toute la puce, puis
+Le panneau « Programmer la puce complète via SWD/JTAG (avancé) » de
+l'onglet de programmation SWD/JTAG fait un flash complet de mise en route - efface en masse toute la puce, puis
 écrit à neuf à la fois l'image du bootloader et celle de l'application,
 aux adresses réelles de la puce correspondant à la sélection **Puce
 cible** (voir ci-dessous). Ceci est un **type d'opération
@@ -391,13 +391,13 @@ examinée pour du texte d'échec connu comme seconde couche, au cas où le
 code de sortie d'un outil à lui seul ne serait pas fiable dans une autre
 situation non plus.
 
-**Le dry run est activé par défaut.** La première fois, laissez-le
-coché et appuyez sur "Programmer la puce complète" - il imprime les commandes
+**La simulation (dry run) est activée par défaut.** La première fois, laissez-la
+cochée et appuyez sur « Programmer la puce complète » - il imprime les commandes
 exactes dans le journal sans toucher la carte. Lisez-les, confirmez que
-les chemins et adresses semblent corrects, *puis* décochez le dry run et
+les chemins et adresses semblent corrects, *puis* décochez la simulation et
 faites-le pour de vrai.
 
-**"Back up entire flash before erasing"** lit d'abord toute la région
+**« Back up entire flash before erasing »** lit d'abord toute la région
 flash de 256KB dans un fichier `.bin`, via la commande propre de
 lecture-mémoire-vers-fichier du même outil (`-r` pour
 STM32CubeProgrammer, `commander savemem` pour pyOCD) - une vraie
@@ -412,8 +412,8 @@ vous avez demandée.
 
 **État des tests :** la logique de vérification de connexion ci-dessus a
 été vérifiée contre une sortie réelle de STM32CubeProgrammer (à la fois
-un vrai journal de connexion réussie et un échec documenté "No target
-connected", tous deux provenant du propre forum communautaire de ST) et
+un vrai journal de connexion réussie et un échec documenté « No target
+connected », tous deux provenant du propre forum communautaire de ST) et
 contre le scénario exact de faux succès qu'un utilisateur réel a
 rencontré. La séquence complète d'effacement/programmation/vérification
 contre un vrai ST-Link et un vrai STM32F303CC n'a pas encore été
@@ -442,16 +442,16 @@ binaire de SocketCAN est défini au niveau du système d'exploitation
 (`ip link`), donc ce contrôle est désactivé pour ce transport - il n'y a
 rien ici à essayer.
 
-**Activité du bus** ("Vérifier (2s)", à côté d'Interroger) : compte les
+**Activité du bus** (« Vérifier (2s) », à côté d'Interroger) : compte les
 vraies trames de protocole réellement vues pendant une fenêtre fixe de
 2 secondes sur le transport connecté. Ceci n'est délibérément **pas** la
 même chose qu'un vrai pourcentage de charge de bus CAN - cela
 nécessiterait une requête netlink (SocketCAN) ou des extensions
 spécifiques à l'adaptateur (SLCAN) que cet outil n'a pas de moyen
 standard et sans dépendance d'obtenir pour le contrôleur du *propre
-adaptateur*. Ce que ça donne : un signal genuine, directement
-mesuré, de "quelque chose parle sur ce bus, et environ à quelle
-fréquence", sur l'un ou l'autre des 2 transports. Pour SocketCAN
+adaptateur*. Ce que ça donne : un signal authentique, directement
+mesuré, de « quelque chose parle sur ce bus, et environ à quelle
+fréquence », sur l'un ou l'autre des 2 transports. Pour SocketCAN
 spécifiquement, cela montre aussi le delta de 2 secondes des propres
 statistiques d'interface de Linux
 (`/sys/class/net/<iface>/statistics/`) - compteurs de base
@@ -459,7 +459,7 @@ rx/tx/error/drop que chaque interface expose, lus comme fichiers plats,
 aucune dépendance supplémentaire. Se connecter via SocketCAN lit aussi
 `/sys/class/net/<iface>/carrier` - un simple fichier 0/1 que chaque
 interface Linux expose. Quand un contrôleur CAN passe en bus-off, le
-pilote du noyau appelle `netif_carrier_off()`, donc "pas de porteuse"
+pilote du noyau appelle `netif_carrier_off()`, donc « pas de porteuse »
 ici est une preuve réelle d'un bus-off ou d'un lien similairement mort,
 enregistré comme avertissement avec la commande exacte de récupération
 (`sudo ip link set <iface> down && sudo ip link set <iface> up type can
@@ -515,7 +515,7 @@ bytes ou de données de calibration, que certaines chaînes d'outils STM32
 regroupent en un seul export) valide sur son contenu réel plutôt que
 sur l'écart entre eux. Une image firmware brute sous une extension
 autre que `.bin` (`.img`, `.rom`, ou pas d'extension du tout -
-sélectionnable via l'option "Tous les fichiers" du sélecteur de
+sélectionnable via l'option « Tous les fichiers » du sélecteur de
 fichiers) obtient son adresse de base de dans quel emplacement vous le
 chargez, de la même manière qu'un `.bin` le ferait.
 
@@ -538,7 +538,7 @@ bloqué, pas silencieusement accepté. La même logique s'applique à
 `.hex`/`.elf`, vérifiés contre leur propre adresse de chargement
 intégrée à la place.
 
-**Vérifier les Option Bytes** (section 4, STM32CubeProgrammer
+**Vérifier les Option Bytes** (même onglet de programmation SWD/JTAG, STM32CubeProgrammer
 uniquement - pyOCD n'expose pas ceci de la même manière via CLI) : un
 dump en lecture seule `-ob displ`, sans effacement/écriture. Signale le
 niveau RDP avec le même soin que tout cet outil prend autour du risque
@@ -547,16 +547,16 @@ SWD :
 - **RDP1** - réversible via le Read Unprotect de CubeProgrammer, mais
   cela efface la puce en masse dans le cadre de sa suppression - pas
   quelque chose que cet outil fait pour vous automatiquement.
-- **RDP2** - le seul verrouillage genuinement **permanent** de tout ce
+- **RDP2** - le seul verrouillage véritablement **permanent** de tout ce
   projet. Contrairement à tout autre risque documenté ci-dessus (tous
   récupérables via SWD), RDP2 désactive le port de débogage pour
   toujours par conception propre de ST. Cette vérification existe pour
   l'attraper avant une opération de puce complète, pas après.
 
-**Sélection de sonde** (section 4) : si plus d'un ST-Link/sonde est
+**Sélection de sonde** (même onglet) : si plus d'un ST-Link/sonde est
 connecté à la fois, chaque commande exige d'en choisir un
-explicitement dans la liste déroulante Sonde - pas de "celui que l'OS
-énumère en premier". Avec exactement une sonde connectée, elle est
+explicitement dans la liste déroulante Sonde - pas de « celui que l'OS
+énumère en premier ». Avec exactement une sonde connectée, elle est
 auto-sélectionnée ; avec zéro ou plusieurs, appuyez sur Actualiser et
 choisissez. Ceci s'applique à la fois au flash de puce complète et à la
 vérification d'option bytes, puisque les deux sont suffisamment proches
@@ -584,14 +584,14 @@ temps écoulé par page pendant une mise à jour CAN, plus une ligne de
 résumé à la fin (temps total, KB/s moyen, combien de nouvelles
 tentatives d'ACK de page se sont produites). Purement informatif - ne
 change pas le comportement de flash, rend juste plus facile de
-distinguer d'un coup d'œil "ça va juste lentement" de "quelque chose ne
-va vraiment pas".
+distinguer d'un coup d'œil « ça va juste lentement » de « quelque chose ne
+va vraiment pas ».
 
 **Raisons spécifiques d'échec de vérification** : si la vérification
 échoue pendant une mise à jour CAN, `bootloader_protocol.c` envoie un octet de
 raison à côté du statut `0x05` (vérification échouée) - transfert
 incomplet, discordance CRC32, discordance de signature, ou discordance
-HardwareID, plutôt que chaque échec paraisse identique. Voir
+HardwareID, plutôt que de laisser chaque échec paraître identique. Voir
 `docs/CANBUS.TXT` pour le format exact de trame (`0x7F5`, DLC 2 pour ce
 statut spécifique). Cet outil et le bootloader s'accordent sur ce
 format de trame, donc flashez les deux ensemble si vous construisez un
@@ -610,8 +610,8 @@ générique « échec de vérification ».
 
 ### Effacement optionnel de la F-RAM avant de flasher
 
-La section 3 a une case à cocher, **"Effacer aussi la F-RAM de
-persistance avant de flasher"** - désactivée par défaut. Si cochée,
+La section 3 a une case à cocher, **« Effacer aussi la F-RAM de
+persistance avant de flasher »** - désactivée par défaut. Si cochée,
 elle envoie la commande d'effacement à charge utile magique (`0x192` -
 voir `docs/CANBUS.TXT`) à la F-RAM de persistance FM24CL64B de la carte
 avant que la séquence de mise à jour ne commence, effaçant tout état de
@@ -622,14 +622,14 @@ version dans la mise en page propre de l'enregistrement sauvegardé est
 déjà détectée et ignorée en sécurité au prochain démarrage (voir la
 section de persistance des paramètres de
 `src/F303-master/README.md`) - cette case existe pour un
-nettoyage genuinement complet, pas parce que la sauter laisserait
+nettoyage véritablement complet, pas parce que la sauter laisserait
 quelque chose de cassé.
 
 **Fonctionne seulement pendant que l'application est en cours
 d'exécution** - le bootloader lui-même ne gère pas du tout `0x192`,
 seul `firmware_can_global_post.c` le fait. Cette case est sautée silencieusement
-(avec une ligne de journal expliquant pourquoi) si la case "la carte
-exécute actuellement l'application" au-dessus n'est pas cochée,
+(avec une ligne de journal expliquant pourquoi) si la case « la carte
+exécute actuellement l'application » au-dessus n'est pas cochée,
 puisque dans ce cas on suppose que la carte est déjà dans le
 bootloader.
 
@@ -753,9 +753,9 @@ avoir. Voir `docs/FIRMWARE_SIGNING.TXT` dans URTC. L'enregistrement Ed25519 de c
 
 **Ou remplacez tout ceci sans toucher le script :** un
 `urtc_config.json` optionnel à côté de `firmware/` peut définir la clé
-de signature, le HardwareID, et les valeurs de la carte mémoire - utile
+de signature, le HardwareID, et les valeurs du plan mémoire - utile
 pour une révision de carte différente, une clé pivotée, ou (pour les
-champs de carte mémoire) adapter cet outil à une variante de puce ou un
+champs du plan mémoire) adapter cet outil à une variante de puce ou un
 schéma de partition différent, sans avoir besoin d'une nouvelle version
 de script par déploiement :
 ```json
@@ -830,7 +830,7 @@ un port série, ce dont ce chemin a besoin. Pour utiliser Série/SLCAN à
 la place (obligatoire sous Windows ; optionnel sous Linux) :
 
 1. Téléchargez un firmware compatible SLCAN pour votre adaptateur
-   (cherchez "canable slcan firmware" — il existe quelques forks
+   (cherchez « canable slcan firmware » — il existe quelques forks
    maintenus ; utilisez celui indiqué par la documentation de votre
    propre adaptateur).
 2. Mettez l'adaptateur en mode DFU/bootloader (généralement un bouton
@@ -871,7 +871,7 @@ d'abord).
 
 Les deux scripts passent `--noconfirm` à PyInstaller, donc reconstruire
 par-dessus un `dist/URTC_Flasher` déjà existant le remplace directement
-au lieu d'attendre une invite "remplacer ?" facile à manquer dans la
+au lieu d'attendre une invite « Remplacer ? » facile à manquer dans la
 sortie d'un script.
 
 #### Console visuelle de contrôle
@@ -880,7 +880,7 @@ La console **Qt Quick** est la seule fenêtre du programme (testée uniquement c
 ~~~
 python urtc_flasher.py
 ~~~
-Elle a une surface sombre bleu marine/cyan avec une carte de connexion, des tableaux de firmware lisibles, un journal de vérification sombre et un canal de progression visible, et couvre tout le flux : la mise à jour CAN-OTA de la carte principale ou de l'esclave d'extension (le choix de la cible ; l'option « la carte exécute l'application », l'effacement de la F-RAM et l'autorisation de retour à une version antérieure ne concernent que la carte principale), une sauvegarde du firmware installé via CAN, le sélecteur de débit du bus avec la recherche en écoute seule, le téléchargement d'une release GitHub, un sélecteur de fichier pour n'importe quel `.bin`, le contrôle de l'activité du bus, le Board Snapshot, les 4 écritures de configuration de l'appareil, la découverte SWD/JTAG en lecture seule et la programmation de la puce complète via SWD/JTAG (effacement/écriture, essai à blanc, sauvegarde avant effacement, contrôle RDP). Toute action qui écrit dans la carte demande d'abord une confirmation, l'autorisation de retour à une version antérieure en demande une seconde, et fermer la fenêtre pendant un transfert redemande. Rien de tout cela n'a été essayé sur une vraie carte. `python urtc_flasher.py --cli` est le mode sans interface (section 7).
+Elle a une surface sombre bleu marine/cyan avec une carte de connexion, des tableaux de firmware lisibles, un journal de vérification sombre et un canal de progression visible, et couvre tout le flux : la mise à jour CAN-OTA de la carte principale ou de l'esclave d'extension (le choix de la cible ; l'option « la carte exécute l'application », l'effacement de la F-RAM et l'autorisation de retour à une version antérieure ne concernent que la carte principale), une sauvegarde du firmware installé via CAN, le sélecteur de débit du bus avec la recherche en écoute seule, le téléchargement d'une release GitHub, un sélecteur de fichier pour n'importe quel `.bin`, le contrôle de l'activité du bus, l'ÉTAT DE LA CARTE, les 4 écritures de configuration de l'appareil, la découverte SWD/JTAG en lecture seule et la programmation de la puce complète via SWD/JTAG (effacement/écriture, essai à blanc, sauvegarde avant effacement, contrôle RDP). Toute action qui écrit dans la carte demande d'abord une confirmation, l'autorisation de retour à une version antérieure en demande une seconde, et fermer la fenêtre pendant un transfert redemande. Rien de tout cela n'a été essayé sur une vraie carte. `python urtc_flasher.py --cli` est le mode sans interface (section 7).
 
 #### En-tête et outils
 
@@ -898,7 +898,7 @@ démarrage. Les traductions vivent dans des fichiers texte brut sous
 les lignes commençant par `#` et les lignes vides sont ignorées, et un
 `\n` littéral dans une valeur devient un vrai saut de ligne (utilisé par
 la poignée de messages de dialogue multi-lignes). Générés depuis le catalogue d'URTC-COMMON (une traduction s'y corrige et les fichiers sont réécrits, jamais modifiés à la main), ou comme point de départ pour une autre langue (ajoutez `language/<nom>.lng`, ajoutez
-`("<nom>", "Nom Natif")` à `AVAILABLE_LANGUAGES` près du début de
+`("<nom>", "Nom natif")` à `AVAILABLE_LANGUAGES` près du début de
 `flasher_config.py`, et définissez `"language": "<nom>"` dans
 `urtc_config.json`). Une clé manquante d'un fichier de langue retombe
 sur l'affichage du nom de cette clé même plutôt que de planter, et un
@@ -907,7 +907,7 @@ nom de fichier) retombe sur l'anglais pour toute l'interface - dans les
 deux cas l'outil reste utilisable pendant que le décalage se règle.
 
 **Permissions série sous Linux :** si vous utilisez le chemin
-Série/SLCAN et que la connexion échoue avec "Permission denied", votre
+Série/SLCAN et que la connexion échoue avec « Permission denied », votre
 utilisateur doit être dans le groupe propriétaire des périphériques
 série (`dialout` sur Debian/Ubuntu ; varie sur d'autres distributions) :
 ```
@@ -939,16 +939,15 @@ Cet outil s'attend à un dossier `firmware/` juste à côté de
 │   └── URTC_LOGO_FLASHER.svg      <- source de la bannière (vectorielle)
 ├── firmware/
 │   ├── URTC_MAIN_FIRMWARE_v<version>.bin  <- placez les nouveaux fichiers .bin ici
-│   ├── URTC_*  <- tools/sync_firmware.py remplace les fichiers URTC_* de ce dossier par ceux d'une release ; les autres fichiers restent
-│   └── URTC_SLAVE_FIRMWARE_v<version>.bin    <- application du chip esclave d'extension, le cas échéant
+│   └── URTC_*  <- tools/sync_firmware.py remplace les fichiers URTC_* de ce dossier par ceux d'une release ; les autres fichiers restent
 ├── logs/                          <- créé automatiquement, un fichier par session
-├── urtc_config.json               <- optionnel, non inclus par défaut (voir "Changer la clé HMAC" ci-dessous)
+├── urtc_config.json               <- optionnel, non inclus par défaut (voir « Changer la clé HMAC » ci-dessous)
 ├── urtc_flasher.py                <- point d'entrée : arguments CLI et démarrage de la fenêtre Qt Quick
 ├── flasher_config.py              <- E/S du fichier de configuration, chargement de la langue, constantes du protocole
 ├── flasher_transports.py          <- SLCAN, SocketCAN, MockCAN
 ├── flasher_swd_tools.py           <- wrappers STM32CubeProgrammer / pyOCD
 ├── flasher_validation.py          <- validation des fichiers firmware (.bin/.hex/.elf)
-├── flasher_protocol.py            <- la machine à états CAN OTA elle-même, tant pour la carte principale que (relayée via son propre pont I2C) l'esclave d'extension
+├── flasher_protocol.py            <- la machine à états CAN OTA elle-même
 ├── flasher_github.py               <- liste et télécharge les assets d'une release GitHub d'URTC
 ├── flasher_records.py             <- journaux de session (emplacement, conservation) et rapports de mise à jour
 ├── flasher_scenario.py            <- une mise à jour derrière un scénario de bus simulé, sur une horloge virtuelle, avec son enregistrement de preuve
@@ -961,19 +960,16 @@ Cet outil s'attend à un dossier `firmware/` juste à côté de
 
 Cet outil est organisé dans les modules ci-dessus par responsabilité,
 purement pour la lisibilité - il n'y a aucune différence fonctionnelle
-entre les avoir comme fichiers séparés ou comme un seul gros fichier, et
-il n'existe pas de forme monolithique à garder synchronisée comme c'est
-le cas pour le firmware (ceci est un outil PC, pas quelque chose de
-flashé sur la carte, donc il n'y a jamais qu'une seule forme).
+entre les avoir comme fichiers séparés ou comme un seul gros fichier.
 
 Ceci est délibéré : ce dépôt entier est autonome. Si vous voulez juste
 flasher une carte — sur un PC d'atelier, depuis une clé USB, n'importe
 où — vous pouvez copier ce dépôt seul, et cela fonctionne quand même.
 
-**Vous pouvez en garder plus d'un `.bin` là-dedans.** Chaque fichier de
+**Vous pouvez y garder plusieurs fichiers `.bin`.** Chaque fichier de
 firmware applicatif est vérifié et listé - l'outil ne prend pas
 simplement le premier qu'il trouve, et les binaires de bootloader
-(tout fichier avec "BOOTLOADER" dans le nom - `URTC_BOOTLOADER.bin`,
+(tout fichier avec « BOOTLOADER » dans le nom - `URTC_BOOTLOADER.bin`,
 `URTC_SLAVE_BOOTLOADER.bin`) sont entièrement filtrés de cette liste,
 puisque CAN-OTA ne flashe jamais que du firmware applicatif ; une mise
 à jour du bootloader nécessite SWD/JTAG à la place (section 6
@@ -989,7 +985,7 @@ liste avec un ✓ ou ✗ clair et la raison :
 |---|---|---|
 | URTC_MAIN_FIRMWARE_v<version>.bin | 71.8 KB | ✓ semble valide |
 | URTC_SLAVE_FIRMWARE_v<version>.bin | 33.9 KB | ✓ semble valide |
-| notes.txt.bin | 0.1 KB | ✗ le premier mot ne ressemble pas a un pointeur de pile valide |
+| notes.txt.bin | 0.1 KB | ✗ le premier mot ne ressemble pas à un pointeur de pile valide |
 
 - **Exactement un fichier passe la vérification** → il est sélectionné
   pour vous au moment où l'outil démarre. Un fichier invalide seul dans
@@ -1008,7 +1004,7 @@ liste avec un ✓ ou ✗ clair et la raison :
   entièrement** → utilisez le bouton **Parcourir .bin...**, qui
   fonctionne peu importe où le fichier vit réellement (et exécute la
   même vérification de validation dans les deux cas).
-- **Vous voulez la dernière build sans avoir à la chercher vous-même**
+- **Vous voulez le dernier build sans avoir à la chercher vous-même**
   → **Télécharger depuis GitHub...** liste les fichiers joints à la
   dernière release GitHub du dépôt URTC
   (`github.com/JuanenRac/URTC/releases` ; les binaires du firmware sont
@@ -1047,7 +1043,7 @@ est annoncée. Un fichier sans manifeste (votre propre build) n'est flashé
 que si une clé de signature est définie dans `urtc_config.json` - voir plus
 bas la modification de la clé HMAC.
 
-Ajouter une nouvelle build plus tard : déposez-la simplement dans
+Ajouter un nouveau build plus tard : déposez-la simplement dans
 `firmware/` et cliquez sur **Actualiser** - aucun redémarrage
 nécessaire.
 
@@ -1201,7 +1197,7 @@ qu'elle couvre réellement :
 1. Le code source (`urtc_flasher.py` et chaque module `flasher_*.py`)
    et tout binaire construit à partir de celui-ci via
    `build_exe.bat`/`build_exe.sh` sont disponibles sous la
-   **GNU General Public License v3.0 or later (GPL-3.0-or-later)**. Texte complet sur
+   **GNU General Public License v3.0 ou ultérieure (GPL-3.0-or-later)**. Texte complet sur
    https://www.gnu.org/licenses/gpl-3.0.html.
 
 2. La documentation (ce README et ses propres traductions -

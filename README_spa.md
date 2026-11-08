@@ -140,7 +140,7 @@ Capturadas en un banco de pruebas con datos de ejemplo inventados y sin ninguna 
 
 ### Comprobar qué hay instalado actualmente
 
-> En el panel Qt Quick los puertos de ambos transportes (adaptadores serie y, en Linux, interfaces SocketCAN) están en una sola lista, y las consultas de esta sección las hace **LEER ESTADO DE PLACA**, que pide de una vez la versión, los contadores de error CAN, el tipo de placa de expansión, la variante MLX9064x y la información del periférico y los muestra en la instantánea de la placa. Los guardados de la sección de configuración del dispositivo escriben los valores.
+> En el panel Qt Quick los puertos de ambos transportes (adaptadores serie y, en Linux, interfaces SocketCAN) están en una sola lista, y las consultas de esta sección las hace **LEER ESTADO DE PLACA**, que pide de una vez la versión, los contadores de error CAN, el tipo de placa de expansión, la variante MLX9064x y la información del periférico y los muestra en el panel de estado de la placa. Los guardados de la sección de configuración del dispositivo escriben los valores.
 
 Si estás en Linux y SocketCAN está disponible, verás una opción de
 **Transporte** en la parte superior - elige Serie/SLCAN o SocketCAN
@@ -242,13 +242,13 @@ de expansión ya lo requiere.
    "Esclavo de expansión" - por defecto la placa principal, el caso más
    común con diferencia. La opción de esclavo solo alcanza algo en una
    variante de placa de expansión Advanced (TMC2209+STM32F303CBT6 o
-   TMC5160A+STM32F303CBT6) - la actualización se relevada a través del
+   TMC5160A+STM32F303CBT6) - la actualización se releva a través del
    propio puente I2C de la placa principal hacia el chip esclavo (los
    propios `0x210`-`0x219` de `CANBUS.TXT`), no una conexión física
    separada. "Borrar F-RAM antes de grabar" (paso 4 abajo) se
    deshabilita automáticamente al elegir Esclavo - el chip esclavo no
    tiene F-RAM propia que borrar.
-3. **Seleccionar firmware**: elige de la lista detectada, o Buscar - ver
+3. **Seleccionar firmware**: elige de la lista detectada, o Examinar - ver
    sección 3 de arriba para saber exactamente cómo funcionan la
    detección y la validación.
 4. **Grabar**:
@@ -282,7 +282,7 @@ erasing" (sección 6 más abajo), por la misma razón. Vale la pena hacerlo
 antes de cualquier actualización, especialmente antes de un downgrade
 deliberado (abajo), ya que es la única forma de recuperar los bytes
 exactos de hoy más adelante si ya no tienes el archivo que los generó.
-Solo board principal, y solo mientras la placa está realmente en el
+Solo placa principal, y solo mientras la placa está realmente en el
 bootloader - requiere un bootloader que implemente `0x7FE`/`0x7FF` (ver
 `docs/CANBUS.TXT`); uno antiguo simplemente nunca responde, mostrado como
 un timeout claro en vez de un archivo silenciosamente vacío. En la práctica, esto significa que la copia funciona en una placa sin aplicación válida o que quedó a medias de una actualización: con una aplicación válida el bootloader salta a ella unos 600 ms después del reinicio salvo que llegue una trama de inicio de actualización (`0x7F1`), y esta herramienta no tiene ningún botón que mantenga al bootloader esperando (eso requeriría un cambio en el bootloader). Para una placa que funciona con normalidad, haz la copia de la flash por SWD/JTAG (sección 6).
@@ -295,8 +295,8 @@ versión anterior a la ya instalada (razón de fallo de verificación
 "rollback rechazado") - esto evita que se reenvíe una versión con una
 vulnerabilidad ya descubierta. Si genuinamente necesitas revertir a una
 versión anterior en la que confíes, marca **"Permitir downgrade
-(saltarse el anti-rollback) para esta actualización"** (solo para el
-board principal) antes de grabar - aparece un segundo diálogo de
+(saltarse el anti-rollback) para esta actualización"** (solo para la
+placa principal) antes de grabar - aparece un segundo diálogo de
 confirmación, ya que esto salta deliberadamente una comprobación de
 seguridad. Esto sigue subiendo la imagen antigua completa a través de
 la transferencia normal, solo levanta la comprobación de orden de
@@ -309,8 +309,8 @@ una suposición silenciosa.
 
 ### Programar el chip completo por SWD/JTAG (avanzado)
 
-La sección "4. Program complete chip via SWD/JTAG" en la herramienta
-hace una grabación de puesta en marcha completa - borra todo el chip por
+El panel «Programar el chip completo por SWD/JTAG (avanzado)» de la
+pestaña de programación SWD/JTAG hace una grabación de puesta en marcha completa - borra todo el chip por
 completo, luego escribe desde cero tanto la imagen del bootloader como
 la de la aplicación, en las direcciones reales del chip que corresponda
 según la selección de **Chip objetivo** (ver abajo). Esto es un
@@ -417,7 +417,7 @@ coincide con lo que se asume aquí.
 URTC está fijo a 500 kbit/s, que sigue siendo el valor por defecto -
 esto es para un adaptador mal configurado o para depurar una placa no
 estándar. **Autodetección** solo *escucha*: abre el adaptador en modo
-solo escucha de SLCAN (`L`) en cada velocidad de bus estándar por turno y se
+solo escucha de SLCAN (`L`) en cada velocidad de bus estándar por turnos y se
 detiene en el primero donde oye una trama CAN válida, así que nunca
 transmite y no puede perturbar un bus en marcha. Por eso necesita que
 otros nodos estén enviando y que el adaptador admita el modo solo
@@ -467,7 +467,7 @@ ninguna respuesta en absoluto (firmware/bootloader antiguo que aún no
 implementa `0x7FB`, o la placa no conectada). Un TEC que sube de forma
 constante con un REC plano suele apuntar a que las propias transmisiones
 de esta placa no reciben confirmación - ningún otro nodo en el bus, o un
-problema de cableado/terminación/velocidad de bus específica de la conexión de
+problema de cableado/terminación/velocidad de bus específico de la conexión de
 esta placa.
 
 **Exportar paquete de depuración** (arriba del registro): guarda un
@@ -477,7 +477,7 @@ transporte/puerto/velocidad de bus actual), y el archivo de firmware CAN
 seleccionado actualmente - útil para entregar un panorama completo a
 quien escribió el firmware si algo sale mal en el campo, en vez de
 copiar el registro
-por mano.
+a mano.
 
 ### SWD/JTAG — formatos de archivo, verificación de slot, y selección de sonda
 
@@ -522,7 +522,7 @@ las 2 en el slot equivocado se detecta y se bloquea, no se acepta en
 silencio. Se aplica la misma lógica a `.hex`/`.elf`, comprobados contra
 su propia dirección de carga embebida en su lugar.
 
-**Comprobar Option Bytes** (sección 4, solo STM32CubeProgrammer -
+**Comprobar Option Bytes** (misma pestaña de programación SWD/JTAG, solo STM32CubeProgrammer -
 pyOCD no expone esto de la misma forma por CLI): un volcado de solo
 lectura `-ob displ`, sin borrado/escritura. Marca el nivel RDP con el
 mismo cuidado que toma toda esta herramienta en torno al riesgo de SWD:
@@ -536,11 +536,11 @@ mismo cuidado que toma toda esta herramienta en torno al riesgo de SWD:
   para siempre por diseño del propio ST. Esta comprobación existe para
   detectarlo antes de una operación de chip completo, no después.
 
-**Selección de sonda** (sección 4): si hay más de un ST-Link/sonda
+**Selección de sonda** (misma pestaña): si hay más de un ST-Link/sonda
 conectado a la vez, todo comando exige elegir uno explícitamente del
 desplegable de Sonda - no hay "el que sea que el sistema operativo
 enumere primero". Con exactamente una sonda conectada, se auto-selecciona;
-con cero o varias, pulsa Actualizar y elige. Esto se aplica tanto al
+con cero o varias, pulsa Actualizar y elige. Esto se aplica tanto a la
 grabación de chip completo como a la comprobación de option bytes, ya que
 ambos son lo bastante cercanos a destructivos como para que adivinar la
 placa equivocada sea un riesgo real en un banco con varios dispositivos.
@@ -639,7 +639,7 @@ Un plan o una actualización se puede ejecutar contra un bus simulado que se por
 |---|---|
 | Grabar una imagen en la placa equivocada | La comprobación del HardwareID del protocolo del bootloader, hecha antes de escribir nada |
 | Una imagen corrupta, sin firmar o manipulada | Las comprobaciones de integridad de la imagen; un manifiesto cuyo `sha256` no coincide con el archivo se rechaza antes de cualquier tráfico en el bus, una imagen sin firmar se rechaza y se envía la firma publicada sin ninguna clave; la firma de release (Ed25519) se comprueba antes de usar la imagen de una release |
-| Instalar una imagen más antigua por error | La comprobación anti-retroceso del bootloader; volver a una versión anterior a propósito necesita la autorización de bajada |
+| Instalar una imagen más antigua por error | La comprobación anti-retroceso del bootloader; volver a una versión anterior a propósito necesita la autorización de bajada de versión |
 | Una actualización fallida que deja la placa muerta | El modelo de imagen dorada: la ranura de respaldo conserva el firmware anterior, una trama de confirmación perdida se recupera preguntando de nuevo la versión en lugar de informar de un fallo falso, y la ranura principal puede leerse antes |
 | Una actualización manipulada de este programa | «Buscar actualización» solo acepta un paquete con SHA-256 y firma Ed25519 válidos (la clave de las releases, fijada en el programa), instala solo tras una confirmación y nunca durante una transferencia, y conserva la versión anterior |
 
@@ -662,7 +662,7 @@ transferencia. Mientras espera, se compara el propio latido del
 bootloader (enviado aproximadamente una vez por segundo) con el progreso
 que implicaría la página y el registro indica cuándo coinciden; el latido
 es un porcentaje entero, así que es solo una pista, no una prueba de que
-la página llegará, y nunca cambia el resultado.
+la página haya llegado, y nunca cambia el resultado.
 
 Cada sesión también escribe un archivo de registro con marca de tiempo
 en `logs/` (`urtc_flasher_YYYYMMDD_HHMMSS.log`),
@@ -712,7 +712,7 @@ o antes de tocar hardware real - no algo que hable con una placa real.
 verificación en vez de tener éxito, para probar la ruta de fallo de la
 misma manera.
 
-- **Historial de operaciones.** El botón **Historial**, junto a Ayuda, abre los registros de evidencia (`urtc-evidence/1`) que URTC-FLASHER escribió en su carpeta de registros. Cada fila muestra el tipo, el resultado, la herramienta, la placa y las versiones, de la más reciente a la más antigua; un registro editado después de escribirse, un archivo que no es JSON o un registro de otro formato se muestra como no válido, con lo que falla. La lista se puede filtrar por resultado y por texto o reducir a los registros que fallan; lee la carpeta cada vez que se abre, muestra como máximo 500 filas (e indica cuántas hay) y no cambia nada en el disco. Es la misma ventana en URTC-FLASHER, URTC-TESTER y URTC-UPDATER, compartida desde URTC-COMMON, en los ocho idiomas. Por línea de comandos, `python urtc_flasher.py --history FOLDER [--json]` lista los registros de una carpeta, comprueba cada uno y sale con estado 1 si alguno no es válido; no abre ningún bus.
+- **Historial de operaciones.** El botón **Historial**, junto a Ayuda, abre los registros de evidencia (`urtc-evidence/1`) que URTC-FLASHER escribió en su carpeta de registros. Cada fila muestra el tipo, el resultado, la herramienta, la placa y las versiones, de la más reciente a la más antigua; un registro editado después de escribirse, un archivo que no es JSON o un registro de otro formato se muestra como no válido, con la causa del problema. La lista se puede filtrar por resultado y por texto o reducir a los registros que fallan; lee la carpeta cada vez que se abre, muestra como máximo 500 filas (e indica cuántas hay) y no cambia nada en el disco. Es la misma ventana en URTC-FLASHER, URTC-TESTER y URTC-UPDATER, compartida desde URTC-COMMON, en los ocho idiomas. Por línea de comandos, `python urtc_flasher.py --history FOLDER [--json]` lista los registros de una carpeta, comprueba cada uno y sale con estado 1 si alguno no es válido; no abre ningún bus.
 
 ## ⚙️ Configuración
 
@@ -850,7 +850,7 @@ El panel de control **Qt Quick** es la única ventana del programa (probado solo
 ~~~
 python urtc_flasher.py
 ~~~
-Tiene una superficie oscura azul marino/cian con una tarjeta de conexión, tablas de firmware legibles, un registro de verificación oscuro y un canal de progreso visible, y cubre todo el flujo: la actualización CAN-OTA de la placa principal o del esclavo de expansión (la elección de destino; la opción «la placa está ejecutando la aplicación», el borrado de la F-RAM y la autorización de bajada de versión son solo para la placa principal), una copia de seguridad por CAN del firmware instalado, el selector de velocidad del bus con la búsqueda en solo escucha, la descarga de una release de GitHub, un selector de archivos para cualquier `.bin`, la comprobación de actividad del bus, el Board Snapshot, las 4 escrituras de configuración del dispositivo, el descubrimiento SWD/JTAG de solo lectura y la programación del chip completo por SWD/JTAG (borrado/escritura, simulacro, copia de seguridad antes de borrar, comprobación de RDP). Cada acción que escribe en la placa pide confirmación antes, la autorización de bajada de versión pide una segunda, y cerrar la ventana durante una transferencia vuelve a preguntar. Nada de esto se ha probado en una placa real. `python urtc_flasher.py --cli` es el modo sin interfaz (sección 7).
+Tiene una superficie oscura azul marino/cian con una tarjeta de conexión, tablas de firmware legibles, un registro de verificación oscuro y un canal de progreso visible, y cubre todo el flujo: la actualización CAN-OTA de la placa principal o del esclavo de expansión (la elección de destino; la opción «la placa está ejecutando la aplicación», el borrado de la F-RAM y la autorización de bajada de versión son solo para la placa principal), una copia de seguridad por CAN del firmware instalado, el selector de velocidad del bus con la búsqueda en solo escucha, la descarga de una release de GitHub, un selector de archivos para cualquier `.bin`, la comprobación de actividad del bus, el estado de la placa, las 4 escrituras de configuración del dispositivo, el descubrimiento SWD/JTAG de solo lectura y la programación del chip completo por SWD/JTAG (borrado/escritura, simulacro, copia de seguridad antes de borrar, comprobación de RDP). Cada acción que escribe en la placa pide confirmación antes, la autorización de bajada de versión pide una segunda, y cerrar la ventana durante una transferencia vuelve a preguntar. Nada de esto se ha probado en una placa real. `python urtc_flasher.py --cli` es el modo sin interfaz (sección 7).
 
 #### Cabecera y herramientas
 
@@ -860,7 +860,7 @@ Tiene una superficie oscura azul marino/cian con una tarjeta de conexión, tabla
 
 **Idioma**: inglés por defecto.
 Se cambia con el selector de idioma de la cabecera de la ventana - se guarda inmediatamente en `urtc_config.json` (el mismo archivo usado
-para los overrides técnicos de hardware — la preferencia de idioma
+para los ajustes técnicos de hardware — la preferencia de idioma
 simplemente vive junto a esos), y se aplica en el siguiente arranque.
 Las traducciones viven en archivos de texto plano bajo `language/`
 (`english.lng`, `spanish.lng`, `italian.lng`, `french.lng`,
@@ -901,7 +901,7 @@ directamente.
 
 ### Dónde van los archivos de firmware
 
-**La carpeta empieza vacía.** Las imágenes de firmware no se guardan en este repositorio: son los ficheros de las releases de [URTC](https://github.com/JuanenRac/URTC). La ventana las descarga de la release que elijas, y `python tools/sync_firmware.py` rellena la carpeta desde la última release oficial (o `--release ETIQUETA`). Cada fichero se comprueba con la firma de la release (`.sig`, Ed25519) y sus resúmenes antes de usarse.
+**La carpeta empieza vacía.** Las imágenes de firmware no se guardan en este repositorio: son los archivos de las releases de [URTC](https://github.com/JuanenRac/URTC). La ventana las descarga de la release que elijas, y `python tools/sync_firmware.py` rellena la carpeta desde la última release oficial (o `--release ETIQUETA`). Cada archivo se comprueba con la firma de la release (`.sig`, Ed25519) y sus resúmenes antes de usarse.
 Esta herramienta espera una carpeta `firmware/` justo al lado de
 `urtc_flasher.py`, en la raíz de este mismo repositorio:
 
@@ -910,8 +910,7 @@ Esta herramienta espera una carpeta `firmware/` justo al lado de
 │   └── URTC_LOGO_FLASHER.svg      <- fuente del banner (vectorial)
 ├── firmware/
 │   ├── URTC_MAIN_FIRMWARE_v<version>.bin  <- pon los archivos .bin nuevos aquí
-│   ├── URTC_*  <- tools/sync_firmware.py sustituye los archivos URTC_* de esta carpeta por los de una release; los demás archivos se quedan
-│   └── URTC_SLAVE_FIRMWARE_v<version>.bin    <- app del chip esclavo de expansión, si aplica
+│   └── URTC_*  <- tools/sync_firmware.py sustituye los archivos URTC_* de esta carpeta por los de una release; los demás archivos se quedan
 ├── logs/                          <- se crea automáticamente, un archivo por sesión
 ├── urtc_config.json               <- opcional, no incluido por defecto (ver "Cambiar la clave HMAC" más abajo)
 ├── urtc_flasher.py                <- punto de entrada: argumentos de la CLI e inicio de la ventana Qt Quick
@@ -919,7 +918,7 @@ Esta herramienta espera una carpeta `firmware/` justo al lado de
 ├── flasher_transports.py          <- SLCAN, SocketCAN, MockCAN
 ├── flasher_swd_tools.py           <- envoltorios de STM32CubeProgrammer / pyOCD
 ├── flasher_validation.py          <- validación de archivos de firmware (.bin/.hex/.elf)
-├── flasher_protocol.py            <- la propia máquina de estados de CAN OTA, tanto para la placa principal como (relevado a través de su propio puente I2C) el chip esclavo de expansión
+├── flasher_protocol.py            <- la propia máquina de estados de CAN OTA
 ├── flasher_github.py               <- lista y descarga los assets de una release de GitHub de URTC
 ├── flasher_records.py             <- registros de sesión (ubicación, retención) e informes de actualización
 ├── flasher_scenario.py            <- una actualización tras un escenario de bus simulado, con reloj virtual y su registro de evidencia
@@ -932,10 +931,7 @@ Esta herramienta espera una carpeta `firmware/` justo al lado de
 
 Esta herramienta está organizada en los módulos de arriba por
 responsabilidad, puramente por legibilidad - no hay ninguna diferencia
-funcional entre tenerlos como archivos separados o como uno grande, y no
-existe una forma monolítica que mantener sincronizada como sí ocurre con
-el firmware (esto es una herramienta de PC, no algo que se graba en la
-placa, así que solo hay una forma).
+funcional entre tenerlos como archivos separados o como uno grande.
 
 Esto es deliberado: este repositorio entero es autocontenido. Si solo
 quieres grabar una placa — en un PC de taller, desde una memoria USB,
@@ -976,7 +972,7 @@ aparece en la lista con un ✓ o ✗ claro y el motivo:
   es para lo que sirve la propia revisión de CRC32/firma del bootloader
   durante la transferencia real.
 - **No se encuentra nada, o quieres un archivo de otro sitio por
-  completo** → usa el botón **Buscar .bin...**, que funciona sin
+  completo** → usa el botón **Explorar .bin...**, que funciona sin
   importar dónde viva realmente el archivo (y ejecuta la misma revisión
   de validación de cualquier forma).
 - **Quieres la última compilación sin tener que buscarla tú mismo** →
@@ -1013,7 +1009,7 @@ Ambos resúmenes se comprueban justo antes de grabar y una discrepancia
 **rechaza la grabación** antes de enviar nada por el bus (archivo
 equivocado, descarga corrupta o manifiesto desactualizado). La firma
 publicada es la que se envía al bootloader, y la versión del manifiesto es
-la que se le informa. Un archivo sin manifiesto (un build propio) solo se
+la que se le comunica. Un archivo sin manifiesto (un build propio) solo se
 graba si hay una clave de firma en `urtc_config.json` - ver "Cambiar la
 clave HMAC" más abajo.
 
@@ -1170,7 +1166,7 @@ realmente cubre:
 1. El código fuente (`urtc_flasher.py` y cada módulo `flasher_*.py`)
    y cualquier binario compilado a partir de él vía
    `build_exe.bat`/`build_exe.sh` están disponibles bajo la
-   **GNU General Public License v3.0 or later (GPL-3.0-or-later)**. Texto completo en
+   **GNU General Public License v3.0 o posterior (GPL-3.0-or-later)**. Texto completo en
    https://www.gnu.org/licenses/gpl-3.0.html.
 
 2. La documentación (este README y sus propias traducciones -
