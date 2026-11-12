@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The plausibility check of an image and the plan of an update are tested at the edges of their ranges:** the stack pointer and the reset handler at both ends of their slots, the exact size limit, files too short or empty or missing, another slot when it is named, the version read from the name of the file only, the data frames rounded up, the numbering of the steps, what force lets through, and generated images judged the same way every time.
+
 - **A bus that mixes speeds is recognised by its symptoms:** the flasher listens to the health frames (`0x1B8`) that go by while it flashes or reads back and, when the operation ends, writes a warning in the log (error counters or a bus-off of the heads that were heard, a head known to be built for 500 kbit/s); it has no continuous poll of the bus, so it looks when an operation ends. `bus_health` in `urtc_config.json` sets the thresholds. The four texts are in the eight languages. Tested with a simulated transport; nothing has run on a real bus.
 
 - **The flasher opens the bus at 1 Mbit/s, the speed of the tool heads:** the default speed of the adapter selector and of the search for the speed of a bus (1 Mbit/s first, then the legacy 500 kbit/s), taken from the shared specification; the README says it in the eight languages. **Compatibility note:** every board and adapter of one bus must run at the same speed (the default is now 1 Mbit/s; early boards run at 500 kbit/s), the trunk should stay under about 25 m at 1 Mbit/s with short stubs and a 120 ohm termination at each end.
