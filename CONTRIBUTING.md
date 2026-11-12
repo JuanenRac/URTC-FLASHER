@@ -11,3 +11,4 @@
 3. **UX**: Show clear error codes (e.g., `0x03` for HMAC failure) rather than generic error messages.
 4. **Shared code**: `urtc_can/` and `urtc_ui/` are copies of URTC-COMMON with a lock file; change them there and copy them again with `vendor_copy.py`, never by hand.
 5. **Checks**: run `python -m ruff check .`, `python -m mypy` and `python -m pytest` before a pull request.
+6. **Documentation language**: the files in `docs/` are written in English only, on purpose: they are technical reference for developers, kept in one language so that a change is made once and cannot drift between eight copies. The README of each repository is the part that is translated into the eight languages.
