@@ -34,9 +34,8 @@ REM Runs URTC-FLASHER from source. build_exe.bat produces a standalone
 REM .exe instead; this script is the quick "run it right now" path.
 cd /d "%~dp0"
 
-if exist .venv\Scripts\activate.bat (
-    call .venv\Scripts\activate.bat
-)
+set "VENV_PYTHON=python"
+if exist .venv\Scripts\python.exe set "VENV_PYTHON=%CD%\.venv\Scripts\python.exe"
 
-python urtc_flasher.py %*
+"%VENV_PYTHON%" urtc_flasher.py %*
 %KEEP_OPEN%

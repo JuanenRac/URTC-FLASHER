@@ -33,12 +33,13 @@ cd "$(dirname "$0")"
 # (never in CI/piped/non-interactive runs).
 trap '[ -t 0 ] && read -r -p "Press Enter to close..." _' EXIT
 
-if [ -f .venv/bin/activate ]; then
-    # shellcheck disable=SC1091
-    source .venv/bin/activate
-elif [ -f .venv/Scripts/activate ]; then
-    # shellcheck disable=SC1091
-    source .venv/Scripts/activate
+# Run the python of the virtual environment directly: the first python on the PATH can be a stripped one whose venv has no script to switch into it.
+if [ -z "${PYTHON:-}" ]; then
+    if [ -x .venv/bin/python ]; then
+        PYTHON=".venv/bin/python"
+    elif [ -x .venv/Scripts/python.exe ]; then
+        PYTHON=".venv/Scripts/python.exe"
+    fi
 fi
 
 "${PYTHON:-$(command -v python3 || command -v python)}" urtc_flasher.py "$@"
