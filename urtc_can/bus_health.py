@@ -103,9 +103,11 @@ class HealthTap:
     def __init__(self, transport: Any, keep: int = 64) -> None:
         self._frames: list[bytes] = []
         self._keep = keep
-        self._read = transport.read_frame
-        transport.read_frame = self._tapped          # the instance, not the class: isinstance() and the other methods are untouched
         self.transport = transport
+        self._read: Any = getattr(transport, "read_frame", None)
+        self._tapping = callable(self._read)
+        if self._tapping:
+            transport.read_frame = self._tapped      # the instance, not the class: isinstance() and the other methods are untouched
 
     def _tapped(self, *args: Any, **kwargs: Any) -> Any:
         frame = self._read(*args, **kwargs)
@@ -119,5 +121,7 @@ class HealthTap:
         return frames
 
     def release(self) -> None:
-        """Gives the transport its own ``read_frame`` back."""
-        self.transport.read_frame = self._read
+        """Gives the transport its own ``read_frame`` back (a transport that has none was never touched)."""
+        if self._tapping:
+            self.transport.read_frame = self._read
+            self._tapping = False

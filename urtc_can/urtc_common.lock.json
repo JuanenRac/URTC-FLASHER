@@ -16,7 +16,7 @@
     },
     "bus_health.py": {
       "from": "src/urtc_common/bus_health.py",
-      "sha256": "4d46652bce2169c795aed3f42f0cb8d914a672609bf7e6e738c5e5d7058cbc8d"
+      "sha256": "80fede3e0c8e7a0d64a6704f00a2f1aed2d134464749def7f69f4cf0f18cd637"
     },
     "bus_scenario.py": {
       "from": "src/urtc_common/bus_scenario.py",
