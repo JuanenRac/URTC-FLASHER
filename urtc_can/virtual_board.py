@@ -217,9 +217,12 @@ class VirtualBoard:
 class SlcanAdapter:
     """The adapter between a text stream and a board: ``feed(bytes)`` returns the bytes to send back."""
 
-    def __init__(self, board: VirtualBoard, acknowledge_transmit: bool = True) -> None:
+    def __init__(self, board: VirtualBoard, acknowledge_transmit: bool = True, bus_bitrate_code: str | None = None) -> None:
         self.board = board
         self.acknowledge_transmit = acknowledge_transmit
+        # The SLCAN code of the speed the bus runs at; None means the bus follows whatever the adapter is set to (the older behaviour). With a code, a board and an
+        # adapter at different speeds do not hear each other: what the adapter sends reaches nobody and nothing comes back, as on a real bus of another speed.
+        self.bus_bitrate_code = bus_bitrate_code
         self.state = "closed"  # closed, open or listen
         self.bitrate_code: str | None = None
         self._pending = b""
@@ -239,6 +242,8 @@ class SlcanAdapter:
             frame = decode_line(line)
             if frame is None:
                 return b"\a"
+            if self.bus_bitrate_code is not None and self.bitrate_code != self.bus_bitrate_code:
+                return b"z\r" if self.acknowledge_transmit else b""          # sent into a bus that is at another speed: nobody hears it
             replies = self._lines(self.board.handle(frame.id, frame.data))
             return (b"z\r" if self.acknowledge_transmit else b"") + replies
         if head == "S" and len(line) == 2 and line[1] in "0123456789":

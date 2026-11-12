@@ -192,7 +192,7 @@
     },
     "virtual_board.py": {
       "from": "src/urtc_common/virtual_board.py",
-      "sha256": "3541afacc4b32df6f6134ec68420ca84e5744a732206fe3633222dcdd8bc98ff"
+      "sha256": "34fd2108b9ea10b233bd4652f581d25b23a44982c17da5e5c740039a8fd50107"
     }
   }
 }
