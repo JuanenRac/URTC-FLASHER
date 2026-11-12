@@ -233,7 +233,7 @@ de expansión ya lo requiere.
 
 1. **Conectar**: elige Serie/SLCAN o SocketCAN (solo Linux), luego el
    puerto/interfaz, luego haz clic en Conectar. Para Serie/SLCAN esto
-   abre el canal CAN a 500 kbit/s (la velocidad de bus fija de URTC);
+   abre el canal CAN a 1 Mbit/s (la velocidad de bus fija de URTC);
    para SocketCAN se espera que la interfaz ya esté a esa velocidad
    (paso 1 de arriba) - esta herramienta no la establece. De cualquier
    forma, la versión actual se consulta automáticamente - ver sección 4
@@ -416,7 +416,7 @@ coincide con lo que se asume aquí.
 ### Diagnósticos — actividad de bus, velocidad de bus, y paquetes de depuración
 
 **Selector de velocidad de bus + autodetección** (solo Serie/SLCAN): el bus de
-URTC está fijo a 500 kbit/s, que sigue siendo el valor por defecto -
+URTC está fijo a 1 Mbit/s, que sigue siendo el valor por defecto -
 esto es para un adaptador mal configurado o para depurar una placa no
 estándar. **Autodetección** solo *escucha*: abre el adaptador en modo
 solo escucha de SLCAN (`L`) en cada velocidad de bus estándar por turnos y se
@@ -449,7 +449,7 @@ interfaz de Linux. Cuando un controlador CAN entra en bus-off, el driver
 del kernel llama a `netif_carrier_off()`, así que "sin portadora" aquí
 es evidencia real de un bus-off o un enlace igualmente muerto, registrado
 como advertencia con el comando exacto de recuperación (`sudo ip link
-set <iface> down && sudo ip link set <iface> up type can bitrate 500000
+set <iface> down && sudo ip link set <iface> up type can bitrate 1000000
 restart-ms 100`). Esta herramienta no ejecuta ese comando por sí misma -
 limpiar un bus-off real necesita bajar y volver a subir la interfaz a
 nivel del kernel, lo cual necesita root y cuenta como cambiar la
@@ -696,7 +696,7 @@ dado lo mucho más que está en juego si una ejecución con script obtiene
 una combinación equivocada de archivo/objetivo sin que nadie esté
 observando.
 
-**`--transport python-can`** usa el paquete opcional `python-can` (`pip install python-can`) para PCAN, Kvaser, gs_usb/candleLight y las demás interfaces que admite, de modo que no hace falta regrabar el adaptador con SLCAN: `--port` es entonces `<interfaz>:<canal>` (por ejemplo `pcan:PCAN_USBBUS1`) y el bus se abre a 500 kbit/s. La ventana ofrece los mismos adaptadores cuando `python-can` está instalado: los que encuentra para PCAN, Kvaser y gs_usb y los nombrados en la variable de entorno `URTC_PYTHON_CAN` (`<interfaz>:<canal>` separados por comas), listados como `python-can:<interfaz>:<canal>`; la velocidad del bus de esa conexión es fija, 500 kbit/s. La ventana también puede arrancar con `--firmware RUTA` para tener ya elegida una imagen (no se escribe nada en una placa hasta que conectes y confirmes la actualización).
+**`--transport python-can`** usa el paquete opcional `python-can` (`pip install python-can`) para PCAN, Kvaser, gs_usb/candleLight y las demás interfaces que admite, de modo que no hace falta regrabar el adaptador con SLCAN: `--port` es entonces `<interfaz>:<canal>` (por ejemplo `pcan:PCAN_USBBUS1`) y el bus se abre a 1 Mbit/s. La ventana ofrece los mismos adaptadores cuando `python-can` está instalado: los que encuentra para PCAN, Kvaser y gs_usb y los nombrados en la variable de entorno `URTC_PYTHON_CAN` (`<interfaz>:<canal>` separados por comas), listados como `python-can:<interfaz>:<canal>`; la velocidad del bus de esa conexión es fija, 1 Mbit/s. La ventana también puede arrancar con `--firmware RUTA` para tener ya elegida una imagen (no se escribe nada en una placa hasta que conectes y confirmes la actualización).
 
 **`--transport mock`** ejecuta toda la secuencia de actualización contra
 un bootloader simulado, en memoria, en vez de una placa real - sin
@@ -785,7 +785,7 @@ Nada que grabar en el adaptador mismo. Levanta la interfaz una vez por
 arranque (o añádela a tu configuración de red para que persista):
 ```
 sudo modprobe can vcan gs_usb   # gs_usb cubre la mayoria de placas de la familia CANable
-sudo ip link set can0 type can bitrate 500000
+sudo ip link set can0 type can bitrate 1000000
 sudo ip link set can0 up
 ```
 Si tu adaptador se enumera con un nombre distinto de `can0`, revisa `ip

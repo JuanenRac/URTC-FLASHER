@@ -153,16 +153,18 @@ SLAVE_HMAC_KEY = None
 APP_MAX_SIZE = 112 * 1024
 SLAVE_APP_MAX_SIZE = 54 * 1024  # matches STM32F303CBTx_SLAVEAPP.ld's own 54K main slot at 0x08005000 - verified against the real linker script, not assumed to match the main board's own 112K
 FLASH_PAGE_SIZE = protocol.FLASH_PAGE_SIZE
-BITRATE_500K_SLCAN_CODE = "6"  # SLCAN's "Sx" bitrate codes: 6 = 500 kbit/s
+BITRATE_DEFAULT_SLCAN_CODE = protocol.SLCAN_BITRATE_DEFAULT_CODE  # SLCAN's "Sx" bitrate codes: 8 = 1 Mbit/s, the speed of the bus of the tool heads
 # Full standard SLCAN/Lawicel bitrate code table, for the bitrate selector
-# and auto-detect (see FlasherGUI.auto_detect_bitrate). 500k stays the
-# default everywhere else in this file - URTC's own bus is fixed at 500k -
-# but a mis-set adapter or a non-standard board might need a different one.
+# and auto-detect (see FlasherGUI.auto_detect_bitrate). 1 Mbit/s is the
+# default everywhere else in this file - the bus of the tool heads runs at
+# 1 Mbit/s, with 500 kbit/s as the legacy speed of early boards - but a
+# mis-set adapter or a non-standard board might need a different one.
 SLCAN_BITRATES = [
     ("10 kbit/s", "0"), ("20 kbit/s", "1"), ("50 kbit/s", "2"),
     ("100 kbit/s", "3"), ("125 kbit/s", "4"), ("250 kbit/s", "5"),
     ("500 kbit/s", "6"), ("800 kbit/s", "7"), ("1 Mbit/s", "8"),
 ]
+DEFAULT_BITRATE_LABEL = next(label for label, code in SLCAN_BITRATES if code == BITRATE_DEFAULT_SLCAN_CODE)
 
 # Full-chip SWD/JTAG programming (see SWDFlasher below) - same two fixed
 # addresses used throughout bootloader_common.h (MAIN_APP_ADDR) and the README's

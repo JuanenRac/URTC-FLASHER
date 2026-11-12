@@ -240,7 +240,7 @@ erfordert.
 
 1. **Verbinden**: wählen Sie Seriell/SLCAN oder SocketCAN (nur Linux),
    dann den Port/die Schnittstelle, dann klicken Sie auf Verbinden. Für
-   Seriell/SLCAN öffnet dies den CAN-Kanal mit 500 kbit/s (URTCs feste
+   Seriell/SLCAN öffnet dies den CAN-Kanal mit 1 Mbit/s (URTCs feste
    Bus-Geschwindigkeit); für SocketCAN wird erwartet, dass die
    Schnittstelle bereits mit dieser Busgeschwindigkeit läuft (Schritt 1 oben) -
    dieses Tool stellt sie nicht ein. So oder so wird die aktuelle
@@ -433,7 +433,7 @@ angenommen wird.
 ### Diagnose — Busaktivität, Busgeschwindigkeit und Debug-Pakete
 
 **Auswahl der Busgeschwindigkeit + Auto-Erkennung** (nur Seriell/SLCAN): der Bus von
-URTC ist fest auf 500 kbit/s, was der Standard bleibt - dies ist für
+URTC ist fest auf 1 Mbit/s, was der Standard bleibt - dies ist für
 einen falsch konfigurierten Adapter oder zur Fehlersuche bei einer
 nicht standardmäßigen Platine gedacht. **Auto-Erkennung** hört nur *zu*:
 Sie öffnet den Adapter im SLCAN-Nur-Hören-Modus (`L`) nacheinander bei
@@ -725,7 +725,7 @@ dessen, wie viel mehr auf dem Spiel steht, wenn ein skriptgesteuerter
 Lauf eine falsche Datei-/Ziel-Kombination erwischt, ohne dass jemand
 zusieht.
 
-**`--transport python-can`** nutzt das optionale Paket `python-can` (`pip install python-can`) für PCAN, Kvaser, gs_usb/candleLight und die anderen unterstützten Schnittstellen, sodass der Adapter nicht auf SLCAN umgeflasht werden muss: `--port` ist dann `<Schnittstelle>:<Kanal>` (zum Beispiel `pcan:PCAN_USBBUS1`), und der Bus wird mit 500 kbit/s geöffnet. Das Fenster bietet dieselben Adapter an, wenn `python-can` installiert ist: die, die es für PCAN, Kvaser und gs_usb findet, und die in der Umgebungsvariable `URTC_PYTHON_CAN` genannten (`<Schnittstelle>:<Kanal>`, durch Kommas getrennt), aufgelistet als `python-can:<Schnittstelle>:<Kanal>`; die Busgeschwindigkeit dieser Verbindung ist fest 500 kbit/s. Das Fenster lässt sich auch mit `--firmware PFAD` starten, damit schon ein Image ausgewählt ist (auf eine Platine wird erst geschrieben, wenn Sie verbinden und das Update bestätigen).
+**`--transport python-can`** nutzt das optionale Paket `python-can` (`pip install python-can`) für PCAN, Kvaser, gs_usb/candleLight und die anderen unterstützten Schnittstellen, sodass der Adapter nicht auf SLCAN umgeflasht werden muss: `--port` ist dann `<Schnittstelle>:<Kanal>` (zum Beispiel `pcan:PCAN_USBBUS1`), und der Bus wird mit 1 Mbit/s geöffnet. Das Fenster bietet dieselben Adapter an, wenn `python-can` installiert ist: die, die es für PCAN, Kvaser und gs_usb findet, und die in der Umgebungsvariable `URTC_PYTHON_CAN` genannten (`<Schnittstelle>:<Kanal>`, durch Kommas getrennt), aufgelistet als `python-can:<Schnittstelle>:<Kanal>`; die Busgeschwindigkeit dieser Verbindung ist fest 1 Mbit/s. Das Fenster lässt sich auch mit `--firmware PFAD` starten, damit schon ein Image ausgewählt ist (auf eine Platine wird erst geschrieben, wenn Sie verbinden und das Update bestätigen).
 
 **`--transport mock`** führt die gesamte Update-Sequenz gegen einen
 simulierten, speicherinternen Bootloader aus statt gegen eine echte
@@ -818,7 +818,7 @@ einmal pro Start (oder fügen Sie sie zu Ihrer Netzwerkkonfiguration
 hinzu, damit sie bestehen bleibt):
 ```
 sudo modprobe can vcan gs_usb   # gs_usb deckt die meisten Platinen der CANable-Familie ab
-sudo ip link set can0 type can bitrate 500000
+sudo ip link set can0 type can bitrate 1000000
 sudo ip link set can0 up
 ```
 Wenn sich Ihr Adapter unter einem anderen Namen als `can0` anmeldet,

@@ -144,7 +144,7 @@
     },
     "protocol.py": {
       "from": "src/urtc_common/protocol.py",
-      "sha256": "67ffeb8cba5d7710e6d1f8690e468dd737d56a8e47bc7185d6a7cd4c59a9b951"
+      "sha256": "8ca082503681084b8479b9ddba2071b361df2eba67775537b84c9872de5ac0bb"
     },
     "quick_state.py": {
       "from": "src/urtc_common/quick_state.py",
@@ -168,7 +168,7 @@
     },
     "transports.py": {
       "from": "src/urtc_common/transports.py",
-      "sha256": "0c30d5ed8709cc76cd22e39779494e692f1ee4707609b02698fffc0eeb2a3b69"
+      "sha256": "c7adede6b7025cb0639ec0ed50cfc86f07243abafaff41fa07be39a336605cdb"
     },
     "update_controller.py": {
       "from": "src/urtc_common/update_controller.py",

@@ -29,7 +29,7 @@ from PySide6.QtQuickControls2 import QQuickStyle
 
 import flasher_config
 from flasher_config import (
-    APP_FLASH_ADDR, APP_MAX_SIZE, BITRATE_500K_SLCAN_CODE, SLCAN_BITRATES,
+    APP_FLASH_ADDR, APP_MAX_SIZE, BITRATE_DEFAULT_SLCAN_CODE, DEFAULT_BITRATE_LABEL, SLCAN_BITRATES,
     BOOTLOADER_FLASH_ADDR, BOOTLOADER_MAX_SIZE,
     CAN_ID_ERROR_COUNTERS_RESPONSE, CAN_ID_EXPANSION_TYPE_RESP,
     CAN_ID_FREE_TOOL_CONFIG_RESP, CAN_ID_MLX_VARIANT_RESP,
@@ -121,7 +121,7 @@ class FlasherQtBridge(QObject):
         self._socketcan_ports: set[str] = set()
         self._firmware: list[dict[str, object]] = []
         self._selected_port = ""
-        self._bitrate_label = "500 kbit/s"
+        self._bitrate_label = DEFAULT_BITRATE_LABEL
         self._selected_firmware = ""
         self._transport = None
         self._busy = False
@@ -1201,8 +1201,8 @@ class FlasherQtBridge(QObject):
     def _autodetect_worker(self, port: str) -> None:
         found = ""
         try:
-            # Most likely first: URTC's bus is 500 kbit/s, then its two usual neighbours.
-            order = ["500 kbit/s", "250 kbit/s", "125 kbit/s", "1 Mbit/s", "100 kbit/s", "50 kbit/s", "20 kbit/s", "10 kbit/s", "800 kbit/s"]
+            # Most likely first: the bus of the tool heads is 1 Mbit/s, then the legacy 500 kbit/s of early boards and its two usual neighbours.
+            order = ["1 Mbit/s", "500 kbit/s", "250 kbit/s", "125 kbit/s", "100 kbit/s", "50 kbit/s", "20 kbit/s", "10 kbit/s", "800 kbit/s"]
             by_label = dict(SLCAN_BITRATES)
 
             def open_listen_only(code):
@@ -1236,7 +1236,7 @@ class FlasherQtBridge(QObject):
         for label, code in SLCAN_BITRATES:
             if label == self._bitrate_label:
                 return code
-        return BITRATE_500K_SLCAN_CODE
+        return BITRATE_DEFAULT_SLCAN_CODE
 
     @Slot()
     def scanFirmware(self) -> None:

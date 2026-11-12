@@ -56,10 +56,10 @@ def fake_can(monkeypatch):
     return module
 
 
-def test_the_channel_is_opened_at_500k_with_the_named_interface(fake_can):
+def test_the_channel_is_opened_at_one_megabit_with_the_named_interface(fake_can):
     transport = PythonCAN("pcan:PCAN_USBBUS1")
     transport.open_channel()
-    assert _Bus.instances[0].kwargs == {"interface": "pcan", "channel": "PCAN_USBBUS1", "bitrate": 500_000}
+    assert _Bus.instances[0].kwargs == {"interface": "pcan", "channel": "PCAN_USBBUS1", "bitrate": 1_000_000}
 
 
 def test_a_numeric_channel_is_passed_as_a_number(fake_can):
@@ -132,3 +132,8 @@ def test_nothing_is_offered_and_nothing_fails_without_python_can_or_when_probing
     assert list_python_can_adapters(None, {"URTC_PYTHON_CAN": "pcan:1"}, find_spec=lambda name: None) == ["python-can:pcan:1"]
     assert list_python_can_adapters(_Detecting(error=OSError("driver missing")), {}) == []
     assert list_python_can_adapters(_Detecting(configs=None), {}) == []
+
+
+def test_the_legacy_speed_of_early_boards_can_still_be_asked_for(fake_can):
+    PythonCAN("pcan:PCAN_USBBUS1", bitrate=500_000).open_channel()
+    assert _Bus.instances[0].kwargs["bitrate"] == 500_000

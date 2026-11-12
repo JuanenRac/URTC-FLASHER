@@ -16,9 +16,10 @@ class QtBitrateTests(unittest.TestCase):
     def setUp(self):
         self.bridge = qt_flasher.FlasherQtBridge()
 
-    def test_the_default_is_500_kbit_and_maps_to_the_documented_slcan_code(self):
-        self.assertEqual(self.bridge.selectedBitrate, "500 kbit/s")
-        self.assertEqual(self.bridge._slcan_bitrate_code(), qt_flasher.BITRATE_500K_SLCAN_CODE)
+    def test_the_default_is_1_mbit_and_maps_to_the_documented_slcan_code(self):
+        self.assertEqual(self.bridge.selectedBitrate, "1 Mbit/s")
+        self.assertEqual(self.bridge._slcan_bitrate_code(), qt_flasher.BITRATE_DEFAULT_SLCAN_CODE)
+        self.assertEqual(qt_flasher.BITRATE_DEFAULT_SLCAN_CODE, "8")
 
     def test_every_listed_speed_can_be_selected_and_maps_to_its_own_code(self):
         for label, code in qt_flasher.SLCAN_BITRATES:
@@ -28,12 +29,12 @@ class QtBitrateTests(unittest.TestCase):
 
     def test_an_unknown_speed_is_ignored(self):
         self.bridge.selectBitrate("123 kbit/s")
-        self.assertEqual(self.bridge.selectedBitrate, "500 kbit/s")
+        self.assertEqual(self.bridge.selectedBitrate, "1 Mbit/s")
 
     def test_the_speed_cannot_change_while_a_transport_is_open(self):
         self.bridge._transport = object()
         self.bridge.selectBitrate("125 kbit/s")
-        self.assertEqual(self.bridge.selectedBitrate, "500 kbit/s")
+        self.assertEqual(self.bridge.selectedBitrate, "1 Mbit/s")
 
     def test_auto_detect_adopts_the_speed_the_bus_answers_at(self):
         self.bridge._log = lambda message: None
@@ -43,7 +44,7 @@ class QtBitrateTests(unittest.TestCase):
     def test_auto_detect_on_a_silent_bus_keeps_the_chosen_speed(self):
         self.bridge._log = lambda message: None
         self.bridge._on_bitrate_detected("")
-        self.assertEqual(self.bridge.selectedBitrate, "500 kbit/s")
+        self.assertEqual(self.bridge.selectedBitrate, "1 Mbit/s")
 
     def test_auto_detect_never_transmits_a_trial_in_normal_mode(self):
         opened = []
@@ -66,7 +67,7 @@ class QtBitrateTests(unittest.TestCase):
         import unittest.mock as mock
         with mock.patch.object(qt_flasher, "SLCAN", fake_slcan):
             self.bridge._autodetect_worker("COM9")
-        self.assertEqual(results, ["500 kbit/s"])
+        self.assertEqual(results, ["1 Mbit/s"])      # the bus of the tool heads is tried first
         self.assertTrue(opened and all(listen_only for _code, listen_only in opened), opened)
 
 

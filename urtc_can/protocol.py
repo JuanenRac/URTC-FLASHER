@@ -14,7 +14,11 @@ PROTOCOL_VERSION = 1
 BYTE_ORDER = "big"
 
 # --- constants ---
-BITRATE = 0x7A120  # Fixed bus bitrate (bit/s)
+BITRATE = 0xF4240  # Default bus bit rate of the tool heads (bit/s)
+BITRATE_LEGACY = 0x7A120  # Bit rate of the early boards, kept as the legacy option (bit/s)
+CAN_SAMPLE_POINT_PERMILLE = 0x36B  # Wanted sample point of the bit (per mille)
+CAN_SAMPLE_POINT_MIN_PERMILLE = 0x2EE  # Lowest sample point a timing may have (per mille)
+CAN_SJW_TQ = 2  # Wanted synchronisation jump width (time quanta)
 STANDARD_ID_MAX = 0x7FF  # Highest standard 11-bit identifier
 DLC_MAX = 8  # Classic CAN payload limit (bytes)
 HARDWARE_ID_MAIN = 0x303CC01  # HardwareID of the tool-head board (STM32F303CCT6, revision 1)
@@ -508,7 +512,7 @@ SLCAN_BITRATES = [('10 kbit/s', '0'),
  ('500 kbit/s', '6'),
  ('800 kbit/s', '7'),
  ('1 Mbit/s', '8')]
-SLCAN_BITRATE_DEFAULT_CODE = "6"
+SLCAN_BITRATE_DEFAULT_CODE = "8"
 SLCAN_RX_BUFFER_LIMIT = 4096
 
 # --- one record per identifier ---

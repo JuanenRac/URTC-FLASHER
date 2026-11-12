@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The flasher opens the bus at 1 Mbit/s, the speed of the tool heads:** the default speed of the adapter selector and of the search for the speed of a bus (1 Mbit/s first, then the legacy 500 kbit/s), taken from the shared specification; the README says it in the eight languages. **Compatibility note:** every board and adapter of one bus must run at the same speed (the default is now 1 Mbit/s; early boards run at 500 kbit/s), the trunk should stay under about 25 m at 1 Mbit/s with short stubs and a 120 ohm termination at each end.
+
 - **The shared document policy check is refreshed:** `tools/_doc_policy.py` and `tools/ci_validate.py` are the current copies, which also fail when a build script changes a version and when a script switches into a virtual environment instead of running its python directly. The run scripts run the python of the virtual environment directly.
 
 - **The package tool signs the package the Windows build makes:** `tools/make_update_package.py sign PACKAGE` (the copy of URTC-COMMON's tool, refreshed) signs the very bytes of the `.zip` that the manual Windows build in Actions packs without a key, after checking that the `app_info.json` inside agrees with the name of the file, and writes `PACKAGE.sha256` and `PACKAGE.sig` next to it; it then runs the same check the program runs. The package is never rewritten, so the attestation of the build still describes the bytes that are signed. A test checks that the companions are byte for byte the ones a signed build writes.

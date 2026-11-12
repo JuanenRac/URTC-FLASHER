@@ -240,7 +240,7 @@ carte d'extension lui-même le requiert déjà.
 
 1. **Connecter** : choisissez Série/SLCAN ou SocketCAN (Linux
    uniquement), puis le port/interface, puis cliquez sur Connecter.
-   Pour Série/SLCAN ceci ouvre le canal CAN à 500 kbit/s (la vitesse de
+   Pour Série/SLCAN ceci ouvre le canal CAN à 1 Mbit/s (la vitesse de
    bus fixe d'URTC) ; pour SocketCAN on s'attend à ce que l'interface
    soit déjà à ce débit (étape 1 ci-dessus) - cet outil ne le définit
    pas. Dans les deux cas, la version actuelle est interrogée
@@ -430,7 +430,7 @@ votre version spécifique de pyOCD ou votre sonde ne correspondrait pas
 ### Diagnostics — activité du bus, débit binaire, et paquets de débogage
 
 **Sélecteur de débit binaire + détection automatique** (Série/SLCAN
-uniquement) : le bus d'URTC est fixé à 500 kbit/s, qui reste la valeur
+uniquement) : le bus d'URTC est fixé à 1 Mbit/s, qui reste la valeur
 par défaut - ceci est pour un adaptateur mal configuré ou pour déboguer
 une carte non standard. **Détection automatique** se contente d'*écouter* :
 elle ouvre l'adaptateur en mode écoute seule SLCAN (`L`) à chaque débit
@@ -465,7 +465,7 @@ pilote du noyau appelle `netif_carrier_off()`, donc « pas de porteuse »
 ici est une preuve réelle d'un bus-off ou d'un lien similairement mort,
 enregistré comme avertissement avec la commande exacte de récupération
 (`sudo ip link set <iface> down && sudo ip link set <iface> up type can
-bitrate 500000 restart-ms 100`). Cet outil n'exécute pas cette commande
+bitrate 1000000 restart-ms 100`). Cet outil n'exécute pas cette commande
 lui-même - nettoyer un vrai bus-off nécessite de baisser et remonter
 l'interface au niveau du noyau, ce qui nécessite root et compte comme
 changer la configuration réseau système, pas quelque chose à faire
@@ -718,7 +718,7 @@ uniquement pour l'instant, étant donné ce qui est bien plus en jeu si
 une exécution scriptée obtient une mauvaise combinaison fichier/cible
 sans que personne ne surveille.
 
-**`--transport python-can`** utilise le paquet optionnel `python-can` (`pip install python-can`) pour PCAN, Kvaser, gs_usb/candleLight et les autres interfaces qu'il prend en charge, de sorte qu'il n'est pas nécessaire de reflasher l'adaptateur en SLCAN : `--port` est alors `<interface>:<canal>` (par exemple `pcan:PCAN_USBBUS1`) et le bus est ouvert à 500 kbit/s. La fenêtre propose les mêmes adaptateurs lorsque `python-can` est installé : ceux qu'il trouve pour PCAN, Kvaser et gs_usb et ceux nommés dans la variable d'environnement `URTC_PYTHON_CAN` (`<interface>:<canal>` séparés par des virgules), listés sous la forme `python-can:<interface>:<canal>` ; la vitesse du bus de cette connexion est fixée à 500 kbit/s. La fenêtre peut aussi être lancée avec `--firmware CHEMIN` pour qu'une image soit déjà choisie (rien n'est écrit sur une carte tant que vous ne vous connectez pas et ne confirmez pas la mise à jour).
+**`--transport python-can`** utilise le paquet optionnel `python-can` (`pip install python-can`) pour PCAN, Kvaser, gs_usb/candleLight et les autres interfaces qu'il prend en charge, de sorte qu'il n'est pas nécessaire de reflasher l'adaptateur en SLCAN : `--port` est alors `<interface>:<canal>` (par exemple `pcan:PCAN_USBBUS1`) et le bus est ouvert à 1 Mbit/s. La fenêtre propose les mêmes adaptateurs lorsque `python-can` est installé : ceux qu'il trouve pour PCAN, Kvaser et gs_usb et ceux nommés dans la variable d'environnement `URTC_PYTHON_CAN` (`<interface>:<canal>` séparés par des virgules), listés sous la forme `python-can:<interface>:<canal>` ; la vitesse du bus de cette connexion est fixée à 1 Mbit/s. La fenêtre peut aussi être lancée avec `--firmware CHEMIN` pour qu'une image soit déjà choisie (rien n'est écrit sur une carte tant que vous ne vous connectez pas et ne confirmez pas la mise à jour).
 
 **`--transport mock`** exécute toute la séquence de mise à jour contre
 un bootloader simulé, en mémoire, plutôt qu'une vraie carte - aucun
@@ -811,7 +811,7 @@ par démarrage (ou ajoutez-la à votre configuration réseau pour qu'elle
 persiste) :
 ```
 sudo modprobe can vcan gs_usb   # gs_usb couvre la plupart des cartes de la famille CANable
-sudo ip link set can0 type can bitrate 500000
+sudo ip link set can0 type can bitrate 1000000
 sudo ip link set can0 up
 ```
 Si votre adaptateur s'énumère sous un nom autre que `can0`, vérifiez `ip

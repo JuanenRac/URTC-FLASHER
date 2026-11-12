@@ -228,7 +228,7 @@ expansão.
 
 1. **Ligar**: escolha Serial/SLCAN ou SocketCAN (apenas Linux), depois a
    porta/interface, e clique em Ligar. Para Serial/SLCAN isto abre o canal
-   CAN a 500 kbit/s (a velocidade fixa do barramento do URTC); para SocketCAN
+   CAN a 1 Mbit/s (a velocidade fixa do barramento do URTC); para SocketCAN
    espera-se que a interface já esteja a essa velocidade (passo 1 acima) - esta
    ferramenta não o define. Em ambos os casos, a versão atual é consultada
    automaticamente - consulte a secção 4 acima.
@@ -397,7 +397,7 @@ que isto assume.
 ### Diagnósticos — atividade e velocidade do barramento e pacotes de depuração
 
 **Seletor da velocidade do barramento + auto-deteção** (apenas Serial/SLCAN): o barramento do
-URTC é fixo a 500 kbit/s, que continua a ser o valor por defeito - isto serve
+URTC é fixo a 1 Mbit/s, que continua a ser o valor por defeito - isto serve
 para um adaptador mal configurado ou para diagnosticar uma placa não standard.
 **Deteção automática** apenas *escuta*: abre o adaptador no modo de apenas escuta do
 SLCAN (`L`) em cada velocidade standard por vez e pára no primeiro em que ouve
@@ -427,7 +427,7 @@ interface Linux expõe. Quando um controlador CAN entra em bus-off, o driver do
 kernel chama `netif_carrier_off()`, pelo que «sem portadora» aqui é prova real de
 um bus-off ou de uma ligação igualmente morta, registada como aviso com o
 comando de recuperação exato (`sudo ip link set <iface> down && sudo ip link
-set <iface> up type can bitrate 500000 restart-ms 100`). Esta ferramenta não
+set <iface> up type can bitrate 1000000 restart-ms 100`). Esta ferramenta não
 executa esse comando por si - limpar um bus-off real precisa de a interface
 ser desligada e voltar a ligar ao nível do kernel, o que precisa de root e
 conta como alterar a configuração de rede do sistema, não algo a fazer
@@ -659,7 +659,7 @@ deliberadamente apenas GUI por agora, dado o muito mais que está em jogo se
 uma execução por script errar uma combinação de ficheiro/alvo sem ninguém a
 observar.
 
-**`--transport python-can`** usa o pacote opcional `python-can` (`pip install python-can`) para PCAN, Kvaser, gs_usb/candleLight e as outras interfaces que suporta, pelo que o adaptador não tem de ser regravado com SLCAN: `--port` passa a ser `<interface>:<canal>` (por exemplo `pcan:PCAN_USBBUS1`) e o barramento abre-se a 500 kbit/s. A janela oferece os mesmos adaptadores quando o `python-can` está instalado: os que ele encontra para PCAN, Kvaser e gs_usb e os indicados na variável de ambiente `URTC_PYTHON_CAN` (`<interface>:<canal>` separados por vírgulas), listados como `python-can:<interface>:<canal>`; a velocidade do barramento dessa ligação é fixa, 500 kbit/s. A janela também pode arrancar com `--firmware CAMINHO` para já ter uma imagem escolhida (não se escreve nada numa placa enquanto não se ligar e confirmar a atualização).
+**`--transport python-can`** usa o pacote opcional `python-can` (`pip install python-can`) para PCAN, Kvaser, gs_usb/candleLight e as outras interfaces que suporta, pelo que o adaptador não tem de ser regravado com SLCAN: `--port` passa a ser `<interface>:<canal>` (por exemplo `pcan:PCAN_USBBUS1`) e o barramento abre-se a 1 Mbit/s. A janela oferece os mesmos adaptadores quando o `python-can` está instalado: os que ele encontra para PCAN, Kvaser e gs_usb e os indicados na variável de ambiente `URTC_PYTHON_CAN` (`<interface>:<canal>` separados por vírgulas), listados como `python-can:<interface>:<canal>`; a velocidade do barramento dessa ligação é fixa, 1 Mbit/s. A janela também pode arrancar com `--firmware CAMINHO` para já ter uma imagem escolhida (não se escreve nada numa placa enquanto não se ligar e confirmar a atualização).
 
 **`--transport mock`** executa toda a sequência de atualização contra um
 bootloader simulado em memória em vez de uma placa real - sem adaptador, sem
@@ -744,7 +744,7 @@ Nada para gravar no próprio adaptador. Ative a interface uma vez por arranque
 (ou adicione-a à sua configuração de rede para persistir):
 ```
 sudo modprobe can vcan gs_usb   # gs_usb cobre a maioria das placas da família CANable
-sudo ip link set can0 type can bitrate 500000
+sudo ip link set can0 type can bitrate 1000000
 sudo ip link set can0 up
 ```
 Se o seu adaptador for enumerado com outro nome que não `can0`, verifique `ip

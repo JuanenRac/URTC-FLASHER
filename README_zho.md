@@ -202,7 +202,7 @@ MLX9064x 系列热传感器（或完全没有）中实际装配的是哪一种�
 ### 刷写
 
 1. **连接**：选择串口/SLCAN 或 SocketCAN（仅限 Linux），然后选择端口/接口，
-   然后点击连接。对于串口/SLCAN，这会以 500 kbit/s（URTC 固定的总线速度）
+   然后点击连接。对于串口/SLCAN，这会以 1 Mbit/s（URTC 固定的总线速度）
    打开 CAN 通道；对于 SocketCAN，接口应已处于该比特率（上文第 1 步）——
    本工具不会设置它。无论哪种方式，当前版本都会被自动查询——见上方第 4 节。
 2. **选择刷写目标**：“本板卡（主）”或“扩展从属”——默认为主板，这是更常见
@@ -331,7 +331,7 @@ pyOCD 版本或探针与本文档假设的内容不匹配。
 ### 诊断——总线活动、比特率和调试包
 
 **比特率选择器 + 自动检测**（仅限串口/SLCAN）：URTC 的总线固定为
-500 kbit/s，这仍是默认值——本功能用于配置错误的适配器或排查非标准板卡的
+1 Mbit/s，这仍是默认值——本功能用于配置错误的适配器或排查非标准板卡的
 故障。**自动检测**只*监听*：它以 SLCAN 只听模式（`L`）依次在每种标准比特率
 下打开适配器，并在第一个听到有效 CAN 帧的比特率处停止，因此从不发送数据，
 也不会干扰正在运行的总线。所以它需要其他节点正在发送数据，且适配器必须
@@ -354,7 +354,7 @@ SocketCAN 连接时还会读取 `/sys/class/net/<iface>/carrier`——每个 Lin
 内核驱动会调用 `netif_carrier_off()`，因此这里的“无载波”是总线关闭或
 类似死链路的真实证据，会作为警告记录，并附带确切的恢复命令
 （`sudo ip link set <iface> down && sudo ip link set <iface> up type can
-bitrate 500000 restart-ms 100`）。本工具本身不会运行该命令——清除一次
+bitrate 1000000 restart-ms 100`）。本工具本身不会运行该命令——清除一次
 真正的总线关闭需要在内核层面将接口关闭再启用，这需要 root 权限，且属于
 更改系统网络配置的范畴，不是应该在你不知情的情况下默默代劳的事情。
 
@@ -532,7 +532,7 @@ usage: urtc_flasher.py --cli [-h] [--transport {serial,socketcan,python-can,mock
 考虑到如果一次脚本化运行在无人监视的情况下弄错了文件/目标组合，风险会
 大得多。
 
-**`--transport python-can`** 使用可选的 `python-can` 包（`pip install python-can`），支持 PCAN、Kvaser、gs_usb/candleLight 及其支持的其他接口，因此无需把适配器重刷为 SLCAN：此时 `--port` 为 `<接口>:<通道>`（例如 `pcan:PCAN_USBBUS1`），总线以 500 kbit/s 打开。安装了 `python-can` 时，窗口也提供同样的适配器：python-can 为 PCAN、Kvaser 和 gs_usb 找到的适配器，以及环境变量 `URTC_PYTHON_CAN`（以逗号分隔的 `<接口>:<通道>`）中列出的适配器，显示为 `python-can:<接口>:<通道>`；该连接的总线速度固定为 500 kbit/s。窗口也可以用 `--firmware 路径` 启动，使镜像已被选中（在你连接并确认更新之前，不会向板卡写入任何内容）。
+**`--transport python-can`** 使用可选的 `python-can` 包（`pip install python-can`），支持 PCAN、Kvaser、gs_usb/candleLight 及其支持的其他接口，因此无需把适配器重刷为 SLCAN：此时 `--port` 为 `<接口>:<通道>`（例如 `pcan:PCAN_USBBUS1`），总线以 1 Mbit/s 打开。安装了 `python-can` 时，窗口也提供同样的适配器：python-can 为 PCAN、Kvaser 和 gs_usb 找到的适配器，以及环境变量 `URTC_PYTHON_CAN`（以逗号分隔的 `<接口>:<通道>`）中列出的适配器，显示为 `python-can:<接口>:<通道>`；该连接的总线速度固定为 1 Mbit/s。窗口也可以用 `--firmware 路径` 启动，使镜像已被选中（在你连接并确认更新之前，不会向板卡写入任何内容）。
 
 **`--transport mock`** 针对一个模拟的、内存中的引导程序运行整个更新序列，
 而非真实板卡——不涉及适配器、端口，或任何物理设备：
@@ -604,7 +604,7 @@ python3 urtc_flasher.py --cli --transport mock --file firmware.bin --no-trigger
 使其持久生效）：
 ```
 sudo modprobe can vcan gs_usb   # gs_usb 覆盖大多数 CANable 系列板卡
-sudo ip link set can0 type can bitrate 500000
+sudo ip link set can0 type can bitrate 1000000
 sudo ip link set can0 up
 ```
 如果你的适配器枚举出的接口名并非 `can0`，请查看 `ip link show`（或插入设备后

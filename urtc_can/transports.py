@@ -355,7 +355,7 @@ class PythonCAN:
     """Optional transport over the python-can package (PCAN, Kvaser, gs_usb, SocketCAN ...).
 
     ``spec`` is ``<interface>:<channel>``, for example ``pcan:PCAN_USBBUS1``, ``kvaser:0`` or ``socketcan:can0``.
-    The package is imported only when the channel is opened. The bus runs at a fixed 500 kbit/s.
+    The package is imported only when the channel is opened. The bus of the tool heads runs at 1 Mbit/s (``protocol.BITRATE``; 500 kbit/s for early boards).
     """
 
     def __init__(self, spec: str, log: Callable[[str], None] | None = None, bitrate: int = protocol.BITRATE, can_module=None) -> None:

@@ -223,7 +223,7 @@ expansion board type itself does.
 
 1. **Connect**: pick Serial/SLCAN or SocketCAN (Linux only), then the
    port/interface, then click Connect. For Serial/SLCAN this opens the CAN
-   channel at 500 kbit/s (URTC's fixed bus speed); for SocketCAN the
+   channel at 1 Mbit/s (URTC's fixed bus speed); for SocketCAN the
    interface is expected to already be at that bitrate (step 1 above) -
    this tool doesn't set it. Either way, the current version is queried
    automatically - see section 4 above.
@@ -384,7 +384,7 @@ what this assumes.
 ### Diagnostics — bus activity, bitrate, and debug bundles
 
 **Bitrate selector + auto-detect** (Serial/SLCAN only): URTC's bus is fixed
-at 500 kbit/s, which stays the default - this is for a misconfigured
+at 1 Mbit/s, which stays the default - this is for a misconfigured
 adapter or troubleshooting a non-standard board. **Auto-detect** only
 *listens*: it opens the adapter in SLCAN listen-only mode (`L`) at each
 standard bitrate in turn and stops at the first one where it hears a valid
@@ -412,7 +412,7 @@ exposes. When a CAN controller goes bus-off, the kernel driver calls
 `netif_carrier_off()`, so "no carrier" here is real evidence of a bus-off
 or similarly dead link, logged as a warning with the exact recovery
 command (`sudo ip link set <iface> down && sudo ip link set <iface> up
-type can bitrate 500000 restart-ms 100`). This tool doesn't run that
+type can bitrate 1000000 restart-ms 100`). This tool doesn't run that
 command itself - clearing a real bus-off needs the interface taken down
 and back up at the kernel level, which needs root and counts as changing
 system network configuration, not something to do silently on your behalf.
@@ -631,7 +631,7 @@ anyway), `130` cancelled with Ctrl+C. Only covers the CAN OTA update path
 now, given how much more is at stake if a scripted run gets a wrong
 file/target combination wrong with nobody watching.
 
-**`--transport python-can`** uses the optional `python-can` package (`pip install python-can`) for PCAN, Kvaser, gs_usb/candleLight and the other interfaces it supports, so the adapter does not have to be reflashed to SLCAN: `--port` is then `<interface>:<channel>` (for example `pcan:PCAN_USBBUS1`) and the bus is opened at 500 kbit/s. The window offers the same adapters when `python-can` is installed: those it finds for PCAN, Kvaser and gs_usb, and those named in the `URTC_PYTHON_CAN` environment variable (comma separated `<interface>:<channel>`), listed as `python-can:<interface>:<channel>`; the bus speed of that connection is fixed at 500 kbit/s. The window can also be started with `--firmware PATH` to have an image already selected (nothing is written to a board until you connect and confirm the update).
+**`--transport python-can`** uses the optional `python-can` package (`pip install python-can`) for PCAN, Kvaser, gs_usb/candleLight and the other interfaces it supports, so the adapter does not have to be reflashed to SLCAN: `--port` is then `<interface>:<channel>` (for example `pcan:PCAN_USBBUS1`) and the bus is opened at 1 Mbit/s. The window offers the same adapters when `python-can` is installed: those it finds for PCAN, Kvaser and gs_usb, and those named in the `URTC_PYTHON_CAN` environment variable (comma separated `<interface>:<channel>`), listed as `python-can:<interface>:<channel>`; the bus speed of that connection is fixed at 1 Mbit/s. The window can also be started with `--firmware PATH` to have an image already selected (nothing is written to a board until you connect and confirm the update).
 
 **`--transport mock`** runs the whole update sequence against a
 simulated, in-memory bootloader instead of a real board - no adapter, no
@@ -715,7 +715,7 @@ Nothing to flash on the adapter itself. Bring the interface up once per
 boot (or add it to your network config to persist):
 ```
 sudo modprobe can vcan gs_usb   # gs_usb covers most CANable-family boards
-sudo ip link set can0 type can bitrate 500000
+sudo ip link set can0 type can bitrate 1000000
 sudo ip link set can0 up
 ```
 If your adapter enumerates as something other than `can0`, check `ip link
