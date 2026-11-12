@@ -43,9 +43,10 @@ from flasher_config import (
     SLAVE_HARDWARE_ID, SLAVE_APP_MAX_SIZE,
     CAN_ID_VERSION_PATCH_RESPONSE, PATCH_UNKNOWN, PATCH_FLAG,
     BOOTLOADER_KEY_ID_BYTES, CAN_ID_BOOTLOADER_KEY_ID, KEY_ID_PRECHECK,
-    FRAME_GAP_S, FRAME_GAP_PROBLEM,
+    FRAME_GAP_S, FRAME_GAP_PROBLEM, IMAGE_HEADER_POLICY,
 )
 
+from urtc_can import image_header as _image_header
 from urtc_can import protocol as _wire
 
 ROTATION_STATUS_OP = 0x05           # operation of 0x7EA that asks which signing keys the bootloader trusts now
@@ -54,6 +55,14 @@ ROTATION_ANSWER_WAIT = 0.3          # seconds to listen for the answer (0x7ED fr
 
 class FlashError(Exception):
     pass
+
+
+# the words that say why the header inside an image was refused (the status names of urtc_can/image_header.py)
+IMAGE_HEADER_REASON_KEYS = {
+    "short": "IMAGE_HEADER_REASON_SHORT", "bad_magic": "IMAGE_HEADER_REASON_BAD_MAGIC", "bad_version": "IMAGE_HEADER_REASON_BAD_VERSION",
+    "bad_size": "IMAGE_HEADER_REASON_BAD_SIZE", "bad_header_crc": "IMAGE_HEADER_REASON_BAD_HEADER_CRC", "bad_length": "IMAGE_HEADER_REASON_BAD_LENGTH",
+    "bad_payload_crc": "IMAGE_HEADER_REASON_BAD_PAYLOAD_CRC", "bad_flags": "IMAGE_HEADER_REASON_BAD_FLAGS", "not_sealed": "IMAGE_HEADER_REASON_NOT_SEALED",
+}
 
 
 def minor_with_patch(info):
@@ -425,6 +434,34 @@ class URTCFlasher:
     def _minutes(seconds):
         return 0 if seconds is None else max(1, -(-int(seconds) // 60))
 
+    @staticmethod
+    def _version_parts_from_name(firmware_path):
+        """The components the file name states (URTC_MAIN_FIRMWARE_v0.8.1.3.bin: 3 or 4 of them), or None."""
+        match = re.search(r"_[vV](\d+)\.(\d+)\.(\d+)(?:\.(\d+))?", os.path.basename(firmware_path))
+        return tuple(int(part) for part in match.groups() if part is not None) if match else None
+
+    def _check_image_header(self, firmware_path, firmware, hardware_id):
+        """The header inside the image (when it has one) against the board and the file name, and the switch for an image without it. Raises FlashError, before anything is sent."""
+        name = os.path.basename(firmware_path)
+        check = _image_header.inspect_image(firmware, IMAGE_HEADER_POLICY, hardware_id, self._version_parts_from_name(firmware_path))
+        if check.accepted:
+            if check.info is not None:
+                self.log(_("LOG_IMAGE_HEADER_OK", hw=f"0x{check.info.hardware_id:08X}", version=check.info.version_text(), length=check.info.payload_length))
+            elif check.warn:
+                self.log(_("LOG_IMAGE_HEADER_NONE"))
+            return check
+        if check.reason == _image_header.REASON_STAMPED:
+            raise FlashError(_("ERR_IMAGE_HEADER_STAMPED", name=name))
+        if check.reason == _image_header.REASON_REQUIRED:
+            raise FlashError(_("ERR_IMAGE_HEADER_REQUIRED", name=name))
+        if check.reason == _image_header.REASON_HARDWARE:
+            raise FlashError(_("ERR_IMAGE_HEADER_HARDWARE", name=name, image=f"0x{check.info.hardware_id:08X}", board=f"0x{hardware_id:08X}"))
+        if check.reason == _image_header.REASON_VERSION:
+            expected = ".".join(str(part) for part in self._version_parts_from_name(firmware_path))
+            raise FlashError(_("ERR_IMAGE_HEADER_VERSION", name=name, image=check.info.version_text(), expected=expected))
+        reason_key = IMAGE_HEADER_REASON_KEYS.get(check.reason.removeprefix("header_"), "IMAGE_HEADER_REASON_BAD_MAGIC")
+        raise FlashError(_("ERR_IMAGE_HEADER_BAD", name=name, reason=_(reason_key)))
+
     def _check_key_id(self, firmware_path, board_key_id, board_is_bootloader=False, rotation=None):
         """Compares the signing-key fingerprint the bootloader publishes with the one the image declares (the key id of its .imgsig record, or else the manifest), before anything is sent. Returns
         "off", "unknown" (one side does not say), "match" or "mismatch"; a mismatch is logged and, with key_id_precheck "refuse", stops flash(). A
@@ -643,6 +680,7 @@ class URTCFlasher:
         if size > APP_MAX_SIZE:
             raise FlashError(_("ERR_FIRMWARE_TOO_BIG_MAIN", size=size, max=APP_MAX_SIZE))
 
+        self._check_image_header(firmware_path, firmware, THIS_HARDWARE_ID)
         crc32 = zlib.crc32(firmware) & 0xFFFFFFFF
         actual_sha256 = hashlib.sha256(firmware).hexdigest()
         manifest_info = self._check_manifest(firmware_path, actual_sha256)
@@ -1070,6 +1108,7 @@ class URTCFlasher:
         if size > SLAVE_APP_MAX_SIZE:
             raise FlashError(_("ERR_FIRMWARE_TOO_BIG_SLAVE", size=size, max=SLAVE_APP_MAX_SIZE))
 
+        self._check_image_header(firmware_path, firmware, SLAVE_HARDWARE_ID)
         crc32 = zlib.crc32(firmware) & 0xFFFFFFFF
         actual_sha256 = hashlib.sha256(firmware).hexdigest()
         # The manifest published by the URTC build: checked against the image and against the board (nothing else of it is needed to flash the slave).

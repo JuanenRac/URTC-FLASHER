@@ -542,6 +542,14 @@ if KEY_ID_PRECHECK not in ("off", "warn", "refuse"):
     KEY_ID_PRECHECK = "warn"
 BOOTLOADER_KEY_ID_BYTES = 8  # the whole payload of 0x7ED
 
+# The header inside the image: an image built with the header slot sealed (docs/IMAGE_HEADER.md of URTC-COMMON) states the hardware it is for, its version, its length and
+# its CRC-32 inside the file. "image_header_policy" decides what happens to an image WITHOUT that header: "accept" (flash it), "warn" (the default: flash it and say that its
+# identity could not be checked) or "require" (refuse it before a single frame is sent). A header that is there is always checked and a bad one is always refused; a value
+# that is not one of the three words means "require".
+from urtc_can import image_header as _image_header  # noqa: E402
+
+IMAGE_HEADER_POLICY = _image_header.parse_policy(_config.get("image_header_policy"))
+
 # Pacing between the 8-byte data frames of a transfer: "frame_gap_ms" in urtc_config.json (a number of milliseconds, default 1.0). 0 sends the frames back to back
 # (the adapter's own queue then sets the pace), the ceiling of 50 ms keeps a typo from turning a 112 KB image into a quarter-hour wait. Anything that is not a
 # number inside the limits (text, a boolean, NaN, a negative or too large value) falls back to the default and is reported once by frame_gap_problem().

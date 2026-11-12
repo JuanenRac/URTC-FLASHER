@@ -90,6 +90,18 @@
       "from": "src/urtc_common/help_text.py",
       "sha256": "e7465c8d08daea5873f30570ffae833b319d140438445db01e92d4733a0f85d2"
     },
+    "image_header.py": {
+      "from": "src/urtc_common/image_header.py",
+      "sha256": "30ad1d49b4b23be27d462974c6033b8a27fa03e6975303cb44833d4b860ed6fd"
+    },
+    "image_header_embedded_vectors.json": {
+      "from": "conformance/image_header_embedded_vectors.json",
+      "sha256": "c5da6152110144249b8b00e034a98e428ec0d972d29e0d23bfc9f00e8d32123f"
+    },
+    "image_header_vectors.json": {
+      "from": "conformance/image_header_vectors.json",
+      "sha256": "6710f4f69a49da3fb1324eb627570daaf12c705a98dab78b80ebd467c1fd88c7"
+    },
     "key_rotation.py": {
       "from": "src/urtc_common/key_rotation.py",
       "sha256": "c43d769595490772c7e59a9e034d9da58e3f5f3e475dc6fd3bfc8edb6713387e"

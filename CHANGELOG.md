@@ -4,6 +4,12 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The flasher reads the header inside the image before it sends a frame:** an image built with the header slot sealed states its hardware, version, length and CRC-32 inside the file; the flasher refuses an image for another board (main or expansion slave), a version that differs from the file name, a length or CRC-32 that does not match, a header nobody sealed, and a stamped `.urimg` file, and logs the identity it read. Nothing is sent when it refuses.
+
+- **`image_header_policy` in `urtc_config.json` is the compatibility switch for an image without the header:** `warn` (the default) flashes it and says its identity could not be checked, `accept` flashes it silently, `require` refuses it; any other value means `require`. A header that is there is always checked.
+
+- **The messages of the header check are in the eight languages** (the shared catalog of URTC-COMMON).
+
 - **The German README addresses the reader formally in the contributing list:** the three lines that still used the informal form now use the same formal form as the rest of the text and as the other repositories.
 
 - **The simulated readback tests no longer depend on the speed of the computer:** the simulated board answers at once in the readback tests, so the whole file runs in about one second instead of ten and cannot time out on a busy machine.
