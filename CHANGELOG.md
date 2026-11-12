@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- **The German README addresses the reader formally in the contributing list:** the three lines that still used the informal form now use the same formal form as the rest of the text and as the other repositories.
+
+- **The simulated readback tests no longer depend on the speed of the computer:** the simulated board answers at once in the readback tests, so the whole file runs in about one second instead of ten and cannot time out on a busy machine.
+
 ## [0.5.5] - The Spanish texts say "grabar" and "velocidad de bus": the calques "flashear", "flasheo" and "bitrate" are replaced in the window, the guide, the Spanish README and the shared sections, with the gender of the sentence... (and 7 more changes)
 
 - **The Spanish texts say "grabar" and "velocidad de bus":** the calques "flashear", "flasheo" and "bitrate" are replaced in the window, the guide, the Spanish README and the shared sections, with the gender of the sentence corrected, so the README names what the window shows.

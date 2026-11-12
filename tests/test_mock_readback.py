@@ -22,10 +22,11 @@ from flasher_transports import MockCAN
 def test_a_backup_from_the_simulated_board_is_complete(tmp_path, size):
     image = bytes((i * 5 + 1) % 256 for i in range(size))
     output = tmp_path / "backup.bin"
-    assert URTCFlasher(MockCAN(installed_image=image), log=lambda m: None).read_back_flash(str(output)) == size
+    # delay=0: the simulated board answers at once, so the test measures the protocol and not the timer of the PC it runs on.
+    assert URTCFlasher(MockCAN(installed_image=image, delay=0), log=lambda m: None).read_back_flash(str(output)) == size
     assert output.read_bytes() == image
 
 
 def test_a_board_with_nothing_installed_says_so(tmp_path):
     with pytest.raises(FlashError):
-        URTCFlasher(MockCAN(), log=lambda m: None).read_back_flash(str(tmp_path / "backup.bin"))
+        URTCFlasher(MockCAN(delay=0), log=lambda m: None).read_back_flash(str(tmp_path / "backup.bin"))
