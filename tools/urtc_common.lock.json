@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "urtc_common_version": "0.2.4",
+  "urtc_common_version": "0.2.5",
   "files": {
     "changelog_section.py": {
       "from": "tools/changelog_section.py",
@@ -8,7 +8,7 @@
     },
     "make_update_package.py": {
       "from": "tools/make_update_package.py",
-      "sha256": "950df03625550f0e89e3e38b884682cd2a06a5d511c19391628d9d80e3873d5a"
+      "sha256": "2a62fe5c7d28e96d911fc9565414f78f48745adce642c801af4338173118153f"
     }
   }
 }

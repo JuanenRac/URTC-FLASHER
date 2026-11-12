@@ -40,3 +40,16 @@ def test_a_package_is_built_signed_and_accepted_by_the_verifier_of_the_program(t
 def test_the_tool_and_the_program_trust_the_same_key():
     assert tool.svc.RELEASE_PUBLIC_KEY_HEX == "4020c46d76c8ebacb64c5c7b9f3e7c62475afeb133d7421591988174e0f5dc90"
     assert tool.svc.__name__.startswith("urtc_can")
+
+
+def test_a_package_packed_in_actions_is_signed_with_the_same_bytes_as_one_built_signed(tmp_path):
+    source = tmp_path / "dist"
+    source.mkdir()
+    (source / "URTC-Flasher.exe").write_bytes(b"MZ")
+    built, _ = tool.build("urtc-flasher", "0.5.0", "windows-x64", source, "URTC-Flasher.exe", tmp_path / "built", SEED)
+    unsigned = tmp_path / "unsigned" / built.name
+    unsigned.parent.mkdir()
+    unsigned.write_bytes(built.read_bytes())
+    assert tool.sign_existing(unsigned, SEED) == hashlib.sha256(tool.public_key_of(SEED)).hexdigest()[:16]
+    for suffix in (".sha256", ".sig"):
+        assert (unsigned.parent / (unsigned.name + suffix)).read_bytes() == (built.parent / (built.name + suffix)).read_bytes()
