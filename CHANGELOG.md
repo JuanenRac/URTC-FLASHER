@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **A bus that mixes speeds is recognised by its symptoms:** the flasher listens to the health frames (`0x1B8`) that go by while it flashes or reads back and, when the operation ends, writes a warning in the log (error counters or a bus-off of the heads that were heard, a head known to be built for 500 kbit/s); it has no continuous poll of the bus, so it looks when an operation ends. `bus_health` in `urtc_config.json` sets the thresholds. The four texts are in the eight languages. Tested with a simulated transport; nothing has run on a real bus.
+
 - **The flasher opens the bus at 1 Mbit/s, the speed of the tool heads:** the default speed of the adapter selector and of the search for the speed of a bus (1 Mbit/s first, then the legacy 500 kbit/s), taken from the shared specification; the README says it in the eight languages. **Compatibility note:** every board and adapter of one bus must run at the same speed (the default is now 1 Mbit/s; early boards run at 500 kbit/s), the trunk should stay under about 25 m at 1 Mbit/s with short stubs and a 120 ohm termination at each end.
 
 - **The shared document policy check is refreshed:** `tools/_doc_policy.py` and `tools/ci_validate.py` are the current copies, which also fail when a build script changes a version and when a script switches into a virtual environment instead of running its python directly. The run scripts run the python of the virtual environment directly.

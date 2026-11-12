@@ -21,13 +21,13 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-847-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-857-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocol-CAN--OTA-orange.svg" alt="CAN-OTA">
 </p>
 
 ---
 
-**Verificação de honestidade - o que realmente corre hoje:** `tests/` contém 62 ficheiros pytest (847 testes: todos passam; 101 deles são ignorados sem PySide6) - o protocolo CAN-OTA contra um transporte `MockCAN` real (`flasher_transports.py`) que reproduz uma sequência completa de bootloader simulado (start/erase/receive, dados de página + PAGE_ACK, tramas do registo de assinatura, end-update com um sucesso real ou um `VERIFY_FAIL_REASON` específico), as regras de assinatura (assinatura publicada enviada sem qualquer chave, imagem sem assinatura recusada, discrepância de sha256 do manifesto recusada antes de qualquer tráfego no barramento), as verificações de integridade da imagem e o `firmware/` incluído contra os seus manifestos. O GitHub Actions (`.github/workflows/ci.yml`) corre esta suite em cada push, e `tools/build_test.py` corre-a em `build-test.sh`/`.bat`. Executa ainda `ruff check` e `python -m mypy` (uma verificação de tipos do programa e das cópias do código partilhado). Os três scripts `verify_qt_*.py` na raiz do repositório são verificações reais de ponta a ponta mantidas fora do pytest (precisam de um loop de eventos Qt real; execute-os com `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`); `verify_qt_swd_full_chip_flash.py` apenas constrói os comandos `PyOCDCLI`/`CubeProgrammerCLI` com `dry_run=True`. Nada disto foi executado contra uma placa real com hardware real neste ambiente. Consulte `CHANGELOG.md` para saber exatamente o que foi entregue até agora. O bootloader simulado (`MockCAN`) é apenas um modelo escrito a partir da descrição do protocolo: reproduz os ACK de página, a última página parcial e as tramas de leitura, mas não é o bootloader real, pelo que uma execução de testes a verde não substitui um ensaio numa placa real (a imagem oficial de 73476 bytes não se conseguia instalar e a última trama de uma cópia perdia-se enquanto os testes passavam, precisamente porque a simulação era mais permissiva do que o bootloader real).
+**Verificação de honestidade - o que realmente corre hoje:** `tests/` contém 63 ficheiros pytest (857 testes: todos passam; 101 deles são ignorados sem PySide6) - o protocolo CAN-OTA contra um transporte `MockCAN` real (`flasher_transports.py`) que reproduz uma sequência completa de bootloader simulado (start/erase/receive, dados de página + PAGE_ACK, tramas do registo de assinatura, end-update com um sucesso real ou um `VERIFY_FAIL_REASON` específico), as regras de assinatura (assinatura publicada enviada sem qualquer chave, imagem sem assinatura recusada, discrepância de sha256 do manifesto recusada antes de qualquer tráfego no barramento), as verificações de integridade da imagem e o `firmware/` incluído contra os seus manifestos. O GitHub Actions (`.github/workflows/ci.yml`) corre esta suite em cada push, e `tools/build_test.py` corre-a em `build-test.sh`/`.bat`. Executa ainda `ruff check` e `python -m mypy` (uma verificação de tipos do programa e das cópias do código partilhado). Os três scripts `verify_qt_*.py` na raiz do repositório são verificações reais de ponta a ponta mantidas fora do pytest (precisam de um loop de eventos Qt real; execute-os com `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`); `verify_qt_swd_full_chip_flash.py` apenas constrói os comandos `PyOCDCLI`/`CubeProgrammerCLI` com `dry_run=True`. Nada disto foi executado contra uma placa real com hardware real neste ambiente. Consulte `CHANGELOG.md` para saber exatamente o que foi entregue até agora. O bootloader simulado (`MockCAN`) é apenas um modelo escrito a partir da descrição do protocolo: reproduz os ACK de página, a última página parcial e as tramas de leitura, mas não é o bootloader real, pelo que uma execução de testes a verde não substitui um ensaio numa placa real (a imagem oficial de 73476 bytes não se conseguia instalar e a última trama de uma cópia perdia-se enquanto os testes passavam, precisamente porque a simulação era mais permissiva do que o bootloader real).
 
 ---
 
@@ -39,7 +39,7 @@
 |---|---|
 | Versão | `0.5.5` |
 | Maturidade | Funcional |
-| Testes | 847 (`python -m pytest tests -q`) |
+| Testes | 857 (`python -m pytest tests -q`) |
 | Tecnologia | Python / PySide6 / Qt Quick / CAN-OTA / SWD/JTAG |
 | Destino | O PC de quem o usa |
 | Em hardware real | Só simulado: testado com emuladores, dublês de teste ou simuladores; não há registo de execução em hardware real para esta versão |
@@ -408,6 +408,8 @@ e que o adaptador suporte o modo de apenas escuta; num barramento em silêncio
 manualmente. Ainda sem ligação quando clica nele. A velocidade do barramento do SocketCAN é
 definida ao nível do SO (`ip link`), pelo que este controlo está desativado
 para esse transporte - não há nada aqui para ele experimentar.
+
+**Um barramento que mistura velocidades**: uma cabeça a outra velocidade que a do barramento não se ouve, por isso não pode declarar a sua velocidade. O programador não sonda o barramento de forma contínua: escuta as tramas de saúde (`0x1B8`) que passam enquanto trabalha (gravar, ler de volta) e, no fim da operação, escreve um aviso no registo se as cabeças que se ouviram mostrarem contadores de erros ou um bus-off, ou se houver no barramento uma cabeça que se sabe feita para 500 kbit/s. `"bus_health"` em `urtc_config.json` define os limiares: `"tec_warn"`, `"rec_warn"` e `"bus_off_warn"` (inteiros de 1 a 255; 96, 96 e 1 por omissão) e `"legacy_heads"` (nomes ou números de série das cabeças feitas para 500 kbit/s). Um valor fora dos limites mantém o valor por omissão. Testado com um transporte simulado; nada correu num barramento real.
 
 **Atividade do barramento** («Verificar (2s)», ao lado de Consultar): conta as tramas
 de protocolo reais efetivamente vistas durante uma janela fixa de 2 segundos
@@ -985,7 +987,7 @@ As versões dos programas URTC que funcionam em conjunto, e a versão do protoco
 
 ## 🧪 Testes
 
-O conjunto tem 847 testes em 62 ficheiros (`python -m pytest tests -q`; com Qt numa máquina sem ecrã, `QT_QPA_PLATFORM=offscreen`; os 101 que precisam do PySide6 são ignorados sem ele): o protocolo CAN-OTA contra um transporte `MockCAN` real que reproduz um bootloader simulado completo (início, apagamento, receção, dados de página e ACK, tramas do registo de assinatura, fim de atualização com um verdadeiro sucesso ou um `VERIFY_FAIL_REASON` concreto), as regras de assinatura, as verificações de integridade da imagem, o firmware incluído em `firmware/` contra os seus manifestos, os comandos SWD/JTAG construídos com `dry_run`, os ficheiros de idioma e os painéis Qt Quick. Três scripts na raiz (`verify_qt_*.py`) comandam os painéis Qt de ponta a ponta. A CI executa também `ruff check`, `python -m mypy` e `tools/ci_validate.py`. O `MockCAN` é apenas um modelo escrito a partir do protocolo: é mais permissivo do que o bootloader real, pelo que uma execução verde não substitui uma experiência numa placa real.
+O conjunto tem 857 testes em 63 ficheiros (`python -m pytest tests -q`; com Qt numa máquina sem ecrã, `QT_QPA_PLATFORM=offscreen`; os 101 que precisam do PySide6 são ignorados sem ele): o protocolo CAN-OTA contra um transporte `MockCAN` real que reproduz um bootloader simulado completo (início, apagamento, receção, dados de página e ACK, tramas do registo de assinatura, fim de atualização com um verdadeiro sucesso ou um `VERIFY_FAIL_REASON` concreto), as regras de assinatura, as verificações de integridade da imagem, o firmware incluído em `firmware/` contra os seus manifestos, os comandos SWD/JTAG construídos com `dry_run`, os ficheiros de idioma e os painéis Qt Quick. Três scripts na raiz (`verify_qt_*.py`) comandam os painéis Qt de ponta a ponta. A CI executa também `ruff check`, `python -m mypy` e `tools/ci_validate.py`. O `MockCAN` é apenas um modelo escrito a partir do protocolo: é mais permissivo do que o bootloader real, pelo que uma execução verde não substitui uma experiência numa placa real.
 
 ## 🏗️ Compilação e publicação
 
@@ -1009,7 +1011,7 @@ URTC-FLASHER/
 ├── urtc_can/                                          protocolo, transportes e atualizações (cópia)
 ├── urtc_ui/                                           auxiliares de interface (cópia)
 ├── firmware/                                          onde ficam as imagens (começa vazia)
-├── tests/                                             62 ficheiros de teste, um por área
+├── tests/                                             63 ficheiros de teste, um por área
 ├── language/                                          os oito ficheiros de idioma .lng
 ├── assets/                                            QML, faixa e ícone
 ├── docs/                                              arquitetura, compilação e execução

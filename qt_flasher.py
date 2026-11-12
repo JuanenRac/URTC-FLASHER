@@ -55,6 +55,7 @@ from flasher_transports import (
     python_can_spec, virtual_ports,
 )
 from flasher_validation import validate_firmware_file, validate_swd_image_file
+from urtc_can import bus_health
 from urtc_can import update_service as update_service
 from urtc_can import versioning
 from urtc_can.protocol import CAN_ID_SLAVE_APP_PATCH, CAN_ID_SLAVE_REG_READ
@@ -124,6 +125,7 @@ class FlasherQtBridge(QObject):
         self._bitrate_label = DEFAULT_BITRATE_LABEL
         self._selected_firmware = ""
         self._transport = None
+        self._health_tap: bus_health.HealthTap | None = None
         self._busy = False
         self._progress = 0
         self._status = "READY"
@@ -652,6 +654,7 @@ class FlasherQtBridge(QObject):
     def prepareToQuit(self) -> None:
         """Stop a transfer and release the adapter before the window goes away."""
         self._cancel_requested = True
+        self._release_health_tap()
         transport, self._transport = self._transport, None
         if self._node_model is not None:
             self._node_model.stop()
@@ -1854,7 +1857,10 @@ class FlasherQtBridge(QObject):
             self._connectionResult.emit(None, str(exc))
 
     def _on_connection_result(self, transport, error: str) -> None:
+        self._release_health_tap()
         self._transport = None if transport is None else self._attach_node_picker(transport)
+        if transport is not None and not error:
+            self._health_tap = bus_health.HealthTap(transport)      # the health frames (0x1B8) that go by while the flasher works are judged when it finishes
         if error:
             self._set_state(status="CONNECTION FAILED", busy=False)
             self._log(f"CONNECTION_FAILED {error}")
@@ -1995,6 +2001,22 @@ class FlasherQtBridge(QObject):
                 self._readback_result = detail
         self._set_state(status=result, busy=False)
         self._log(result)
+        self._report_bus_symptoms()
+
+    def _release_health_tap(self) -> None:
+        tap, self._health_tap = getattr(self, "_health_tap", None), None
+        if tap is not None:
+            tap.release()
+
+    def _report_bus_symptoms(self) -> None:
+        """The warnings of a bus that mixes speeds or is in trouble, from the health frames of the heads that were heard during the operation that just ended.
+        The flasher has no continuous poll of the bus, so it looks when an operation ends (thresholds and the heads known to be of 500 kbit/s from urtc_config.json)."""
+        tap = getattr(self, "_health_tap", None)
+        if tap is None:
+            return
+        profiles = bus_health.profiles_from_frames(tap.take())
+        for code in bus_health.warnings(profiles, False, (), flasher_config.bus_health_thresholds()):
+            self._log(flasher_config.BUS_SYMPTOM_TOKENS[code])
 
 
 def firmware_argument(argv: list[str]) -> str:

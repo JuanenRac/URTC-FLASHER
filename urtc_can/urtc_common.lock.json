@@ -14,6 +14,10 @@
       "from": "src/urtc_common/bl_serial.py",
       "sha256": "5b16e4a3d916ad2c042cf7fe7638e49698f6a1574edc48ea95d87c98318df186"
     },
+    "bus_health.py": {
+      "from": "src/urtc_common/bus_health.py",
+      "sha256": "4d46652bce2169c795aed3f42f0cb8d914a672609bf7e6e738c5e5d7058cbc8d"
+    },
     "bus_scenario.py": {
       "from": "src/urtc_common/bus_scenario.py",
       "sha256": "5121706c348576fd5ca4a48e03c1a102bf01e0e8aab6146f421cc8bebd9ac195"

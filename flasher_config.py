@@ -241,6 +241,13 @@ def trusted_keys_store(config=None):
     return record_signing.trust_store_from_config(load_config() if config is None else config)
 
 
+def bus_health_thresholds(config=None):
+    """The thresholds of the bus-health warnings from ``bus_health`` in urtc_config.json: ``tec_warn``, ``rec_warn`` and ``bus_off_warn`` (whole numbers from 1 to 255; a value
+    outside keeps its default) and ``legacy_heads`` (names or serial numbers of the heads built for 500 kbit/s)."""
+    from urtc_can import bus_health
+    return bus_health.thresholds_from_config((load_config() if config is None else config).get("bus_health"))
+
+
 def load_config():
     """Reads the same urtc_config.json that _load_config_overrides below
     already reads for its own technical keys (hardware_id, hmac_key_hex,
@@ -335,8 +342,16 @@ _LOG_LABEL_ONLY = frozenset({
     "FIRMWARE_SCAN_BLOCKED", "SWD_PROBE_SCAN_SKIPPED", "SWD_PROBE_SCAN_STARTED", "SWD_FLASH_BLOCKED",
     "SWD_OPTION_BYTE_CHECK_BLOCKED", "BOARD_SNAPSHOT_BLOCKED", "BOARD_SNAPSHOT_STARTED",
     "EXPANSION_TYPE_SAVE_BLOCKED", "MLX_VARIANT_SAVE_BLOCKED", "FREE_TOOL_SAVE_BLOCKED",
-    "DEVICE_SERIAL_SAVE_BLOCKED", "ERROR",
+    "DEVICE_SERIAL_SAVE_BLOCKED", "ERROR", "BUS_MIXED_SPEEDS", "BUS_NO_HEAD_AT_ANY_SPEED", "BUS_ERRORS_SEEN", "BUS_LEGACY_HEAD",
 })
+
+# the log line (token) of each warning of urtc_can.bus_health
+BUS_SYMPTOM_TOKENS = {
+    "mixed_bus_suspected": "BUS_MIXED_SPEEDS",
+    "no_head_at_any_speed": "BUS_NO_HEAD_AT_ANY_SPEED",
+    "bus_errors": "BUS_ERRORS_SEEN",
+    "legacy_head_known": "BUS_LEGACY_HEAD",
+}
 
 
 def translate_log_line(message):
