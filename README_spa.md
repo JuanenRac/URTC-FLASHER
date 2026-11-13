@@ -27,11 +27,11 @@
 
 ---
 
-**Comprobación de honestidad - lo que realmente funciona hoy:** `tests/` contiene 64 archivos de pytest (905 tests: todos pasan; 101 de ellos se omiten sin PySide6) - el protocolo CAN-OTA contra un transporte `MockCAN` real (`flasher_transports.py`) que reproduce una secuencia completa de bootloader simulado (inicio/borrado/recepción, datos de página + PAGE_ACK, tramas del registro de firma, fin de actualización con un éxito real o un `VERIFY_FAIL_REASON` concreto), las reglas de firma (firma publicada enviada sin ninguna clave, imagen sin firmar rechazada, sha256 del manifiesto que no coincide rechazado antes de cualquier tráfico en el bus), las comprobaciones de integridad de imagen y la carpeta `firmware/` incluida contra sus manifiestos. GitHub Actions (`.github/workflows/ci.yml`) ejecuta esta suite en cada push, y `tools/build_test.py` la ejecuta en `build-test.sh`/`.bat`. También ejecuta `ruff check` y `python -m mypy` (una comprobación de tipos del programa y de las copias del código compartido). Los tres scripts `verify_qt_*.py` de la raíz son comprobaciones de extremo a extremo reales fuera de pytest (necesitan un bucle de eventos Qt real; se ejecutan con `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`); `verify_qt_swd_full_chip_flash.py` solo construye los comandos de `PyOCDCLI`/`CubeProgrammerCLI` con `dry_run=True`. Nada de esto se ha probado contra una placa real en este entorno. Ver `CHANGELOG.md` para saber exactamente qué se ha publicado. El bootloader simulado (`MockCAN`) es solo un modelo escrito a partir de la descripción del protocolo: reproduce los ACK de página, la última página parcial y las tramas de lectura, pero no es el bootloader real, así que una pasada de tests en verde no sustituye una prueba en una placa real (la imagen oficial de 73476 bytes no se podía instalar y la última trama de una copia se perdía mientras los tests pasaban, justamente porque la simulación era más permisiva que el bootloader real).
+**Aviso de honestidad: lo que realmente funciona hoy:** `tests/` contiene 64 archivos de pytest (905 tests: todos pasan; 101 de ellos se omiten sin PySide6) - el protocolo CAN-OTA contra un transporte `MockCAN` real (`flasher_transports.py`) que reproduce una secuencia completa de bootloader simulado (inicio/borrado/recepción, datos de página + PAGE_ACK, tramas del registro de firma, fin de actualización con un éxito real o un `VERIFY_FAIL_REASON` concreto), las reglas de firma (firma publicada enviada sin ninguna clave, imagen sin firmar rechazada, sha256 del manifiesto que no coincide rechazado antes de cualquier tráfico en el bus), las comprobaciones de integridad de imagen y la carpeta `firmware/` incluida contra sus manifiestos. GitHub Actions (`.github/workflows/ci.yml`) ejecuta esta suite en cada push, y `tools/build_test.py` la ejecuta en `build-test.sh`/`.bat`. También ejecuta `ruff check` y `python -m mypy` (una comprobación de tipos del programa y de las copias del código compartido). Los tres scripts `verify_qt_*.py` de la raíz son comprobaciones de extremo a extremo reales fuera de pytest (necesitan un bucle de eventos Qt real; se ejecutan con `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`); `verify_qt_swd_full_chip_flash.py` solo construye los comandos de `PyOCDCLI`/`CubeProgrammerCLI` con `dry_run=True`. Nada de esto se ha probado contra una placa real en este entorno. Ver `CHANGELOG.md` para saber exactamente qué se ha publicado. El bootloader simulado (`MockCAN`) es solo un modelo escrito a partir de la descripción del protocolo: reproduce los ACK de página, la última página parcial y las tramas de lectura, pero no es el bootloader real, así que una pasada de tests en verde no sustituye una prueba en una placa real (la imagen oficial de 73476 bytes no se podía instalar y la última trama de una copia se perdía mientras los tests pasaban, justamente porque la simulación era más permisiva que el bootloader real).
 
 ---
 
-> **Estado de seguridad física y de ciberseguridad:** este ecosistema no es un sistema de seguridad certificado y todavía no existe ninguna placa URTC poblada. El bootloader de la placa principal verifica un registro Ed25519 de la imagen (`<imagen>.imgsig`) contra una tabla de claves públicas y no guarda ningún secreto, y el bootloader del esclavo de expansión comprueba un SHA-256 simple e instala solo una imagen que la placa principal confirma; la tabla de la compilación oficial está vacía hasta que se cree la clave de firma de imágenes, y una compilación de banco confía en una clave pública de desarrollo, así que cualquiera puede producir una imagen que un bootloader así acepte; no se ha transmitido nada a una placa real. Lee la [línea base de seguridad](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md) y el [modelo de amenazas](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md) antes de fiarte de cualquier afirmación de aquí para la seguridad de una persona.
+> **Estado de seguridad física y de ciberseguridad:** este ecosistema no es un sistema de seguridad certificado y todavía no existe ninguna placa URTC poblada. El bootloader de la placa principal verifica un registro Ed25519 de la imagen (`<imagen>.imgsig`) contra una tabla de claves públicas y no guarda ningún secreto, y el bootloader del esclavo de expansión comprueba un SHA-256 simple e instala solo una imagen que la placa principal confirma; la tabla de la compilación oficial está vacía hasta que se cree la clave de firma de imágenes, y una compilación de banco confía en una clave pública de desarrollo, así que cualquiera puede producir una imagen que un bootloader así acepte; no se ha transmitido nada a una placa real. Lee la [línea base de seguridad](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md) y el [modelo de amenazas](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md) antes de fiarte de cualquier afirmación de este repositorio sobre la seguridad de una persona.
 
 ## 📋 De un vistazo
 
@@ -174,7 +174,7 @@ justo después de `0x7F9`), así que la ventana y el registro muestran el
 `mayor.menor`; el parche de una imagen es la tercera parte de la versión
 de su manifiesto. Antes de una actualización el registro muestra
 `instalada -> nueva` con ese formato, y el parche solo interviene en el
-aviso de "más antigua que la instalada" cuando ambos lados lo tienen. Una
+aviso de «más antigua que la instalada» cuando ambos lados lo tienen. Una
 placa anterior al parche responde sin él y se muestra exactamente como
 antes. Cuando el bootloader anuncia (indicador en la misma trama) que lee
 el parche, la trama de fin de actualización lo lleva en el byte alto del
@@ -223,7 +223,7 @@ ninguno) está realmente instalado, por CAN (`0x1A6`/`0x1A7` - ver
 `CANBUS.TXT`). Solo relevante cuando la placa de expansión de arriba
 está configurada como una variante Advanced o Basic+MLX9064x; el propio
 firmware de la placa ignora por completo este ajuste en cualquier otro
-tipo de placa de expansión. "Ninguno instalado" (el valor por defecto
+tipo de placa de expansión. «Ninguno instalado» (el valor por defecto
 seguro) deliberadamente no cae de vuelta a asumir MLX90640 - una placa
 con un MLX90640 real conectado necesita esto establecido
 explícitamente, una vez, de la misma forma que el propio tipo de placa
@@ -238,21 +238,21 @@ de expansión ya lo requiere.
    (paso 1 de arriba) - esta herramienta no la establece. De cualquier
    forma, la versión actual se consulta automáticamente - ver sección 4
    de arriba.
-2. **Elige un objetivo de grabación**: "Esta placa (principal)" o
-   "Esclavo de expansión" - por defecto la placa principal, el caso más
+2. **Elige un objetivo de grabación**: «Esta placa (principal)» o
+   «Esclavo de expansión» - por defecto la placa principal, el caso más
    común con diferencia. La opción de esclavo solo alcanza algo en una
    variante de placa de expansión Advanced (TMC2209+STM32F303CBT6 o
    TMC5160A+STM32F303CBT6) - la actualización se releva a través del
    propio puente I2C de la placa principal hacia el chip esclavo (los
    propios `0x210`-`0x219` de `CANBUS.TXT`), no una conexión física
-   separada. "Borrar F-RAM antes de grabar" (paso 4 abajo) se
+   separada. «Borrar F-RAM antes de grabar» (paso 4 abajo) se
    deshabilita automáticamente al elegir Esclavo - el chip esclavo no
    tiene F-RAM propia que borrar.
 3. **Seleccionar firmware**: elige de la lista detectada, o Examinar - ver
    sección 3 de arriba para saber exactamente cómo funcionan la
    detección y la validación.
 4. **Grabar**:
-   - Deja marcado "La placa está ejecutando actualmente la aplicación"
+   - Deja marcado «La placa está ejecutando actualmente la aplicación»
      si la placa está encendida y funcionando con normalidad - la
      herramienta envía primero el disparador de payload mágico `0x7F0`
      (o `0x210`, relevado al esclavo, si Esclavo es el objetivo
@@ -261,7 +261,7 @@ de expansión ya lo requiere.
      bootloader.
    - Desmárcalo si la placa ya está en el bootloader (justo después de
      una grabación JTAG nueva, o si la comprobación de versión de arriba
-     mostró "no valid firmware currently installed").
+     mostró «no valid firmware currently installed»).
    - Haz clic en **Grabar Firmware** y confirma - el diálogo de
      confirmación nombra qué objetivo estás a punto de grabar, así
      que verifica que coincide con lo que realmente pretendías
@@ -285,7 +285,7 @@ exactos de hoy más adelante si ya no tienes el archivo que los generó.
 Solo placa principal, y solo mientras la placa está realmente en el
 bootloader - requiere un bootloader que implemente `0x7FE`/`0x7FF` (ver
 `docs/CANBUS.TXT`); uno antiguo simplemente nunca responde, mostrado como
-un timeout claro en vez de un archivo silenciosamente vacío. En la práctica, esto significa que la copia funciona en una placa sin aplicación válida o que quedó a medias de una actualización: con una aplicación válida el bootloader salta a ella unos 600 ms después del reinicio salvo que llegue una trama de inicio de actualización (`0x7F1`), y esta herramienta no tiene ningún botón que mantenga al bootloader esperando (eso requeriría un cambio en el bootloader). Para una placa que funciona con normalidad, haz la copia de la flash por SWD/JTAG (sección 6).
+un tiempo de espera claro en vez de un archivo silenciosamente vacío. En la práctica, esto significa que la copia funciona en una placa sin aplicación válida o que quedó a medias de una actualización: con una aplicación válida el bootloader salta a ella unos 600 ms después del reinicio salvo que llegue una trama de inicio de actualización (`0x7F1`), y esta herramienta no tiene ningún botón que mantenga al bootloader esperando (eso requeriría un cambio en el bootloader). Para una placa que funciona con normalidad, haz la copia de la flash por SWD/JTAG (sección 6).
 
 **Avisos de versión y de firma**: antes de la transferencia la herramienta pregunta a la placa qué hay instalado y registra "instalada vX.Y -> nueva vA.B"; si la versión nueva es más antigua, avisa de que el bootloader la rechazará salvo que se permita el downgrade y sugiere hacer antes una copia de seguridad. Una imagen cuyo manifiesto dice que está firmada con la clave de desarrollo PÚBLICA (las imágenes oficiales incluidas lo están) muestra un aviso en rojo bajo el nombre del archivo; pon `"require_production_signature": true` en `urtc_config.json` para rechazar por completo esas imágenes. Un bootloader que publica la huella de la clave de firma que acepta se compara con el `signing_key_id` del manifiesto de la imagen antes de la transferencia: una diferencia se anota (`"key_id_precheck": "warn"`, el valor por defecto), se rechaza (`"refuse"`) o no se comprueba (`"off"`) en `urtc_config.json`; un bootloader o un manifiesto sin huella nunca cuenta como diferencia. Probado solo con un bootloader simulado. Cuando la placa responde desde su bootloader sin firmware válido, se selecciona la imagen oficial más reciente de la placa principal que haya en `firmware/` para que la compruebes y la grabes. Tras cada actualización correcta se escribe un pequeño informe (`logs/urtc_update_report_*.json`: versión de la herramienta, operador, nombre, tamaño y SHA-256 de la imagen, versiones anterior y posterior); lleva su propio SHA-256 para que una edición se note, pero no es una firma.
 
@@ -294,7 +294,7 @@ un timeout claro en vez de un archivo silenciosamente vacío. En la práctica, e
 **Instalar deliberadamente una versión anterior**: el bootloader
 normalmente rechaza una imagen válidamente firmada si declara una
 versión anterior a la ya instalada (razón de fallo de verificación
-"rollback rechazado") - esto evita que se reenvíe una versión con una
+«rollback rechazado») - esto evita que se reenvíe una versión con una
 vulnerabilidad ya descubierta. Si genuinamente necesitas revertir a una
 versión anterior en la que confíes, marca **"Permitir downgrade
 (saltarse el anti-rollback) para esta actualización"** (solo para la
@@ -326,7 +326,7 @@ según la selección de **Chip objetivo** (ver abajo). Esto es un
 | Necesita | Un adaptador USB-CAN | Una sonda SWD/JTAG (ST-Link o similar) |
 | Uso típico | Actualizaciones de firmware rutinarias | Primera puesta en marcha en un chip en blanco, o recuperar una placa inutilizada |
 
-**Chip objetivo:** "Esta placa (principal)" o "Esclavo de expansión" -
+**Chip objetivo:** «Esta placa (principal)» o «Esclavo de expansión» -
 mismas 2 opciones que el propio selector de la pestaña CAN-OTA, pero
 una elección genuinamente separada aquí: SWD/JTAG necesita una sonda
 cableada físicamente al chip que corresponda según esta selección, ya
@@ -345,7 +345,7 @@ proyecto sobre el nombre real de target de pyOCD para cada chip, no
 confirmado contra una instalación real de pyOCD mientras se escribía
 esto (la cobertura de STM32 en pyOCD llega en gran parte a través de
 CMSIS-Packs en vez de targets integrados) - si la grabación falla con un
-error del estilo "target not found", ejecuta tú mismo `pyocd list
+error del estilo «target not found», ejecuta tú mismo `pyocd list
 --targets --name stm32f303` y `pyocd pack install <el nombre real>`
 descarga el CMSIS-Pack correcto.
 
@@ -382,12 +382,12 @@ como una segunda capa, por si el código de salida de una herramienta por
 sí solo no fuera fiable en alguna otra situación tampoco.
 
 **El simulacro (dry run) está activado por defecto.** La primera vez,
-déjalo marcado y pulsa "Grabar chip completo" - imprime los comandos
+déjalo marcado y pulsa «Grabar chip completo» - imprime los comandos
 exactos en el registro sin tocar la placa. Léelos, confirma que las
 rutas y direcciones parecen correctas, *luego* desmarca el simulacro y
 hazlo de verdad.
 
-**"Back up entire flash before erasing"** lee toda la región de flash de
+**«Back up entire flash before erasing»** lee toda la región de flash de
 256KB a un archivo `.bin` primero, mediante el propio comando de
 lectura-de-memoria-a-archivo de la misma herramienta (`-r` para
 STM32CubeProgrammer, `commander savemem` para pyOCD) - un seguro real
@@ -431,7 +431,7 @@ para ese transporte - no hay nada aquí para que lo intente.
 
 **Un bus que mezcla velocidades**: un cabezal a otra velocidad que el bus no se oye, así que no puede declarar su velocidad. El flasheador no sondea el bus de forma continua: escucha las tramas de salud (`0x1B8`) que pasan mientras trabaja (grabar, leer de vuelta) y, al terminar la operación, escribe un aviso en el registro si los cabezales que se oyeron muestran contadores de error o un bus-off, o si hay en el bus un cabezal que se sabe hecho para 500 kbit/s. `"bus_health"` en `urtc_config.json` fija los umbrales: `"tec_warn"`, `"rec_warn"` y `"bus_off_warn"` (enteros de 1 a 255; 96, 96 y 1 por defecto) y `"legacy_heads"` (nombres o números de serie de los cabezales hechos para 500 kbit/s). Un valor fuera de los límites mantiene el valor por defecto. Probado con un transporte simulado; nada ha corrido en un bus real.
 
-**Actividad de bus** ("Comprobar (2s)", junto a Consultar): cuenta
+**Actividad de bus** («Comprobar (2s)», junto a Consultar): cuenta
 tramas de protocolo reales realmente vistas durante una ventana fija de
 2 segundos en el transporte que esté conectado. Esto deliberadamente
 **no** es lo mismo que un porcentaje real de carga de bus CAN - eso
@@ -448,7 +448,7 @@ rx/tx/error/drop que expone toda interfaz, leídos como archivos planos,
 sin dependencia extra. Conectar por SocketCAN también lee
 `/sys/class/net/<iface>/carrier` - un archivo plano 0/1 que expone toda
 interfaz de Linux. Cuando un controlador CAN entra en bus-off, el driver
-del kernel llama a `netif_carrier_off()`, así que "sin portadora" aquí
+del kernel llama a `netif_carrier_off()`, así que «sin portadora» aquí
 es evidencia real de un bus-off o un enlace igualmente muerto, registrado
 como advertencia con el comando exacto de recuperación (`sudo ip link
 set <iface> down && sudo ip link set <iface> up type can bitrate 1000000
@@ -505,7 +505,7 @@ de calibración, que algunos toolchains de STM32 agrupan en una sola
 exportación) valida sobre su contenido real en vez de sobre el hueco
 entre ellos. Una imagen de firmware en bruto bajo una extensión que no
 sea `.bin` (`.img`, `.rom`, o sin extensión en absoluto - seleccionable
-mediante la opción "Todos los archivos" del selector de archivos) obtiene
+mediante la opción «Todos los archivos» del selector de archivos) obtiene
 su dirección base de en qué slot la estés cargando, igual que lo haría
 un `.bin`.
 
@@ -569,7 +569,7 @@ y el tiempo transcurrido por página durante una actualización CAN, más
 una línea de resumen al final (tiempo total, KB/s promedio, cuántos
 reintentos de ACK de página ocurrieron). Puramente informativo - no
 cambia el comportamiento de grabación, solo hace más fácil distinguir de
-un vistazo "esto simplemente va lento" de "algo realmente va mal".
+un vistazo «esto simplemente va lento» de «algo realmente va mal».
 
 **Motivos específicos de fallo de verificación**: si la verificación
 falla durante una actualización CAN, `bootloader_protocol.c` envía un byte de
@@ -583,7 +583,7 @@ construyendo un bootloader personalizado con una versión distinta del
 protocolo.
 
 **El mismo detalle para el esclavo de expansión**: una actualización
-fallida del esclavo (Objetivo: "Esclavo de expansión") consulta `0x219`
+fallida del esclavo (Objetivo: «Esclavo de expansión») consulta `0x219`
 justo después de que `0x215` reporte `STATUS_VERIFY_FAIL`, relevando el
 propio `REG_VERIFY_FAIL_REASON` del bootloader esclavo - los mismos 5
 motivos de arriba, solo que alcanzados a través del puente I2C en vez de
@@ -591,7 +591,7 @@ leídos directamente de una trama CAN. Requiere un bootloader esclavo que
 implemente `0x219` (añadido junto con el soporte de esta herramienta para
 ello); un bootloader esclavo más antiguo simplemente no responde a esa
 consulta, y esta herramienta cae de vuelta al mensaje genérico de
-"verificación fallida".
+«verificación fallida».
 
 ### Borrado opcional de la F-RAM antes de grabar
 
@@ -659,7 +659,7 @@ llega tarde: el bootloader envía cada ACK de página una sola vez y nunca
 lo repite, así que un ACK realmente perdido no se puede recuperar y la
 actualización se aborta con un error (la placa se queda en su bootloader
 y la actualización se puede volver a lanzar sin más). La herramienta
-deliberadamente no reenvía los datos de la página en un timeout - si los
+deliberadamente no reenvía los datos de la página en un tiempo de espera - si los
 datos hubieran llegado bien, reenviar haría que el bootloader leyera esos
 bytes como el inicio de la *siguiente* página, desincronizando la
 transferencia. Mientras espera, se compara el propio latido del
@@ -709,7 +709,7 @@ python3 urtc_flasher.py --cli --transport mock --file firmware.bin --no-trigger
 ```
 
 Útil para probar la lógica propia de esta herramienta (comportamiento de
-reintentos, manejo de timeouts, códigos de salida) en un pipeline de CI
+reintentos, manejo de timeouts, códigos de salida) en un flujo de CI
 o antes de tocar hardware real - no algo que hable con una placa real.
 `--mock-fail 0x03` (o cualquier otro valor `VERIFY_FAIL_REASON_*` de
 `docs/CANBUS.TXT`) hace que la actualización simulada falle la
@@ -807,7 +807,7 @@ esta ruta. Para usar Serie/SLCAN en su lugar (obligatorio en Windows;
 opcional en Linux):
 
 1. Descarga firmware compatible con SLCAN para tu adaptador (busca
-   "canable slcan firmware" — hay varios forks mantenidos; usa el que
+   «canable slcan firmware» — hay varios forks mantenidos; usa el que
    indique la propia documentación de tu adaptador).
 2. Pon el adaptador en modo DFU/bootloader (normalmente un botón BOOT
    mantenido durante el encendido, o un jumper — revisa la documentación
@@ -845,7 +845,7 @@ primero).
 
 Ambos scripts pasan `--noconfirm` a PyInstaller, así que reconstruir
 sobre un `dist/URTC_Flasher` ya existente lo reemplaza directamente en
-vez de esperar un aviso de "¿reemplazar?" que es fácil pasar por alto en
+vez de esperar un aviso de «¿reemplazar?» que es fácil pasar por alto en
 la salida de un script.
 
 #### Panel visual de control
@@ -882,7 +882,7 @@ cualquier forma la herramienta se mantiene usable mientras se resuelve
 el desajuste.
 
 **Permisos de serie en Linux:** si estás usando la ruta Serie/SLCAN y la
-conexión falla con "Permission denied", tu usuario necesita estar en el
+conexión falla con «Permission denied», tu usuario necesita estar en el
 grupo propietario de los dispositivos serie (`dialout` en
 Debian/Ubuntu; varía en otras distros):
 ```
@@ -945,7 +945,7 @@ funcionando.
 **Puedes tener más de un `.bin` ahí.** Cada archivo de firmware de
 aplicación se revisa y se lista - la herramienta no coge simplemente lo
 primero que encuentra, y los binarios de bootloader (cualquiera con
-"BOOTLOADER" en el nombre - `URTC_BOOTLOADER.bin`,
+«BOOTLOADER» en el nombre - `URTC_BOOTLOADER.bin`,
 `URTC_SLAVE_BOOTLOADER.bin`) se filtran por completo de esta lista, ya
 que CAN-OTA solo graba firmware de aplicación; una actualización de
 bootloader necesita SWD/JTAG en su lugar (sección 6 abajo). Al arrancar
@@ -1116,11 +1116,11 @@ URTC se compone de repositorios independientes, cada uno con su versión, sus pr
   * **URTC-FLASHER** (este repositorio) - herramienta de escritorio que actualiza el firmware de la placa por CAN o por SWD/JTAG.
   * [URTC-GATEWAY](https://github.com/JuanenRac/URTC-GATEWAY) - pasarela delante del bus CAN: solo deja pasar los identificadores de una lista, limita su frecuencia y pide una clave de sesión.
   * [URTC-SMART-RACK](https://github.com/JuanenRac/URTC-SMART-RACK) - lógica en C independiente del hardware y protocolo de órdenes para un soporte de herramientas con precalentamiento y seguimiento del ciclo de vida.
-  * [URTC-TESTER](https://github.com/JuanenRac/URTC-TESTER) - probador de escritorio del bus CAN en vivo que muestra los controles y la telemetría del perfil de herramienta que informa una placa.
+  * [URTC-TESTER](https://github.com/JuanenRac/URTC-TESTER) - tester de escritorio del bus CAN en vivo que muestra los controles y la telemetría del perfil de herramienta que informa una placa.
   * [URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL) - protocolo de tramas de sensor en C y un acompañante en Python térmico/RGB para un cabezal de inspección.
   * [URTC-WEB-STUDIO](https://github.com/JuanenRac/URTC-WEB-STUDIO) - aplicación de navegador que graba y prueba la placa por Web Serial y SLCAN, sin instalar nada.
 * **Ecosystem Operations:**
-  * [URTC-DEVTOOLS](https://github.com/JuanenRac/URTC-DEVTOOLS) - las herramientas de repositorio compartidas de la familia como un conjunto con versión y un fichero de bloqueo que distingue una copia editada de una desfasada.
+  * [URTC-DEVTOOLS](https://github.com/JuanenRac/URTC-DEVTOOLS) - las herramientas de repositorio compartidas de la familia como un conjunto con versión y un archivo de bloqueo que distingue una copia editada de una desfasada.
   * [URTC-DOCS](https://github.com/JuanenRac/URTC-DOCS) - arquitectura, interfaces, línea base de seguridad y catálogo generado del ecosistema, más las herramientas que comparan todos los repositorios.
   * [URTC-UPDATER](https://github.com/JuanenRac/URTC-UPDATER) - herramienta de escritorio que detecta, instala y actualiza los repositorios de la familia URTC, una acción explícita cada vez.
 
@@ -1133,15 +1133,15 @@ URTC se compone de repositorios independientes, cada uno con su versión, sus pr
 ## 📚 Documentación
 
 - **[docs/WINDOW_GUIDE.md](docs/WINDOW_GUIDE.md)** — una guía de la ventana con imágenes: la pantalla principal, la ayuda y la ventana de actualización.
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** — stack tecnológico y pautas de codificación para un pull request.
-- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — los estándares de comportamiento esperados en esta comunidad.
-- **[SECURITY.md](SECURITY.md)** — cómo reportar una vulnerabilidad, y las áreas reales de enfoque en seguridad de este proyecto.
-- **[SUPPORT.md](SUPPORT.md)** — dónde hacer preguntas y reportar errores.
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** — tecnologías usadas y normas de código para una pull request.
+- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — las normas de comportamiento que se esperan en esta comunidad.
+- **[SECURITY.md](SECURITY.md)** — cómo informar de una vulnerabilidad y en qué aspectos de seguridad se centra realmente este proyecto.
+- **[SUPPORT.md](SUPPORT.md)** — dónde hacer preguntas y notificar errores.
 - **[LICENSE.md](LICENSE.md)** — la licencia propia de este proyecto.
 
 ## 🤝 Contribuir y comunidad
 
-* Antes de una pull request ejecuta `URTC_CI=1 python tools/ci_validate.py`: debe pasar. Consulta [CONTRIBUTING.md](CONTRIBUTING.md) y el [código de conducta](CODE_OF_CONDUCT.md).
+* Antes de abrir una pull request, ejecuta `URTC_CI=1 python tools/ci_validate.py`: debe pasar. Consulta [CONTRIBUTING.md](CONTRIBUTING.md) y el [código de conducta](CODE_OF_CONDUCT.md).
 * El README existe en ocho idiomas: un cambio en el texto se hace en los ocho archivos, y las secciones compartidas con otros repositorios las escribe `tools/readme_sections.py` de URTC-COMMON.
 * Un cambio en el protocolo CAN empieza en URTC-COMMON (`spec/can_protocol.json`) y llega a este repositorio mediante la copia comprobada.
 * No describas como funcionando en una placa lo que solo se ha compilado.
@@ -1157,7 +1157,7 @@ URTC se compone de repositorios independientes, cada uno con su versión, sus pr
 
 Licencia: **GPL-3.0-or-later** para el código fuente, **CC BY-SA 4.0** para esta
 documentación - ver `LICENSE` en este repositorio, o la sección
-"Licencia y Avisos de Copyright" al final de este documento.
+«Licencia y Avisos de Copyright» al final de este documento.
 
 URTC Flasher es (c) 2026 JuanenRac (Electro Hobby 3D). Este aviso debe
 incluirse en cualquier distribución de este proyecto o trabajos
