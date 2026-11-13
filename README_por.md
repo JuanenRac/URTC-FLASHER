@@ -72,7 +72,7 @@ bootloader descrito em `docs/CANBUS.TXT` (no repositório irmão
 implementada - consulte «Projetos relacionados» perto do fim deste documento;
 todas as outras referências a `docs/*.TXT` neste README apontam também para
 lá): a verificação do HardwareID, o registo Ed25519 da imagem, o fluxo de
-atualização golden-image com slot de backup, o progresso em direto através das
+atualização com imagem dourada e ranhura de reserva, o progresso em direto através das
 mensagens de heartbeat do bootloader, e uma consulta de versão (se a aplicação
 *ou* o bootloader desta placa se identifica através do CAN) para que possa ver
 o que está atualmente instalado antes de decidir o que escrever.
@@ -84,11 +84,11 @@ Duas formas de comunicar com a placa, ambas a falar o mesmo protocolo por baixo:
 - **Serial / SLCAN** — funciona em Windows e Linux. Precisa de um adaptador
   USB-CAN com firmware SLCAN, ligado como porta série virtual.
   - Sem adaptador nem hardware, uma placa virtual faz as vezes: execute `python -m urtc_can.virtual_board`, indique o seu endereço na variável de ambiente `URTC_VIRTUAL_PORT` (por exemplo `socket://127.0.0.1:7777`) antes de iniciar o programa, ou passe-o a `--port` na linha de comandos. Aparece na lista de portas e responde como uma placa, aplicação e bootloader.
-- **SocketCAN** — **apenas Linux**, e só é mostrado na UI da ferramenta em
+- **SocketCAN** — **apenas Linux**, e só é mostrado na interface da ferramenta em
   Linux. Comunica diretamente com uma interface de rede `can0`/`slcan0` do
   kernel. Se o seu adaptador já corre firmware `gs_usb`/candleLight (a maioria
   das placas CANable fá-lo de origem), este caminho **não precisa de qualquer
-  reflash do adaptador** — o próprio controlador do Linux trata disso nativamente.
+  regravação do adaptador** — o próprio controlador do Linux trata disso nativamente.
 
 ## 🧩 Papel no URTC
 
@@ -188,7 +188,7 @@ O que verá:
   execução, tudo coincide.
 - **`Bootloader running, no valid firmware currently installed, bootloader
   v0.1.2`** - a placa está presa no bootloader sem nada para onde saltar
-  (chip em branco, ou todas as verificações do slot principal falharam). Esta
+  (chip em branco, ou todas as verificações da ranhura principal falharam). Esta
   é exatamente a situação que esta ferramenta existe para resolver - grave.
   A versão do bootloader mostrada aqui é a do próprio bootloader, sem relação
   com a versão da aplicação cujas verificações falharam.
@@ -247,7 +247,7 @@ expansão.
 4. **Flash**:
    - Deixe «A placa está atualmente a executar a aplicação» marcado se a placa
      estiver ligada e a funcionar normalmente - a ferramenta envia primeiro o
-     disparador de payload mágico `0x7F0` (ou `0x210`, retransmitido ao escravo, se
+     disparador de carga mágica `0x7F0` (ou `0x210`, retransmitido ao escravo, se
      Escravo for o alvo selecionado), que desliga em segurança todos os
      atuadores antes de reiniciar para o bootloader.
    - Desmarque-o se a placa já estiver parada no bootloader (logo após uma
@@ -258,10 +258,10 @@ expansão.
      corresponde ao que realmente pretendia selecionar. O registo mostra cada
      passo do protocolo; a barra de progresso acompanha o progresso da escrita
      página a página durante a transferência, e depois o progresso da cópia
-     durante a cópia final do backup para o slot principal.
+     durante a cópia final da cópia de segurança para a ranhura principal.
 
 Se a verificação falhar em qualquer ponto (CRC32, assinatura, ou discrepância de
-HardwareID), o slot principal do bootloader nunca é tocado - a placa continua a
+HardwareID), a ranhura principal do bootloader nunca é tocado - a placa continua a
 correr o firmware que já tinha. É sempre seguro simplesmente tentar outra vez.
 
 **Cópia de segurança do firmware (CAN)**: lê de volta, através do barramento e sem
@@ -308,7 +308,7 @@ acima:
 
 |  | Atualização CAN OTA (secções 1-5) | SWD/JTAG de chip completo (secção 6) |
 |---|---|---|
-| Autorrecuperação se interrompida | Sim - o slot de backup golden-image garante que o firmware em execução sobrevive | Não - não corre nada até ser reprogramado |
+| Autorrecuperação se interrompida | Sim - a ranhura de reserva da imagem dourada garante que o firmware em execução sobrevive | Não - não corre nada até ser reprogramado |
 | Recuperável | Automaticamente, sem necessidade de ação | Sim - basta voltar a ligar e gravar de novo por SWD; a porta de depuração não depende do conteúdo da flash. Só um verdadeiro bloqueio permanente (byte de opção RDP2) o impediria, e nada nesta ferramenta define bytes de opção |
 | Toca no bootloader | Nunca | Sim, por design |
 | Precisa de | Um adaptador USB-CAN | Uma sonda SWD/JTAG (ST-Link ou semelhante) |
@@ -350,7 +350,7 @@ bibliotecas Python - verá o comando exato registado antes de ser executado.
 já conhece - não o introduz) ou `.hex` (traz o seu próprio endereço, usado tal
 como está). Misturar é aceitável - bootloader como `.hex` e aplicação como
 `.bin`, ou vice-versa, ambos funcionam. Ambos os seletores de ficheiro validam
-o ficheiro selecionado (tamanho plausível para o slot de destino e - onde o
+o ficheiro selecionado (tamanho plausível para a ranhura de destino e - onde o
 formato permite verificá-lo com confiança - um stack pointer inicial
 plausível) antes de o deixar prosseguir, tal como o seletor de firmware do
 caminho CAN já fazia.
@@ -374,12 +374,12 @@ certos, *e só depois* desmarque o dry run e faça-o a sério.
 de 256KB para um ficheiro `.bin`, através do comando de leitura de memória
 para ficheiro da própria ferramenta (`-r` para o STM32CubeProgrammer,
 `commander savemem` para o pyOCD) - um seguro real aqui, uma vez que, ao
-contrário de uma atualização CAN OTA (que o slot de backup golden-image já
+contrário de uma atualização CAN OTA (que a ranhura de reserva da imagem dourada já
 protege), um apagamento do chip completo não tem outra forma de desfazer.
 Desativado por defeito, uma vez que acrescenta 10-30s e não é necessário num
 chip em branco/novo; vale a pena marcar antes de sobrescrever uma placa que já
 está a correr alguma coisa. Se a leitura não produzir realmente um ficheiro, o
-apagamento é recusado em vez de prosseguir sem o backup que pediu.
+apagamento é recusado em vez de prosseguir sem o cópia de segurança que pediu.
 
 **Estado dos testes:** a lógica de verificação de ligação acima foi verificada
 contra saída real do STM32CubeProgrammer (tanto um registo real de ligação
@@ -456,7 +456,7 @@ de firmware CAN atualmente selecionado - útil para entregar um quadro completo
 a quem escreveu o firmware se algo correr mal no terreno, em vez de copiar o
 texto do registo à mão.
 
-### SWD/JTAG — formatos de ficheiro, verificação de slot e seleção de sonda
+### SWD/JTAG — formatos de ficheiro, verificação de ranhura e seleção de sonda
 
 **Formatos de ficheiro**: os seletores de bootloader/aplicação da secção SWD
 aceitam `.bin`, `.hex`, e `.elf`/`.axf`. O ELF/AXF é interpretado com uma
@@ -476,21 +476,21 @@ dados de calibração, que algumas toolchains STM32 juntam numa única
 exportação) valida pelo seu conteúdo real e não pelo intervalo entre eles. Uma
 imagem de firmware em bruto com uma extensão que não `.bin` (`.img`, `.rom`, ou
 sem qualquer extensão - selecionável através da opção «Todos os ficheiros» do seletor
-de ficheiros) obtém o seu endereço base a partir do slot para o qual a está a
+de ficheiros) obtém o seu endereço base a partir da ranhura para o qual a está a
 carregar, tal como um `.bin` obteria.
 
-**Verificação de slot do bootloader/aplicação**: os seletores de ficheiro
-verificam que cada imagem se destina ao slot onde está a ser colocada, e não
+**Verificação de ranhura do bootloader/aplicação**: os seletores de ficheiro
+verificam que cada imagem se destina à ranhura onde está a ser colocada, e não
 apenas que parece *algum* firmware válido. Uma imagem de bootloader e uma
 imagem de aplicação têm ambas um stack pointer igualmente plausível - mesmo
 chip, mesma RAM - pelo que essa verificação sozinha não as consegue distinguir
-se uma acabar no slot da outra. O que consegue: o **reset handler** de uma
+se uma acabar na ranhura da outra. O que consegue: o **reset tratador** de uma
 imagem ligada (linked) é um endereço real e absoluto fixado em tempo de
 link, e só aponta para dentro da região para a qual foi realmente ligada.
 Verificado contra os `BOOTLOADER.bin`/`APP.bin` realmente compilados do
 próprio projeto: os seus reset handlers são `0x08000785` e `0x0800C0CD`
 respetivamente, cada um corretamente dentro do intervalo de endereços do seu
-próprio slot e fora do do outro - pelo que colocar qualquer um deles no slot
+próprio ranhura e fora do do outro - pelo que colocar qualquer um deles na ranhura
 errado é apanhado e bloqueado, não aceite silenciosamente. A mesma lógica
 aplica-se a `.hex`/`.elf`, verificada contra o seu próprio endereço de carga
 embutido.
@@ -523,7 +523,7 @@ não apenas confiadas no código de saída. O próprio comando `flash` do pyOCD
 salta a reescrita de páginas que já coincidem (uma otimização de velocidade,
 não um relatório de verificação), pelo que esta ferramenta acrescenta um passo
 `commander compare` contra ambas as imagens depois de escrever - uma
-verificação autêntica byte a byte, igual ao que a flag `-v` do
+verificação autêntica byte a byte, igual ao que a opção `-v` do
 STM32CubeProgrammer já faz. Apenas para `.bin`: o `compare` verifica o
 conteúdo da flash contra os bytes em bruto do ficheiro, o que não
 corresponderia corretamente à codificação própria de um ficheiro `.hex`/`.elf`
@@ -564,7 +564,7 @@ mensagem genérica «verificação falhada».
 
 A secção 3 tem uma caixa de seleção, **«Apagar também a F-RAM de persistência antes
 de flashar»** - desligada por defeito. Se marcada, envia o comando de
-apagamento de payload mágico (`0x192` - consulte `docs/CANBUS.TXT`) à F-RAM de
+apagamento de carga mágica (`0x192` - consulte `docs/CANBUS.TXT`) à F-RAM de
 persistência FM24CL64B integrada na placa antes de a sequência de atualização
 começar, apagando qualquer estado de parâmetros da ferramenta que tivesse
 guardado.
@@ -672,7 +672,7 @@ python3 urtc_flasher.py --cli --transport mock --file firmware.bin --no-trigger
 ```
 
 Útil para testar a lógica da própria ferramenta (comportamento de repetição,
-tratamento de timeouts, códigos de saída) num cadeia de CI ou antes de tocar
+tratamento de timeouts, códigos de saída) numa cadeia de CI ou antes de tocar
 em hardware real - não é algo que comunique com uma placa verdadeira.
 `--mock-fail 0x03` (ou qualquer outro valor `VERIFY_FAIL_REASON_*` de
 `docs/CANBUS.TXT`) faz a atualização simulada falhar a verificação em vez de ter
@@ -905,7 +905,7 @@ abaixo). No arranque (e sempre que clicar em **Atualizar**), cada `.bin`
 restante em `firmware/` é verificado com o mesmo teste de plausibilidade que o
 próprio bootloader aplica a uma imagem nova (os seus primeiros 4 bytes têm de
 parecer um verdadeiro stack pointer inicial para a RAM deste chip, e o seu
-tamanho tem de caber no slot principal). Cada ficheiro aparece na lista com um
+tamanho tem de caber na ranhura principal). Cada ficheiro aparece na lista com um
 ✓ ou ✗ claro e o motivo:
 
 | Ficheiro | Tamanho | Estado |

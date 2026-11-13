@@ -67,7 +67,7 @@
 
 Ein kleines plattformübergreifendes GUI-Tool zum Aktualisieren der
 URTC-Platinen-Firmware über den CAN-Bus. Es implementiert genau das
-Bootloader-Protokoll aus `docs/CANBUS.TXT` (im Schwester-Repository [URTC](https://github.com/JuanenRac/URTC), gegen das dieses Werkzeug implementiert ist - siehe „Verwandte Projekte“ gegen Ende dieses Dokuments; jeder andere Verweis auf `docs/*.TXT` in diesem README zeigt ebenfalls dorthin): die HardwareID-Prüfung, den Ed25519-Eintrag des Images, den Golden-Image-Backup-Slot-Update-Ablauf, den
+Bootloader-Protokoll aus `docs/CANBUS.TXT` (im Schwester-Repository [URTC](https://github.com/JuanenRac/URTC), gegen das dieses Werkzeug implementiert ist - siehe „Verwandte Projekte“ gegen Ende dieses Dokuments; jeder andere Verweis auf `docs/*.TXT` in diesem README zeigt ebenfalls dorthin): die HardwareID-Prüfung, den Ed25519-Eintrag des Images, den Update-Ablauf mit Golden Image und Sicherungsslot, den
 Live-Fortschritt über die Heartbeat-Nachrichten des Bootloaders, und
 eine Versionsabfrage (identifiziert, ob sich die Anwendung *oder* der
 Bootloader dieser Platine über CAN meldet), damit Sie sehen können, was
@@ -179,7 +179,7 @@ Manifest. Vor einem Update zeigt das Protokoll `installiert -> neu` in
 dieser Form, und der Patch fließt nur dann in die Warnung „älter als
 installiert“ ein, wenn beide Seiten einen haben. Eine Platine, die älter
 als der Patch ist, antwortet ohne ihn und wird genau wie bisher angezeigt.
-Meldet der Bootloader (Flag im selben Frame), dass er den Patch liest,
+Meldet der Bootloader (Kennzeichen im selben Frame), dass er den Patch liest,
 trägt der Frame zum Ende des Updates ihn im oberen Byte des Minor-Felds;
 jeder andere Bootloader und jedes Image ohne Patch erhalten den
 unveränderten Frame mit zwei Zahlen. Die Versionsantwort des
@@ -331,7 +331,7 @@ ist eine **andere Art von Operation** als die Abschnitte 1-5 oben:
 
 |  | CAN-OTA-Update (Abschnitte 1-5) | SWD/JTAG, ganzer Chip (Abschnitt 6) |
 |---|---|---|
-| Selbstheilend bei Unterbrechung | Ja - der Golden-Image-Backup-Slot garantiert, dass die laufende Firmware überlebt | Nein - führt nichts aus, bis neu programmiert |
+| Selbstheilend bei Unterbrechung | Ja - der Sicherungsslot für das Golden Image garantiert, dass die laufende Firmware überlebt | Nein - führt nichts aus, bis neu programmiert |
 | Wiederherstellbar | Automatisch, keine Aktion nötig | Ja - einfach wieder verbinden und erneut über SWD flashen; der Debug-Port hängt nicht vom Flash-Inhalt ab. Nur eine echte permanente Sperre (Option-Byte RDP2) würde dies verhindern, und nichts in diesem Tool setzt Option-Bytes |
 | Berührt den Bootloader | Nie | Ja, per Design |
 | Benötigt | Einen USB-CAN-Adapter | Eine SWD/JTAG-Sonde (ST-Link oder ähnlich) |
@@ -577,7 +577,7 @@ bereits übereinstimmen (eine Geschwindigkeitsoptimierung, kein
 Verifizierungsbericht), daher fügt dieses Tool einen
 `commander compare`-Schritt gegen beide Images nach dem Schreiben
 hinzu - eine echte Byte-für-Byte-Prüfung, die dem entspricht, was das
-`-v`-Flag von STM32CubeProgrammer bereits tut. Nur für `.bin`: `compare`
+`-v`-Kennzeichen von STM32CubeProgrammer bereits tut. Nur für `.bin`: `compare`
 prüft den Flash-Inhalt gegen die rohen Bytes der Datei, was mit der
 eigenen Kodierung einer `.hex`/`.elf`-Datei auch nach einem
 erfolgreichen Flash nicht korrekt übereinstimmen würde, daher
@@ -937,7 +937,7 @@ dies eine Änderung der Netzwerkgerätekonfiguration ist.
 
 Die Verwendung von `python -m pip`/`python3 -m pip` statt eines bloßen
 `pip` umgeht ein häufiges Problem auf beiden Plattformen: das eigene
-Wrapper-Skript von `pip` ist nicht immer im PATH, selbst direkt nach
+Hüllskript-Skript von `pip` ist nicht immer im PATH, selbst direkt nach
 einer erfolgreichen Installation, während `-m pip` das installierte
 Modul direkt findet.
 

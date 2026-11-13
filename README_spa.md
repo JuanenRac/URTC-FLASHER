@@ -67,7 +67,7 @@
 
 Una pequeña herramienta GUI multiplataforma para actualizar el firmware
 de la placa URTC por bus CAN. Implementa exactamente el protocolo del
-bootloader de `docs/CANBUS.TXT` (en el repositorio hermano [URTC](https://github.com/JuanenRac/URTC) contra el que implementa esta herramienta - ver «Proyectos Relacionados» cerca del final de este documento; cualquier otra referencia a `docs/*.TXT` en este README apunta allí también): la verificación de HardwareID, el registro Ed25519 de la imagen, el flujo de actualización con slot de respaldo de imagen
+bootloader de `docs/CANBUS.TXT` (en el repositorio hermano [URTC](https://github.com/JuanenRac/URTC) contra el que implementa esta herramienta - ver «Proyectos Relacionados» cerca del final de este documento; cualquier otra referencia a `docs/*.TXT` en este README apunta allí también): la verificación de HardwareID, el registro Ed25519 de la imagen, el flujo de actualización con ranura de respaldo de imagen
 dorada, el progreso en vivo mediante los mensajes de latido del
 bootloader, y una consulta de versión (identifica si la aplicación *o*
 el bootloader de esta placa se anuncia por CAN) para que puedas ver qué
@@ -86,7 +86,7 @@ debajo:
   kernel `can0`/`slcan0`. Si tu adaptador ya ejecuta firmware
   `gs_usb`/candleLight (la mayoría de las placas CANable lo hacen de
   fábrica), esta ruta **no necesita volver a grabar el adaptador en
-  absoluto** — el propio driver de Linux lo gestiona de forma nativa.
+  absoluto** — el propio controlador de Linux lo gestiona de forma nativa.
 
 ## 🧩 Papel en URTC
 
@@ -190,7 +190,7 @@ Lo que verás:
   aplicación en ejecución, todo coincide.
 - **`Bootloader running, no valid firmware currently installed,
   bootloader v0.1.2`** - la placa está atascada en el bootloader sin
-  nada a lo que saltar (chip en blanco, o cada comprobación en el slot
+  nada a lo que saltar (chip en blanco, o cada comprobación en la ranura
   principal falló). Esta es exactamente la situación para la que existe
   esta herramienta - grábalo. La versión de bootloader mostrada aquí
   es la del propio bootloader, sin relación con la versión de aplicación
@@ -242,7 +242,7 @@ de expansión ya lo requiere.
    «Esclavo de expansión» - por defecto la placa principal, el caso más
    común con diferencia. La opción de esclavo solo alcanza algo en una
    variante de placa de expansión Advanced (TMC2209+STM32F303CBT6 o
-   TMC5160A+STM32F303CBT6) - la actualización se releva a través del
+   TMC5160A+STM32F303CBT6) - la actualización se retransmite a través del
    propio puente I2C de la placa principal hacia el chip esclavo (los
    propios `0x210`-`0x219` de `CANBUS.TXT`), no una conexión física
    separada. «Borrar F-RAM antes de grabar» (paso 4 abajo) se
@@ -254,8 +254,8 @@ de expansión ya lo requiere.
 4. **Grabar**:
    - Deja marcado «La placa está ejecutando actualmente la aplicación»
      si la placa está encendida y funcionando con normalidad - la
-     herramienta envía primero el disparador de payload mágico `0x7F0`
-     (o `0x210`, relevado al esclavo, si Esclavo es el objetivo
+     herramienta envía primero el disparador de carga mágica `0x7F0`
+     (o `0x210`, retransmitido al esclavo, si Esclavo es el objetivo
      seleccionado), que apaga de forma segura cada actuador antes de
      reiniciar hacia el
      bootloader.
@@ -271,7 +271,7 @@ de expansión ya lo requiere.
      final de respaldo a principal.
 
 Si la verificación falla en cualquier punto (desajuste de CRC32, firma, o
-HardwareID), el slot principal del bootloader nunca se toca - la placa
+HardwareID), la ranura principal del bootloader nunca se toca - la placa
 sigue ejecutando el firmware que ya tenía. Siempre es seguro simplemente
 volver a intentarlo.
 
@@ -303,8 +303,8 @@ confirmación, ya que esto salta deliberadamente una comprobación de
 seguridad. Esto sigue subiendo la imagen antigua completa a través de
 la transferencia normal, solo levanta la comprobación de orden de
 versión para ese intento (`0x7FD` - ver `docs/CANBUS.TXT`); el número de
-versión reportado a la placa viene del propio `.manifest.json` del
-archivo cuando existe uno junto a él (ver sección 3 arriba), recayendo
+versión comunicado a la placa viene del propio `.manifest.json` del
+archivo cuando existe uno junto a él (ver sección 3 arriba), volviendo
 en la versión actualmente configurada de esta herramienta en caso
 contrario, registrado claramente en cualquier caso para que nunca sea
 una suposición silenciosa.
@@ -320,7 +320,7 @@ según la selección de **Chip objetivo** (ver abajo). Esto es un
 
 |  | Actualización CAN OTA (secciones 1-5) | SWD/JTAG chip completo (sección 6) |
 |---|---|---|
-| Auto-reparable si se interrumpe | Sí - el slot de respaldo de imagen dorada garantiza que el firmware en ejecución sobrevive | No - no ejecutará nada hasta que se reprograme |
+| Auto-reparable si se interrumpe | Sí - la ranura de respaldo de imagen dorada garantiza que el firmware en ejecución sobrevive | No - no ejecutará nada hasta que se reprograme |
 | Recuperable | Automáticamente, sin acción necesaria | Sí - solo reconecta y graba de nuevo por SWD; el puerto de depuración no depende del contenido de la flash. Solo un bloqueo verdaderamente permanente (option byte RDP2) impediría esto, y nada en esta herramienta establece option bytes |
 | Toca el bootloader | Nunca | Sí, por diseño |
 | Necesita | Un adaptador USB-CAN | Una sonda SWD/JTAG (ST-Link o similar) |
@@ -365,7 +365,7 @@ que se ejecute.
 herramienta ya conoce - no la introduces tú) o `.hex` (lleva su propia
 dirección, se usa tal cual). Mezclar está bien - bootloader como `.hex`
 y aplicación como `.bin`, o viceversa, ambos funcionan. Ambos selectores
-de archivo validan el archivo elegido (tamaño plausible para el slot de
+de archivo validan el archivo elegido (tamaño plausible para la ranura de
 destino, y - donde el formato permite comprobarlo con confianza - un
 puntero de pila inicial plausible) antes de dejarte continuar, de la
 misma forma que ya lo hacía el selector de firmware de la ruta CAN.
@@ -391,7 +391,7 @@ hazlo de verdad.
 256KB a un archivo `.bin` primero, mediante el propio comando de
 lectura-de-memoria-a-archivo de la misma herramienta (`-r` para
 STM32CubeProgrammer, `commander savemem` para pyOCD) - un seguro real
-aquí, ya que a diferencia de una actualización CAN OTA (que el slot de
+aquí, ya que a diferencia de una actualización CAN OTA (que la ranura de
 respaldo de imagen dorada ya protege), un borrado completo de chip no
 tiene otro deshacer. Desactivado por defecto ya que añade 10-30s y no es
 necesario en un chip nuevo/en blanco; vale la pena marcarlo antes de
@@ -429,7 +429,7 @@ haces clic en él. La velocidad de bus de SocketCAN se establece a nivel del
 sistema operativo (`ip link`), así que este control está deshabilitado
 para ese transporte - no hay nada aquí para que lo intente.
 
-**Un bus que mezcla velocidades**: un cabezal a otra velocidad que el bus no se oye, así que no puede declarar su velocidad. El flasheador no sondea el bus de forma continua: escucha las tramas de salud (`0x1B8`) que pasan mientras trabaja (grabar, leer de vuelta) y, al terminar la operación, escribe un aviso en el registro si los cabezales que se oyeron muestran contadores de error o un bus-off, o si hay en el bus un cabezal que se sabe hecho para 500 kbit/s. `"bus_health"` en `urtc_config.json` fija los umbrales: `"tec_warn"`, `"rec_warn"` y `"bus_off_warn"` (enteros de 1 a 255; 96, 96 y 1 por defecto) y `"legacy_heads"` (nombres o números de serie de los cabezales hechos para 500 kbit/s). Un valor fuera de los límites mantiene el valor por defecto. Probado con un transporte simulado; nada ha corrido en un bus real.
+**Un bus que mezcla velocidades**: un cabezal a otra velocidad que el bus no se oye, así que no puede declarar su velocidad. El flasher no sondea el bus de forma continua: escucha las tramas de salud (`0x1B8`) que pasan mientras trabaja (grabar, leer de vuelta) y, al terminar la operación, escribe un aviso en el registro si los cabezales que se oyeron muestran contadores de error o un bus-off, o si hay en el bus un cabezal que se sabe hecho para 500 kbit/s. `"bus_health"` en `urtc_config.json` fija los umbrales: `"tec_warn"`, `"rec_warn"` y `"bus_off_warn"` (enteros de 1 a 255; 96, 96 y 1 por defecto) y `"legacy_heads"` (nombres o números de serie de los cabezales hechos para 500 kbit/s). Un valor fuera de los límites mantiene el valor por defecto. Probado con un transporte simulado; nada ha corrido en un bus real.
 
 **Actividad de bus** («Comprobar (2s)», junto a Consultar): cuenta
 tramas de protocolo reales realmente vistas durante una ventana fija de
@@ -447,7 +447,7 @@ estadísticas de interfaz de Linux
 rx/tx/error/drop que expone toda interfaz, leídos como archivos planos,
 sin dependencia extra. Conectar por SocketCAN también lee
 `/sys/class/net/<iface>/carrier` - un archivo plano 0/1 que expone toda
-interfaz de Linux. Cuando un controlador CAN entra en bus-off, el driver
+interfaz de Linux. Cuando un controlador CAN entra en bus-off, el controlador
 del kernel llama a `netif_carrier_off()`, así que «sin portadora» aquí
 es evidencia real de un bus-off o un enlace igualmente muerto, registrado
 como advertencia con el comando exacto de recuperación (`sudo ip link
@@ -483,7 +483,7 @@ quien escribió el firmware si algo sale mal en el campo, en vez de
 copiar el registro
 a mano.
 
-### SWD/JTAG — formatos de archivo, verificación de slot, y selección de sonda
+### SWD/JTAG — formatos de archivo, verificación de ranura, y selección de sonda
 
 **Formatos de archivo**: los selectores de bootloader/aplicación de la
 sección SWD aceptan `.bin`, `.hex`, y `.elf`/`.axf`. ELF/AXF se analiza
@@ -501,28 +501,28 @@ alguna vez. El tamaño declarado de un archivo `.hex` es el recuento real
 de bytes ocupados, no el rango de direcciones desde su registro más bajo
 hasta el más alto - así que un archivo disperso (un pequeño bloque de
 firmware real más un bloque distante y separado de option bytes o datos
-de calibración, que algunos toolchains de STM32 agrupan en una sola
+de calibración, que algunas cadenas de herramientas de STM32 agrupan en una sola
 exportación) valida sobre su contenido real en vez de sobre el hueco
 entre ellos. Una imagen de firmware en bruto bajo una extensión que no
 sea `.bin` (`.img`, `.rom`, o sin extensión en absoluto - seleccionable
 mediante la opción «Todos los archivos» del selector de archivos) obtiene
-su dirección base de en qué slot la estés cargando, igual que lo haría
+su dirección base de en qué ranura la estés cargando, igual que lo haría
 un `.bin`.
 
-**Verificación de slot de bootloader/aplicación**: los selectores de
-archivo verifican que cada imagen está pensada para el slot en el que se
+**Verificación de ranura de bootloader/aplicación**: los selectores de
+archivo verifican que cada imagen está pensada para la ranura en el que se
 está poniendo, no solo que parece firmware válido de *algún* tipo. Una
 imagen de bootloader y una de aplicación tienen un puntero de pila
 igualmente plausible - mismo chip, misma RAM - así que esa comprobación
-por sí sola no puede distinguirlas si una termina en el slot de la otra.
-Lo que sí puede: el **manejador de reset** de una imagen enlazada es una
+por sí sola no puede distinguirlas si una termina en la ranura de la otra.
+Lo que sí puede: el **manejador de reinicio** de una imagen enlazada es una
 dirección absoluta y real fijada en tiempo de enlazado, y solo apunta
 dentro de la región para la que realmente se enlazó. Verificado contra
 el propio `BOOTLOADER.bin`/`APP.bin` compilado real de este proyecto:
-sus manejadores de reset son `0x08000785` y `0x0800C0CD`
+sus manejadores de reinicio son `0x08000785` y `0x0800C0CD`
 respectivamente, cada uno correctamente dentro del rango de direcciones
-de su propio slot y fuera del de la otra - así que poner cualquiera de
-las 2 en el slot equivocado se detecta y se bloquea, no se acepta en
+de su propio ranura y fuera del de la otra - así que poner cualquiera de
+las 2 en la ranura equivocado se detecta y se bloquea, no se acepta en
 silencio. Se aplica la misma lógica a `.hex`/`.elf`, comprobados contra
 su propia dirección de carga embebida en su lugar.
 
@@ -543,7 +543,7 @@ mismo cuidado que toma toda esta herramienta en torno al riesgo de SWD:
 **Selección de sonda** (misma pestaña): si hay más de un ST-Link/sonda
 conectado a la vez, todo comando exige elegir uno explícitamente del
 desplegable de Sonda - no hay "el que sea que el sistema operativo
-enumere primero". Con exactamente una sonda conectada, se auto-selecciona;
+enumere primero". Con exactamente una sonda conectada, se selecciona sola;
 con cero o varias, pulsa Actualizar y elige. Esto se aplica tanto a la
 grabación de chip completo como a la comprobación de option bytes, ya que
 ambos son lo bastante cercanos a destructivos como para que adivinar la
@@ -554,7 +554,7 @@ no solo se confía en el código de salida. El propio comando `flash` de
 pyOCD se salta reescribir páginas que ya coinciden (una optimización de
 velocidad, no un informe de verificación), así que esta herramienta
 añade un paso `commander compare` contra ambas imágenes tras escribir -
-una comprobación genuina byte a byte, igual que ya hace el flag `-v` de
+una comprobación genuina byte a byte, igual que ya hace la opción `-v` de
 STM32CubeProgrammer. Solo para `.bin`: `compare` comprueba el contenido
 de la flash contra los bytes en bruto del archivo, lo cual no
 coincidiría correctamente con la propia codificación de un archivo
@@ -584,7 +584,7 @@ protocolo.
 
 **El mismo detalle para el esclavo de expansión**: una actualización
 fallida del esclavo (Objetivo: «Esclavo de expansión») consulta `0x219`
-justo después de que `0x215` reporte `STATUS_VERIFY_FAIL`, relevando el
+justo después de que `0x215` indique `STATUS_VERIFY_FAIL`, retransmitiendo el
 propio `REG_VERIFY_FAIL_REASON` del bootloader esclavo - los mismos 5
 motivos de arriba, solo que alcanzados a través del puente I2C en vez de
 leídos directamente de una trama CAN. Requiere un bootloader esclavo que
@@ -597,7 +597,7 @@ consulta, y esta herramienta cae de vuelta al mensaje genérico de
 
 La sección 3 tiene una casilla, **"También borrar la F-RAM de
 persistencia antes de grabar"** - desactivada por defecto. Si está
-marcada, envía el comando de borrado con payload mágico (`0x192` - ver
+marcada, envía el comando de borrado con carga mágica (`0x192` - ver
 `docs/CANBUS.TXT`) a la F-RAM de persistencia FM24CL64B de la placa
 antes de que empiece la secuencia de actualización, borrando cualquier
 estado de parámetros de herramienta que tuviera guardado.
@@ -677,7 +677,7 @@ leer registros antiguos. Solo se conservan los 30 registros de sesión más reci
 
 ## 🔌 Interfaces
 
-Para pipelines de CI, bancos de pruebas, o scripting de línea de
+Para flujos de CI, bancos de pruebas, o scripting de línea de
 producción donde no hay pantalla:
 
 ```
@@ -709,7 +709,7 @@ python3 urtc_flasher.py --cli --transport mock --file firmware.bin --no-trigger
 ```
 
 Útil para probar la lógica propia de esta herramienta (comportamiento de
-reintentos, manejo de timeouts, códigos de salida) en un flujo de CI
+reintentos, gestión de los tiempos de espera, códigos de salida) en un flujo de CI
 o antes de tocar hardware real - no algo que hable con una placa real.
 `--mock-fail 0x03` (o cualquier otro valor `VERIFY_FAIL_REASON_*` de
 `docs/CANBUS.TXT`) hace que la actualización simulada falle la
@@ -720,13 +720,13 @@ misma manera.
 
 ## ⚙️ Configuración
 
-Esta herramienta **no lleva ninguna clave de firma**. El build de URTC firma
+Esta herramienta **no lleva ninguna clave de firma**. La compilación de URTC firma
 cada imagen de aplicación y publica la firma a su lado, en
 `<imagen>.manifest.json` (`hmac_sha256`, más `<imagen>.sha256`); el flasher
 envía esa firma publicada y rechaza una imagen cuyo sha256 no coincide con
 su manifiesto. Al descargar una imagen desde GitHub también se descargan
 ambos archivos, y `python tools/sync_firmware.py` actualiza la carpeta
-`firmware/` incluida a partir del build de URTC (`--check` la verifica). Por defecto toma el conjunto de los assets de la última release de URTC (`--release TAG` elige otra); en su lugar se puede pasar como argumento una carpeta local, por ejemplo un build local de URTC.
+`firmware/` incluida a partir de la compilación de URTC (`--check` la verifica). Por defecto toma el conjunto de los archivos adjuntos de la última release de URTC (`--release TAG` elige otra); en su lugar se puede pasar como argumento una carpeta local, por ejemplo una compilación local de URTC.
 Solo una imagen compilada por ti sin manifiesto, en una placa de banco,
 necesita clave: define `hmac_key_hex` / `slave_hmac_key_hex` en
 `urtc_config.json` (abajo); sin ella esa imagen se rechaza en lugar de
@@ -792,7 +792,7 @@ sudo ip link set can0 up
 ```
 Si tu adaptador se enumera con un nombre distinto de `can0`, revisa `ip
 link show` (o `dmesg` justo después de conectarlo) para ver el nombre
-real. Algunos adaptadores necesitan `slcand` en vez de un driver nativo
+real. Algunos adaptadores necesitan `slcand` en vez de un controlador nativo
 — si `ip link show` no muestra ninguna interfaz CAN en absoluto tras
 conectarlo, este es probablemente tu caso; consulta la documentación de
 tu adaptador para la invocación de `slcand`, que crea una interfaz
@@ -800,7 +800,7 @@ tu adaptador para la invocación de `slcand`, que crea una interfaz
 
 **Windows, o Linux por la ruta Serie/SLCAN:**
 Una CANable Pro v2 viene de fábrica con firmware **candleLight**, que
-habla con el host usando el protocolo `gs_usb` - el mismo que el driver
+habla con el host usando el protocolo `gs_usb` - el mismo que el controlador
 `gs_usb` de SocketCAN en Linux espera de forma nativa (ver arriba). Ese
 protocolo **no** se presenta como puerto serie, que es lo que necesita
 esta ruta. Para usar Serie/SLCAN en su lugar (obligatorio en Windows;
@@ -898,7 +898,7 @@ sí necesita `sudo`, ya que es un cambio de configuración de dispositivo
 de red.
 
 Usar `python -m pip`/`python3 -m pip` en vez de un `pip` a secas evita
-un problema común en ambas plataformas: el propio script wrapper de
+un problema común en ambas plataformas: el propio script envoltorio de
 `pip` no siempre está en el PATH incluso justo después de una
 instalación exitosa, mientras que `-m pip` encuentra el módulo instalado
 directamente.
@@ -953,7 +953,7 @@ bootloader necesita SWD/JTAG en su lugar (sección 6 abajo). Al arrancar
 `firmware/` se revisa contra la misma prueba de plausibilidad que
 aplica el propio bootloader a una imagen nueva (sus primeros 4 bytes
 tienen que parecer un puntero de pila inicial real para la RAM de este
-chip, y su tamaño tiene que caber en el slot principal). Cada archivo
+chip, y su tamaño tiene que caber en la ranura principal). Cada archivo
 aparece en la lista con un ✓ o ✗ claro y el motivo:
 
 | Archivo | Tamaño | Estado |
@@ -964,9 +964,9 @@ aparece en la lista con un ✓ o ✗ claro y el motivo:
 
 - **Exactamente un archivo pasa la revisión** → se selecciona por ti en
   el momento en que arranca la herramienta. Un archivo inválido que esté
-  solo en la carpeta *no* se auto-selecciona solo porque nada más
+  solo en la carpeta *no* se selecciona sola solo porque nada más
   compite con él.
-- **Más de un archivo válido** → no se auto-selecciona nada; elige el
+- **Más de un archivo válido** → no se selecciona sola nada; elige el
   que quieras de la lista.
 - **Seleccionas un archivo que parece inválido de todas formas** → la
   herramienta te pide confirmar primero. Esta revisión existe para
@@ -1001,7 +1001,7 @@ aparece en la lista con un ✓ o ✗ claro y el motivo:
 Cada archivo de una release oficial tiene una firma de release (`<archivo>.sig`, Ed25519): el flasher la verifica cuando existe y rechaza una incorrecta. Un conjunto sin firmas, como una pre-release de banco, solo lo acepta `tools/sync_firmware.py` con `--allow-unsigned`.
 
 **`<nombredearchivo>.manifest.json` y `<nombredearchivo>.sha256`, junto a
-cada archivo de firmware** - los publica el build de URTC para cada imagen
+cada archivo de firmware** - los publica la compilación de URTC para cada imagen
 (y se descargan junto con ella desde GitHub). El manifiesto lleva la
 versión, el `sha256` y, en las imágenes de aplicación, el valor `hmac_sha256` que espera el bootloader (un HMAC-SHA256 de clave compartida que solo comprueban los bootloaders de la generación anterior; el registro Ed25519 que verifican los actuales es el archivo `<imagen>.imgsig` junto a la imagen; `signing_key_kind: dev` indica la clave pública de desarrollo):
 
@@ -1013,7 +1013,7 @@ Ambos resúmenes se comprueban justo antes de grabar y una discrepancia
 **rechaza la grabación** antes de enviar nada por el bus (archivo
 equivocado, descarga corrupta o manifiesto desactualizado). La firma
 publicada es la que se envía al bootloader, y la versión del manifiesto es
-la que se le comunica. Un archivo sin manifiesto (un build propio) solo se
+la que se le comunica. Un archivo sin manifiesto (una compilación propia) solo se
 graba si hay una clave de firma en `urtc_config.json` - ver "Cambiar la
 clave HMAC" más abajo.
 

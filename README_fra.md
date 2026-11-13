@@ -92,7 +92,7 @@ protocole en dessous :
 
 ## 🧩 Rôle dans URTC
 
-URTC-FLASHER est le programme qui met du firmware sur une carte URTC. Il parle le protocole du bootloader d'URTC (`docs/CANBUS.TXT` de ce dépôt) via un adaptateur USB-CAN, comme port série SLCAN ou comme SocketCAN sous Linux : le contrôle du HardwareID, l'enregistrement Ed25519 de l'image, le flux d'image dorée avec slot de secours et une requête de version pour voir ce qui est installé avant de décider quoi flasher. Pour une carte sans bootloader fonctionnel, ou pour programmer la puce entière, il prépare les commandes SWD/JTAG de pyOCD ou STM32CubeProgrammer. C'est le compagnon de mise à jour d'URTC-TESTER, partage son code CAN avec lui via URTC-COMMON, et URTC-UPDATER peut lui remettre une image de firmware dont la signature de release a déjà été vérifiée.
+URTC-FLASHER est le programme qui met du firmware sur une carte URTC. Il parle le protocole du bootloader d'URTC (`docs/CANBUS.TXT` de ce dépôt) via un adaptateur USB-CAN, comme port série SLCAN ou comme SocketCAN sous Linux : le contrôle du HardwareID, l'enregistrement Ed25519 de l'image, le flux d'image dorée avec emplacement de secours et une requête de version pour voir ce qui est installé avant de décider quoi flasher. Pour une carte sans bootloader fonctionnel, ou pour programmer la puce entière, il prépare les commandes SWD/JTAG de pyOCD ou STM32CubeProgrammer. C'est le compagnon de mise à jour d'URTC-TESTER, partage son code CAN avec lui via URTC-COMMON, et URTC-UPDATER peut lui remettre une image de firmware dont la signature de release a déjà été vérifiée.
 
 ## 🏛️ Architecture
 
@@ -666,7 +666,7 @@ Un plan ou une mise à jour peut être exécuté contre un bus simulé qui se co
 | Flasher une image sur la mauvaise carte | Le contrôle du HardwareID du protocole du bootloader, fait avant d'écrire quoi que ce soit |
 | Une image corrompue, non signée ou manipulée | Les contrôles d'intégrité de l'image ; un manifeste dont le `sha256` ne correspond pas au fichier est refusé avant tout trafic sur le bus, une image non signée est refusée et la signature publiée est envoyée sans aucune clé ; la signature de release (Ed25519) est vérifiée avant d'utiliser l'image d'une release |
 | Installer une image plus ancienne par erreur | Le contrôle anti-retour arrière du bootloader ; un retour volontaire exige l'autorisation de rétrogradation |
-| Une mise à jour ratée qui laisse la carte inutilisable | Le modèle d'image dorée : le slot de secours garde le firmware précédent, une trame de confirmation perdue se rattrape en redemandant la version au lieu de signaler un faux échec, et le slot principal peut être relu avant |
+| Une mise à jour ratée qui laisse la carte inutilisable | Le modèle d'image dorée : l'emplacement de secours garde le firmware précédent, une trame de confirmation perdue se rattrape en redemandant la version au lieu de signaler un faux échec, et l'emplacement principal peut être relu avant |
 | Une mise à jour manipulée de ce programme | « Rechercher une mise à jour » n'accepte qu'un paquet avec un SHA-256 et une signature Ed25519 valides (la clé des releases, figée dans le programme), n'installe qu'après confirmation et jamais pendant un transfert, et garde la version précédente |
 
 Le bootloader de la carte principale vérifie un enregistrement Ed25519 de l'image par rapport à une table de clés publiques et ne détient aucun secret ; la table du build officiel est vide tant que la clé de signature des images n'est pas créée, et un build de banc fait confiance à une clé publique de développement, si bien que n'importe qui peut fabriquer une image qu'un tel bootloader accepte. Rien de tout cela n'a tourné sur une vraie carte.
@@ -927,7 +927,7 @@ lieu (étape 1 ci-dessus) nécessite quand même `sudo`, puisque c'est une
 modification de configuration de périphérique réseau.
 
 Utiliser `python -m pip`/`python3 -m pip` plutôt qu'un simple `pip`
-évite un problème courant sur les deux plateformes : le script wrapper
+évite un problème courant sur les deux plateformes : le script enveloppes
 de `pip` lui-même n'est pas toujours dans le PATH même juste après une
 installation réussie, alors que `-m pip` trouve le module installé
 directement.
