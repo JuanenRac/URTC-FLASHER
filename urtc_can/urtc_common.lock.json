@@ -162,6 +162,10 @@
       "from": "src/urtc_common/record_signing.py",
       "sha256": "3319983cc18428409251afe87ce4d3dd6967b1d92623f41fb2ac98c611c59164"
     },
+    "safety_policy.py": {
+      "from": "src/urtc_common/safety_policy.py",
+      "sha256": "1536ccafb5aeb0e0da40bd6b98f7138f0e6769e17fa78c81603a89f47851dd13"
+    },
     "self_update.py": {
       "from": "src/urtc_common/self_update.py",
       "sha256": "2bd5c4cba06fe9dfede27892dab2b7ee34366133dcbfe3fab3a8152171c8ec01"
