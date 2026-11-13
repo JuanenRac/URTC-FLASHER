@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The Spanish, German, French and European Portuguese README were read for register and wording:** the programs are called the same way in every language (tester, updater, Web Studio), calques, straight quotes and words of another language were corrected, and the Related Projects section follows the shared texts.
+
 - **The Chinese texts say "flashing" with one word:** the texts of the program and the README use 刷写 for flashing a firmware image, over the bus or with a probe, instead of mixing it with 烧录 and 烧写; the texts come from the shared catalog.
 
 - **A lost digest chunk of a slave update is named:** when the main board reports that a digest chunk was lost on the bus (reason 7 of the verify-fail query 0x219), the flasher says so in the language of the program, in the eight languages, instead of an unknown reason or a signature mismatch. The chunks are still sent in order, right after the start frame; the position of each is implicit and the main board checks the count at the end frame. Tested against a scripted slave and main board; not tried on a bus with real boards.

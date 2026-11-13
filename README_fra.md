@@ -27,11 +27,11 @@
 
 ---
 
-**Vérification d'honnêteté - ce qui fonctionne réellement aujourd'hui :** `tests/` contient 64 fichiers pytest (905 tests : tous réussis ; 101 d'entre eux sont ignorés sans PySide6) - le protocole CAN-OTA face à un vrai transport `MockCAN` (`flasher_transports.py`) qui rejoue une séquence complète de bootloader simulé (démarrage/effacement/réception, données de page + PAGE_ACK, trames du registre de signature, fin de mise à jour avec un vrai succès ou un `VERIFY_FAIL_REASON` précis), les règles de signature (signature publiée envoyée sans aucune clé, image non signée refusée, sha256 du manifeste non conforme refusé avant tout trafic sur le bus), les contrôles d'intégrité d'image et le dossier `firmware/` fourni par rapport à ses manifestes. GitHub Actions (`.github/workflows/ci.yml`) exécute cette suite à chaque push, et `tools/build_test.py` l'exécute dans `build-test.sh`/`.bat`. Elle exécute aussi `ruff check` et `python -m mypy` (un contrôle des types du programme et des copies du code partagé). Les trois scripts `verify_qt_*.py` à la racine sont de vrais contrôles de bout en bout hors pytest (ils nécessitent une vraie boucle d'événements Qt ; lancement avec `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`) ; `verify_qt_swd_full_chip_flash.py` construit seulement les commandes `PyOCDCLI`/`CubeProgrammerCLI` avec `dry_run=True`. Rien de tout cela n'a été exécuté sur une vraie carte dans cet environnement. Voir `CHANGELOG.md` pour ce qui a réellement été publié. Le bootloader simulé (`MockCAN`) n'est qu'un modèle écrit à partir de la description du protocole : il reproduit les ACK de page, la dernière page partielle et les trames de relecture, mais ce n'est pas le vrai bootloader, donc une exécution de tests au vert ne remplace pas un essai sur une vraie carte (l'image officielle de 73476 octets ne pouvait pas être installée et la dernière trame d'une sauvegarde était perdue alors que les tests passaient, justement parce que la simulation était plus indulgente que le vrai bootloader).
+**Point d'honnêteté : ce qui fonctionne réellement aujourd'hui :** `tests/` contient 64 fichiers pytest (905 tests : tous réussis ; 101 d'entre eux sont ignorés sans PySide6) - le protocole CAN-OTA face à un vrai transport `MockCAN` (`flasher_transports.py`) qui rejoue une séquence complète de bootloader simulé (démarrage/effacement/réception, données de page + PAGE_ACK, trames du registre de signature, fin de mise à jour avec un vrai succès ou un `VERIFY_FAIL_REASON` précis), les règles de signature (signature publiée envoyée sans aucune clé, image non signée refusée, sha256 du manifeste non conforme refusé avant tout trafic sur le bus), les contrôles d'intégrité d'image et le dossier `firmware/` fourni par rapport à ses manifestes. GitHub Actions (`.github/workflows/ci.yml`) exécute cette suite à chaque push, et `tools/build_test.py` l'exécute dans `build-test.sh`/`.bat`. Elle exécute aussi `ruff check` et `python -m mypy` (un contrôle des types du programme et des copies du code partagé). Les trois scripts `verify_qt_*.py` à la racine sont de vrais contrôles de bout en bout hors pytest (ils nécessitent une vraie boucle d'événements Qt ; lancement avec `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`) ; `verify_qt_swd_full_chip_flash.py` construit seulement les commandes `PyOCDCLI`/`CubeProgrammerCLI` avec `dry_run=True`. Rien de tout cela n'a été exécuté sur une vraie carte dans cet environnement. Voir `CHANGELOG.md` pour ce qui a réellement été publié. Le bootloader simulé (`MockCAN`) n'est qu'un modèle écrit à partir de la description du protocole : il reproduit les ACK de page, la dernière page partielle et les trames de relecture, mais ce n'est pas le vrai bootloader, donc une exécution de tests au vert ne remplace pas un essai sur une vraie carte (l'image officielle de 73476 octets ne pouvait pas être installée et la dernière trame d'une sauvegarde était perdue alors que les tests passaient, justement parce que la simulation était plus indulgente que le vrai bootloader).
 
 ---
 
-> **État de la sûreté et de la cybersécurité :** cet écosystème n'est pas un système de sécurité certifié et aucune carte URTC assemblée n'existe encore. Le bootloader de la carte principale vérifie un enregistrement Ed25519 de l'image (`<image>.imgsig`) par rapport à une table de clés publiques et ne détient aucun secret, et celui de l'esclave d'extension contrôle un simple SHA-256 et n'installe qu'une image que la carte principale confirme ; la table du build officiel est vide tant que la clé de signature des images n'est pas créée, et un build de banc fait confiance à une clé publique de développement, si bien que n'importe qui peut produire une image qu'un tel bootloader accepte ; rien n'a été transmis à une carte réelle. Lisez la [base de sécurité](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md) et le [modèle de menaces](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md) avant de vous fier à une affirmation d'ici pour la sécurité d'une personne.
+> **État de la sûreté et de la cybersécurité :** cet écosystème n'est pas un système de sécurité certifié et aucune carte URTC assemblée n'existe encore. Le bootloader de la carte principale vérifie un enregistrement Ed25519 de l'image (`<image>.imgsig`) par rapport à une table de clés publiques et ne détient aucun secret, et celui de l'esclave d'extension contrôle un simple SHA-256 et n'installe qu'une image que la carte principale confirme ; la table du build officiel est vide tant que la clé de signature des images n'est pas créée, et un build de banc fait confiance à une clé publique de développement, si bien que n'importe qui peut produire une image qu'un tel bootloader accepte ; rien n'a été transmis à une carte réelle. Lisez la [base de sécurité](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md) et le [modèle de menaces](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md) avant de vous fier à une affirmation de ce dépôt quant à la sécurité d'une personne.
 
 ## 📋 En un coup d'œil
 
@@ -573,7 +573,7 @@ pas seulement faisant confiance au code de sortie. La propre commande
 (une optimisation de vitesse, pas un rapport de vérification), donc cet
 outil ajoute une étape `commander compare` contre les deux images
 après l'écriture - une vraie vérification octet par octet, correspondant
-à ce que fait déjà le flag `-v` de STM32CubeProgrammer. Seulement pour
+à ce que fait déjà l'option `-v` de STM32CubeProgrammer. Seulement pour
 `.bin` : `compare` vérifie le contenu de la flash contre les octets
 bruts du fichier, ce qui ne correspondrait pas correctement à
 l'encodage propre d'un fichier `.hex`/`.elf` même après un flash
@@ -681,7 +681,7 @@ retard : le bootloader envoie chaque ACK de page une seule fois et ne le
 répète jamais, donc un ACK réellement perdu ne peut pas être récupéré et
 la mise à jour est abandonnée avec une erreur (la carte reste dans son
 bootloader et la mise à jour peut simplement être relancée). L'outil ne
-renvoie délibérément pas les données de page sur un timeout - si les
+renvoie délibérément pas les données de page sur un délai d'attente - si les
 données étaient bien arrivées, renvoyer ferait lire au bootloader ces
 octets comme le début de la *prochaine* page, désynchronisant le
 transfert. Pendant l'attente, la pulsation propre du bootloader (envoyée
@@ -732,7 +732,7 @@ python3 urtc_flasher.py --cli --transport mock --file firmware.bin --no-trigger
 
 Utile pour tester la logique propre de cet outil (comportement de
 nouvelle tentative, gestion des timeouts, codes de sortie) dans un
-pipeline CI ou avant de toucher du matériel réel - pas quelque chose qui
+chaîne CI ou avant de toucher du matériel réel - pas quelque chose qui
 parle à une vraie carte. `--mock-fail 0x03` (ou toute autre valeur
 `VERIFY_FAIL_REASON_*` de `docs/CANBUS.TXT`) fait échouer la
 vérification de la mise à jour simulée au lieu de réussir, pour tester
@@ -749,7 +749,7 @@ envoie cette signature publiée et refuse une image dont le sha256 ne
 correspond pas à son manifeste. Télécharger une image depuis GitHub
 télécharge aussi ces deux fichiers, et `python tools/sync_firmware.py` met à
 jour le dossier `firmware/` fourni à partir du build URTC (`--check` le
-vérifie). Par défaut, il prend l'ensemble dans les assets de la dernière release d'URTC (`--release TAG` en choisit une autre) ; on peut aussi passer en argument un dossier local, par exemple un build URTC local. Seule une image compilée soi-même sans manifeste, sur une carte de
+vérifie). Par défaut, il prend l'ensemble dans les fichiers joints de la dernière release d'URTC (`--release TAG` en choisit une autre) ; on peut aussi passer en argument un dossier local, par exemple un build URTC local. Seule une image compilée soi-même sans manifeste, sur une carte de
 banc, a besoin d'une clé : définir `hmac_key_hex` / `slave_hmac_key_hex`
 dans `urtc_config.json` (ci-dessous) - sans elle, une telle image est
 refusée au lieu d'être signée avec une clé que le bootloader ne peut pas
@@ -1012,7 +1012,7 @@ liste avec un ✓ ou ✗ clair et la raison :
   → **Télécharger depuis GitHub...** liste les fichiers joints à la
   dernière release GitHub du dépôt URTC
   (`github.com/JuanenRac/URTC/releases` ; les binaires du firmware sont
-  publiés comme assets de la release, ils ne sont pas conservés dans git)
+  publiés comme fichiers joints de la release, ils ne sont pas conservés dans git)
   et vous permet d'en choisir un à télécharger directement dans votre
   propre dossier `firmware/` local - il apparaît ensuite dans la liste
   ci-dessus comme n'importe quel autre fichier, sans redémarrage
@@ -1147,11 +1147,11 @@ URTC est fait de dépôts indépendants, chacun avec sa version, ses tests et so
   * **URTC-FLASHER** (ce dépôt) - outil de bureau qui met à jour le firmware de la carte par CAN ou par SWD/JTAG.
   * [URTC-GATEWAY](https://github.com/JuanenRac/URTC-GATEWAY) - passerelle devant le bus CAN : ne laisse passer que les identifiants d'une liste, limite leur cadence et demande une clé de session.
   * [URTC-SMART-RACK](https://github.com/JuanenRac/URTC-SMART-RACK) - logique C indépendante du matériel et protocole de commandes pour un support d'outils avec préchauffage et suivi du cycle de vie.
-  * [URTC-TESTER](https://github.com/JuanenRac/URTC-TESTER) - testeur de bureau du bus CAN en direct qui affiche les commandes et la télémétrie du profil d'outil signalé par une carte.
-  * [URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL) - protocole de trames de capteur en C et compagnon Python thermique/RVB pour une tête d'outil d'inspection.
+  * [URTC-TESTER](https://github.com/JuanenRac/URTC-TESTER) - tester de bureau du bus CAN en direct qui affiche les commandes et la télémétrie du profil d'outil signalé par une carte.
+  * [URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL) - protocole de trames de capteur en C et compagnon Python thermique/RGB pour une tête d'outil d'inspection.
   * [URTC-WEB-STUDIO](https://github.com/JuanenRac/URTC-WEB-STUDIO) - application de navigateur qui flashe et teste la carte via Web Serial et SLCAN, sans rien installer.
 * **Ecosystem Operations:**
-  * [URTC-DEVTOOLS](https://github.com/JuanenRac/URTC-DEVTOOLS) - les outils de dépôt communs de la famille en un ensemble versionné, avec un fichier de verrou qui distingue une copie modifiée d'une copie en retard.
+  * [URTC-DEVTOOLS](https://github.com/JuanenRac/URTC-DEVTOOLS) - les outils de dépôt communs de la famille en un ensemble versionné, avec un fichier de verrouillage qui distingue une copie modifiée d'une copie en retard.
   * [URTC-DOCS](https://github.com/JuanenRac/URTC-DOCS) - architecture, interfaces, base de sécurité et catalogue généré de l'écosystème, plus les outils qui comparent tous les dépôts.
   * [URTC-UPDATER](https://github.com/JuanenRac/URTC-UPDATER) - outil de bureau qui détecte, installe et met à jour les dépôts de la famille URTC, une action explicite à la fois.
 
@@ -1164,9 +1164,9 @@ URTC est fait de dépôts indépendants, chacun avec sa version, ses tests et so
 ## 📚 Documentation
 
 - **[docs/WINDOW_GUIDE.md](docs/WINDOW_GUIDE.md)** — un guide de la fenêtre avec des images : la fenêtre principale, l'aide et la fenêtre de mise à jour.
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** — pile technologique et lignes directrices de codage pour une pull request.
-- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — les normes de comportement attendues dans cette communauté.
-- **[SECURITY.md](SECURITY.md)** — comment signaler une vulnérabilité, et les véritables axes de sécurité de ce projet.
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** — technologies utilisées et consignes de codage pour une pull request.
+- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — les règles de conduite attendues dans cette communauté.
+- **[SECURITY.md](SECURITY.md)** — comment signaler une vulnérabilité, et les véritables priorités de sécurité de ce projet.
 - **[SUPPORT.md](SUPPORT.md)** — où poser des questions et signaler des bugs.
 - **[LICENSE.md](LICENSE.md)** — la licence propre de ce projet.
 

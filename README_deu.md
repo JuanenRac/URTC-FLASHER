@@ -27,11 +27,11 @@
 
 ---
 
-**Ehrlichkeitscheck - was heute wirklich läuft:** `tests/` enthält 64 pytest-Dateien (905 Tests: alle bestehen; 101 davon werden ohne PySide6 übersprungen) - das CAN-OTA-Protokoll gegen einen echten `MockCAN`-Transport (`flasher_transports.py`), der eine vollständige simulierte Bootloader-Sequenz abspielt (Start/Löschen/Empfang, Seitendaten + PAGE_ACK, Frames des Signatureintrags, Update-Ende mit echtem Erfolg oder einem bestimmten `VERIFY_FAIL_REASON`), die Signaturregeln (veröffentlichte Signatur ohne Schlüssel gesendet, unsigniertes Image abgelehnt, nicht passender Manifest-sha256 vor jedem Busverkehr abgelehnt), die Image-Integritätsprüfungen und den mitgelieferten Ordner `firmware/` gegen seine Manifeste. GitHub Actions (`.github/workflows/ci.yml`) führt diese Suite bei jedem Push aus, und `tools/build_test.py` führt sie in `build-test.sh`/`.bat` aus. Außerdem führt sie `ruff check` und `python -m mypy` aus (eine Typprüfung des Programms und der Kopien des gemeinsamen Codes). Die drei Skripte `verify_qt_*.py` im Wurzelverzeichnis sind echte End-to-End-Prüfungen außerhalb von pytest (sie brauchen eine echte Qt-Ereignisschleife; Aufruf mit `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`); `verify_qt_swd_full_chip_flash.py` baut die Befehle für `PyOCDCLI`/`CubeProgrammerCLI` nur mit `dry_run=True`. Nichts davon wurde in dieser Umgebung gegen eine echte Platine ausgeführt. Siehe `CHANGELOG.md` für den genauen Stand. Der simulierte Bootloader (`MockCAN`) ist nur ein aus der Protokollbeschreibung gebautes Modell: Er bildet die Seiten-ACKs, die teilweise letzte Seite und die Readback-Frames nach, ist aber nicht der echte Bootloader, daher ersetzt ein grüner Testlauf keinen Versuch an einer echten Platine (das offizielle Image mit 73476 Byte ließ sich nicht installieren und der letzte Frame einer Sicherung ging verloren, während die Tests bestanden, gerade weil die Simulation nachsichtiger war als der echte Bootloader).
+**Ehrlicher Zwischenstand: Was heute wirklich läuft:** `tests/` enthält 64 pytest-Dateien (905 Tests: alle bestehen; 101 davon werden ohne PySide6 übersprungen) - das CAN-OTA-Protokoll gegen einen echten `MockCAN`-Transport (`flasher_transports.py`), der eine vollständige simulierte Bootloader-Sequenz abspielt (Start/Löschen/Empfang, Seitendaten + PAGE_ACK, Frames des Signatureintrags, Update-Ende mit echtem Erfolg oder einem bestimmten `VERIFY_FAIL_REASON`), die Signaturregeln (veröffentlichte Signatur ohne Schlüssel gesendet, unsigniertes Image abgelehnt, nicht passender Manifest-sha256 vor jedem Busverkehr abgelehnt), die Image-Integritätsprüfungen und den mitgelieferten Ordner `firmware/` gegen seine Manifeste. GitHub Actions (`.github/workflows/ci.yml`) führt diese Suite bei jedem Push aus, und `tools/build_test.py` führt sie in `build-test.sh`/`.bat` aus. Außerdem führt sie `ruff check` und `python -m mypy` aus (eine Typprüfung des Programms und der Kopien des gemeinsamen Codes). Die drei Skripte `verify_qt_*.py` im Wurzelverzeichnis sind echte End-to-End-Prüfungen außerhalb von pytest (sie brauchen eine echte Qt-Ereignisschleife; Aufruf mit `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`); `verify_qt_swd_full_chip_flash.py` baut die Befehle für `PyOCDCLI`/`CubeProgrammerCLI` nur mit `dry_run=True`. Nichts davon wurde in dieser Umgebung gegen eine echte Platine ausgeführt. Siehe `CHANGELOG.md` für den genauen Stand. Der simulierte Bootloader (`MockCAN`) ist nur ein aus der Protokollbeschreibung gebautes Modell: Er bildet die Seiten-ACKs, die teilweise letzte Seite und die Readback-Frames nach, ist aber nicht der echte Bootloader, daher ersetzt ein grüner Testlauf keinen Versuch an einer echten Platine (das offizielle Image mit 73476 Byte ließ sich nicht installieren und der letzte Frame einer Sicherung ging verloren, während die Tests bestanden, gerade weil die Simulation nachsichtiger war als der echte Bootloader).
 
 ---
 
-> **Stand von Sicherheit (Safety) und Security:** Dieses Ökosystem ist kein zertifiziertes Sicherheitssystem, und es existiert noch keine bestückte URTC-Platine. Der Bootloader der Hauptplatine prüft einen Ed25519-Eintrag des Images (`<image>.imgsig`) gegen eine Tabelle öffentlicher Schlüssel und hält kein Geheimnis, und der Bootloader des Erweiterungs-Slaves prüft ein einfaches SHA-256 und installiert nur ein Image, das die Hauptplatine bestätigt; die Tabelle des offiziellen Builds ist leer, bis der Schlüssel zum Signieren der Images erzeugt ist, und ein Bench-Build vertraut einem öffentlichen Entwicklungsschlüssel, sodass jeder ein Image erzeugen kann, das ein solcher Bootloader akzeptiert; an eine echte Platine wurde noch nichts gesendet. Lesen Sie die [Sicherheitsbasis](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md) und das [Bedrohungsmodell](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md), bevor Sie sich für die Sicherheit einer Person auf eine Aussage hier verlassen.
+> **Stand von Sicherheit (Safety) und Security:** Dieses Ökosystem ist kein zertifiziertes Sicherheitssystem, und es existiert noch keine bestückte URTC-Platine. Der Bootloader der Hauptplatine prüft einen Ed25519-Eintrag des Images (`<image>.imgsig`) gegen eine Tabelle öffentlicher Schlüssel und hält kein Geheimnis, und der Bootloader des Erweiterungs-Slaves prüft ein einfaches SHA-256 und installiert nur ein Image, das die Hauptplatine bestätigt; die Tabelle des offiziellen Builds ist leer, bis der Schlüssel zum Signieren der Images erzeugt ist, und ein Bench-Build vertraut einem öffentlichen Entwicklungsschlüssel, sodass jeder ein Image erzeugen kann, das ein solcher Bootloader akzeptiert; an eine echte Platine wurde noch nichts gesendet. Lesen Sie die [Sicherheitsbasis](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md) und das [Bedrohungsmodell](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md), bevor Sie sich bei der Sicherheit einer Person auf eine Aussage in diesem Repository verlassen.
 
 ## 📋 Auf einen Blick
 
@@ -44,7 +44,7 @@
 | Ziel | Der PC der Person, die es benutzt |
 | Auf echter Hardware | Nur simuliert: gegen Emulatoren, Attrappen oder Simulatoren getestet; für diese Version ist kein Lauf auf echter Hardware vermerkt |
 
-**Springe zu:** [Überblick](#-überblick) · [Architektur](#-architektur) · [Funktionen](#-funktionen) · [Sicherheit](#-sicherheit-und-schutz) · [Schnittstellen](#-schnittstellen) · [Konfiguration](#-konfiguration) · [Schnellstart](#-schnellstart) · [Tests](#-tests) · [Struktur](#-struktur-des-repositorys) · [Verwandte](#-verwandte-projekte)
+**Weiter zu:** [Überblick](#-überblick) · [Architektur](#-architektur) · [Funktionen](#-funktionen) · [Sicherheit](#-sicherheit-und-schutz) · [Schnittstellen](#-schnittstellen) · [Konfiguration](#-konfiguration) · [Schnellstart](#-schnellstart) · [Tests](#-tests) · [Struktur](#-struktur-des-repositorys) · [Verwandte](#-verwandte-projekte)
 
 <!-- urtc-section:status_flasher -->
 ## 🚦 Projektstatus
@@ -93,7 +93,7 @@ Protokoll:
 
 ## 🧩 Rolle in URTC
 
-URTC-FLASHER ist das Programm, das Firmware auf eine URTC-Platine bringt. Es spricht das Bootloader-Protokoll von URTC (`docs/CANBUS.TXT` jenes Repositorys) über einen USB-CAN-Adapter, als serielle SLCAN-Schnittstelle oder als SocketCAN unter Linux: die HardwareID-Prüfung, den Ed25519-Eintrag des Images, den Golden-Image-Ablauf mit Sicherungsslot und eine Versionsabfrage, damit man sieht, was installiert ist, bevor man entscheidet, was geflasht wird. Für eine Platine ohne funktionierenden Bootloader oder um den ganzen Chip zu programmieren, bereitet es die SWD/JTAG-Befehle für pyOCD oder STM32CubeProgrammer vor. Es ist der Update-Begleiter von URTC-TESTER, teilt seinen CAN-Code über URTC-COMMON mit ihm, und URTC-UPDATER kann ihm ein Firmware-Image übergeben, dessen Release-Signatur schon geprüft wurde.
+URTC-FLASHER ist das Programm, das Firmware auf eine URTC-Platine bringt. Es spricht das Bootloader-Protokoll von URTC (`docs/CANBUS.TXT` jenes Repositories) über einen USB-CAN-Adapter, als serielle SLCAN-Schnittstelle oder als SocketCAN unter Linux: die HardwareID-Prüfung, den Ed25519-Eintrag des Images, den Golden-Image-Ablauf mit Sicherungsslot und eine Versionsabfrage, damit man sieht, was installiert ist, bevor man entscheidet, was geflasht wird. Für eine Platine ohne funktionierenden Bootloader oder um den ganzen Chip zu programmieren, bereitet es die SWD/JTAG-Befehle für pyOCD oder STM32CubeProgrammer vor. Es ist der Update-Begleiter von URTC-TESTER, teilt seinen CAN-Code über URTC-COMMON mit ihm, und URTC-UPDATER kann ihm ein Firmware-Image übergeben, dessen Release-Signatur schon geprüft wurde.
 
 ## 🏛️ Architektur
 
@@ -756,7 +756,7 @@ sendet diese veröffentlichte Signatur und lehnt ein Image ab, dessen sha256
 nicht zu seinem Manifest passt. Beim Herunterladen eines Images von GitHub
 werden beide Dateien mitgeladen, und `python tools/sync_firmware.py`
 aktualisiert den mitgelieferten Ordner `firmware/` aus dem URTC-Build
-(`--check` prüft ihn). Standardmäßig nimmt es den Satz aus den Assets des neuesten URTC-Releases (`--release TAG` wählt ein anderes); stattdessen kann ein lokaler Ordner, etwa ein lokaler URTC-Build, als Argument übergeben werden. Nur ein selbst gebautes Image ohne Manifest auf einer
+(`--check` prüft ihn). Standardmäßig nimmt es den Satz aus den Anhänge des neuesten URTC-Releases (`--release TAG` wählt ein anderes); stattdessen kann ein lokaler Ordner, etwa ein lokaler URTC-Build, als Argument übergeben werden. Nur ein selbst gebautes Image ohne Manifest auf einer
 Testplatine braucht einen Schlüssel: `hmac_key_hex` / `slave_hmac_key_hex`
 in `urtc_config.json` (unten) setzen - ohne ihn wird ein solches Image
 abgelehnt, statt mit einem Schlüssel signiert zu werden, den der Bootloader
@@ -1023,7 +1023,7 @@ Grund:
   **Von GitHub herunterladen...** listet die Dateien auf, die am neuesten
   GitHub-Release des URTC-Repositorys hängen
   (`github.com/JuanenRac/URTC/releases`; die Firmware-Binärdateien werden
-  als Release-Assets veröffentlicht und nicht in git gehalten), und lässt
+  als Release-Anhänge veröffentlicht und nicht in git gehalten), und lässt
   Sie eine Datei zum direkten Herunterladen in Ihren eigenen lokalen
   `firmware/`-Ordner auswählen - sie erscheint dann in der obigen Liste
   wie jede andere Datei, kein Neustart nötig. Geben Sie ein Release-Tag
@@ -1158,7 +1158,7 @@ URTC besteht aus unabhängigen Repositories mit jeweils eigener Version, eigenen
   * [URTC-GATEWAY](https://github.com/JuanenRac/URTC-GATEWAY) - Gateway vor dem CAN-Bus: lässt nur gelistete Kennungen durch, begrenzt ihre Rate und verlangt einen Sitzungsschlüssel.
   * [URTC-SMART-RACK](https://github.com/JuanenRac/URTC-SMART-RACK) - hardwareunabhängige C-Logik und Befehlsprotokoll für eine Werkzeugablage mit Vorheizen und Lebenszyklusverfolgung.
   * [URTC-TESTER](https://github.com/JuanenRac/URTC-TESTER) - Desktop-Live-Tester für den CAN-Bus, der die Bedienelemente und die Telemetrie des von einer Platine gemeldeten Werkzeugprofils zeigt.
-  * [URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL) - Sensorrahmen-Protokoll in C und ein Python-Thermo-/RGB-Begleiter für einen Inspektions-Werkzeugkopf.
+  * [URTC-VISION-TOOL](https://github.com/JuanenRac/URTC-VISION-TOOL) - Sensor-Frame-Protokoll in C und ein Python-Thermo-/RGB-Begleiter für einen Inspektions-Werkzeugkopf.
   * [URTC-WEB-STUDIO](https://github.com/JuanenRac/URTC-WEB-STUDIO) - Browser-App, die die Platine über Web Serial und SLCAN flasht und testet, ohne Installation.
 * **Ecosystem Operations:**
   * [URTC-DEVTOOLS](https://github.com/JuanenRac/URTC-DEVTOOLS) - die gemeinsamen Repository-Werkzeuge der Familie als versionierter Satz, mit einer Sperrdatei, die eine bearbeitete von einer veralteten Kopie unterscheidet.
@@ -1174,16 +1174,16 @@ URTC besteht aus unabhängigen Repositories mit jeweils eigener Version, eigenen
 ## 📚 Dokumentation
 
 - **[docs/WINDOW_GUIDE.md](docs/WINDOW_GUIDE.md)** — ein Rundgang durch das Fenster mit Bildern: das Hauptfenster, die Hilfe und das Update-Fenster.
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** — Technologie-Stack und Coding-Richtlinien für einen Pull Request.
-- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — die in dieser Community erwarteten Verhaltensstandards.
-- **[SECURITY.md](SECURITY.md)** — wie man eine Schwachstelle meldet, und die echten Sicherheitsschwerpunkte dieses Projekts.
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** — Technologie-Stack und Programmierrichtlinien für einen Pull Request.
+- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — die in dieser Community erwarteten Verhaltensregeln.
+- **[SECURITY.md](SECURITY.md)** — wie man eine Schwachstelle meldet, und die tatsächlichen Sicherheitsschwerpunkte dieses Projekts.
 - **[SUPPORT.md](SUPPORT.md)** — wo man Fragen stellt und Fehler meldet.
 - **[LICENSE.md](LICENSE.md)** — die eigene Lizenz dieses Projekts.
 
 ## 🤝 Mitwirken und Community
 
 * Führen Sie vor einem Pull Request `URTC_CI=1 python tools/ci_validate.py` aus: Es muss bestehen. Siehe [CONTRIBUTING.md](CONTRIBUTING.md) und den [Verhaltenskodex](CODE_OF_CONDUCT.md).
-* Das README gibt es in acht Sprachen: Eine Textänderung wird in allen acht Dateien vorgenommen, und die mit anderen Repositorys geteilten Abschnitte schreibt `tools/readme_sections.py` von URTC-COMMON.
+* Das README gibt es in acht Sprachen: Eine Textänderung wird in allen acht Dateien vorgenommen, und die mit anderen Repositories geteilten Abschnitte schreibt `tools/readme_sections.py` von URTC-COMMON.
 * Eine Änderung am CAN-Protokoll beginnt in URTC-COMMON (`spec/can_protocol.json`) und gelangt über die geprüfte Kopie in dieses Repository.
 * Beschreiben Sie nichts als auf einer Platine funktionierend, was nur gebaut wurde.
 * Melden Sie eine Schwachstelle privat: [SECURITY.md](SECURITY.md). Fragen, Ideen und Meldungen: electrohobby3d@gmail.com ([SUPPORT.md](SUPPORT.md)).
