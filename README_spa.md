@@ -277,8 +277,8 @@ volver a intentarlo.
 
 **Respaldar Firmware (CAN)**: lee el firmware actualmente instalado por
 el bus, sin modificar, y lo guarda como un archivo `.bin` - el
-equivalente CAN de la propia función SWD "back up entire flash before
-erasing" (sección 6 más abajo), por la misma razón. Vale la pena hacerlo
+equivalente CAN de la función SWD «Hacer copia de seguridad de toda la flash antes de
+borrar» (sección 6 más abajo), por la misma razón. Vale la pena hacerlo
 antes de cualquier actualización, especialmente antes de un downgrade
 deliberado (abajo), ya que es la única forma de recuperar los bytes
 exactos de hoy más adelante si ya no tienes el archivo que los generó.
@@ -387,7 +387,7 @@ exactos en el registro sin tocar la placa. Léelos, confirma que las
 rutas y direcciones parecen correctas, *luego* desmarca el simulacro y
 hazlo de verdad.
 
-**«Back up entire flash before erasing»** lee toda la región de flash de
+**«Hacer copia de seguridad de toda la flash antes de borrar»** lee toda la región de flash de
 256KB a un archivo `.bin` primero, mediante el propio comando de
 lectura-de-memoria-a-archivo de la misma herramienta (`-r` para
 STM32CubeProgrammer, `commander savemem` para pyOCD) - un seguro real
@@ -1041,7 +1041,7 @@ La suite tiene 905 pruebas en 64 archivos (`python -m pytest tests -q`; con Qt e
 
 ## 🏗️ Compilación y publicación
 
-`build_exe.bat` / `build_exe.sh` construyen un programa independiente con PyInstaller (ambos pasan `--noconfirm`, así que recompilar sobre un `dist/URTC_Flasher` existente lo sustituye directamente); `build-test.sh` / `build-test.bat` comprueban todo sin construir nada ni cambiar una versión. La versión del programa (`FLASHER_VERSION` en `flasher_config.py`, visible en el banner de la ventana y la barra de título) solo cambia con el paso explícito `python bump.py`; ejecutar desde el código y compilar nunca la tocan. Consulta `CHANGELOG.md` para el historial de versiones.
+`build_exe.bat` / `build_exe.sh` generan un programa independiente con PyInstaller (ambos pasan `--noconfirm`, así que recompilar sobre un `dist/URTC_Flasher` existente lo sustituye directamente); `build-test.sh` / `build-test.bat` comprueban todo sin compilar nada ni cambiar una versión. La versión del programa (`FLASHER_VERSION` en `flasher_config.py`, visible en el banner de la ventana y la barra de título) solo cambia con el paso explícito `python bump.py`; ejecutar desde el código y compilar nunca la tocan. Consulta `CHANGELOG.md` para el historial de versiones.
 
 ## 📂 Estructura del repositorio
 
@@ -1092,8 +1092,8 @@ La lista anotada de cada archivo de código, una línea por archivo, está en [d
 
 ## 🗺️ Hoja de ruta y límites conocidos
 
-**Estado:** el cálculo de CRC32 y HMAC-SHA256 en esta herramienta se ha
-verificado byte a byte contra la propia implementación en C del
+**Estado:** el cálculo de CRC32 y HMAC-SHA256 en el flasher se ha
+verificado byte a byte contra la implementación en C del
 bootloader, y el empaquetado de tramas SocketCAN se verificó contra el
 formato `struct can_frame` de Linux con una prueba de empaquetado/
 desempaquetado de ida y vuelta. Lo que **no** se ha probado en ninguna
@@ -1180,16 +1180,15 @@ realmente cubre:
    International (CC BY-SA 4.0)**. Texto completo en
    https://creativecommons.org/licenses/by-sa/4.0/.
 
-Esta herramienta es el compañero de grabación CAN-OTA/SWD-JTAG del
+El flasher es el compañero de grabación CAN-OTA/SWD-JTAG del
 proyecto [URTC (Universal Robot Tool Controller)](https://github.com/JuanenRac/URTC)
-- ver el propio repositorio de ese proyecto para el firmware de la
-placa, los diseños de hardware, y la documentación completa del
-protocolo contra la que trabaja esta herramienta. El propio firmware de
-URTC es GPL-3.0-or-later y sus diseños de hardware son CERN-OHL-S v2; la propia
-licencia de esta herramienta aquí no se extiende a ese proyecto
-separado, y viceversa. También existe una alternativa basada en web que
-cubre terreno similar en
-[URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO).
+- consulta el repositorio de ese proyecto para el firmware de la
+placa, los diseños de hardware y la documentación completa del
+protocolo con el que trabaja el flasher. El firmware de
+URTC es GPL-3.0-or-later y sus diseños de hardware son CERN-OHL-S v2; la
+licencia del flasher no se extiende a ese proyecto
+separado, y viceversa. También existe una alternativa basada en web, de
+alcance parecido: [URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO).
 
 Si construyes sobre este proyecto, ten en cuenta la separación de
 licencias: los cambios de código deberían mantenerse GPL-3.0-or-later, los
