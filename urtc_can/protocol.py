@@ -653,7 +653,8 @@ LAYOUTS = {
     'aoi_telemetry': {'id': 341, 'role': 'response', 'dlc': {'exact': 1}, 'fields': [{'name': 'endstop', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 1]}]},
     'laser_cmd': {'id': 352, 'role': 'request', 'dlc': {'exact': 2}, 'fields': [{'name': 'power', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'interlock', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 1]}]},
     'laser_telemetry': {'id': 357, 'role': 'response', 'dlc': {'exact': 1}, 'fields': [{'name': 'endstop', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 1]}]},
-    'printer_thermal_motion': {'id': 368, 'role': 'request', 'dlc': {'exact': 6}, 'fields': [{'name': 'nozzle_setpoint_c', 'type': 'u16', 'offset': 0, 'width': 2, 'range': [0, 300]}, {'name': 'extruder_direction', 'type': 'u8', 'offset': 2, 'width': 1, 'allowed': [1, 0]}, {'name': 'extruder_steps', 'type': 'u24', 'offset': 3, 'width': 3}]},
+    'printer_thermal_motion_request': {'id': 368, 'role': 'request', 'dlc': {'exact': 6}, 'fields': [{'name': 'nozzle_setpoint_c', 'type': 'u16', 'offset': 0, 'width': 2, 'range': [0, 300]}, {'name': 'extruder_direction', 'type': 'u8', 'offset': 2, 'width': 1, 'allowed': [1, 0]}, {'name': 'extruder_steps', 'type': 'u24', 'offset': 3, 'width': 3}]},
+    'printer_thermal_motion_request_heater_only': {'id': 368, 'role': 'request', 'dlc': {'exact': 2}, 'fields': [{'name': 'nozzle_setpoint_c', 'type': 'u16', 'offset': 0, 'width': 2, 'range': [0, 300]}]},
     'printer_layerfan_cmd': {'id': 371, 'role': 'request', 'dlc': {'exact': 1}, 'fields': [{'name': 'power', 'type': 'u8', 'offset': 0, 'width': 1}]},
     'printer_hotend_telemetry': {'id': 373, 'role': 'response', 'dlc': {'exact': 2}, 'fields': [{'name': 'temperature_c', 'type': 'u16', 'offset': 0, 'width': 2}]},
     'printer_layerfan_rpm': {'id': 375, 'role': 'response', 'dlc': {'exact': 2}, 'fields': [{'name': 'rpm', 'type': 'u16', 'offset': 0, 'width': 2}]},
@@ -1137,14 +1138,24 @@ def decode_laser_telemetry(data: bytes, strict: bool = False) -> dict | None:
     return decode("laser_telemetry", data, strict)
 
 
-def encode_printer_thermal_motion(nozzle_setpoint_c: int, extruder_direction: int, extruder_steps: int) -> tuple[int, bytes]:
+def encode_printer_thermal_motion_request(nozzle_setpoint_c: int, extruder_direction: int, extruder_steps: int) -> tuple[int, bytes]:
     """Nozzle setpoint and extruder motion (0x170, request)."""
-    return encode("printer_thermal_motion", nozzle_setpoint_c=nozzle_setpoint_c, extruder_direction=extruder_direction, extruder_steps=extruder_steps)
+    return encode("printer_thermal_motion_request", nozzle_setpoint_c=nozzle_setpoint_c, extruder_direction=extruder_direction, extruder_steps=extruder_steps)
 
 
-def decode_printer_thermal_motion(data: bytes, strict: bool = False) -> dict | None:
+def decode_printer_thermal_motion_request(data: bytes, strict: bool = False) -> dict | None:
     """Fields of 0x170 (request), or None when the payload is too short."""
-    return decode("printer_thermal_motion", data, strict)
+    return decode("printer_thermal_motion_request", data, strict)
+
+
+def encode_printer_thermal_motion_request_heater_only(nozzle_setpoint_c: int) -> tuple[int, bytes]:
+    """Nozzle setpoint and extruder motion (0x170, request, heater_only)."""
+    return encode("printer_thermal_motion_request_heater_only", nozzle_setpoint_c=nozzle_setpoint_c)
+
+
+def decode_printer_thermal_motion_request_heater_only(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x170 (request, heater_only), or None when the payload is too short."""
+    return decode("printer_thermal_motion_request_heater_only", data, strict)
 
 
 def encode_printer_layerfan_cmd(power: int) -> tuple[int, bytes]:

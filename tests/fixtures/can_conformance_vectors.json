@@ -1882,7 +1882,7 @@
     {
       "name": "PRINTER_THERMAL_MOTION request: 200 C, extrude 16 steps",
       "message": "PRINTER_THERMAL_MOTION",
-      "layout": "printer_thermal_motion",
+      "layout": "printer_thermal_motion_request",
       "fields": {
         "nozzle_setpoint_c": 200,
         "extruder_direction": 1,
@@ -1896,7 +1896,7 @@
     {
       "name": "PRINTER_THERMAL_MOTION request: heater off",
       "message": "PRINTER_THERMAL_MOTION",
-      "layout": "printer_thermal_motion",
+      "layout": "printer_thermal_motion_request",
       "fields": {
         "nozzle_setpoint_c": 0,
         "extruder_direction": 1,
@@ -1905,6 +1905,30 @@
       "frame": {
         "id": "0x170",
         "data": "000001000000"
+      }
+    },
+    {
+      "name": "PRINTER_THERMAL_MOTION request heater_only: keep a 200 C setpoint alive without touching the extruder",
+      "message": "PRINTER_THERMAL_MOTION",
+      "layout": "printer_thermal_motion_request_heater_only",
+      "fields": {
+        "nozzle_setpoint_c": 200
+      },
+      "frame": {
+        "id": "0x170",
+        "data": "00C8"
+      }
+    },
+    {
+      "name": "PRINTER_THERMAL_MOTION request heater_only: heater off, extruder untouched",
+      "message": "PRINTER_THERMAL_MOTION",
+      "layout": "printer_thermal_motion_request_heater_only",
+      "fields": {
+        "nozzle_setpoint_c": 0
+      },
+      "frame": {
+        "id": "0x170",
+        "data": "0000"
       }
     },
     {
@@ -4091,7 +4115,7 @@
     {
       "name": "PRINTER_THERMAL_MOTION request: 200 C, extrude 16 steps",
       "message": "PRINTER_THERMAL_MOTION",
-      "layout": "printer_thermal_motion",
+      "layout": "printer_thermal_motion_request",
       "frame": {
         "id": "0x170",
         "data": "00C801000010"
@@ -4105,7 +4129,7 @@
     {
       "name": "PRINTER_THERMAL_MOTION request: heater off",
       "message": "PRINTER_THERMAL_MOTION",
-      "layout": "printer_thermal_motion",
+      "layout": "printer_thermal_motion_request",
       "frame": {
         "id": "0x170",
         "data": "000001000000"
@@ -4119,7 +4143,7 @@
     {
       "name": "PRINTER_THERMAL_MOTION request: 5 bytes is too short",
       "message": "PRINTER_THERMAL_MOTION",
-      "layout": "printer_thermal_motion",
+      "layout": "printer_thermal_motion_request",
       "frame": {
         "id": "0x170",
         "data": "00C8010000"
@@ -4129,10 +4153,55 @@
     {
       "name": "PRINTER_THERMAL_MOTION request: one byte too many is refused when strict",
       "message": "PRINTER_THERMAL_MOTION",
-      "layout": "printer_thermal_motion",
+      "layout": "printer_thermal_motion_request",
       "frame": {
         "id": "0x170",
         "data": "00C80100001000"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "PRINTER_THERMAL_MOTION request heater_only: keep a 200 C setpoint alive without touching the extruder",
+      "message": "PRINTER_THERMAL_MOTION",
+      "layout": "printer_thermal_motion_request_heater_only",
+      "frame": {
+        "id": "0x170",
+        "data": "00C8"
+      },
+      "fields": {
+        "nozzle_setpoint_c": 200
+      }
+    },
+    {
+      "name": "PRINTER_THERMAL_MOTION request heater_only: heater off, extruder untouched",
+      "message": "PRINTER_THERMAL_MOTION",
+      "layout": "printer_thermal_motion_request_heater_only",
+      "frame": {
+        "id": "0x170",
+        "data": "0000"
+      },
+      "fields": {
+        "nozzle_setpoint_c": 0
+      }
+    },
+    {
+      "name": "PRINTER_THERMAL_MOTION request: 1 bytes is too short",
+      "message": "PRINTER_THERMAL_MOTION",
+      "layout": "printer_thermal_motion_request_heater_only",
+      "frame": {
+        "id": "0x170",
+        "data": "00"
+      },
+      "fields": null
+    },
+    {
+      "name": "PRINTER_THERMAL_MOTION request: one byte too many is refused when strict",
+      "message": "PRINTER_THERMAL_MOTION",
+      "layout": "printer_thermal_motion_request_heater_only",
+      "frame": {
+        "id": "0x170",
+        "data": "00C800"
       },
       "fields": null,
       "strict": true
@@ -7425,7 +7494,7 @@
     {
       "name": "PRINTER_THERMAL_MOTION: nozzle_setpoint_c above its maximum",
       "message": "PRINTER_THERMAL_MOTION",
-      "layout": "printer_thermal_motion",
+      "layout": "printer_thermal_motion_request",
       "fields": {
         "nozzle_setpoint_c": 301,
         "extruder_direction": 1,
@@ -7435,11 +7504,19 @@
     {
       "name": "PRINTER_THERMAL_MOTION: extruder_direction 2 is not a defined value",
       "message": "PRINTER_THERMAL_MOTION",
-      "layout": "printer_thermal_motion",
+      "layout": "printer_thermal_motion_request",
       "fields": {
         "nozzle_setpoint_c": 200,
         "extruder_direction": 2,
         "extruder_steps": 16
+      }
+    },
+    {
+      "name": "PRINTER_THERMAL_MOTION: nozzle_setpoint_c above its maximum",
+      "message": "PRINTER_THERMAL_MOTION",
+      "layout": "printer_thermal_motion_request_heater_only",
+      "fields": {
+        "nozzle_setpoint_c": 301
       }
     },
     {
