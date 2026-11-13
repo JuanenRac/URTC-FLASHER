@@ -1,6 +1,10 @@
+# urtc_can/* and urtc_ui/* are COPIES of URTC-COMMON (their locks list every file): URTC-COMMON measures and tests them, so this program does not
+# count them again. The coverage of this repository is the coverage of its own code.
 [run]
 source = .
 omit =
+    urtc_can/*
+    urtc_ui/*
     tests/*
     tools/*
     build/*
