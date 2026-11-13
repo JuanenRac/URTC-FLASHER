@@ -65,10 +65,10 @@
 
 ## 🎯 Überblick
 
-Ein kleines plattformübergreifendes GUI-Tool zum Aktualisieren der
+Ein kleines plattformübergreifendes Programm mit grafischer Oberfläche zum Aktualisieren der
 URTC-Platinen-Firmware über den CAN-Bus. Es implementiert genau das
-Bootloader-Protokoll aus `docs/CANBUS.TXT` (im Schwester-Repository [URTC](https://github.com/JuanenRac/URTC), gegen das dieses Werkzeug implementiert ist - siehe „Verwandte Projekte“ gegen Ende dieses Dokuments; jeder andere Verweis auf `docs/*.TXT` in diesem README zeigt ebenfalls dorthin): die HardwareID-Prüfung, den Ed25519-Eintrag des Images, den Golden-Image-Backup-Slot-Update-Ablauf, den
-Live-Fortschritt über die Heartbeat-Nachrichten des Bootloaders, und
+Bootloader-Protokoll aus `docs/CANBUS.TXT` (im Schwester-Repository [URTC](https://github.com/JuanenRac/URTC), nach dem der Flasher entwickelt wurde - siehe „Verwandte Projekte“ gegen Ende dieses Dokuments; jeder andere Verweis auf `docs/*.TXT` in diesem README zeigt ebenfalls dorthin): die HardwareID-Prüfung, den Ed25519-Eintrag des Images, den Update-Ablauf mit Golden Image und Sicherungsbereich, den
+Fortschritt in Echtzeit über die Lebenszeichen des Bootloaders, und
 eine Versionsabfrage (identifiziert, ob sich die Anwendung *oder* der
 Bootloader dieser Platine über CAN meldet), damit Sie sehen können, was
 aktuell installiert ist, bevor Sie entscheiden, was geflasht werden
@@ -84,7 +84,7 @@ Protokoll:
   serieller Port.
   - Ohne Adapter und ohne Hardware springt eine virtuelle Platine ein: `python -m urtc_can.virtual_board` ausführen, ihre Adresse vor dem Start des Programms in der Umgebungsvariable `URTC_VIRTUAL_PORT` angeben (zum Beispiel `socket://127.0.0.1:7777`) oder in der Befehlszeile an `--port` übergeben. Sie erscheint in der Portliste und antwortet wie eine Platine, Anwendung und Bootloader.
 - **SocketCAN** — **nur Linux**, und nur in der Benutzeroberfläche des
-  Tools unter Linux angezeigt. Spricht direkt mit einer
+  Programms unter Linux angezeigt. Spricht direkt mit einer
   Kernel-Netzwerkschnittstelle `can0`/`slcan0`. Wenn Ihr Adapter
   bereits `gs_usb`/candleLight-Firmware ausführt (die meisten
   CANable-Platinen tun dies ab Werk), benötigt dieser Weg
@@ -93,7 +93,7 @@ Protokoll:
 
 ## 🧩 Rolle in URTC
 
-URTC-FLASHER ist das Programm, das Firmware auf eine URTC-Platine bringt. Es spricht das Bootloader-Protokoll von URTC (`docs/CANBUS.TXT` jenes Repositories) über einen USB-CAN-Adapter, als serielle SLCAN-Schnittstelle oder als SocketCAN unter Linux: die HardwareID-Prüfung, den Ed25519-Eintrag des Images, den Golden-Image-Ablauf mit Sicherungsslot und eine Versionsabfrage, damit man sieht, was installiert ist, bevor man entscheidet, was geflasht wird. Für eine Platine ohne funktionierenden Bootloader oder um den ganzen Chip zu programmieren, bereitet es die SWD/JTAG-Befehle für pyOCD oder STM32CubeProgrammer vor. Es ist der Update-Begleiter von URTC-TESTER, teilt seinen CAN-Code über URTC-COMMON mit ihm, und URTC-UPDATER kann ihm ein Firmware-Image übergeben, dessen Release-Signatur schon geprüft wurde.
+URTC-FLASHER ist das Programm, das Firmware auf eine URTC-Platine bringt. Es spricht das Bootloader-Protokoll von URTC (`docs/CANBUS.TXT` jenes Repositories) über einen USB-CAN-Adapter, als serielle SLCAN-Schnittstelle oder als SocketCAN unter Linux: die HardwareID-Prüfung, den Ed25519-Eintrag des Images, den Golden-Image-Ablauf mit Sicherungsbereich und eine Versionsabfrage, damit man sieht, was installiert ist, bevor man entscheidet, was geflasht wird. Für eine Platine ohne funktionierenden Bootloader oder um den ganzen Chip zu programmieren, bereitet es die SWD/JTAG-Befehle für pyOCD oder STM32CubeProgrammer vor. Es ist der Update-Begleiter von URTC-TESTER, teilt seinen CAN-Code über URTC-COMMON mit ihm, und URTC-UPDATER kann ihm ein Firmware-Image übergeben, dessen Release-Signatur schon geprüft wurde.
 
 ## 🏛️ Architektur
 
@@ -150,7 +150,7 @@ eine **Transport**-Auswahl - wählen Sie Seriell/SLCAN oder SocketCAN
 vor dem Verbinden. Unter Windows erscheint diese Zeile überhaupt
 nicht; Seriell/SLCAN ist die einzige Option.
 
-Klicken Sie auf **Verbinden**, und das Tool fragt die Platine
+Klicken Sie auf **Verbinden**, und der Flasher fragt die Platine
 automatisch, was sie aktuell ausführt (CAN-ID `0x7F8` → `0x7F9` - siehe
 `docs/CANBUS.TXT`). Dies funktioniert, egal ob die Platine ihre
 Anwendung normal ausführt *oder* im Bootloader sitzt, sodass Sie
@@ -179,7 +179,7 @@ Manifest. Vor einem Update zeigt das Protokoll `installiert -> neu` in
 dieser Form, und der Patch fließt nur dann in die Warnung „älter als
 installiert“ ein, wenn beide Seiten einen haben. Eine Platine, die älter
 als der Patch ist, antwortet ohne ihn und wird genau wie bisher angezeigt.
-Meldet der Bootloader (Flag im selben Frame), dass er den Patch liest,
+Meldet der Bootloader (Kennzeichen im selben Frame), dass er den Patch liest,
 trägt der Frame zum Ende des Updates ihn im oberen Byte des Minor-Felds;
 jeder andere Bootloader und jedes Image ohne Patch erhalten den
 unveränderten Frame mit zwei Zahlen. Die Versionsantwort des
@@ -194,13 +194,13 @@ Was Sie sehen werden:
 - **`Bootloader running, no valid firmware currently installed,
   bootloader v0.1.2`** - die Platine steckt im Bootloader fest, ohne
   etwas, zu dem sie springen könnte (leerer Chip, oder jede Prüfung
-  auf dem Hauptslot schlug fehl). Dies ist genau die Situation, für die
-  dieses Tool existiert - flashen Sie sie. Die hier gezeigte
+  im Hauptbereich schlug fehl). Dies ist genau die Situation, für die
+  der Flasher existiert - flashen Sie sie. Die hier gezeigte
   Bootloader-Version ist die des Bootloaders selbst, ohne Bezug zu
   irgendeiner Anwendungsversion, die ihre Prüfungen nicht bestanden
   hat.
 - **`⚠ HardwareID mismatch!`** in Rot angezeigt - etwas hat geantwortet,
-  aber seine HardwareID stimmt nicht mit dem überein, was dieses Tool
+  aber seine HardwareID stimmt nicht mit dem überein, was der Flasher
   erwartet. Flashen Sie nicht, ohne vorher zu verstehen, warum; der
   Bootloader würde das Update sowieso ablehnen, aber eine Abweichung
   hier kann auch bedeuten, dass Sie komplett auf die falsche Platine
@@ -210,20 +210,20 @@ Was Sie sehen werden:
   Verbindung und, im SocketCAN-Weg, dass die Schnittstelle tatsächlich
   aktiv ist (`ip link show`).
 
-**Erweiterungsplatine:** ein separates Dropdown und ein
+**Erweiterungsplatine:** eine separate Auswahlliste und ein
 Abfragen/Speichern-Paar, direkt unter der Versionsprüfung. Liest und
 setzt, welche der 7 möglichen `CONN_EXPANSION`-Konfigurationen (keine,
 oder eine der 6 echten Varianten - siehe `EXPANSION.TXT`) physisch
 installiert ist, über CAN (`0x1A0`/`0x1A1`). Es gibt keine elektrische
 Möglichkeit für die Platine, dies selbst zu erkennen, also muss es ihr
-gesagt werden - dies lebt hier (nicht nur in `URTC Tester`), da es sich
+gesagt werden - dies gehört hierher (nicht nur in `URTC Tester`), da es sich
 um einen einmaligen Hardware-Konfigurationsschritt handelt, der am
 natürlichsten zusammen mit einem Firmware-Update erfolgt. **Speichern**
 fragt zuerst nach Bestätigung, da dies über Stromzyklen hinweg
 bestehen bleibt, bis es explizit erneut geändert wird.
 
 **MLX9064x-Sensorvariante:** gleiche Form wie die obige
-Erweiterungsplatinen-Kontrolle - ein Dropdown und ein
+Erweiterungsplatinen-Kontrolle - eine Auswahlliste und ein
 Abfragen/Speichern-Paar, das liest/setzt, welcher der 3 Wärmesensoren
 der MLX9064x-Familie (oder keiner) tatsächlich installiert ist, über
 CAN (`0x1A6`/`0x1A7` - siehe `CANBUS.TXT`). Nur relevant, wenn die
@@ -243,14 +243,14 @@ erfordert.
    Seriell/SLCAN öffnet dies den CAN-Kanal mit 1 Mbit/s (URTCs feste
    Bus-Geschwindigkeit); für SocketCAN wird erwartet, dass die
    Schnittstelle bereits mit dieser Busgeschwindigkeit läuft (Schritt 1 oben) -
-   dieses Tool stellt sie nicht ein. So oder so wird die aktuelle
+   der Flasher stellt sie nicht ein. So oder so wird die aktuelle
    Version automatisch abgefragt - siehe Abschnitt 4 oben.
 2. **Wählen Sie ein Flash-Ziel**: „Diese Platine (Haupt)“ oder
    „Erweiterungs-Slave“ - Standard ist die Hauptplatine, der mit
    Abstand häufigere Fall. Die Slave-Option erreicht nur etwas auf
    einer Advanced-Erweiterungsplatinen-Variante
    (TMC2209+STM32F303CBT6 oder TMC5160A+STM32F303CBT6) - das Update
-   wird über die eigene I2C-Bridge der Hauptplatine zum Slave-Chip
+   wird über die eigene I2C-Brücke der Hauptplatine zum Slave-Chip
    weitergeleitet (die eigenen `0x210`-`0x219` von `CANBUS.TXT`), keine
    separate physische Verbindung. „F-RAM vor dem Flashen löschen“
    (Schritt 4 unten) deaktiviert sich automatisch bei Auswahl von
@@ -260,8 +260,8 @@ erfordert.
    Erkennung und Validierung funktionieren.
 4. **Flashen**:
    - Lassen Sie „Platine führt aktuell die Anwendung aus“ markiert,
-     wenn die Platine eingeschaltet ist und normal läuft - das Tool
-     sendet zuerst den magischen Payload-Auslöser `0x7F0` (oder
+     wenn die Platine eingeschaltet ist und normal läuft - der Flasher
+     sendet zuerst den magischen Auslöser `0x7F0` (oder
      `0x210`, an den Slave weitergeleitet, falls Slave das gewählte
      Ziel ist), der jeden
      Aktuator sicher herunterfährt, bevor es in den Bootloader
@@ -277,17 +277,17 @@ erfordert.
      des Ablaufs; der Fortschrittsbalken
      verfolgt den Schreibfortschritt Seite für Seite während der
      Übertragung, dann den Kopierfortschritt während der abschließenden
-     Backup-zu-Haupt-Kopie.
+     Kopie der Sicherung in den Hauptbereich.
 
 Wenn die Verifizierung an irgendeinem Punkt fehlschlägt (CRC32-, Signatur-,
-oder HardwareID-Abweichung), wird der Hauptslot des Bootloaders nie
+oder HardwareID-Abweichung), wird der Hauptbereich des Bootloaders nie
 berührt - die Platine führt weiterhin die Firmware aus, die sie bereits
 hatte. Es ist immer sicher, es einfach erneut zu versuchen.
 
 **Firmware sichern (CAN)**: liest die aktuell installierte Firmware über
 den Bus zurück, unverändert, und speichert sie als `.bin`-Datei - das
-CAN-Äquivalent der eigenen SWD-Funktion „back up entire flash before
-erasing" (Abschnitt 6 unten), aus demselben Grund. Lohnt sich vor jedem
+CAN-Äquivalent der SWD-Funktion „Gesamten Flash vor dem Löschen
+sichern“ (Abschnitt 6 unten), aus demselben Grund. Lohnt sich vor jedem
 Update, besonders vor einem absichtlichen Downgrade (unten), da dies die
 einzige Möglichkeit ist, die heutigen exakten Bytes später
 zurückzuerhalten, falls Sie die Datei, aus der sie stammen, nicht mehr
@@ -297,9 +297,9 @@ implementiert (siehe `docs/CANBUS.TXT`); ein älterer antwortet einfach
 nie, was als klare Zeitüberschreitung angezeigt wird statt als
 stillschweigend leere Datei. In der Praxis heißt das: Die Sicherung funktioniert bei einer Platine ohne gültige Anwendung oder bei einer mitten im Update stehengebliebenen Platine. Mit gültiger Anwendung springt der Bootloader etwa 600 ms nach dem Reset dorthin, sofern kein Start-Update-Frame (`0x7F1`) eintrifft, und dieses Tool hat keine Schaltfläche, die den Bootloader warten lässt (dafür wäre eine Änderung im Bootloader nötig). Für eine normal laufende Platine sichern Sie den Flash stattdessen über SWD/JTAG (Abschnitt 6).
 
-**Hinweise zu Version und Signatur**: Vor der Übertragung fragt das Tool die Platine, was installiert ist, und protokolliert „installiert vX.Y -> neu vA.B“; ist die neue Version älter, warnt es, dass der Bootloader sie ohne erlaubtes Downgrade ablehnt, und empfiehlt zuerst eine Sicherung. Ein Image, dessen Manifest angibt, mit dem ÖFFENTLICHEN Entwicklungsschlüssel signiert zu sein (die mitgelieferten offiziellen Images sind es), zeigt unter dem Dateinamen eine rote Warnung; mit `"require_production_signature": true` in `urtc_config.json` werden solche Images ganz abgelehnt. Ein Bootloader, der den Fingerabdruck des akzeptierten Signaturschlüssels veröffentlicht, wird vor der Übertragung mit der `signing_key_id` des Image-Manifests verglichen: Eine Abweichung wird protokolliert (`"key_id_precheck": "warn"`, der Standard), abgelehnt (`"refuse"`) oder nicht geprüft (`"off"`) in `urtc_config.json`; ein Bootloader oder Manifest ohne Fingerabdruck ist nie eine Abweichung. Nur an einem simulierten Bootloader erprobt. Antwortet die Platine aus dem Bootloader ohne gültige Firmware, wird das neueste offizielle Hauptplatinen-Image aus `firmware/` zur Prüfung und zum Flashen vorausgewählt. Nach jedem erfolgreichen Update wird ein kleiner Bericht geschrieben (`logs/urtc_update_report_*.json`: Tool-Version, Bediener, Name, Größe und SHA-256 des Images, Versionen vorher und nachher); er trägt seine eigene SHA-256, damit eine Änderung auffällt, ist aber keine Signatur.
+**Hinweise zu Version und Signatur**: Vor der Übertragung fragt der Flasher die Platine, was installiert ist, und protokolliert „installiert vX.Y -> neu vA.B“; ist die neue Version älter, warnt es, dass der Bootloader sie ohne erlaubtes Downgrade ablehnt, und empfiehlt zuerst eine Sicherung. Ein Image, dessen Manifest angibt, mit dem ÖFFENTLICHEN Entwicklungsschlüssel signiert zu sein (die mitgelieferten offiziellen Images sind es), zeigt unter dem Dateinamen eine rote Warnung; mit `"require_production_signature": true` in `urtc_config.json` werden solche Images ganz abgelehnt. Ein Bootloader, der den Fingerabdruck des akzeptierten Signaturschlüssels veröffentlicht, wird vor der Übertragung mit der `signing_key_id` des Image-Manifests verglichen: Eine Abweichung wird protokolliert (`"key_id_precheck": "warn"`, der Standard), abgelehnt (`"refuse"`) oder nicht geprüft (`"off"`) in `urtc_config.json`; ein Bootloader oder Manifest ohne Fingerabdruck ist nie eine Abweichung. Nur an einem simulierten Bootloader erprobt. Antwortet die Platine aus dem Bootloader ohne gültige Firmware, wird das neueste offizielle Hauptplatinen-Image aus `firmware/` zur Prüfung und zum Flashen vorausgewählt. Nach jedem erfolgreichen Update wird ein kleiner Bericht geschrieben (`logs/urtc_update_report_*.json`: Version des Flashers, Bediener, Name, Größe und SHA-256 des Images, Versionen vorher und nachher); er trägt seine eigene SHA-256, damit eine Änderung auffällt, ist aber keine Signatur.
 
-**Header im Image**: Ein Firmware-Image, das mit versiegeltem Header gebaut wurde (`stamp_image.py seal` aus URTC-COMMON), nennt in der Datei selbst die Hardware, für die es gebaut ist, seine Version, seine Länge und seine CRC-32. Vor dem ersten Frame liest der Flasher ihn und lehnt ein Image für eine andere Platine ab, eine Version, die vom Dateinamen abweicht, eine Länge oder CRC-32, die nicht stimmt, einen Header, den niemand versiegelt hat, und eine `.urimg`-Datei (der Header vor dem Binary, die nie geflasht wird). Ein älteres Image ohne Header wird mit einer Warnung geflasht; `image_header_policy` in `urtc_config.json` ändert das: `accept` (ohne Warnung), `warn` (der Standard) oder `require` (ablehnen).
+**Header im Image**: Ein Firmware-Image, das mit versiegeltem Header gebaut wurde (`stamp_image.py seal` aus URTC-COMMON), nennt in der Datei selbst die Hardware, für die es gebaut ist, seine Version, seine Länge und seine CRC-32. Vor dem ersten Frame liest der Flasher ihn und lehnt ein Image für eine andere Platine ab, eine Version, die vom Dateinamen abweicht, eine Länge oder CRC-32, die nicht stimmt, einen Header, den niemand versiegelt hat, und eine `.urimg`-Datei (die Datei mit dem Header vor der Binärdatei, die nie geflasht wird). Ein älteres Image ohne Header wird mit einer Warnung geflasht; `image_header_policy` in `urtc_config.json` ändert das: `accept` (ohne Warnung), `warn` (der Standard) oder `require` (ablehnen).
 
 **Absichtliches Installieren einer älteren Version**: der Bootloader
 lehnt normalerweise ein gültig signiertes Image ab, wenn es eine ältere
@@ -315,7 +315,7 @@ umgeht. Dies lädt weiterhin das komplette ältere Image über die normale
 einen Versuch auf (`0x7FD` - siehe `docs/CANBUS.TXT`); die der Platine
 gemeldete Versionsnummer stammt aus der eigenen `.manifest.json` der
 Datei, falls neben ihr eine vorhanden ist (siehe Abschnitt 3 oben),
-andernfalls aus der aktuell konfigurierten Version dieses Tools, in
+andernfalls aus der aktuell konfigurierten Version des Flashers, in
 beiden Fällen klar protokolliert, sodass es nie eine stille Vermutung
 ist.
 
@@ -331,7 +331,7 @@ ist eine **andere Art von Operation** als die Abschnitte 1-5 oben:
 
 |  | CAN-OTA-Update (Abschnitte 1-5) | SWD/JTAG, ganzer Chip (Abschnitt 6) |
 |---|---|---|
-| Selbstheilend bei Unterbrechung | Ja - der Golden-Image-Backup-Slot garantiert, dass die laufende Firmware überlebt | Nein - führt nichts aus, bis neu programmiert |
+| Selbstheilend bei Unterbrechung | Ja - der Sicherungsslot für das Golden Image garantiert, dass die laufende Firmware überlebt | Nein - führt nichts aus, bis neu programmiert |
 | Wiederherstellbar | Automatisch, keine Aktion nötig | Ja - einfach wieder verbinden und erneut über SWD flashen; der Debug-Port hängt nicht vom Flash-Inhalt ab. Nur eine echte permanente Sperre (Option-Byte RDP2) würde dies verhindern, und nichts in diesem Tool setzt Option-Bytes |
 | Berührt den Bootloader | Nie | Ja, per Design |
 | Benötigt | Einen USB-CAN-Adapter | Eine SWD/JTAG-Sonde (ST-Link oder ähnlich) |
@@ -341,8 +341,8 @@ ist eine **andere Art von Operation** als die Abschnitte 1-5 oben:
 gleiche 2 Optionen wie die eigene Auswahl im CAN-OTA-Tab, aber eine
 hier wirklich separate Wahl: SWD/JTAG benötigt eine Sonde, die
 physisch mit dem Chip verbunden ist, der dieser Auswahl entspricht, da
-es keine Bridge gibt (im Gegensatz zu CAN-OTA), die es einer einzigen
-Verbindung erlaubt, beide zu erreichen. Das Umschalten hierbei ändert
+es keine Brücke gibt (im Gegensatz zu CAN-OTA), die es einer einzigen
+Verbindung erlaubt, beide zu erreichen. Das Umschalten ändert hier
 automatisch die verwendeten Flash-Adressen:
 
 | | Hauptplatine (STM32F303CC) | Erweiterungs-Slave (STM32F303CBT6) |
@@ -357,10 +357,10 @@ pyOCD-Installation bestätigt, während dies geschrieben wurde (die
 STM32-Abdeckung in pyOCD läuft größtenteils über CMSIS-Packs statt
 über integrierte Ziele) - wenn das Flashen mit einem Fehler wie „target
 not found“ fehlschlägt, führen Sie selbst `pyocd list --targets --name
-stm32f303` aus, und `pyocd pack install <der echte Name>` lädt das
+stm32f303` aus; danach lädt `pyocd pack install <der echte Name>` das
 richtige CMSIS-Pack herunter.
 
-**Benötigt eines von** (das Tool erkennt automatisch, was verfügbar
+**Benötigt eines von** (der Flasher erkennt automatisch, was verfügbar
 ist, und aktiviert nur das Gefundene):
 - **pyOCD** - `pip install pyocd`. Frei, Open Source, keine separate
   Installation über das pip-Paket hinaus.
@@ -373,19 +373,18 @@ Beide werden als Kommandozeilen-Subprozesse gesteuert, nicht als
 Python-Bibliotheken importiert - Sie sehen den genauen Befehl
 protokolliert, bevor er ausgeführt wird.
 
-**Dateiformate:** `.bin` (benötigt die feste Adresse, die dieses Tool
+**Dateiformate:** `.bin` (benötigt die feste Adresse, die der Flasher
 bereits kennt - Sie geben sie nicht ein) oder `.hex` (trägt seine
-eigene Adresse, wird unverändert verwendet). Mischen ist in Ordnung -
-Bootloader als `.hex` und Anwendung als `.bin`, oder umgekehrt, beides
-funktioniert. Beide Dateiauswähler validieren die ausgewählte Datei
-(plausible Größe für den Ziel-Slot, und - wo das Format eine
+eigene Adresse, wird unverändert verwendet). Beides lässt sich mischen:
+Bootloader als `.hex` und Anwendung als `.bin` oder umgekehrt. Beide Dateiauswähler validieren die ausgewählte Datei
+(plausible Größe für den Zielbereich, und - wo das Format eine
 zuverlässige Prüfung erlaubt - ein plausibler anfänglicher
 Stack-Pointer), bevor Sie fortfahren dürfen, genau wie es der
 Firmware-Auswähler des CAN-Wegs bereits tat.
 
 **Die Verbindung wird geprüft, bevor irgendetwas Destruktives
-ausgeführt wird**, wobei **positive Beweise** für eine echte
-Sonde/ein echtes Ziel erforderlich sind statt nur des Fehlens eines
+ausgeführt wird**, wobei ein **positiver Nachweis** für eine echte
+Sonde/ein echtes Ziel erforderlich ist statt nur des Fehlens eines
 Fehlers - der eigene Exit-Code von STM32CubeProgrammer ist allein kein
 zuverlässiges Erfolgs-/Fehlersignal, daher läuft eine dedizierte
 Verbindungsprüfung (`pyocd list --probes`, oder ein reines
@@ -396,23 +395,12 @@ durchsucht, falls der Exit-Code eines Tools allein in irgendeiner
 anderen Situation ebenfalls nicht vertrauenswürdig wäre.
 
 **Der Testlauf ist standardmäßig aktiviert.** Lassen Sie ihn beim
-ersten Mal markiert und drücken Sie „Kompletten Chip flashen“ - er druckt
+ersten Mal markiert und drücken Sie „Kompletten Chip flashen“ - er schreibt
 die genauen Befehle ins Protokoll, ohne die Platine zu berühren. Lesen
 Sie sie durch, bestätigen Sie, dass Pfade und Adressen richtig
 aussehen, *dann* deaktivieren Sie den Testlauf und tun es wirklich.
 
-**„Back up entire flash before erasing“** liest zuerst die gesamte
-256KB-Flash-Region in eine `.bin`-Datei, über den eigenen
-Speicher-Lesen-in-Datei-Befehl desselben Tools (`-r` für
-STM32CubeProgrammer, `commander savemem` für pyOCD) - eine echte
-Versicherung hier, denn anders als ein CAN-OTA-Update (das der
-Golden-Image-Backup-Slot bereits schützt), hat ein vollständiges
-Chip-Löschen kein anderes Rückgängigmachen. Standardmäßig
-deaktiviert, da es 10-30s hinzufügt und auf einem
-neuen/leeren Chip nicht nötig ist; lohnt sich zu markieren, bevor eine
-Platine überschrieben wird, die bereits etwas ausführt. Wenn das Lesen
-tatsächlich keine Datei erzeugt, wird das Löschen verweigert, statt
-ohne das angeforderte Backup fortzufahren.
+**„Gesamten Flash vor dem Löschen sichern“** liest zuerst die gesamte 256-KB-Flash-Region in eine `.bin`-Datei, über den eigenen Befehl desselben Programms zum Lesen des Speichers in eine Datei (`-r` für STM32CubeProgrammer, `commander savemem` für pyOCD) - eine echte Absicherung, denn anders als bei einem CAN-OTA-Update (das der Golden-Image-Sicherungsbereich bereits schützt) lässt sich ein vollständiges Löschen des Chips nicht anders rückgängig machen. Standardmäßig deaktiviert, da es 10-30 s hinzufügt und auf einem neuen, leeren Chip nicht nötig ist; es lohnt sich, die Option anzuhaken, bevor eine Platine überschrieben wird, die bereits etwas ausführt. Wenn das Lesen tatsächlich keine Datei erzeugt, wird das Löschen verweigert, statt ohne die angeforderte Sicherung fortzufahren.
 
 **Teststatus:** die obige Verbindungsprüfungslogik wurde gegen echte
 STM32CubeProgrammer-Ausgabe verifiziert (sowohl ein echtes
@@ -441,8 +429,8 @@ jeder Standard-Busgeschwindigkeit und stoppt bei der ersten, bei der sie einen
 gültigen CAN-Frame hört; sie sendet also nie und kann einen laufenden Bus
 nicht stören. Deshalb müssen andere Knoten senden und der Adapter muss den
 Nur-Hören-Modus unterstützen; bei ruhigem Bus (oder mit einem Adapter ohne
-diesen Modus) findet sie nichts, und Sie wählen die Busgeschwindigkeit von Hand. Noch
-nicht verbunden, wenn Sie darauf klicken. Die Busgeschwindigkeit von SocketCAN wird
+diesen Modus) findet sie nichts, und Sie wählen die Busgeschwindigkeit von Hand. Sie funktioniert
+vor dem Verbinden. Die Busgeschwindigkeit von SocketCAN wird
 auf Betriebssystemebene festgelegt (`ip link`), daher ist dieses
 Steuerelement für diesen Transport deaktiviert - es gibt hier nichts zu
 versuchen.
@@ -454,12 +442,12 @@ Protokoll-Frames, die tatsächlich während eines festen 2-Sekunden-Fensters
 auf dem verbundenen Transport gesehen wurden. Dies ist absichtlich
 **nicht** dasselbe wie ein echter CAN-Bus-Auslastungsprozentsatz - das
 würde eine Netlink-Abfrage (SocketCAN) oder adapterspezifische
-Erweiterungen (SLCAN) benötigen, die dieses Tool nicht auf
+Erweiterungen (SLCAN) benötigen, die der Flasher nicht auf
 standardmäßige, abhängigkeitsfreie Weise für den Controller des
-*eigenen Adapters* erhalten kann. Was es gibt: ein echtes, direkt gemessenes Signal
+*eigenen Adapters* erhalten kann. Was sie liefert: ein echtes, direkt gemessenes Signal
 für „spricht etwas auf diesem Bus, und ungefähr wie oft“, auf beiden
-Transporten. Speziell für SocketCAN zeigt es auch das 2-Sekunden-Delta
-der eigenen Schnittstellenstatistiken von Linux
+Transporten. Speziell für SocketCAN zeigt sie auch die Änderung über 2 Sekunden
+der Schnittstellenstatistiken von Linux
 (`/sys/class/net/<iface>/statistics/`) - grundlegende
 rx/tx/error/drop-Zähler, die jede Schnittstelle bereitstellt, als
 einfache Dateien gelesen, keine zusätzliche Abhängigkeit. Das Verbinden
@@ -470,15 +458,15 @@ CAN-Controller in Bus-Off geht, ruft der Kernel-Treiber
 Beweis für ein Bus-Off oder eine ähnlich tote Verbindung, als Warnung
 mit dem genauen Wiederherstellungsbefehl protokolliert (`sudo ip link
 set <iface> down && sudo ip link set <iface> up type can bitrate
-500000 restart-ms 100`). Dieses Tool führt diesen Befehl nicht selbst
-aus - ein echtes Bus-Off zu bereinigen erfordert, die Schnittstelle auf
-Kernel-Ebene herunter- und wieder hochzufahren, was Root erfordert und
-als Änderung der Systemnetzwerkkonfiguration zählt, nichts, das
-stillschweigend in Ihrem Namen getan werden sollte.
+1000000 restart-ms 100`). Der Flasher führt diesen Befehl nicht selbst
+aus - ein echtes Bus-Off zu beheben erfordert, die Schnittstelle auf
+Kernel-Ebene herunter- und wieder hochzufahren, was Root-Rechte erfordert und
+als Änderung der Netzwerkkonfiguration des Systems zählt, nichts, das
+stillschweigend an Ihrer Stelle getan werden sollte.
 
 **Fehlerzähler (TEC/REC)** (neben Busaktivität): im Gegensatz zu den
-Adapter-Zählern oben fragt dies **die Platine selbst** nach ihrem
-eigenen Transmit/Receive Error Counter des CAN-Controllers
+Adapter-Zählern oben fragt dies **die Platine selbst** nach den
+Fehlerzählern für Senden und Empfangen (TEC/REC) ihres CAN-Controllers
 (`0x7FB`/`0x7FC` - siehe `docs/CANBUS.TXT`), beantwortet von dem, was
 gerade läuft, Anwendung oder Bootloader. Grün bedeutet, beide Zähler
 stehen auf 0 (error-active, gesund); orange bedeutet, einer oder beide
@@ -487,7 +475,7 @@ verursacht Neuübertragungen); rot bedeutet 128 oder mehr (error-passive
 oder schlimmer) oder gar keine Antwort (ältere Firmware/älterer
 Bootloader, der `0x7FB` noch nicht implementiert, oder Platine nicht
 verbunden). Ein stetig steigender TEC bei flachem REC deutet
-typischerweise darauf hin, dass die eigenen Übertragungen dieser
+typischerweise darauf hin, dass die Übertragungen dieser
 Platine unbestätigt bleiben - kein anderer Knoten am Bus, oder ein
 Verkabelungs-, Terminierungs- oder Busgeschwindigkeitsproblem speziell bei der
 Verbindung dieser Platine.
@@ -496,26 +484,25 @@ Verbindung dieser Platine.
 `.zip`-Datei mit dem aktuellen Bildschirmprotokoll, grundlegender
 Systemdiagnose (Betriebssystem, Python-Version, welche Tools gefunden
 wurden, aktueller Transport/Port/Busgeschwindigkeit), und der aktuell ausgewählten
-CAN-Firmware-Datei - nützlich, um ein vollständiges Bild an denjenigen
-weiterzugeben, der die Firmware geschrieben hat, falls im Feld etwas
+CAN-Firmware-Datei - nützlich, um ein vollständiges Bild an die Person
+weiterzugeben, die die Firmware geschrieben hat, falls im Feld etwas
 schiefgeht, statt das Protokoll
 von Hand zu kopieren.
 
-### SWD/JTAG — Dateiformate, Slot-Verifizierung, und Sondenauswahl
+### SWD/JTAG — Dateiformate, Bereichsprüfung und Sondenauswahl
 
 **Dateiformate**: die Bootloader-/Anwendungsauswähler des
 SWD-Abschnitts akzeptieren `.bin`, `.hex`, und `.elf`/`.axf`. ELF/AXF
 wird mit einer kleinen Menge handgeschriebenen
-Struct-Unpackings analysiert (nur ELF-Header + Programm-Header - keine
+Dekodierens von Strukturen analysiert (nur ELF-Header + Programm-Header - keine
 Symbole, keine Section-Header), absichtlich ohne `pyelftools` zu
-verwenden: dieses Projekt bleibt bei null Abhängigkeiten außerhalb der
+verwenden: dieses Projekt hat keine Abhängigkeiten außerhalb der
 Standardbibliothek, und vollständiges ELF-Parsing ist mehr, als diese
-spezifische Plausibilitätsprüfung benötigt. Verifiziert gegen die
-eigenen kompilierten `BOOTLOADER.elf`/`APP.elf` dieses Projekts - beide
+spezifische Plausibilitätsprüfung benötigt. Geprüft gegen die
+echten kompilierten `BOOTLOADER.elf`/`APP.elf` dieses Projekts - beide
 validieren korrekt an ihren echten Ladeadressen
 (`0x08000000`/`0x08008000`), nicht nur an synthetischen Testdateien.
-Nur 32-Bit-ARM-Little-Endian, was alles ist, was ein Cortex-M-Ziel
-jemals ist. Die deklarierte Größe einer `.hex`-Datei ist die
+Nur 32-Bit-ARM-Little-Endian, was jedes Cortex-M-Ziel ist. Die deklarierte Größe einer `.hex`-Datei ist die
 tatsächliche belegte Byteanzahl, nicht die Adressspanne von ihrem
 niedrigsten bis höchsten Record - daher validiert eine spärliche Datei
 (ein kleiner Block echter Firmware plus ein entfernter, separater
@@ -524,60 +511,44 @@ STM32-Toolchains in einen Export bündeln) anhand ihres tatsächlichen
 Inhalts statt der Lücke dazwischen. Ein rohes Firmware-Image unter
 einer anderen Erweiterung als `.bin` (`.img`, `.rom`, oder gar keine
 Erweiterung - wählbar über die „Alle Dateien“-Option des
-Dateiauswählers) erhält seine Basisadresse davon, in welchen Slot Sie
-es laden, genauso wie es eine `.bin` täte.
+Dateiauswählers) erhält seine Basisadresse aus dem Bereich, in den Sie
+es laden, genauso wie bei einer `.bin`-Datei.
 
-**Bootloader-/Anwendungs-Slot-Verifizierung**: die Dateiauswähler
-verifizieren, dass jedes Image für den Slot bestimmt ist, in den es
-gesetzt wird, nicht nur, dass es wie *irgendeine* Art gültiger Firmware
-aussieht. Ein Bootloader-Image und ein Anwendungs-Image haben einen
-gleich plausiblen Stack-Pointer - gleicher Chip, gleicher RAM - daher
-kann diese Prüfung allein sie nicht unterscheiden, wenn eines im Slot
-des anderen landet. Was es kann: der **Reset-Handler** eines gelinkten
-Images ist eine echte, absolute Adresse, die zur Linkzeit fest
-eingebettet wird, und zeigt immer nur in die Region, für die es
-tatsächlich gelinkt wurde. Verifiziert gegen die eigenen echten
-kompilierten `BOOTLOADER.bin`/`APP.bin` dieses Projekts: ihre
-Reset-Handler sind `0x08000785` bzw. `0x0800C0CD`, jeweils korrekt
-innerhalb des Adressbereichs ihres eigenen Slots und außerhalb desjenigen des
-anderen - daher wird das Setzen eines der beiden in den falschen Slot
-erkannt und blockiert, nicht stillschweigend akzeptiert. Dieselbe
-Logik gilt für `.hex`/`.elf`, stattdessen gegen ihre eigene eingebettete
-Ladeadresse geprüft.
+**Bereichsprüfung für Bootloader und Anwendung**: Die Dateiauswähler prüfen, dass jedes Image für den Bereich bestimmt ist, in den es gesetzt wird, und nicht nur, dass es wie *irgendeine* Art gültiger Firmware aussieht. Ein Bootloader-Image und ein Anwendungs-Image haben einen gleich plausiblen Stack-Pointer - gleicher Chip, gleicher RAM -, daher kann diese Prüfung allein sie nicht unterscheiden, wenn eines im Bereich des anderen landet. Was das kann: Der **Reset-Handler** eines gelinkten Images ist eine echte, absolute Adresse, die zur Linkzeit fest eingebettet wird, und zeigt immer nur in die Region, für die das Image tatsächlich gelinkt wurde. Geprüft gegen die echten kompilierten `BOOTLOADER.bin`/`APP.bin` dieses Projekts: Ihre Reset-Handler sind `0x08000785` bzw. `0x0800C0CD`, jeweils korrekt innerhalb des Adressbereichs des eigenen Bereichs und außerhalb desjenigen des anderen - daher wird ein Image im falschen Bereich erkannt und blockiert, nicht stillschweigend akzeptiert. Dieselbe Logik gilt für `.hex`/`.elf`, die stattdessen gegen ihre eigene eingebettete Ladeadresse geprüft werden.
 
 **Option-Bytes prüfen** (derselbe SWD/JTAG-Reiter, nur STM32CubeProgrammer - pyOCD
-exponiert dies nicht auf dieselbe Weise über CLI): ein
-schreibgeschützter `-ob displ`-Dump, kein Löschen/Schreiben. Markiert
-die RDP-Stufe mit derselben Sorgfalt, die dieses gesamte Tool rund um
-das SWD-Risiko walten lässt:
+bietet dies über die Kommandozeile nicht auf dieselbe Weise an): ein
+schreibgeschützter `-ob displ`-Dump, kein Löschen/Schreiben. Meldet
+die RDP-Stufe mit derselben Sorgfalt, die der Flasher dem
+SWD-Risiko insgesamt widmet:
 - **RDP0** - kein Schutz, normal für eine Entwicklungsplatine.
 - **RDP1** - über den Read Unprotect von CubeProgrammer reversibel,
   aber das löscht den Chip komplett als Teil der Entfernung - nichts,
-  was dieses Tool automatisch für Sie tut.
+  was der Flasher automatisch für Sie tut.
 - **RDP2** - die einzige wirklich **permanente** Sperre in diesem
   ganzen Projekt. Anders als jedes andere oben dokumentierte Risiko
   (alle über SWD wiederherstellbar), deaktiviert RDP2 den Debug-Port
-  für immer, per eigenem Design von ST. Diese Prüfung existiert, um
+  für immer, so von ST vorgesehen. Diese Prüfung existiert, um
   dies vor einer Chip-Komplett-Operation zu erkennen, nicht danach.
 
 **Sondenauswahl** (derselbe Reiter): wenn mehr als ein ST-Link/Sonde
 gleichzeitig verbunden ist, erfordert jeder Befehl, dass eine
-explizit aus dem Sonden-Dropdown gewählt wird - kein „welche auch immer
+explizit aus der Sondenliste gewählt wird - kein „welche auch immer
 das Betriebssystem zuerst aufzählt“. Mit genau einer verbundenen Sonde
 wird sie automatisch ausgewählt; bei null oder mehreren, drücken Sie
 Aktualisieren und wählen Sie. Dies gilt sowohl für den
 Chip-Komplett-Flash als auch für die Option-Bytes-Prüfung, da beide
-nah genug am Destruktiven sind, dass das Erraten der falschen Platine
+so zerstörerisch sind, dass das Erraten der falschen Platine
 auf einer Werkbank mit mehreren Geräten ein echtes Risiko darstellt.
 
 **pyOCD-Schreibvorgänge werden mit einem expliziten Rücklesen
-verifiziert**, nicht nur dem Exit-Code vertraut. Der eigene
+verifiziert**, ohne sich allein auf den Exit-Code zu verlassen. Der eigene
 `flash`-Befehl von pyOCD überspringt das Neuschreiben von Seiten, die
 bereits übereinstimmen (eine Geschwindigkeitsoptimierung, kein
-Verifizierungsbericht), daher fügt dieses Tool einen
+Verifizierungsbericht), daher fügt der Flasher einen
 `commander compare`-Schritt gegen beide Images nach dem Schreiben
 hinzu - eine echte Byte-für-Byte-Prüfung, die dem entspricht, was das
-`-v`-Flag von STM32CubeProgrammer bereits tut. Nur für `.bin`: `compare`
+`-v`-Kennzeichen von STM32CubeProgrammer bereits tut. Nur für `.bin`: `compare`
 prüft den Flash-Inhalt gegen die rohen Bytes der Datei, was mit der
 eigenen Kodierung einer `.hex`/`.elf`-Datei auch nach einem
 erfolgreichen Flash nicht korrekt übereinstimmen würde, daher
@@ -601,7 +572,7 @@ Grund-Byte zusammen mit Status `0x05` (Verifizierung fehlgeschlagen) -
 unvollständige Übertragung, CRC32-Abweichung, Signaturabweichung, oder
 HardwareID-Abweichung, statt dass jeder Fehler gleich aussieht. Siehe
 `docs/CANBUS.TXT` für das genaue Frame-Format (`0x7F5`, DLC 2 für
-diesen spezifischen Status). Dieses Tool und der Bootloader stimmen bei
+diesen spezifischen Status). Der Flasher und der Bootloader stimmen bei
 diesem Frame-Format überein, also flashen Sie beide zusammen, wenn Sie
 einen benutzerdefinierten Bootloader mit einer anderen Protokollversion
 bauen.
@@ -612,16 +583,16 @@ nachdem `0x215` `STATUS_VERIFY_FAIL` meldet, und leitet den eigenen
 `REG_VERIFY_FAIL_REASON` des Slave-Bootloaders weiter - dieselben 5
 Gründe wie oben, nur über die I2C-Bridge erreicht statt direkt aus
 einem CAN-Frame gelesen. Erfordert einen Slave-Bootloader, der `0x219`
-implementiert (zusammen mit der Unterstützung dieses Tools dafür
+implementiert (zusammen mit der Unterstützung im Flasher dafür
 hinzugefügt); ein älterer Slave-Bootloader antwortet auf diese Anfrage
-einfach nicht, und dieses Tool fällt dann auf die generische Meldung
+einfach nicht, und der Flasher fällt dann auf die generische Meldung
 „Verifizierung fehlgeschlagen“ zurück.
 
 ### Optionales F-RAM-Löschen vor dem Flashen
 
 Abschnitt 3 hat ein Kontrollkästchen, **"Auch das persistente F-RAM vor
 dem Flashen löschen"** - standardmäßig deaktiviert. Wenn markiert,
-sendet es den Lösch-Befehl mit magischem Payload (`0x192` - siehe
+sendet es den Lösch-Befehl mit magischer Nutzlast (`0x192` - siehe
 `docs/CANBUS.TXT`) an das persistente FM24CL64B-F-RAM der Platine,
 bevor die Update-Sequenz beginnt, und löscht dabei jeden gespeicherten
 Werkzeugparameterzustand.
@@ -642,15 +613,15 @@ führt aktuell die Anwendung aus“ darüber nicht markiert ist, da in
 diesem Fall angenommen wird, dass die Platine bereits im Bootloader
 sitzt.
 
-**Eine fehlende Bestätigung stoppt den Flash nicht.** Wenn der eigene
+**Eine fehlende Bestätigung stoppt den Flash nicht.** Wenn der
 Bestätigungs-Frame des Lösch-Befehls nicht innerhalb von 2 Sekunden
 zurückkommt, wird dies als Warnung protokolliert, und das eigentliche
 Firmware-Update wird trotzdem fortgesetzt - Löschen ist ein
-sekundärer, optionaler Schritt neben dem eigentlichen Zweck dieses
-Tools, nichts, das ein ansonsten erfolgreiches Update wegen des
+sekundärer, optionaler Schritt neben dem eigentlichen Zweck des
+Flashers, nichts, das ein ansonsten erfolgreiches Update wegen des
 Fehlens seines eigenen Bestätigungs-Frames abbrechen sollte. Prüfen
-Sie den F-RAM-Status separat (die eigene
-Zustand-Abfragen-Schaltfläche von `URTC Tester`), falls Ihnen das
+Sie den F-RAM-Status separat (mit der
+Schaltfläche Zustand abfragen von `URTC Tester`), falls Ihnen das
 wichtig ist.
 
 <!-- urtc-section:heads -->
@@ -675,19 +646,19 @@ Ein Plan oder eine Aktualisierung kann ohne Hardware gegen einen simulierten Bus
 | Ein fehlgeschlagenes Update, das die Platine unbrauchbar macht | Das Golden-Image-Modell: Der Sicherungsslot behält die vorherige Firmware, ein verlorener Bestätigungs-Frame wird durch erneute Versionsabfrage behoben statt einen falschen Fehler zu melden, und der Hauptslot kann vorher zurückgelesen werden |
 | Ein manipuliertes Update dieses Programms | „Nach Updates suchen“ akzeptiert nur ein Paket mit gültigem SHA-256 und gültiger Ed25519-Signatur (der im Programm festgelegte Schlüssel der Releases), installiert nur nach einer Bestätigung und nie während einer Übertragung und behält die vorherige Version |
 
-Der Bootloader der Hauptplatine prüft einen Ed25519-Eintrag des Images gegen eine Tabelle öffentlicher Schlüssel und hält kein Geheimnis; die Tabelle des offiziellen Builds ist leer, bis der Schlüssel zum Signieren der Images erzeugt ist, und ein Bench-Build vertraut einem öffentlichen Entwicklungsschlüssel, sodass jeder ein Image bauen kann, das ein solcher Bootloader akzeptiert. Nichts davon lief auf einer echten Platine.
+Der Bootloader der Hauptplatine prüft einen Ed25519-Eintrag des Images gegen eine Tabelle öffentlicher Schlüssel und hält kein Geheimnis; die Tabelle der offiziellen Kompilierung ist leer, bis der Schlüssel zum Signieren der Images erzeugt ist, und eine Prüfstands-Kompilierung vertraut einem öffentlichen Entwicklungsschlüssel, sodass jeder ein Image bauen kann, das ein solcher Bootloader akzeptiert. Nichts davon lief auf einer echten Platine.
 
 ### Zuverlässigkeit während eines CAN-Updates, und Sitzungsprotokolle
 
-Wenn das ACK einer Seite nicht innerhalb des normalen 3s-Fensters
-während eines CAN-Updates ankommt, wartet das Tool erneut (es sendet die
-Seitendaten nicht noch einmal) bis zu zweimal mehr mit einer kurzen
-zunehmenden Verzögerung, bevor es aufgibt. Das hilft nur bei einem ACK,
+Wenn das ACK einer Seite nicht innerhalb des normalen 3-s-Fensters
+während eines CAN-Updates ankommt, wartet der Flasher erneut (er sendet die
+Seitendaten nicht noch einmal), noch bis zu zweimal, mit einer kurzen,
+wachsenden Verzögerung, bevor er aufgibt. Das hilft nur bei einem ACK,
 das lediglich verspätet ist: Der Bootloader sendet jedes Seiten-ACK genau
 einmal und wiederholt es nie, ein wirklich verlorenes ACK lässt sich also
 nicht wiederherstellen, und das Update wird mit einem Fehler abgebrochen
 (die Platine bleibt in ihrem Bootloader, und das Update kann einfach neu
-gestartet werden). Das Tool sendet absichtlich keine Seitendaten bei einem
+gestartet werden). Der Flasher sendet absichtlich keine Seitendaten bei einem
 Timeout erneut - wären die Daten gut angekommen, würde ein erneutes Senden
 den Bootloader diese Bytes als Anfang der *nächsten* Seite lesen lassen
 und die Übertragung desynchronisieren. Während des Wartens wird der eigene
@@ -700,13 +671,13 @@ angekommen ist, und er ändert nie das Ergebnis.
 Jede Sitzung schreibt auch eine zeitgestempelte Protokolldatei nach
 `logs/` (`urtc_flasher_YYYYMMDD_HHMMSS.log`),
 unabhängig vom Bildschirmprotokoll - nützlich, um eine vollständige
-Spur an denjenigen weiterzugeben, der die Firmware geschrieben hat,
+Spur an die Person weiterzugeben, die die Firmware geschrieben hat,
 falls im Feld etwas schiefgeht. Dieser Ordner wird automatisch erstellt
 und ist sicher zu löschen; nichts liest alte Protokolle zurück. Es werden nur die neuesten 30 Sitzungsprotokolle behalten; kann der Ordner neben dem Programm nicht beschrieben werden (schreibgeschützte Installation), wird stattdessen ein Benutzerordner verwendet (`%LOCALAPPDATA%\URTC-Flasher\logs` unter Windows, sonst `~/.local/state/urtc-flasher/logs`).
 
 ## 🔌 Schnittstellen
 
-Für CI-Pipelines, Testbänke, oder Produktionslinien-Skripting, wo es
+Für CI-Pipelines, Testbänke oder Skripte für Produktionslinien, wo es
 keinen Bildschirm gibt:
 
 ```
@@ -722,7 +693,7 @@ Exit-Codes: `0` Erfolg, `1` Protokoll-/Verbindungsfehler, `2` falsche
 Argumente oder eine Firmware-Datei, die die Validierung nicht besteht
 (übergeben Sie `--force`, um sie trotzdem zu flashen), `130` mit Strg+C
 abgebrochen. Deckt nur den CAN-OTA-Update-Weg ab (Abschnitte 1-3) - der
-vollständige SWD/JTAG-Chip-Weg ist vorerst absichtlich nur-GUI, angesichts
+vollständige SWD/JTAG-Chip-Weg ist vorerst absichtlich der grafischen Oberfläche vorbehalten, angesichts
 dessen, wie viel mehr auf dem Spiel steht, wenn ein skriptgesteuerter
 Lauf eine falsche Datei-/Ziel-Kombination erwischt, ohne dass jemand
 zusieht.
@@ -737,7 +708,7 @@ Platine - kein Adapter, kein Port, nichts Physisches beteiligt:
 python3 urtc_flasher.py --cli --transport mock --file firmware.bin --no-trigger
 ```
 
-Nützlich, um die eigene Logik dieses Tools zu testen (Wiederholungsverhalten,
+Nützlich, um die Logik des Flashers zu testen (Wiederholungsverhalten,
 Timeout-Handling, Exit-Codes) in einer CI-Pipeline oder bevor echte
 Hardware berührt wird - nichts, das mit einer echten Platine spricht.
 `--mock-fail 0x03` (oder jeder andere `VERIFY_FAIL_REASON_*`-Wert aus
@@ -755,18 +726,18 @@ jedes Anwendungs-Image und veröffentlicht die Signatur daneben, in
 sendet diese veröffentlichte Signatur und lehnt ein Image ab, dessen sha256
 nicht zu seinem Manifest passt. Beim Herunterladen eines Images von GitHub
 werden beide Dateien mitgeladen, und `python tools/sync_firmware.py`
-aktualisiert den mitgelieferten Ordner `firmware/` aus dem URTC-Build
-(`--check` prüft ihn). Standardmäßig nimmt es den Satz aus den Anhänge des neuesten URTC-Releases (`--release TAG` wählt ein anderes); stattdessen kann ein lokaler Ordner, etwa ein lokaler URTC-Build, als Argument übergeben werden. Nur ein selbst gebautes Image ohne Manifest auf einer
+aktualisiert den mitgelieferten Ordner `firmware/` aus der URTC-Kompilierung
+(`--check` prüft ihn). Standardmäßig nimmt es den Satz aus den Anhängen des neuesten URTC-Releases (`--release TAG` wählt ein anderes); stattdessen kann ein lokaler Ordner, etwa eine lokale URTC-Kompilierung, als Argument übergeben werden. Nur ein selbst gebautes Image ohne Manifest auf einer
 Testplatine braucht einen Schlüssel: `hmac_key_hex` / `slave_hmac_key_hex`
 in `urtc_config.json` (unten) setzen - ohne ihn wird ein solches Image
 abgelehnt, statt mit einem Schlüssel signiert zu werden, den der Bootloader
-nicht haben kann. Siehe `docs/FIRMWARE_SIGNING.TXT` in URTC. Der Ed25519-Eintrag jedes Anwendungs-Images ist die Datei `<image>.imgsig`, die neben ihm veröffentlicht wird; der Flasher überträgt ihn nur an den Bootloader, der ihn gegen seine Tabelle öffentlicher Schlüssel prüft (der Flasher hält keinen Schlüssel und entscheidet nichts). Die Images eines Bench-Builds sind mit dem öffentlichen Entwicklungsschlüssel signiert (`signing_key_kind: dev`): jeder kann ein solches Image erzeugen.
+nicht haben kann. Siehe `docs/FIRMWARE_SIGNING.TXT` in URTC. Der Ed25519-Eintrag jedes Anwendungs-Images ist die Datei `<image>.imgsig`, die neben ihm veröffentlicht wird; der Flasher überträgt ihn nur an den Bootloader, der ihn gegen seine Tabelle öffentlicher Schlüssel prüft (der Flasher hält keinen Schlüssel und entscheidet nichts). Die Images einer Prüfstands-Kompilierung sind mit dem öffentlichen Entwicklungsschlüssel signiert (`signing_key_kind: dev`): jeder kann ein solches Image erzeugen.
 
 **Oder ersetzen Sie all dies, ohne das Skript zu berühren:** eine
 optionale `urtc_config.json` neben `firmware/` kann den Signierschlüssel,
 die HardwareID, und die Speicherplan-Werte setzen - nützlich für eine
 andere Platinenrevision, einen rotierten Schlüssel, oder (für die
-Speicherplan-Felder) die Anpassung dieses Tools an eine andere
+Speicherplan-Felder) die Anpassung des Flashers an eine andere
 Chip-Variante oder ein anderes Partitionsschema, ohne eine neue
 Skriptversion pro Bereitstellung zu benötigen:
 ```json
@@ -785,22 +756,21 @@ Skriptversion pro Bereitstellung zu benötigen:
 Jedes Feld ist optional - ersetzen Sie nur, was sich tatsächlich
 ändert. Eine fehlende Datei fällt stillschweigend auf die kompilierten
 Standardwerte zurück; eine vorhandene, aber defekte Datei protokolliert
-eine Warnung und fällt ebenfalls auf diese Werte zurück, statt das Tool
-wegen eines Tippfehlers abstürzen zu lassen. **Die Überschreibungen von Speicherplan und HardwareID gelten nur für die eigenen Konstanten der Hauptplatine** (die einzige Ausnahme ist `slave_hmac_key_hex`, der Signaturschlüssel des Erweiterungs-Slaves, der hier ebenfalls gesetzt werden kann) - die eigenen Äquivalente des Erweiterungs-Slave-Chips
+eine Warnung und fällt ebenfalls auf diese Werte zurück, statt den Flasher
+wegen eines Tippfehlers abstürzen zu lassen. **Die Überschreibungen von Speicherplan und HardwareID gelten nur für die eigenen Konstanten der Hauptplatine** (die einzige Ausnahme ist `slave_hmac_key_hex`, der Signaturschlüssel des Erweiterungs-Slaves, der hier ebenfalls gesetzt werden kann) - die Äquivalente des Erweiterungs-Slave-Chips
 (`SLAVE_BOOTLOADER_FLASH_ADDR`, `SLAVE_APP_FLASH_ADDR`,
-`SLAVE_HARDWARE_ID` usw.) sind fest in der eigenen `flasher_config.py`
+`SLAVE_HARDWARE_ID` usw.) sind fest in `flasher_config.py`
 verankert, da die echten Werte dieser Hardware bereits gegen ihre
-eigenen echten Linker-Skripte bestätigt sind, statt eine
-Bereitstellungszeit-Überschreibung zu benötigen, wie es die eigenen
-Standardwerte der Hauptplatine tun. Welche Quelle aktiv ist,
+Linker-Skripte bestätigt sind, während die Standardwerte der Hauptplatine
+bei der Bereitstellung überschrieben werden können. Welche Quelle aktiv ist,
 wird beim Start protokolliert, sodass immer sichtbar ist, welche Werte
 eine bestimmte Sitzung tatsächlich verwendet hat. `hardware_id`
 akzeptiert entweder eine JSON-Zeichenkette (`"0x0303CC01"`) oder eine
-einfache JSON-Zahl (`50580689`) - je nachdem, was für die Erzeugung
-der Datei natürlicher ist. `app_max_size`,
+einfache JSON-Zahl (`50580689`) - je nachdem, was sich für die Erzeugung
+der Datei besser eignet. `app_max_size`,
 `bootloader_max_size`, `flash_page_size`, `bootloader_flash_addr`, und
 `app_flash_addr` sind hier ebenfalls ersetzbar, neben dem
-Signierschlüssel und der HardwareID oben - nützlich, falls dieses Tool
+Signierschlüssel und der HardwareID oben - nützlich, falls der Flasher
 jemals an eine andere Chip-Variante oder ein anderes Partitionsschema
 angepasst wird.
 
@@ -850,16 +820,16 @@ verwenden (unter Windows erforderlich; unter Linux optional):
 3. Flashen Sie die SLCAN-Firmware mit dem Flash-Tool des Herstellers
    Ihres Adapters oder `dfu-util`.
 4. Wieder verbinden - es sollte sich nun als serieller Port anmelden:
-   ein COM-Port unter Windows, oder im Stil von
+   ein COM-Port unter Windows, oder ein Name wie
    `/dev/ttyACM0`/`/dev/ttyUSB0` unter Linux.
 
 Wenn Ihr Adapter bereits SLCAN-Firmware ausführt, springen Sie direkt zu
 Schritt 2 unten.
 
 Eine empfangene SLCAN-Zeile, deren tatsächliche Länge nicht mit dem
-übereinstimmt, was ihr eigenes deklariertes DLC impliziert, wird als
+übereinstimmt, was ihr deklariertes DLC verlangt, wird als
 fehlerhaft behandelt und übersprungen, statt anhand ihrer ersten N
-Hex-Zeichen unabhängig davon analysiert zu werden, was folgt - gut zu
+Hex-Zeichen ausgewertet zu werden, egal was danach kommt - gut zu
 wissen, wenn Sie gegen einen verrauschten oder nicht-standardmäßigen
 Adapter debuggen.
 
@@ -878,7 +848,7 @@ diese Datei).
 python3 -m pip install -r requirements.txt
 python3 urtc_flasher.py
 ```
-Oder erstellen Sie ein eigenständiges Binary mit `./build_exe.sh`
+Oder erstellen Sie ein eigenständiges Programm mit `./build_exe.sh`
 (zuerst `chmod +x`).
 
 Beide Skripte übergeben `--noconfirm` an PyInstaller, sodass ein
@@ -892,7 +862,7 @@ Das **Qt-Quick**-Steuerpult ist das einzige Fenster des Programms (nur gegen den
 ~~~
 python urtc_flasher.py
 ~~~
-Es hat eine dunkle marineblau/cyanfarbene Oberfläche mit Verbindungskarte, gut lesbaren Firmware-Tabellen, dunklem Verifizierungsprotokoll und sichtbarem Fortschrittskanal und deckt den gesamten Ablauf ab: das CAN-OTA-Update der Hauptplatine oder des Erweiterungs-Slaves (die Zielauswahl; die Option „Platine führt die Anwendung aus“, das F-RAM-Löschen und die Downgrade-Freigabe gelten nur für die Hauptplatine), eine Sicherung der installierten Firmware über CAN, die Bitraten-Auswahl mit der Nur-Hören-Suche, den Download eines GitHub-Releases, eine Dateiauswahl für jede `.bin`, die Busaktivitätsprüfung, den Platinenstatus, die 4 Gerätekonfigurations-Schreibvorgänge, die schreibgeschützte SWD/JTAG-Erkennung und die Programmierung des kompletten Chips per SWD/JTAG (Löschen/Schreiben, Probelauf, Sicherung vor dem Löschen, RDP-Prüfung). Jede Aktion, die auf die Platine schreibt, fragt vorher nach, die Downgrade-Freigabe fragt ein zweites Mal, und das Schließen des Fensters während einer Übertragung fragt noch einmal. Nichts davon wurde an einer echten Platine erprobt. `python urtc_flasher.py --cli` ist der Headless-Modus (Abschnitt 7).
+Es hat eine dunkle marineblau/cyanfarbene Oberfläche mit Verbindungskarte, gut lesbaren Firmware-Tabellen, dunklem Verifizierungsprotokoll und sichtbarem Fortschrittskanal und deckt den gesamten Ablauf ab: das CAN-OTA-Update der Hauptplatine oder des Erweiterungs-Slaves (die Zielauswahl; die Option „Platine führt die Anwendung aus“, das F-RAM-Löschen und die Downgrade-Freigabe gelten nur für die Hauptplatine), eine Sicherung der installierten Firmware über CAN, die Auswahl der Busgeschwindigkeit mit der Nur-Hören-Suche, den Download eines GitHub-Releases, eine Dateiauswahl für jede `.bin`, die Busaktivitätsprüfung, den Platinenstatus, die 4 Gerätekonfigurations-Schreibvorgänge, die schreibgeschützte SWD/JTAG-Erkennung und die Programmierung des kompletten Chips per SWD/JTAG (Löschen/Schreiben, Probelauf, Sicherung vor dem Löschen, RDP-Prüfung). Jede Aktion, die auf die Platine schreibt, fragt vorher nach, die Downgrade-Freigabe fragt ein zweites Mal, und das Schließen des Fensters während einer Übertragung fragt noch einmal. Nichts davon wurde an einer echten Platine erprobt. `python urtc_flasher.py --cli` ist der Modus ohne Fenster (Abschnitt 7).
 
 #### Kopfzeile und Werkzeuge
 
@@ -902,9 +872,9 @@ Es hat eine dunkle marineblau/cyanfarbene Oberfläche mit Verbindungskarte, gut 
 
 **Sprache**: Englisch als Standard.
 Wird mit der Sprachauswahl in der Kopfzeile des Fensters gewechselt - speichert sofort in `urtc_config.json` (dieselbe Datei, die für die technischen
-Hardware-Überschreibungen verwendet wird — die Spracheinstellung lebt
-einfach neben diesen), angewendet beim nächsten Start. Übersetzungen
-leben in reinen Textdateien unter `language/` (`english.lng`,
+Hardware-Überschreibungen verwendet wird — die Spracheinstellung steht
+einfach daneben), angewendet beim nächsten Start. Übersetzungen
+stehen in reinen Textdateien unter `language/` (`english.lng`,
 `spanish.lng`, `italian.lng`, `french.lng`, `german.lng`, `japanese.lng`, `chinese.lng`, `portuguese.lng`) als einfache
 `SCHLÜSSEL=Wert`-Paare, eines pro Zeile - Zeilen, die mit `#` beginnen,
 und leere Zeilen werden ignoriert, und ein wörtliches `\n` innerhalb
@@ -916,7 +886,7 @@ von `flasher_config.py` hinzu, und setzen Sie `"language": "<name>"` in
 darauf zurück, den Namen dieses Schlüssels selbst anzuzeigen, statt
 abzustürzen, und eine fehlende oder unlesbare Sprachdatei (fehlerhafte
 Bearbeitung, falscher Dateiname) fällt für die gesamte Oberfläche auf
-Englisch zurück - so oder so bleibt das Tool nutzbar, während die
+Englisch zurück - so oder so bleibt der Flasher nutzbar, während die
 Unstimmigkeit behoben wird.
 
 **Serielle Berechtigungen unter Linux:** wenn Sie den Seriell/SLCAN-Weg
@@ -927,7 +897,7 @@ Ihr Benutzer in der Gruppe sein, die die seriellen Geräte besitzt
 sudo usermod -a -G dialout $USER
 ```
 Melden Sie sich ab und wieder an (die Gruppenmitgliedschaft wird beim
-Login gelesen), dann versuchen Sie es erneut. Das Tool erkennt diesen
+Login gelesen), dann versuchen Sie es erneut. Der Flasher erkennt diesen
 spezifischen Fehler und zeigt dieselbe Lösung in einem Dialog, aber es
 lohnt sich, dies vorher zu wissen. SocketCAN hat dieses spezielle
 Problem nicht — der Zugriff auf eine Schnittstelle vom Typ `can0` wird
@@ -936,15 +906,15 @@ Schnittstelle überhaupt (Schritt 1 oben) benötigt trotzdem `sudo`, da
 dies eine Änderung der Netzwerkgerätekonfiguration ist.
 
 Die Verwendung von `python -m pip`/`python3 -m pip` statt eines bloßen
-`pip` umgeht ein häufiges Problem auf beiden Plattformen: das eigene
-Wrapper-Skript von `pip` ist nicht immer im PATH, selbst direkt nach
+`pip` umgeht ein häufiges Problem auf beiden Plattformen: das Startskript
+von `pip` selbst ist nicht immer im PATH, selbst direkt nach
 einer erfolgreichen Installation, während `-m pip` das installierte
 Modul direkt findet.
 
 ### Wohin die Firmware-Dateien gehören
 
 **Der Ordner ist anfangs leer.** Die Firmware-Images liegen nicht in diesem Repository: Sie sind die Dateien der Releases von [URTC](https://github.com/JuanenRac/URTC). Das Fenster lädt sie aus dem gewählten Release herunter, und `python tools/sync_firmware.py` füllt den Ordner aus dem neuesten offiziellen Release (oder `--release TAG`). Jede Datei wird vor der Verwendung gegen die Release-Signatur (`.sig`, Ed25519) und ihre Prüfsummen geprüft.
-Dieses Tool erwartet einen `firmware/`-Ordner direkt neben
+Der Flasher erwartet einen `firmware/`-Ordner direkt neben
 `urtc_flasher.py`, im Wurzelverzeichnis dieses Repositorys:
 
 ```
@@ -971,9 +941,9 @@ Dieses Tool erwartet einen `firmware/`-Ordner direkt neben
 └── README.md
 ```
 
-Dieses Tool ist aus Gründen der Lesbarkeit in die obigen Module nach
-Zuständigkeit organisiert - es gibt keinen funktionalen Unterschied
-zwischen separaten Dateien und einer großen Datei.
+Der Flasher ist aus Gründen der Lesbarkeit nach Zuständigkeit in die
+obigen Module gegliedert - es gibt keinen funktionalen Unterschied
+zwischen getrennten Dateien und einer großen Datei.
 
 Dies ist beabsichtigt: das gesamte Repository ist in sich geschlossen.
 Wenn Sie nur eine Platine flashen wollen — auf einem Werkstatt-PC, von
@@ -981,7 +951,7 @@ einem USB-Stick, wo auch immer — können Sie dieses Repository allein
 kopieren, und es funktioniert trotzdem.
 
 **Sie können mehr als eine `.bin` dort haben.** Jede
-Anwendungs-Firmware-Datei wird geprüft und aufgelistet - das Tool
+Anwendungs-Firmware-Datei wird geprüft und aufgelistet - der Flasher
 greift nicht einfach nach der ersten, die es findet, und
 Bootloader-Binärdateien (alles mit „BOOTLOADER“ im Dateinamen -
 `URTC_BOOTLOADER.bin`, `URTC_SLAVE_BOOTLOADER.bin`) werden vollständig
@@ -992,7 +962,7 @@ wenn Sie auf **Aktualisieren** klicken) wird jede verbleibende `.bin`
 in `firmware/` gegen denselben Plausibilitätstest geprüft, den der
 Bootloader selbst auf ein frisches Image anwendet (ihre ersten 4 Bytes
 müssen wie ein echter anfänglicher Stack-Pointer für den RAM dieses
-Chips aussehen, und ihre Größe muss in den Hauptslot passen). Jede
+Chips aussehen, und ihre Größe muss in den Hauptbereich passen). Jede
 Datei erscheint in der Liste mit einem klaren ✓ oder ✗ und dem
 Grund:
 
@@ -1002,16 +972,16 @@ Grund:
 | URTC_SLAVE_FIRMWARE_v<version>.bin | 33.9 KB | ✓ sieht gültig aus |
 | notes.txt.bin | 0.1 KB | ✗ erstes Wort sieht nicht wie ein gültiger Stack-Pointer aus |
 
-- **Genau eine Datei besteht die Prüfung** → sie wird in dem Moment für
-  Sie ausgewählt, in dem das Tool startet. Eine ungültige Datei allein
+- **Genau eine Datei besteht die Prüfung** → sie wird beim Start des
+  Flashers für Sie ausgewählt. Eine ungültige Datei allein
   im Ordner wird *nicht* automatisch ausgewählt, nur weil nichts anderes
   mit ihr konkurriert.
 - **Mehr als eine gültige Datei** → nichts wird automatisch ausgewählt;
   wählen Sie die gewünschte aus der Liste.
-- **Sie wählen trotzdem eine ungültig aussehende Datei** → das Tool
+- **Sie wählen trotzdem eine ungültig aussehende Datei** → der Flasher
   bittet Sie zuerst um Bestätigung. Diese Prüfung existiert, um
   offensichtliche Fehler abzufangen (falsche Datei, abgebrochener
-  Download, ein leerer Platzhalter) - sie kann nicht alles abfangen
+  Download, eine leere Platzhalterdatei) - sie kann nicht alles abfangen
   (eine beschädigte, aber plausible Datei, oder eine mit dem falschen
   Schlüssel signierte), wofür die eigene CRC32-/Signaturprüfung des
   Bootloaders während der eigentlichen Übertragung da ist.
@@ -1019,7 +989,7 @@ Grund:
   verwenden Sie die Schaltfläche **Durchsuchen .bin...**, die unabhängig
   davon funktioniert, wo die Datei tatsächlich liegt (und in beiden
   Fällen dieselbe Validierungsprüfung ausführt).
-- **Sie wollen den neuesten Build, ohne ihn selbst suchen zu müssen** →
+- **Sie wollen die neueste Kompilierung, ohne sie selbst suchen zu müssen** →
   **Von GitHub herunterladen...** listet die Dateien auf, die am neuesten
   GitHub-Release des URTC-Repositorys hängen
   (`github.com/JuanenRac/URTC/releases`; die Firmware-Binärdateien werden
@@ -1033,16 +1003,16 @@ Grund:
   ihm heruntergeladen. Dateien werden nur von GitHubs eigenen Hosts
   akzeptiert (`github.com` und die Asset-Speicher-Hosts, auf die
   weitergeleitet wird), und eine Datei, deren Größe von der des Releases
-  abweicht, wird verworfen. Verwendet die eigene öffentliche API von
-  GitHub (nicht authentifiziert, daher dem Ratenlimit von 60
-  Anfragen/Stunde unterworfen, falls Sie es viel in kurzer Zeit nutzen;
+  abweicht, wird verworfen. Nutzt die öffentliche API von
+  GitHub (nicht authentifiziert, daher dem Limit von 60
+  Anfragen pro Stunde unterworfen, falls Sie sie viel in kurzer Zeit nutzen;
   eine Umgebungsvariable `GITHUB_TOKEN` hebt es an) - nichts hier
   benötigt ein GitHub-Konto.
 
-Jede Datei eines offiziellen Releases hat eine Release-Signatur (`<Datei>.sig`, Ed25519): Der Flasher prüft sie, wenn sie vorhanden ist, und lehnt eine falsche ab. Ein Satz ohne Signaturen, etwa eine Bench-Vorabversion, wird von `tools/sync_firmware.py` nur mit `--allow-unsigned` akzeptiert.
+Jede Datei eines offiziellen Releases hat eine Release-Signatur (`<Datei>.sig`, Ed25519): Der Flasher prüft sie, wenn sie vorhanden ist, und lehnt eine falsche ab. Ein Satz ohne Signaturen, etwa eine Prüfstands-Vorabversion, wird von `tools/sync_firmware.py` nur mit `--allow-unsigned` akzeptiert.
 
 **`<dateiname>.manifest.json` und `<dateiname>.sha256`, neben jeder
-Firmware-Datei** - vom URTC-Build für jedes Image veröffentlicht (und von
+Firmware-Datei** - von der URTC-Kompilierung für jedes Image veröffentlicht (und von
 GitHub zusammen damit heruntergeladen). Das Manifest enthält die Version,
 den `sha256` und bei Anwendungs-Images den `hmac_sha256`-Wert, den der Bootloader erwartet (ein HMAC-SHA256 mit gemeinsamem Schlüssel, den nur die Bootloader der früheren Generation prüfen; der Ed25519-Eintrag, den die aktuellen prüfen, ist die Datei `<image>.imgsig` neben dem Image; `signing_key_kind: dev` kennzeichnet den öffentlichen Entwicklungsschlüssel):
 
@@ -1054,11 +1024,11 @@ Beide Prüfsummen werden direkt vor dem Flashen geprüft, und eine
 Abweichung **verweigert das Flashen**, bevor irgendetwas auf den Bus geht
 (falsche Datei, beschädigter Download oder veraltetes Manifest). Gesendet
 wird die veröffentlichte Signatur, und dem Bootloader wird die Version aus
-dem Manifest gemeldet. Eine Datei ohne Manifest (ein eigener Build) wird nur
+dem Manifest gemeldet. Eine Datei ohne Manifest (eine eigene Kompilierung) wird nur
 geflasht, wenn in `urtc_config.json` ein Signierschlüssel gesetzt ist -
 siehe weiter unten zum Ändern des HMAC-Schlüssels.
 
-Später einen neuen Build hinzufügen: einfach in `firmware/` ablegen und
+Eine neue Kompilierung später hinzufügen: einfach in `firmware/` ablegen und
 auf **Aktualisieren** klicken - kein Neustart nötig.
 
 <!-- urtc-section:first_flash -->
@@ -1133,15 +1103,7 @@ Die kommentierte Liste jeder Quelldatei, eine Zeile je Datei, steht in [docs/SOU
 
 ## 🗺️ Roadmap und bekannte Grenzen
 
-**Status:** die CRC32- und HMAC-SHA256-Berechnung in diesem Tool wurde
-Byte für Byte gegen die eigene C-Implementierung des Bootloaders
-verifiziert, und das SocketCAN-Frame-Packing wurde gegen das
-`struct can_frame`-Layout von Linux mit einem Hin-und-Rück-Pack/Unpack-
-Test verifiziert. Was auf keiner der 2 Plattformen getestet wurde, ist
-eine echte Platine auf echter Hardware - behandeln Sie einen ersten
-echten Flash-Versuch mit derselben Vorsicht, die Sie jedem neuen Tool
-entgegenbringen würden, das mit einem Bootloader spricht: halten Sie
-JTAG als Rückfalloption bereit. Alles Übrige hier Beschriebene wurde nur gegen `MockCAN`, einen simulierten Bootloader, erprobt, nie gegen eine echte Platine.
+**Status:** die CRC32- und HMAC-SHA256-Berechnung im Flasher wurde Byte für Byte gegen die C-Implementierung des Bootloaders verifiziert, und das SocketCAN-Frame-Packing wurde gegen das `struct can_frame`-Layout von Linux mit einem Hin-und-Rück-Test (Packen und Entpacken) verifiziert. Was auf keiner der 2 Plattformen getestet wurde, ist eine echte Platine auf echter Hardware - behandeln Sie einen ersten echten Flash-Versuch mit derselben Vorsicht, die Sie jedem neuen Programm entgegenbringen würden, das mit einem Bootloader spricht: halten Sie JTAG als Rückfalloption bereit. Alles Übrige hier Beschriebene wurde nur gegen `MockCAN`, einen simulierten Bootloader, erprobt, nie gegen eine echte Platine.
 
 ## 🌍 Sprachen
 
@@ -1221,16 +1183,7 @@ passend zu dem, was sie tatsächlich abdeckt:
    International (CC BY-SA 4.0)** verfügbar. Vollständiger Text unter
    https://creativecommons.org/licenses/by-sa/4.0/.
 
-Dieses Tool ist der CAN-OTA/SWD-JTAG-Flash-Begleiter des
-[URTC (Universal Robot Tool Controller)](https://github.com/JuanenRac/URTC)
--Projekts - siehe das eigene Repository dieses Projekts für die
-Platinen-Firmware, Hardware-Designs und die vollständige
-Protokolldokumentation, gegen die dieses Tool implementiert. Die eigene
-Firmware von URTC ist GPL-3.0-or-later und ihre Hardware-Designs sind CERN-OHL-S
-v2; die eigene Lizenz dieses Tools erstreckt sich hier nicht auf dieses
-separate Projekt, und umgekehrt. Eine webbasierte Alternative, die
-ähnliches Terrain abdeckt, existiert ebenfalls unter
-[URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO).
+Der Flasher ist der CAN-OTA/SWD-JTAG-Flash-Begleiter des Projekts [URTC (Universal Robot Tool Controller)](https://github.com/JuanenRac/URTC) - siehe dessen eigenes Repository für die Platinen-Firmware, die Hardware-Entwürfe und die vollständige Protokolldokumentation, nach der der Flasher entwickelt wurde. Die Firmware von URTC steht unter GPL-3.0-or-later und ihre Hardware-Entwürfe unter CERN-OHL-S v2; die Lizenz des Flashers erstreckt sich nicht auf dieses separate Projekt, und umgekehrt. Eine webbasierte Alternative mit ähnlichem Funktionsumfang gibt es ebenfalls: [URTC Web Studio](https://github.com/JuanenRac/URTC-WEB-STUDIO).
 
 Wenn Sie auf diesem Projekt aufbauen, denken Sie an die Lizenztrennung:
 Codeänderungen sollten GPL-3.0-or-later bleiben, Dokumentationsableitungen
