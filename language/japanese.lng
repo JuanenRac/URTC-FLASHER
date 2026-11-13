@@ -272,6 +272,7 @@ QT_SWD_BACKUP_DIALOG_TITLE=フラッシュのバックアップを保存...
 ERR_CANCELLED_BY_USER=ユーザーによって中止されました
 ERR_UNKNOWN_REASON=不明な理由
 ERR_UNKNOWN_REASON_CODE=不明な理由 0x{code}
+ERR_DIGEST_CHUNK_MISSING=バス上でダイジェストのブロックが失われました（4 つ未満しか届きませんでした）。イメージはインストールされていません。更新をやり直してください
 ERR_BOOTLOADER_VERIFY_FAILURE=ブートローダーが検証の失敗を報告しました：{reason}
 ERR_BOOTLOADER_GENERIC_ERROR=ブートローダーが一般的なエラー状態を報告しました
 ERR_TIMEOUT_WAITING_CAN_ID=CAN ID 0x{can_id} の待機中にタイムアウトしました

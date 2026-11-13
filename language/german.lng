@@ -273,6 +273,7 @@ QT_SWD_BACKUP_DIALOG_TITLE=Flash-Sicherung speichern unter...
 ERR_CANCELLED_BY_USER=Vom Benutzer abgebrochen
 ERR_UNKNOWN_REASON=unbekannter Grund
 ERR_UNKNOWN_REASON_CODE=unbekannter Grund 0x{code}
+ERR_DIGEST_CHUNK_MISSING=ein Digest-Block ging auf dem Bus verloren (weniger als die 4 kamen an); das Image wurde nicht installiert, Update erneut versuchen
 ERR_BOOTLOADER_VERIFY_FAILURE=Der Bootloader meldete einen Verifizierungsfehler: {reason}
 ERR_BOOTLOADER_GENERIC_ERROR=Der Bootloader meldete einen allgemeinen Fehlerstatus
 ERR_TIMEOUT_WAITING_CAN_ID=Zeitüberschreitung beim Warten auf CAN-ID 0x{can_id}
