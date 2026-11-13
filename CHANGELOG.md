@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The copies taken from URTC-COMMON are refreshed:** the protocol layer and the virtual board follow the catalog again (the identifier of the clear-error command, the heater-only layout of 0x170 and the implicit index of the digest chunks), so the comparison of the shared nightly passes.
+
 - **The Spanish, German, French and European Portuguese README were read for register and wording:** the programs are called the same way in every language (tester, updater, Web Studio), calques, straight quotes and words of another language were corrected, and the Related Projects section follows the shared texts.
 
 - **The Chinese texts say "flashing" with one word:** the texts of the program and the README use 刷写 for flashing a firmware image, over the bus or with a probe, instead of mixing it with 烧录 and 烧写; the texts come from the shared catalog.

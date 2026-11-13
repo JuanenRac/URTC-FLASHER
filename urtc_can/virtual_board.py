@@ -85,7 +85,16 @@ class VirtualBoard:
     def __init__(self, hardware_id: int = protocol.HARDWARE_ID_MAIN, version: tuple[int, int] = (0, 4), patch: int | None = 0,
                  accepts_patch: bool = False, tool_id: int = 0, system_error: bool = False, can_error: bool = False,
                  booting: bool = False, thermal_fault: int | None = 0, reset_cause: int | None = 0,
-                 bootloader: bool = False, heater_config: dict | None = None, key_rotation: krc.State | None = None, **bootloader_options) -> None:
+                 bootloader: bool = False, heater_config: dict | None = None, key_rotation: krc.State | None = None,
+                 error_reason: int | None = None, clear_result: int | None = None, features: int = 0, temperature_c: int = 20,
+                 actuators_off: bool = True, **bootloader_options) -> None:
+        # ``error_reason`` and ``clear_result`` are the two last bytes of the quick state (None: a board that does not send them). ``features`` is the mask in
+        # force (every optional function off by default), ``temperature_c`` what the tool reads (0xFFFF: unknown) and ``actuators_off`` whether everything is at zero.
+        self.error_reason = error_reason
+        self.clear_result = clear_result
+        self.features = features
+        self.temperature_c = temperature_c
+        self.actuators_off = actuators_off
         self.hardware_id = hardware_id
         self.version = version
         self.patch = patch
@@ -131,13 +140,32 @@ class VirtualBoard:
 
     def _quick_state(self) -> Frame:
         return protocol.encode_active_tool_resp(self.tool_id, int(self.system_error), int(self.can_error), int(self.booting),
-                                                self.thermal_fault, self.reset_cause)
+                                                self.thermal_fault, self.reset_cause,
+                                                self.error_reason if self.error_reason is not None or self.clear_result is None else protocol.ERROR_REASON_NONE,
+                                                self.clear_result)
+
+    def _clear_error(self, data: bytes) -> list[Frame]:
+        """0x1B2: with the magic payload the decision of ``safety_policy`` is applied; the answer is the quick state, whose last byte tells the outcome."""
+        if data != protocol.MAGIC_CLEAR_ERROR:
+            return []   # any other payload is ignored, like every command that needs its magic
+        from . import safety_policy   # here and not at the top: a program that copied this file before the decisions existed still imports it
+        reason = self.error_reason if self.error_reason is not None else protocol.ERROR_REASON_UNKNOWN
+        result = safety_policy.clear_error_decision(bool(self.features & protocol.FEATURE_CLEAR_ERROR), self.system_error, reason, self.temperature_c,
+                                                    self.actuators_off)
+        self.clear_result = result
+        if result == protocol.CLEAR_ERROR_CLEARED:
+            self.system_error = False
+            self.error_reason = protocol.ERROR_REASON_NONE
+            self.thermal_fault = 0 if self.thermal_fault is not None else None
+        return [self._quick_state()]
 
     def _application(self, can_id: int, data: bytes) -> list[Frame]:
         if can_id == protocol.CAN_ID_QUERY_VERSION:
             return self._version_answer()
         if can_id == protocol.CAN_ID_QUERY_ACTIVE_TOOL:
             return [self._quick_state()]
+        if can_id == protocol.CAN_ID_CLEAR_ERROR:
+            return self._clear_error(data)
         if can_id == protocol.CAN_ID_SOLDER_SETPOINT and self.tool_id == protocol.TOOL_SOLDERING_IRON and not self.system_error:
             fields = protocol.decode_solder_setpoint(data)
             if fields is not None:

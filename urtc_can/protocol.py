@@ -55,6 +55,10 @@ THERMAL_CHUNK_BYTES = 0x20  # Bytes per thermal chunk (4 frames of 8) (bytes)
 THERMAL_CHUNK_COUNT_MLX90640 = 0x30  # Chunks of a 32x24 frame (MLX90640 and MLX90642)
 THERMAL_CHUNK_COUNT_MLX90641 = 0xC  # Chunks of a 16x12 frame (MLX90641)
 BLACKBOX_CHUNK_COUNT = 0x16  # Chunks of the fault recorder record read by 0x1A8
+CLEAR_ERROR_MAX_TEMP_C = 0x32  # A latched error is lifted only below this temperature (C)
+STEPPER_SILENCE_MIN_MS = 0x3E8  # Least silence of the host that cuts a stepper move (communication watchdog on) (ms)
+STEPPER_SILENCE_PERCENT = 0x32  # Silence that cuts a stepper move, as a percentage of the time the move should take (never below the least) (%)
+MAGNET_SILENCE_MS = 0x1388  # Silence of the host after which the electromagnet lets go (communication watchdog and release policy on) (ms)
 
 # --- identifiers ---
 CAN_ID_IMPACT_EVENT = 0x095  # Impact register (touch probe, maximum priority)
@@ -103,6 +107,7 @@ CAN_ID_MULTINODE_CONFIG_RESP = 0x1AD  # The multinode switch: stored value, valu
 CAN_ID_SET_FEATURES = 0x1AE  # Switch the optional firmware features on or off (persistent, acts after the next power-up)
 CAN_ID_FEATURES_RESP = 0x1AF  # The optional firmware features: stored mask, mask in force and supported mask
 CAN_ID_ELECTROMAGNET_CMD = 0x1B0  # Electromagnet coil
+CAN_ID_CLEAR_ERROR = 0x1B2  # Lift a latched critical error without a power cycle (feature CLEAR_ERROR, off by default)
 CAN_ID_HEALTH_PROFILE = 0x1B8  # Periodic health frame of the board (only while the health feature runs)
 CAN_ID_PID_CONFIG = 0x1B9  # Gains of the heater PID and start of its relay autotune
 CAN_ID_PID_STATE_RESP = 0x1BA  # The heater PID: gains in force, state and output
@@ -215,6 +220,7 @@ SLAVE_STATUS_AWAIT_CONFIRM = 0x08
 
 # Verify-fail reasons only the expansion slave bootloader reports (the others are verify_fail_reason)
 SLAVE_VERIFY_FAIL_REASON_NOT_CONFIRMED = 0x06
+SLAVE_VERIFY_FAIL_REASON_DIGEST_CHUNK_MISSING = 0x07
 
 # Answering side
 RESPONDER_APPLICATION = 0x00
@@ -296,6 +302,9 @@ FEATURE_MOTION_RAMPS = 0x01
 FEATURE_HEALTH_PROFILE = 0x02
 FEATURE_HSI_AUTOTRIM = 0x04
 FEATURE_THERMAL_PID = 0x08
+FEATURE_CLEAR_ERROR = 0x10
+FEATURE_COMMS_WATCHDOG = 0x20
+FEATURE_MAGNET_RELEASE = 0x40
 
 # Speed profile of a stepper move
 MOTION_PROFILE_CONSTANT = 0x00
@@ -314,6 +323,26 @@ PID_STATE_RUNNING = 0x01
 PID_STATE_AUTOTUNING = 0x02
 PID_STATE_AUTOTUNE_DONE = 0x03
 PID_STATE_AUTOTUNE_FAILED = 0x04
+
+# Why the board latched its critical error
+ERROR_REASON_NONE = 0x00
+ERROR_REASON_UNKNOWN = 0x01
+ERROR_REASON_THERMAL = 0x02
+ERROR_REASON_SENSOR = 0x03
+ERROR_REASON_TOOL_ID = 0x04
+ERROR_REASON_COMMS_WATCHDOG = 0x05
+ERROR_REASON_FAN_STALL = 0x06
+ERROR_REASON_STEPPER_SILENCE = 0x07
+ERROR_REASON_MAGNET_RELEASE = 0x08
+
+# Outcome of the last clear-error command
+CLEAR_ERROR_NONE = 0x00
+CLEAR_ERROR_CLEARED = 0x01
+CLEAR_ERROR_REFUSED_SWITCH_OFF = 0x02
+CLEAR_ERROR_REFUSED_NO_ERROR = 0x03
+CLEAR_ERROR_REFUSED_NOT_CLEARABLE = 0x04
+CLEAR_ERROR_REFUSED_HOT = 0x05
+CLEAR_ERROR_REFUSED_ACTUATOR_ON = 0x06
 
 ENUM_NAMES = {'tool': {0: 'SOLDERING_IRON',
           1: 'PASTE_DISPENSER',
@@ -351,7 +380,7 @@ ENUM_NAMES = {'tool': {0: 'SOLDERING_IRON',
                        255: 'ERROR'},
  'verify_fail_reason': {1: 'INCOMPLETE', 2: 'CRC32', 3: 'HMAC', 4: 'HARDWARE_ID', 5: 'ROLLBACK'},
  'slave_bootloader_status': {8: 'AWAIT_CONFIRM'},
- 'slave_verify_fail_reason': {6: 'NOT_CONFIRMED'},
+ 'slave_verify_fail_reason': {6: 'NOT_CONFIRMED', 7: 'DIGEST_CHUNK_MISSING'},
  'responder': {0: 'APPLICATION', 1: 'BOOTLOADER'},
  'thermal_fault': {0: 'NONE', 1: 'MAXTEMP', 2: 'HEATING_NO_RISE', 3: 'DROPPED_AT_TARGET'},
  'reset_cause': {1: 'IWDG', 2: 'WWDG', 4: 'SOFTWARE', 8: 'POWER_ON', 16: 'PIN', 32: 'LOW_POWER', 64: 'OPTION_BYTES'},
@@ -372,10 +401,32 @@ ENUM_NAMES = {'tool': {0: 'SOLDERING_IRON',
  'extruder_direction': {1: 'FORWARD', 0: 'RETRACT'},
  'version_flags': {1: 'END_UPDATE_PATCH'},
  'impact_event': {1: 'IMPACT'},
- 'firmware_feature': {1: 'MOTION_RAMPS', 2: 'HEALTH_PROFILE', 4: 'HSI_AUTOTRIM', 8: 'THERMAL_PID'},
+ 'firmware_feature': {1: 'MOTION_RAMPS',
+                      2: 'HEALTH_PROFILE',
+                      4: 'HSI_AUTOTRIM',
+                      8: 'THERMAL_PID',
+                      16: 'CLEAR_ERROR',
+                      32: 'COMMS_WATCHDOG',
+                      64: 'MAGNET_RELEASE'},
  'motion_profile': {0: 'CONSTANT', 1: 'TRAPEZOID', 2: 'S_CURVE'},
  'pid_action': {0: 'SET_GAINS', 1: 'AUTOTUNE_START', 2: 'AUTOTUNE_ABORT', 3: 'QUERY'},
- 'pid_state': {0: 'OFF', 1: 'RUNNING', 2: 'AUTOTUNING', 3: 'AUTOTUNE_DONE', 4: 'AUTOTUNE_FAILED'}}
+ 'pid_state': {0: 'OFF', 1: 'RUNNING', 2: 'AUTOTUNING', 3: 'AUTOTUNE_DONE', 4: 'AUTOTUNE_FAILED'},
+ 'error_reason': {0: 'NONE',
+                  1: 'UNKNOWN',
+                  2: 'THERMAL',
+                  3: 'SENSOR',
+                  4: 'TOOL_ID',
+                  5: 'COMMS_WATCHDOG',
+                  6: 'FAN_STALL',
+                  7: 'STEPPER_SILENCE',
+                  8: 'MAGNET_RELEASE'},
+ 'clear_error_result': {0: 'NONE',
+                        1: 'CLEARED',
+                        2: 'REFUSED_SWITCH_OFF',
+                        3: 'REFUSED_NO_ERROR',
+                        4: 'REFUSED_NOT_CLEARABLE',
+                        5: 'REFUSED_HOT',
+                        6: 'REFUSED_ACTUATOR_ON'}}
 ENUM_TITLES = {'tool': {0: 'Soldering Iron',
           1: 'Paste Dispenser',
           2: 'Liquid Dispenser',
@@ -417,7 +468,9 @@ ENUM_TITLES = {'tool': {0: 'Soldering Iron',
                         5: 'Rollback rejected'},
  'slave_bootloader_status': {8: "Image verified by the slave; waiting ten seconds for the master's confirmation"},
  'slave_verify_fail_reason': {6: 'The master did not confirm the image in time, or its confirmation does not match '
-                                 'this session and image'},
+                                 'this session and image',
+                              7: 'The master bridge found a group of digest chunks (0x212) left half way when the '
+                                 'end (0x214) arrived; a frame was lost'},
  'responder': {0: 'The running application', 1: 'The bootloader'},
  'thermal_fault': {0: 'None',
                    1: 'Temperature above the hard ceiling',
@@ -453,7 +506,13 @@ ENUM_TITLES = {'tool': {0: 'Soldering Iron',
  'firmware_feature': {1: 'Trapezoidal and S-curve ramps for the stepper',
                       2: 'Periodic health frame of the board',
                       4: 'Trim of the internal oscillator against the CAN bit time',
-                      8: 'PID with anti-windup and relay autotune for the heaters'},
+                      8: 'PID with anti-windup and relay autotune for the heaters',
+                      16: 'The clear-error command (0x1B2) works: a latched error is lifted without a power cycle '
+                          'once the board is cool and every actuator is off',
+                      32: 'Communication watchdog of the stepper moves and of the electromagnet (silence of the '
+                          'host)',
+                      64: 'With the communication watchdog: the electromagnet lets go when the host falls silent '
+                          '(without it, it holds)'},
  'motion_profile': {0: 'Constant speed (the behaviour without the ramps feature)',
                     1: 'Trapezoidal: constant acceleration, cruise, constant deceleration',
                     2: 'S-curve: the acceleration itself ramps up and down'},
@@ -465,7 +524,23 @@ ENUM_TITLES = {'tool': {0: 'Soldering Iron',
                1: 'PID control',
                2: 'Relay autotune in progress',
                3: 'Autotune finished and the gains were stored',
-               4: 'Autotune gave up; the previous gains are kept'}}
+               4: 'Autotune gave up; the previous gains are kept'},
+ 'error_reason': {0: 'No error',
+                  1: 'Raised by a path that does not record its reason',
+                  2: 'Thermal guard or heater control (see thermal_fault)',
+                  3: 'A reading of the board could not be trusted',
+                  4: 'No valid tool for the jumper setting (never cleared by command)',
+                  5: 'An actuator was cut because its refresh stopped',
+                  6: 'The hotend fan stalled',
+                  7: 'A stepper move was cut because the host fell silent',
+                  8: 'The electromagnet was released because the host fell silent'},
+ 'clear_error_result': {0: 'No clear-error command since power-up',
+                        1: 'The error was lifted',
+                        2: 'The CLEAR_ERROR feature is off',
+                        3: 'There was no error to clear',
+                        4: 'The error cannot be lifted by command (no valid tool)',
+                        5: 'The temperature is not below the limit, or it is unknown',
+                        6: 'An actuator is not at zero'}}
 TOOL_NAMES = ENUM_TITLES["tool"]
 
 # --- magic payloads: a destructive or one-shot command is only obeyed with exactly these four bytes ---
@@ -473,10 +548,12 @@ MAGIC_ENTER_BOOTLOADER = bytes.fromhex("B0071D5A")  # Reset the board (or the sl
 MAGIC_AUTHORIZE_DOWNGRADE = bytes.fromhex("D09E12AD")  # Allow one older, validly signed image (0x7FD)
 MAGIC_ERASE_FRAM = bytes.fromhex("E3A5E0FF")  # Erase the recovered persisted state (0x192)
 MAGIC_SOLDER_FEEDER_RESET = bytes.fromhex("52535030")  # Reset the solder wire feeder position (ASCII RSP0) (0x131)
+MAGIC_CLEAR_ERROR = bytes.fromhex("434C4552")  # Lift a latched critical error (ASCII CLER) (0x1B2)
 MAGIC_PAYLOADS = {'enter_bootloader': {'id': 2032, 'data': 'B0071D5A'},
  'authorize_downgrade': {'id': 2045, 'data': 'D09E12AD'},
  'erase_fram': {'id': 402, 'data': 'E3A5E0FF'},
- 'solder_feeder_reset': {'id': 305, 'data': '52535030'}}
+ 'solder_feeder_reset': {'id': 305, 'data': '52535030'},
+ 'clear_error': {'id': 434, 'data': '434C4552'}}
 
 # --- registers of the expansion slave over the I2C link bus ---
 SLAVE_BOOT_REG_STATUS = 0x00
@@ -572,6 +649,7 @@ MESSAGES = {
     430: {'name': 'SET_FEATURES', 'group': 'configuration', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
     431: {'name': 'FEATURES_RESP', 'group': 'configuration', 'direction': 'both', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
     432: {'name': 'ELECTROMAGNET_CMD', 'group': 'electromagnet', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': [13], 'gates': {'blocked_by_critical_error': True, 'blocked_during_boot_sequence': True}},
+    434: {'name': 'CLEAR_ERROR', 'group': 'global', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': False, 'needs_magic': 'clear_error'}},
     440: {'name': 'HEALTH_PROFILE', 'group': 'diagnostics', 'direction': 'board_to_host', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': False}, 'timing': {'period_ms': 1000}},
     441: {'name': 'PID_CONFIG', 'group': 'configuration', 'direction': 'host_to_board', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
     442: {'name': 'PID_STATE_RESP', 'group': 'configuration', 'direction': 'both', 'handled_by': 'application', 'tools': None, 'gates': {'blocked_by_critical_error': True}},
@@ -639,7 +717,7 @@ LAYOUTS = {
     'impact_event': {'id': 149, 'role': 'response', 'dlc': {'exact': 1}, 'fields': [{'name': 'event', 'type': 'u8', 'offset': 0, 'width': 1}]},
     'global_status': {'id': 256, 'role': 'request', 'dlc': {'exact': 8}, 'fields': [{'name': 'status_r', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'status_g', 'type': 'u8', 'offset': 1, 'width': 1}, {'name': 'status_b', 'type': 'u8', 'offset': 2, 'width': 1}, {'name': 'display_mode', 'type': 'u8', 'offset': 3, 'width': 1, 'allowed': [0, 1, 15]}, {'name': 'ring_r', 'type': 'u8', 'offset': 4, 'width': 1}, {'name': 'ring_g', 'type': 'u8', 'offset': 5, 'width': 1}, {'name': 'ring_b', 'type': 'u8', 'offset': 6, 'width': 1}, {'name': 'ring_on', 'type': 'u8', 'offset': 7, 'width': 1, 'range': [0, 1]}]},
     'query_active_tool': {'id': 272, 'role': 'request', 'dlc': {'any': True}, 'fields': []},
-    'active_tool_resp': {'id': 273, 'role': 'response', 'dlc': {'min': 4, 'max': 6}, 'fields': [{'name': 'tool_id', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'system_error', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 1]}, {'name': 'can_error', 'type': 'u8', 'offset': 2, 'width': 1, 'range': [0, 1]}, {'name': 'booting', 'type': 'u8', 'offset': 3, 'width': 1, 'range': [0, 1]}, {'name': 'thermal_fault', 'type': 'u8', 'offset': 4, 'width': 1, 'optional': True}, {'name': 'reset_cause', 'type': 'u8', 'offset': 5, 'width': 1, 'optional': True}]},
+    'active_tool_resp': {'id': 273, 'role': 'response', 'dlc': {'min': 4, 'max': 8}, 'fields': [{'name': 'tool_id', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'system_error', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 1]}, {'name': 'can_error', 'type': 'u8', 'offset': 2, 'width': 1, 'range': [0, 1]}, {'name': 'booting', 'type': 'u8', 'offset': 3, 'width': 1, 'range': [0, 1]}, {'name': 'thermal_fault', 'type': 'u8', 'offset': 4, 'width': 1, 'optional': True}, {'name': 'reset_cause', 'type': 'u8', 'offset': 5, 'width': 1, 'optional': True}, {'name': 'error_reason', 'type': 'u8', 'offset': 6, 'width': 1, 'optional': True}, {'name': 'clear_result', 'type': 'u8', 'offset': 7, 'width': 1, 'optional': True}]},
     'motion_cmd': {'id': 288, 'role': 'request', 'dlc': {'min': 5, 'max': 8}, 'fields': [{'name': 'direction', 'type': 'u8', 'offset': 0, 'width': 1, 'allowed': [1, 0]}, {'name': 'steps', 'type': 'u32', 'offset': 1, 'width': 4}, {'name': 'speed', 'type': 'u16', 'offset': 5, 'width': 2, 'optional': True, 'present_from_dlc': 8}, {'name': 'profile', 'type': 'u8', 'offset': 7, 'width': 1, 'optional': True, 'present_from_dlc': 8}]},
     'solder_setpoint': {'id': 304, 'role': 'request', 'dlc': {'exact': 2}, 'fields': [{'name': 'setpoint_c', 'type': 'u16', 'offset': 0, 'width': 2, 'range': [0, 445]}]},
     'solder_feeder_reset': {'id': 305, 'role': 'request', 'dlc': {'exact': 4}, 'fields': [{'name': 'magic', 'type': 'bytes', 'offset': 0, 'fixed': '52535030', 'length': 4}]},
@@ -686,10 +764,11 @@ LAYOUTS = {
     'set_multinode': {'id': 428, 'role': 'request', 'dlc': {'exact': 6}, 'fields': [{'name': 'magic', 'type': 'bytes', 'offset': 0, 'fixed': '4D4E4F44', 'length': 4}, {'name': 'enable', 'type': 'u8', 'offset': 4, 'width': 1, 'range': [0, 1]}, {'name': 'instance', 'type': 'u8', 'offset': 5, 'width': 1}]},
     'multinode_config_resp_request': {'id': 429, 'role': 'request', 'dlc': {'any': True}, 'fields': []},
     'multinode_config_resp_response': {'id': 429, 'role': 'response', 'dlc': {'exact': 4}, 'fields': [{'name': 'stored', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 1]}, {'name': 'running', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 1]}, {'name': 'instance', 'type': 'u8', 'offset': 2, 'width': 1}, {'name': 'address', 'type': 'u8', 'offset': 3, 'width': 1, 'range': [0, 31]}]},
-    'set_features': {'id': 430, 'role': 'request', 'dlc': {'exact': 5}, 'fields': [{'name': 'magic', 'type': 'bytes', 'offset': 0, 'fixed': '46454154', 'length': 4}, {'name': 'features', 'type': 'u8', 'offset': 4, 'width': 1, 'range': [0, 15]}]},
+    'set_features': {'id': 430, 'role': 'request', 'dlc': {'exact': 5}, 'fields': [{'name': 'magic', 'type': 'bytes', 'offset': 0, 'fixed': '46454154', 'length': 4}, {'name': 'features', 'type': 'u8', 'offset': 4, 'width': 1, 'range': [0, 127]}]},
     'features_resp_request': {'id': 431, 'role': 'request', 'dlc': {'any': True}, 'fields': []},
-    'features_resp_response': {'id': 431, 'role': 'response', 'dlc': {'exact': 3}, 'fields': [{'name': 'stored', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 15]}, {'name': 'running', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 15]}, {'name': 'supported', 'type': 'u8', 'offset': 2, 'width': 1, 'range': [0, 15]}]},
+    'features_resp_response': {'id': 431, 'role': 'response', 'dlc': {'exact': 3}, 'fields': [{'name': 'stored', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 127]}, {'name': 'running', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 127]}, {'name': 'supported', 'type': 'u8', 'offset': 2, 'width': 1, 'range': [0, 127]}]},
     'electromagnet_cmd': {'id': 432, 'role': 'request', 'dlc': {'exact': 1}, 'fields': [{'name': 'coil', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 1]}]},
+    'clear_error': {'id': 434, 'role': 'request', 'dlc': {'exact': 4}, 'fields': [{'name': 'magic', 'type': 'bytes', 'offset': 0, 'fixed': '434C4552', 'length': 4}]},
     'health_profile': {'id': 440, 'role': 'response', 'dlc': {'exact': 8}, 'fields': [{'name': 'tec', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'rec', 'type': 'u8', 'offset': 1, 'width': 1}, {'name': 'bus_off_count', 'type': 'u8', 'offset': 2, 'width': 1}, {'name': 'hsi_trim', 'type': 'u8', 'offset': 3, 'width': 1}, {'name': 'loop_max_ms', 'type': 'u8', 'offset': 4, 'width': 1}, {'name': 'mcu_temp_plus_40', 'type': 'u8', 'offset': 5, 'width': 1}, {'name': 'vdda_mv', 'type': 'u16', 'offset': 6, 'width': 2}]},
     'pid_config': {'id': 441, 'role': 'request', 'dlc': {'exact': 7}, 'fields': [{'name': 'kp_x100', 'type': 'u16', 'offset': 0, 'width': 2}, {'name': 'ki_x100', 'type': 'u16', 'offset': 2, 'width': 2}, {'name': 'kd_x100', 'type': 'u16', 'offset': 4, 'width': 2}, {'name': 'action', 'type': 'u8', 'offset': 6, 'width': 1, 'allowed': [0, 1, 2, 3]}]},
     'pid_state_resp_request': {'id': 442, 'role': 'request', 'dlc': {'any': True}, 'fields': []},
@@ -995,9 +1074,9 @@ def decode_query_active_tool(data: bytes, strict: bool = False) -> dict | None:
     return decode("query_active_tool", data, strict)
 
 
-def encode_active_tool_resp(tool_id: int, system_error: int, can_error: int, booting: int, thermal_fault: int | None = None, reset_cause: int | None = None) -> tuple[int, bytes]:
+def encode_active_tool_resp(tool_id: int, system_error: int, can_error: int, booting: int, thermal_fault: int | None = None, reset_cause: int | None = None, error_reason: int | None = None, clear_result: int | None = None) -> tuple[int, bytes]:
     """Active tool and quick state (0x111, response)."""
-    values = {k: v for k, v in dict(tool_id=tool_id, system_error=system_error, can_error=can_error, booting=booting, thermal_fault=thermal_fault, reset_cause=reset_cause).items() if v is not None}
+    values = {k: v for k, v in dict(tool_id=tool_id, system_error=system_error, can_error=can_error, booting=booting, thermal_fault=thermal_fault, reset_cause=reset_cause, error_reason=error_reason, clear_result=clear_result).items() if v is not None}
     return encode("active_tool_resp", **values)
 
 
@@ -1509,6 +1588,17 @@ def encode_electromagnet_cmd(coil: int) -> tuple[int, bytes]:
 def decode_electromagnet_cmd(data: bytes, strict: bool = False) -> dict | None:
     """Fields of 0x1B0 (request), or None when the payload is too short."""
     return decode("electromagnet_cmd", data, strict)
+
+
+def encode_clear_error(magic: bytes | None = None) -> tuple[int, bytes]:
+    """Lift a latched critical error without a power cycle (feature CLEAR_ERROR, off by default) (0x1B2, request)."""
+    values = {k: v for k, v in dict(magic=magic).items() if v is not None}
+    return encode("clear_error", **values)
+
+
+def decode_clear_error(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x1B2 (request), or None when the payload is too short."""
+    return decode("clear_error", data, strict)
 
 
 def encode_health_profile(tec: int, rec: int, bus_off_count: int, hsi_trim: int, loop_max_ms: int, mcu_temp_plus_40: int, vdda_mv: int) -> tuple[int, bytes]:

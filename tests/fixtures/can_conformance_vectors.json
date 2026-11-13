@@ -606,6 +606,11 @@
       "name": "solder_feeder_reset",
       "id": "0x131",
       "data": "52535030"
+    },
+    {
+      "name": "clear_error",
+      "id": "0x1B2",
+      "data": "434C4552"
     }
   ],
   "slcan_encode": [
@@ -836,6 +841,52 @@
         "thermal_fault": 1,
         "reset_cause": 8,
         "watchdog_reset": false
+      }
+    },
+    {
+      "name": "eight bytes: communication watchdog error, clear refused because hot",
+      "data": "0A01000000080505",
+      "expect": {
+        "tool_id": 10,
+        "system_error": true,
+        "can_error": false,
+        "booting": false,
+        "thermal_fault": 0,
+        "reset_cause": 8,
+        "error_reason": 5,
+        "error_reason_name": "COMMS_WATCHDOG",
+        "clear_result": 5,
+        "clear_result_name": "REFUSED_HOT"
+      }
+    },
+    {
+      "name": "eight bytes: no error, error cleared",
+      "data": "0000000000080001",
+      "expect": {
+        "tool_id": 0,
+        "system_error": false,
+        "can_error": false,
+        "booting": false,
+        "thermal_fault": 0,
+        "reset_cause": 8,
+        "error_reason": 0,
+        "error_reason_name": null,
+        "clear_result": 1,
+        "clear_result_name": "CLEARED"
+      }
+    },
+    {
+      "name": "six bytes: error reason not reported by older firmware",
+      "data": "000000000001",
+      "expect": {
+        "tool_id": 0,
+        "system_error": false,
+        "can_error": false,
+        "booting": false,
+        "thermal_fault": 0,
+        "reset_cause": 1,
+        "error_reason": null,
+        "clear_result": null
       }
     },
     {
@@ -1346,6 +1397,10 @@
     {
       "id": "0x1B0",
       "name": "ELECTROMAGNET_CMD"
+    },
+    {
+      "id": "0x1B2",
+      "name": "CLEAR_ERROR"
     },
     {
       "id": "0x1B8",
@@ -2377,6 +2432,18 @@
       "frame": {
         "id": "0x1B0",
         "data": "01"
+      }
+    },
+    {
+      "name": "CLEAR_ERROR request: clear",
+      "message": "CLEAR_ERROR",
+      "layout": "clear_error",
+      "fields": {
+        "magic": "434C4552"
+      },
+      "frame": {
+        "id": "0x1B2",
+        "data": "434C4552"
       }
     },
     {
@@ -3607,7 +3674,9 @@
         "can_error": 0,
         "booting": 0,
         "thermal_fault": 0,
-        "reset_cause": 8
+        "reset_cause": 8,
+        "error_reason": null,
+        "clear_result": null
       }
     },
     {
@@ -3624,7 +3693,9 @@
         "can_error": 1,
         "booting": 0,
         "thermal_fault": null,
-        "reset_cause": null
+        "reset_cause": null,
+        "error_reason": null,
+        "clear_result": null
       }
     },
     {
@@ -3641,7 +3712,9 @@
         "can_error": 0,
         "booting": 0,
         "thermal_fault": 2,
-        "reset_cause": null
+        "reset_cause": null,
+        "error_reason": null,
+        "clear_result": null
       }
     },
     {
@@ -5088,6 +5161,39 @@
       "frame": {
         "id": "0x1B0",
         "data": "0100"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "CLEAR_ERROR request: clear",
+      "message": "CLEAR_ERROR",
+      "layout": "clear_error",
+      "frame": {
+        "id": "0x1B2",
+        "data": "434C4552"
+      },
+      "fields": {
+        "magic": "434C4552"
+      }
+    },
+    {
+      "name": "CLEAR_ERROR request: 3 bytes is too short",
+      "message": "CLEAR_ERROR",
+      "layout": "clear_error",
+      "frame": {
+        "id": "0x1B2",
+        "data": "434C45"
+      },
+      "fields": null
+    },
+    {
+      "name": "CLEAR_ERROR request: one byte too many is refused when strict",
+      "message": "CLEAR_ERROR",
+      "layout": "clear_error",
+      "frame": {
+        "id": "0x1B2",
+        "data": "434C455200"
       },
       "fields": null,
       "strict": true
@@ -7706,7 +7812,7 @@
       "layout": "set_features",
       "fields": {
         "magic": "46454154",
-        "features": 16
+        "features": 128
       }
     },
     {
@@ -7714,7 +7820,7 @@
       "message": "FEATURES_RESP",
       "layout": "features_resp_response",
       "fields": {
-        "stored": 16,
+        "stored": 128,
         "running": 0,
         "supported": 15
       }
@@ -7725,7 +7831,7 @@
       "layout": "features_resp_response",
       "fields": {
         "stored": 2,
-        "running": 16,
+        "running": 128,
         "supported": 15
       }
     },
@@ -7736,7 +7842,7 @@
       "fields": {
         "stored": 2,
         "running": 0,
-        "supported": 16
+        "supported": 128
       }
     },
     {
@@ -7745,6 +7851,14 @@
       "layout": "electromagnet_cmd",
       "fields": {
         "coil": 2
+      }
+    },
+    {
+      "name": "CLEAR_ERROR: a payload that is not the magic one",
+      "message": "CLEAR_ERROR",
+      "layout": "clear_error",
+      "fields": {
+        "magic": "00000000"
       }
     },
     {
