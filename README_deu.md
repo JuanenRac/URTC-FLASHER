@@ -65,10 +65,10 @@
 
 ## 🎯 Überblick
 
-Ein kleines plattformübergreifendes GUI-Tool zum Aktualisieren der
+Ein kleines plattformübergreifendes Programm mit grafischer Oberfläche zum Aktualisieren der
 URTC-Platinen-Firmware über den CAN-Bus. Es implementiert genau das
-Bootloader-Protokoll aus `docs/CANBUS.TXT` (im Schwester-Repository [URTC](https://github.com/JuanenRac/URTC), gegen das dieses Werkzeug implementiert ist - siehe „Verwandte Projekte“ gegen Ende dieses Dokuments; jeder andere Verweis auf `docs/*.TXT` in diesem README zeigt ebenfalls dorthin): die HardwareID-Prüfung, den Ed25519-Eintrag des Images, den Update-Ablauf mit Golden Image und Sicherungsslot, den
-Live-Fortschritt über die Heartbeat-Nachrichten des Bootloaders, und
+Bootloader-Protokoll aus `docs/CANBUS.TXT` (im Schwester-Repository [URTC](https://github.com/JuanenRac/URTC), nach dem der Flasher entwickelt wurde - siehe „Verwandte Projekte“ gegen Ende dieses Dokuments; jeder andere Verweis auf `docs/*.TXT` in diesem README zeigt ebenfalls dorthin): die HardwareID-Prüfung, den Ed25519-Eintrag des Images, den Update-Ablauf mit Golden Image und Sicherungsbereich, den
+Fortschritt in Echtzeit über die Lebenszeichen des Bootloaders, und
 eine Versionsabfrage (identifiziert, ob sich die Anwendung *oder* der
 Bootloader dieser Platine über CAN meldet), damit Sie sehen können, was
 aktuell installiert ist, bevor Sie entscheiden, was geflasht werden
@@ -84,7 +84,7 @@ Protokoll:
   serieller Port.
   - Ohne Adapter und ohne Hardware springt eine virtuelle Platine ein: `python -m urtc_can.virtual_board` ausführen, ihre Adresse vor dem Start des Programms in der Umgebungsvariable `URTC_VIRTUAL_PORT` angeben (zum Beispiel `socket://127.0.0.1:7777`) oder in der Befehlszeile an `--port` übergeben. Sie erscheint in der Portliste und antwortet wie eine Platine, Anwendung und Bootloader.
 - **SocketCAN** — **nur Linux**, und nur in der Benutzeroberfläche des
-  Tools unter Linux angezeigt. Spricht direkt mit einer
+  Programms unter Linux angezeigt. Spricht direkt mit einer
   Kernel-Netzwerkschnittstelle `can0`/`slcan0`. Wenn Ihr Adapter
   bereits `gs_usb`/candleLight-Firmware ausführt (die meisten
   CANable-Platinen tun dies ab Werk), benötigt dieser Weg
@@ -93,7 +93,7 @@ Protokoll:
 
 ## 🧩 Rolle in URTC
 
-URTC-FLASHER ist das Programm, das Firmware auf eine URTC-Platine bringt. Es spricht das Bootloader-Protokoll von URTC (`docs/CANBUS.TXT` jenes Repositories) über einen USB-CAN-Adapter, als serielle SLCAN-Schnittstelle oder als SocketCAN unter Linux: die HardwareID-Prüfung, den Ed25519-Eintrag des Images, den Golden-Image-Ablauf mit Sicherungsslot und eine Versionsabfrage, damit man sieht, was installiert ist, bevor man entscheidet, was geflasht wird. Für eine Platine ohne funktionierenden Bootloader oder um den ganzen Chip zu programmieren, bereitet es die SWD/JTAG-Befehle für pyOCD oder STM32CubeProgrammer vor. Es ist der Update-Begleiter von URTC-TESTER, teilt seinen CAN-Code über URTC-COMMON mit ihm, und URTC-UPDATER kann ihm ein Firmware-Image übergeben, dessen Release-Signatur schon geprüft wurde.
+URTC-FLASHER ist das Programm, das Firmware auf eine URTC-Platine bringt. Es spricht das Bootloader-Protokoll von URTC (`docs/CANBUS.TXT` jenes Repositories) über einen USB-CAN-Adapter, als serielle SLCAN-Schnittstelle oder als SocketCAN unter Linux: die HardwareID-Prüfung, den Ed25519-Eintrag des Images, den Golden-Image-Ablauf mit Sicherungsbereich und eine Versionsabfrage, damit man sieht, was installiert ist, bevor man entscheidet, was geflasht wird. Für eine Platine ohne funktionierenden Bootloader oder um den ganzen Chip zu programmieren, bereitet es die SWD/JTAG-Befehle für pyOCD oder STM32CubeProgrammer vor. Es ist der Update-Begleiter von URTC-TESTER, teilt seinen CAN-Code über URTC-COMMON mit ihm, und URTC-UPDATER kann ihm ein Firmware-Image übergeben, dessen Release-Signatur schon geprüft wurde.
 
 ## 🏛️ Architektur
 
@@ -150,7 +150,7 @@ eine **Transport**-Auswahl - wählen Sie Seriell/SLCAN oder SocketCAN
 vor dem Verbinden. Unter Windows erscheint diese Zeile überhaupt
 nicht; Seriell/SLCAN ist die einzige Option.
 
-Klicken Sie auf **Verbinden**, und das Tool fragt die Platine
+Klicken Sie auf **Verbinden**, und der Flasher fragt die Platine
 automatisch, was sie aktuell ausführt (CAN-ID `0x7F8` → `0x7F9` - siehe
 `docs/CANBUS.TXT`). Dies funktioniert, egal ob die Platine ihre
 Anwendung normal ausführt *oder* im Bootloader sitzt, sodass Sie
@@ -194,13 +194,13 @@ Was Sie sehen werden:
 - **`Bootloader running, no valid firmware currently installed,
   bootloader v0.1.2`** - die Platine steckt im Bootloader fest, ohne
   etwas, zu dem sie springen könnte (leerer Chip, oder jede Prüfung
-  auf dem Hauptslot schlug fehl). Dies ist genau die Situation, für die
-  dieses Tool existiert - flashen Sie sie. Die hier gezeigte
+  im Hauptbereich schlug fehl). Dies ist genau die Situation, für die
+  der Flasher existiert - flashen Sie sie. Die hier gezeigte
   Bootloader-Version ist die des Bootloaders selbst, ohne Bezug zu
   irgendeiner Anwendungsversion, die ihre Prüfungen nicht bestanden
   hat.
 - **`⚠ HardwareID mismatch!`** in Rot angezeigt - etwas hat geantwortet,
-  aber seine HardwareID stimmt nicht mit dem überein, was dieses Tool
+  aber seine HardwareID stimmt nicht mit dem überein, was der Flasher
   erwartet. Flashen Sie nicht, ohne vorher zu verstehen, warum; der
   Bootloader würde das Update sowieso ablehnen, aber eine Abweichung
   hier kann auch bedeuten, dass Sie komplett auf die falsche Platine
@@ -210,20 +210,20 @@ Was Sie sehen werden:
   Verbindung und, im SocketCAN-Weg, dass die Schnittstelle tatsächlich
   aktiv ist (`ip link show`).
 
-**Erweiterungsplatine:** ein separates Dropdown und ein
+**Erweiterungsplatine:** eine separate Auswahlliste und ein
 Abfragen/Speichern-Paar, direkt unter der Versionsprüfung. Liest und
 setzt, welche der 7 möglichen `CONN_EXPANSION`-Konfigurationen (keine,
 oder eine der 6 echten Varianten - siehe `EXPANSION.TXT`) physisch
 installiert ist, über CAN (`0x1A0`/`0x1A1`). Es gibt keine elektrische
 Möglichkeit für die Platine, dies selbst zu erkennen, also muss es ihr
-gesagt werden - dies lebt hier (nicht nur in `URTC Tester`), da es sich
+gesagt werden - dies gehört hierher (nicht nur in `URTC Tester`), da es sich
 um einen einmaligen Hardware-Konfigurationsschritt handelt, der am
 natürlichsten zusammen mit einem Firmware-Update erfolgt. **Speichern**
 fragt zuerst nach Bestätigung, da dies über Stromzyklen hinweg
 bestehen bleibt, bis es explizit erneut geändert wird.
 
 **MLX9064x-Sensorvariante:** gleiche Form wie die obige
-Erweiterungsplatinen-Kontrolle - ein Dropdown und ein
+Erweiterungsplatinen-Kontrolle - eine Auswahlliste und ein
 Abfragen/Speichern-Paar, das liest/setzt, welcher der 3 Wärmesensoren
 der MLX9064x-Familie (oder keiner) tatsächlich installiert ist, über
 CAN (`0x1A6`/`0x1A7` - siehe `CANBUS.TXT`). Nur relevant, wenn die
@@ -243,14 +243,14 @@ erfordert.
    Seriell/SLCAN öffnet dies den CAN-Kanal mit 1 Mbit/s (URTCs feste
    Bus-Geschwindigkeit); für SocketCAN wird erwartet, dass die
    Schnittstelle bereits mit dieser Busgeschwindigkeit läuft (Schritt 1 oben) -
-   dieses Tool stellt sie nicht ein. So oder so wird die aktuelle
+   der Flasher stellt sie nicht ein. So oder so wird die aktuelle
    Version automatisch abgefragt - siehe Abschnitt 4 oben.
 2. **Wählen Sie ein Flash-Ziel**: „Diese Platine (Haupt)“ oder
    „Erweiterungs-Slave“ - Standard ist die Hauptplatine, der mit
    Abstand häufigere Fall. Die Slave-Option erreicht nur etwas auf
    einer Advanced-Erweiterungsplatinen-Variante
    (TMC2209+STM32F303CBT6 oder TMC5160A+STM32F303CBT6) - das Update
-   wird über die eigene I2C-Bridge der Hauptplatine zum Slave-Chip
+   wird über die eigene I2C-Brücke der Hauptplatine zum Slave-Chip
    weitergeleitet (die eigenen `0x210`-`0x219` von `CANBUS.TXT`), keine
    separate physische Verbindung. „F-RAM vor dem Flashen löschen“
    (Schritt 4 unten) deaktiviert sich automatisch bei Auswahl von
@@ -260,8 +260,8 @@ erfordert.
    Erkennung und Validierung funktionieren.
 4. **Flashen**:
    - Lassen Sie „Platine führt aktuell die Anwendung aus“ markiert,
-     wenn die Platine eingeschaltet ist und normal läuft - das Tool
-     sendet zuerst den magischen Payload-Auslöser `0x7F0` (oder
+     wenn die Platine eingeschaltet ist und normal läuft - der Flasher
+     sendet zuerst den magischen Auslöser `0x7F0` (oder
      `0x210`, an den Slave weitergeleitet, falls Slave das gewählte
      Ziel ist), der jeden
      Aktuator sicher herunterfährt, bevor es in den Bootloader
@@ -277,10 +277,10 @@ erfordert.
      des Ablaufs; der Fortschrittsbalken
      verfolgt den Schreibfortschritt Seite für Seite während der
      Übertragung, dann den Kopierfortschritt während der abschließenden
-     Backup-zu-Haupt-Kopie.
+     Kopie der Sicherung in den Hauptbereich.
 
 Wenn die Verifizierung an irgendeinem Punkt fehlschlägt (CRC32-, Signatur-,
-oder HardwareID-Abweichung), wird der Hauptslot des Bootloaders nie
+oder HardwareID-Abweichung), wird der Hauptbereich des Bootloaders nie
 berührt - die Platine führt weiterhin die Firmware aus, die sie bereits
 hatte. Es ist immer sicher, es einfach erneut zu versuchen.
 
@@ -297,9 +297,9 @@ implementiert (siehe `docs/CANBUS.TXT`); ein älterer antwortet einfach
 nie, was als klare Zeitüberschreitung angezeigt wird statt als
 stillschweigend leere Datei. In der Praxis heißt das: Die Sicherung funktioniert bei einer Platine ohne gültige Anwendung oder bei einer mitten im Update stehengebliebenen Platine. Mit gültiger Anwendung springt der Bootloader etwa 600 ms nach dem Reset dorthin, sofern kein Start-Update-Frame (`0x7F1`) eintrifft, und dieses Tool hat keine Schaltfläche, die den Bootloader warten lässt (dafür wäre eine Änderung im Bootloader nötig). Für eine normal laufende Platine sichern Sie den Flash stattdessen über SWD/JTAG (Abschnitt 6).
 
-**Hinweise zu Version und Signatur**: Vor der Übertragung fragt das Tool die Platine, was installiert ist, und protokolliert „installiert vX.Y -> neu vA.B“; ist die neue Version älter, warnt es, dass der Bootloader sie ohne erlaubtes Downgrade ablehnt, und empfiehlt zuerst eine Sicherung. Ein Image, dessen Manifest angibt, mit dem ÖFFENTLICHEN Entwicklungsschlüssel signiert zu sein (die mitgelieferten offiziellen Images sind es), zeigt unter dem Dateinamen eine rote Warnung; mit `"require_production_signature": true` in `urtc_config.json` werden solche Images ganz abgelehnt. Ein Bootloader, der den Fingerabdruck des akzeptierten Signaturschlüssels veröffentlicht, wird vor der Übertragung mit der `signing_key_id` des Image-Manifests verglichen: Eine Abweichung wird protokolliert (`"key_id_precheck": "warn"`, der Standard), abgelehnt (`"refuse"`) oder nicht geprüft (`"off"`) in `urtc_config.json`; ein Bootloader oder Manifest ohne Fingerabdruck ist nie eine Abweichung. Nur an einem simulierten Bootloader erprobt. Antwortet die Platine aus dem Bootloader ohne gültige Firmware, wird das neueste offizielle Hauptplatinen-Image aus `firmware/` zur Prüfung und zum Flashen vorausgewählt. Nach jedem erfolgreichen Update wird ein kleiner Bericht geschrieben (`logs/urtc_update_report_*.json`: Tool-Version, Bediener, Name, Größe und SHA-256 des Images, Versionen vorher und nachher); er trägt seine eigene SHA-256, damit eine Änderung auffällt, ist aber keine Signatur.
+**Hinweise zu Version und Signatur**: Vor der Übertragung fragt der Flasher die Platine, was installiert ist, und protokolliert „installiert vX.Y -> neu vA.B“; ist die neue Version älter, warnt es, dass der Bootloader sie ohne erlaubtes Downgrade ablehnt, und empfiehlt zuerst eine Sicherung. Ein Image, dessen Manifest angibt, mit dem ÖFFENTLICHEN Entwicklungsschlüssel signiert zu sein (die mitgelieferten offiziellen Images sind es), zeigt unter dem Dateinamen eine rote Warnung; mit `"require_production_signature": true` in `urtc_config.json` werden solche Images ganz abgelehnt. Ein Bootloader, der den Fingerabdruck des akzeptierten Signaturschlüssels veröffentlicht, wird vor der Übertragung mit der `signing_key_id` des Image-Manifests verglichen: Eine Abweichung wird protokolliert (`"key_id_precheck": "warn"`, der Standard), abgelehnt (`"refuse"`) oder nicht geprüft (`"off"`) in `urtc_config.json`; ein Bootloader oder Manifest ohne Fingerabdruck ist nie eine Abweichung. Nur an einem simulierten Bootloader erprobt. Antwortet die Platine aus dem Bootloader ohne gültige Firmware, wird das neueste offizielle Hauptplatinen-Image aus `firmware/` zur Prüfung und zum Flashen vorausgewählt. Nach jedem erfolgreichen Update wird ein kleiner Bericht geschrieben (`logs/urtc_update_report_*.json`: Version des Flashers, Bediener, Name, Größe und SHA-256 des Images, Versionen vorher und nachher); er trägt seine eigene SHA-256, damit eine Änderung auffällt, ist aber keine Signatur.
 
-**Header im Image**: Ein Firmware-Image, das mit versiegeltem Header gebaut wurde (`stamp_image.py seal` aus URTC-COMMON), nennt in der Datei selbst die Hardware, für die es gebaut ist, seine Version, seine Länge und seine CRC-32. Vor dem ersten Frame liest der Flasher ihn und lehnt ein Image für eine andere Platine ab, eine Version, die vom Dateinamen abweicht, eine Länge oder CRC-32, die nicht stimmt, einen Header, den niemand versiegelt hat, und eine `.urimg`-Datei (der Header vor dem Binary, die nie geflasht wird). Ein älteres Image ohne Header wird mit einer Warnung geflasht; `image_header_policy` in `urtc_config.json` ändert das: `accept` (ohne Warnung), `warn` (der Standard) oder `require` (ablehnen).
+**Header im Image**: Ein Firmware-Image, das mit versiegeltem Header gebaut wurde (`stamp_image.py seal` aus URTC-COMMON), nennt in der Datei selbst die Hardware, für die es gebaut ist, seine Version, seine Länge und seine CRC-32. Vor dem ersten Frame liest der Flasher ihn und lehnt ein Image für eine andere Platine ab, eine Version, die vom Dateinamen abweicht, eine Länge oder CRC-32, die nicht stimmt, einen Header, den niemand versiegelt hat, und eine `.urimg`-Datei (die Datei mit dem Header vor der Binärdatei, die nie geflasht wird). Ein älteres Image ohne Header wird mit einer Warnung geflasht; `image_header_policy` in `urtc_config.json` ändert das: `accept` (ohne Warnung), `warn` (der Standard) oder `require` (ablehnen).
 
 **Absichtliches Installieren einer älteren Version**: der Bootloader
 lehnt normalerweise ein gültig signiertes Image ab, wenn es eine ältere
@@ -315,7 +315,7 @@ umgeht. Dies lädt weiterhin das komplette ältere Image über die normale
 einen Versuch auf (`0x7FD` - siehe `docs/CANBUS.TXT`); die der Platine
 gemeldete Versionsnummer stammt aus der eigenen `.manifest.json` der
 Datei, falls neben ihr eine vorhanden ist (siehe Abschnitt 3 oben),
-andernfalls aus der aktuell konfigurierten Version dieses Tools, in
+andernfalls aus der aktuell konfigurierten Version des Flashers, in
 beiden Fällen klar protokolliert, sodass es nie eine stille Vermutung
 ist.
 
