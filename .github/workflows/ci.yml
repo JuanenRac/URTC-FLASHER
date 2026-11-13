@@ -34,7 +34,7 @@ jobs:
       - name: Run the test suite
         run: |
           python -m pip install --require-hashes -r requirements-dev.lock
-          python -m pytest -q --cov --cov-config=.coveragerc --cov-fail-under=67 tests
+          python -m pytest -q --cov --cov-config=.coveragerc --cov-fail-under=81 tests
         env:
           QT_QPA_PLATFORM: offscreen
       - name: Type check
