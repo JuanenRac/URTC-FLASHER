@@ -343,10 +343,12 @@ _LOG_LABEL_ONLY = frozenset({
     "SWD_OPTION_BYTE_CHECK_BLOCKED", "BOARD_SNAPSHOT_BLOCKED", "BOARD_SNAPSHOT_STARTED",
     "EXPANSION_TYPE_SAVE_BLOCKED", "MLX_VARIANT_SAVE_BLOCKED", "FREE_TOOL_SAVE_BLOCKED",
     "DEVICE_SERIAL_SAVE_BLOCKED", "ERROR", "BUS_MIXED_SPEEDS", "BUS_NO_HEAD_AT_ANY_SPEED", "BUS_ERRORS_SEEN", "BUS_LEGACY_HEAD",
+    "BUS_RATES_DECLARED_DIFFER", "BUS_RATE_NOT_DECLARED",
 })
 
 # the log line (token) of each warning of urtc_can.bus_health
 BUS_SYMPTOM_TOKENS = {
+    "rates_declared_differ": "BUS_RATES_DECLARED_DIFFER",
     "mixed_bus_suspected": "BUS_MIXED_SPEEDS",
     "no_head_at_any_speed": "BUS_NO_HEAD_AT_ANY_SPEED",
     "bus_errors": "BUS_ERRORS_SEEN",
@@ -362,6 +364,8 @@ def translate_log_line(message):
         key = "QTLOG_" + token
         label = _translations.get(key)
         if label:
+            if "{rate}" in label:
+                return label.replace("{rate}", rest)      # the speed a head declares goes where the text puts it
             if rest and token not in _LOG_LABEL_ONLY:
                 return f"{label}: {rest}"
             return label

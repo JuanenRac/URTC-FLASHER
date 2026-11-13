@@ -2430,20 +2430,21 @@
       }
     },
     {
-      "name": "HEALTH_INFO response: board running 0.4.4 for one hour after a power-on",
+      "name": "HEALTH_INFO response: board running 0.4.4 for one hour after a power-on, on a 1 Mbit/s bus",
       "message": "HEALTH_INFO",
       "layout": "health_info",
       "fields": {
-        "protocol_version": 1,
+        "protocol_version": 2,
         "reset_cause": 8,
         "fw_minor": 4,
         "fw_patch": 4,
         "fw_build": 0,
+        "bus_rate_code": 1,
         "uptime_s": 3600
       },
       "frame": {
         "id": "0x1BB",
-        "data": "0108040400000E10"
+        "data": "0208040400010E10"
       }
     },
     {
@@ -5138,19 +5139,20 @@
       "fields": null
     },
     {
-      "name": "HEALTH_INFO response: board running 0.4.4 for one hour after a power-on",
+      "name": "HEALTH_INFO response: board running 0.4.4 for one hour after a power-on, on a 1 Mbit/s bus",
       "message": "HEALTH_INFO",
       "layout": "health_info",
       "frame": {
         "id": "0x1BB",
-        "data": "0108040400000E10"
+        "data": "0208040400010E10"
       },
       "fields": {
-        "protocol_version": 1,
+        "protocol_version": 2,
         "reset_cause": 8,
         "fw_minor": 4,
         "fw_patch": 4,
         "fw_build": 0,
+        "bus_rate_code": 1,
         "uptime_s": 3600
       }
     },
@@ -5160,7 +5162,7 @@
       "layout": "health_info",
       "frame": {
         "id": "0x1BB",
-        "data": "0108040400000E"
+        "data": "0208040400010E"
       },
       "fields": null
     },

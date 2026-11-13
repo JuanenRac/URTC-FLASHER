@@ -55,7 +55,7 @@ from flasher_transports import (
     python_can_spec, virtual_ports,
 )
 from flasher_validation import validate_firmware_file, validate_swd_image_file
-from urtc_can import bus_health
+from urtc_can import bus_health, health_info
 from urtc_can import update_service as update_service
 from urtc_can import versioning
 from urtc_can.protocol import CAN_ID_SLAVE_APP_PATCH, CAN_ID_SLAVE_REG_READ
@@ -2015,8 +2015,14 @@ class FlasherQtBridge(QObject):
         if tap is None:
             return
         profiles = bus_health.profiles_from_frames(tap.take())
-        for code in bus_health.warnings(profiles, False, (), flasher_config.bus_health_thresholds()):
+        info_frames = tap.take_info()
+        declared = health_info.declared_rates(info_frames)        # heads of protocol version 2 state the speed of their bus in the identity frame (0x1BB)
+        for code in bus_health.warnings(profiles, False, (), flasher_config.bus_health_thresholds(), declared):
             self._log(flasher_config.BUS_SYMPTOM_TOKENS[code])
+        if declared:
+            self._log("BUS_RATE_DECLARED " + " / ".join(health_info.rate_text(rate) for rate in sorted(set(declared), reverse=True)))
+        elif any(health_info.parse(bytes(frame)) is not None for frame in info_frames):
+            self._log("BUS_RATE_NOT_DECLARED")
 
 
 def firmware_argument(argv: list[str]) -> str:

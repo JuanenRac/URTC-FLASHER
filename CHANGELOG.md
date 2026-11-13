@@ -26,6 +26,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The flasher says the bus speed that the heads declare:** heads of protocol version 2 state in their identity frame (`0x1BB`) the bit rate they were built for. The flasher keeps the identity frames that go by while it works and, when the operation ends, writes the declared speed to the log (or that the head declares nothing, as the heads of older firmware do) and warns first when two heads declare different speeds. The warnings by symptoms stay as they were for heads that declare nothing. The shared copies (`urtc_can`, the vectors and the language files) are refreshed from the new specification, with three texts in the eight languages. Tested with virtual frames; not tried against a bus with real heads.
+
 ## [0.5.5] - The Spanish texts say "grabar" and "velocidad de bus": the calques "flashear", "flasheo" and "bitrate" are replaced in the window, the guide, the Spanish README and the shared sections, with the gender of the sentence... (and 7 more changes)
 
 - **The Spanish texts say "grabar" and "velocidad de bus":** the calques "flashear", "flasheo" and "bitrate" are replaced in the window, the guide, the Spanish README and the shared sections, with the gender of the sentence corrected, so the README names what the window shows.
