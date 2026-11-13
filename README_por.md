@@ -465,14 +465,14 @@ headers apenas - sem símbolos, sem section headers), deliberadamente sem usar
 `pyelftools`: este projeto mantém-se com zero dependências fora da stdlib, e a
 análise completa de ELF é mais do que esta verificação de plausibilidade
 específica precisa. Verificado contra os `BOOTLOADER.elf`/`APP.elf` realmente
-compilados a partir da build do próprio projeto - ambos validam corretamente
+compilados a partir da compilação do próprio projeto - ambos validam corretamente
 nos seus endereços de carga reais (`0x08000000`/`0x08008000`), e não apenas em
 ficheiros de teste sintéticos. Apenas ARM de 32 bits little-endian, que é tudo
 o que um alvo Cortex-M alguma vez é. O tamanho declarado de um ficheiro `.hex`
 é a contagem real de bytes ocupados, não o intervalo de endereços entre o seu
 registo mais baixo e o mais alto - pelo que um ficheiro esparso (um pequeno
 bloco de firmware real mais um bloco distante e separado de bytes de opção ou
-dados de calibração, que algumas toolchains STM32 juntam numa única
+dados de calibração, que algumas cadeias de ferramentas STM32 juntam numa única
 exportação) valida pelo seu conteúdo real e não pelo intervalo entre eles. Uma
 imagem de firmware em bruto com uma extensão que não `.bin` (`.img`, `.rom`, ou
 sem qualquer extensão - selecionável através da opção «Todos os ficheiros» do seletor
@@ -488,7 +488,7 @@ se uma acabar na ranhura da outra. O que consegue: o **reset tratador** de uma
 imagem ligada (linked) é um endereço real e absoluto fixado em tempo de
 link, e só aponta para dentro da região para a qual foi realmente ligada.
 Verificado contra os `BOOTLOADER.bin`/`APP.bin` realmente compilados do
-próprio projeto: os seus reset handlers são `0x08000785` e `0x0800C0CD`
+próprio projeto: os seus tratadores de reinício são `0x08000785` e `0x0800C0CD`
 respetivamente, cada um corretamente dentro do intervalo de endereços do seu
 próprio ranhura e fora do do outro - pelo que colocar qualquer um deles na ranhura
 errado é apanhado e bloqueado, não aceite silenciosamente. A mesma lógica
@@ -551,7 +551,7 @@ se estiver a construir um bootloader personalizado com uma versão diferente do
 protocolo.
 
 **O mesmo detalhe para o escravo de expansão**: uma atualização de escravo falhada
-(Destino: «Escravo de expansão») consulta `0x219` logo depois de `0x215` reportar
+(Destino: «Escravo de expansão») consulta `0x219` logo depois de `0x215` indicar
 `STATUS_VERIFY_FAIL`, retransmitindo o `REG_VERIFY_FAIL_REASON` do próprio
 bootloader do escravo - os mesmos 5 motivos que acima, apenas alcançados através
 da ponte I2C em vez de lidos diretamente de uma trama CAN. Requer um
@@ -570,7 +570,7 @@ começar, apagando qualquer estado de parâmetros da ferramenta que tivesse
 guardado.
 
 **Não é necessário numa atualização normal.** Uma discrepância de versão no
-layout do próprio registo guardado já é detetada e ignorada em segurança no
+disposição do próprio registo guardado já é detetada e ignorada em segurança no
 arranque seguinte (consulte a secção de persistência de parâmetros de
 `src/F303-master/README.md`) - esta caixa existe para um recomeço
 verdadeiramente limpo, não porque saltá-la deixasse algo avariado.
@@ -619,7 +619,7 @@ O bootloader da placa principal verifica um registo Ed25519 da imagem contra uma
 
 Se o ACK de uma página não chegar dentro da janela normal de 3s durante uma
 atualização CAN, a ferramenta volta a esperar (não reenvia os dados da
-página) até mais duas vezes com um curto backoff antes de desistir. Isto só
+página) até mais duas vezes com um curta espera crescente antes de desistir. Isto só
 ajuda com um ACK que apenas se atrasou: o bootloader envia cada ACK de
 página uma única vez e nunca o repete, pelo que um ACK realmente perdido não
 pode ser recuperado e a atualização é abortada com um erro (a placa fica no
@@ -641,7 +641,7 @@ registos antigos de volta. Só são conservados os 30 registos de sessão mais r
 
 ## 🔌 Interfaces
 
-Para pipelines de CI, bancadas de teste, ou scripting de linha de produção
+Para pipelines de CI, bancadas de teste, ou criação de scripts de linha de produção
 onde não há ecrã:
 
 ```
@@ -672,7 +672,7 @@ python3 urtc_flasher.py --cli --transport mock --file firmware.bin --no-trigger
 ```
 
 Útil para testar a lógica da própria ferramenta (comportamento de repetição,
-tratamento de timeouts, códigos de saída) numa cadeia de CI ou antes de tocar
+tratamento de tempos limite, códigos de saída) numa cadeia de CI ou antes de tocar
 em hardware real - não é algo que comunique com uma placa verdadeira.
 `--mock-fail 0x03` (ou qualquer outro valor `VERIFY_FAIL_REASON_*` de
 `docs/CANBUS.TXT`) faz a atualização simulada falhar a verificação em vez de ter
@@ -682,13 +682,13 @@ sucesso, para testar o caminho de falha da mesma forma.
 
 ## ⚙️ Configuração
 
-Esta ferramenta **não guarda qualquer chave de assinatura**. A build do URTC
+Esta ferramenta **não guarda qualquer chave de assinatura**. A compilação do URTC
 assina cada imagem de aplicação e publica a assinatura ao lado dela, em
 `<image>.manifest.json` (`hmac_sha256`, mais `<image>.sha256`); o flasher envia
 essa assinatura publicada e recusa uma imagem cujo sha256 não coincida com o
 seu manifesto. Descarregar uma imagem do GitHub descarrega também ambos os
 ficheiros, e `python tools/sync_firmware.py` atualiza a pasta `firmware/`
-incluída a partir da build do URTC (`--check` verifica-a). Por omissão, obtém o conjunto dos anexos da última release do URTC (`--release TAG` escolhe outra); em alternativa, pode passar-se como argumento uma pasta local, por exemplo uma build local do URTC. Apenas uma imagem
+incluída a partir da compilação do URTC (`--check` verifica-a). Por omissão, obtém o conjunto dos anexos da última release do URTC (`--release TAG` escolhe outra); em alternativa, pode passar-se como argumento uma pasta local, por exemplo uma build local do URTC. Apenas uma imagem
 compilada por si, sem manifesto, numa placa de bancada, precisa de uma chave:
 defina `hmac_key_hex` / `slave_hmac_key_hex` em `urtc_config.json` abaixo - sem
 uma, essa imagem é recusada em vez de ser assinada com uma chave que o
@@ -1084,8 +1084,8 @@ O URTC é feito de repositórios independentes, cada um com a sua versão, os se
 - **[docs/WINDOW_GUIDE.md](docs/WINDOW_GUIDE.md)** — um guia da janela com imagens: a janela principal, a ajuda e a janela de atualização.
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** — tecnologias utilizadas e diretrizes de código para um pull request.
 - **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — as normas de comportamento esperadas nesta comunidade.
-- **[SECURITY.md](SECURITY.md)** — como reportar uma vulnerabilidade, e as áreas reais de foco de segurança deste projeto.
-- **[SUPPORT.md](SUPPORT.md)** — onde colocar questões e reportar erros.
+- **[SECURITY.md](SECURITY.md)** — como comunicar uma vulnerabilidade e as prioridades de segurança reais deste projeto.
+- **[SUPPORT.md](SUPPORT.md)** — onde colocar questões e comunicar erros.
 - **[LICENSE.md](LICENSE.md)** — a licença deste próprio projeto.
 
 ## 🤝 Contribuir e comunidade

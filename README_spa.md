@@ -983,7 +983,7 @@ aparece en la lista con un ✓ o ✗ claro y el motivo:
   **Descargar de GitHub...** lista los archivos adjuntos a la última
   release de GitHub del repositorio de URTC
   (`github.com/JuanenRac/URTC/releases`; los binarios de firmware se
-  publican como assets de la release, no se guardan en git) y te permite
+  publican como archivos adjuntos de la release, no se guardan en git) y te permite
   elegir uno para descargarlo directamente en tu propia carpeta
   `firmware/` local - luego aparece en la lista de arriba como cualquier
   otro archivo, sin necesidad de reiniciar. Escribe una etiqueta de
@@ -991,7 +991,7 @@ aparece en la lista con un ✓ o ✗ claro y el motivo:
   ventana y pulsa **Cargar** para listar otra release en lugar de la
   última. El `.sha256` y el `.manifest.json` de la imagen se descargan
   junto con ella. Solo se aceptan archivos de los propios servidores de
-  GitHub (`github.com` y los servidores de almacenamiento de assets a los
+  GitHub (`github.com` y los servidores de almacenamiento de archivos adjuntos a los
   que redirige), y un archivo cuyo tamaño difiere del que anuncia la
   release se descarta. Usa la propia API pública de GitHub (sin
   autenticar, así que sujeta al límite de 60 peticiones/hora de GitHub si

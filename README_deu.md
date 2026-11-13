@@ -621,7 +621,7 @@ einfach nicht, und dieses Tool fällt dann auf die generische Meldung
 
 Abschnitt 3 hat ein Kontrollkästchen, **"Auch das persistente F-RAM vor
 dem Flashen löschen"** - standardmäßig deaktiviert. Wenn markiert,
-sendet es den Lösch-Befehl mit magischem Payload (`0x192` - siehe
+sendet es den Lösch-Befehl mit magischer Nutzlast (`0x192` - siehe
 `docs/CANBUS.TXT`) an das persistente FM24CL64B-F-RAM der Platine,
 bevor die Update-Sequenz beginnt, und löscht dabei jeden gespeicherten
 Werkzeugparameterzustand.

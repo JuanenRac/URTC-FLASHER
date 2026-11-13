@@ -31,7 +31,7 @@
 
 ---
 
-> **État de la sûreté et de la cybersécurité :** cet écosystème n'est pas un système de sécurité certifié et aucune carte URTC assemblée n'existe encore. Le bootloader de la carte principale vérifie un enregistrement Ed25519 de l'image (`<image>.imgsig`) par rapport à une table de clés publiques et ne détient aucun secret, et celui de l'esclave d'extension contrôle un simple SHA-256 et n'installe qu'une image que la carte principale confirme ; la table du build officiel est vide tant que la clé de signature des images n'est pas créée, et un build de banc fait confiance à une clé publique de développement, si bien que n'importe qui peut produire une image qu'un tel bootloader accepte ; rien n'a été transmis à une carte réelle. Lisez la [base de sécurité](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md) et le [modèle de menaces](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md) avant de vous fier à une affirmation de ce dépôt quant à la sécurité d'une personne.
+> **État de la sûreté et de la cybersécurité :** cet écosystème n'est pas un système de sécurité certifié et aucune carte URTC assemblée n'existe encore. Le bootloader de la carte principale vérifie un enregistrement Ed25519 de l'image (`<image>.imgsig`) par rapport à une table de clés publiques et ne détient aucun secret, et celui de l'esclave d'extension contrôle un simple SHA-256 et n'installe qu'une image que la carte principale confirme ; la table de la compilation officielle est vide tant que la clé de signature des images n'est pas créée, et un build de banc fait confiance à une clé publique de développement, si bien que n'importe qui peut produire une image qu'un tel bootloader accepte ; rien n'a été transmis à une carte réelle. Lisez la [base de sécurité](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md) et le [modèle de menaces](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md) avant de vous fier à une affirmation de ce dépôt quant à la sécurité d'une personne.
 
 ## 📋 En un coup d'œil
 
@@ -87,7 +87,7 @@ protocole en dessous :
   l'interface de l'outil sous Linux. Parle directement à une interface
   réseau du noyau `can0`/`slcan0`. Si votre adaptateur exécute déjà le
   firmware `gs_usb`/candleLight (la plupart des cartes CANable le font
-  d'origine), ce chemin **ne nécessite aucun reflash de l'adaptateur**
+  d'origine), ce chemin **ne nécessite aucun reprogrammation de l'adaptateur**
   — le pilote natif de Linux le gère directement.
 
 ## 🧩 Rôle dans URTC
@@ -159,7 +159,7 @@ juste après qu'un flash se termine, pour confirmer que la nouvelle
 version a bien pris).
 
 **Quand le bootloader lui-même répond** (carte assise dans le
-bootloader, n'exécutant pas son application), il rapporte aussi sa
+bootloader, n'exécutant pas son application), il signale aussi sa
 propre version - une chose séparée de la version de l'application
 installée, suivie via son propre
 `BOOTLOADER_VERSION_MAJOR/MINOR/PATCH` dans `bootloader_common.h` et envoyée
@@ -669,7 +669,7 @@ Un plan ou une mise à jour peut être exécuté contre un bus simulé qui se co
 | Une mise à jour ratée qui laisse la carte inutilisable | Le modèle d'image dorée : l'emplacement de secours garde le firmware précédent, une trame de confirmation perdue se rattrape en redemandant la version au lieu de signaler un faux échec, et l'emplacement principal peut être relu avant |
 | Une mise à jour manipulée de ce programme | « Rechercher une mise à jour » n'accepte qu'un paquet avec un SHA-256 et une signature Ed25519 valides (la clé des releases, figée dans le programme), n'installe qu'après confirmation et jamais pendant un transfert, et garde la version précédente |
 
-Le bootloader de la carte principale vérifie un enregistrement Ed25519 de l'image par rapport à une table de clés publiques et ne détient aucun secret ; la table du build officiel est vide tant que la clé de signature des images n'est pas créée, et un build de banc fait confiance à une clé publique de développement, si bien que n'importe qui peut fabriquer une image qu'un tel bootloader accepte. Rien de tout cela n'a tourné sur une vraie carte.
+Le bootloader de la carte principale vérifie un enregistrement Ed25519 de l'image par rapport à une table de clés publiques et ne détient aucun secret ; la table de la compilation officielle est vide tant que la clé de signature des images n'est pas créée, et un build de banc fait confiance à une clé publique de développement, si bien que n'importe qui peut fabriquer une image qu'un tel bootloader accepte. Rien de tout cela n'a tourné sur une vraie carte.
 
 ### Fiabilité pendant une mise à jour CAN, et journaux de session
 
@@ -699,7 +699,7 @@ supprimer ; rien ne relit d'anciens journaux. Seuls les 30 journaux de session l
 
 ## 🔌 Interfaces
 
-Pour les pipelines CI, bancs de test, ou scripting de ligne de
+Pour les pipelines CI, bancs de test, ou scripts de ligne de
 production où il n'y a pas d'écran :
 
 ```
@@ -731,7 +731,7 @@ python3 urtc_flasher.py --cli --transport mock --file firmware.bin --no-trigger
 ```
 
 Utile pour tester la logique propre de cet outil (comportement de
-nouvelle tentative, gestion des timeouts, codes de sortie) dans un
+nouvelle tentative, gestion des délais d'attente, codes de sortie) dans un
 chaîne CI ou avant de toucher du matériel réel - pas quelque chose qui
 parle à une vraie carte. `--mock-fail 0x03` (ou toute autre valeur
 `VERIFY_FAIL_REASON_*` de `docs/CANBUS.TXT`) fait échouer la
@@ -742,13 +742,13 @@ le chemin d'échec de la même manière.
 
 ## ⚙️ Configuration
 
-Cet outil ne contient **aucune clé de signature**. Le build URTC signe
+Cet outil ne contient **aucune clé de signature**. La compilation d'URTC signe
 chaque image d'application et publie la signature à côté, dans
 `<image>.manifest.json` (`hmac_sha256`, plus `<image>.sha256`) ; le flasher
 envoie cette signature publiée et refuse une image dont le sha256 ne
 correspond pas à son manifeste. Télécharger une image depuis GitHub
 télécharge aussi ces deux fichiers, et `python tools/sync_firmware.py` met à
-jour le dossier `firmware/` fourni à partir du build URTC (`--check` le
+jour le dossier `firmware/` fourni à partir de la compilation d'URTC (`--check` le
 vérifie). Par défaut, il prend l'ensemble dans les fichiers joints de la dernière release d'URTC (`--release TAG` en choisit une autre) ; on peut aussi passer en argument un dossier local, par exemple un build URTC local. Seule une image compilée soi-même sans manifeste, sur une carte de
 banc, a besoin d'une clé : définir `hmac_key_hex` / `slave_hmac_key_hex`
 dans `urtc_config.json` (ci-dessous) - sans elle, une telle image est
@@ -1008,7 +1008,7 @@ liste avec un ✓ ou ✗ clair et la raison :
   entièrement** → utilisez le bouton **Parcourir .bin...**, qui
   fonctionne peu importe où le fichier vit réellement (et exécute la
   même vérification de validation dans les deux cas).
-- **Vous voulez le dernier build sans avoir à la chercher vous-même**
+- **Vous voulez la dernière compilation sans avoir à la chercher vous-même**
   → **Télécharger depuis GitHub...** liste les fichiers joints à la
   dernière release GitHub du dépôt URTC
   (`github.com/JuanenRac/URTC/releases` ; les binaires du firmware sont
@@ -1020,7 +1020,7 @@ liste avec un ✓ ou ✗ clair et la raison :
   champ en haut de la fenêtre et appuyez sur **Charger** pour lister une
   autre release que la dernière. Le `.sha256` et le `.manifest.json` de
   l'image sont téléchargés avec elle. Seuls les fichiers provenant des
-  hôtes propres à GitHub (`github.com` et les hôtes de stockage des assets
+  hôtes propres à GitHub (`github.com` et les hôtes de stockage des fichiers joints
   vers lesquels il redirige) sont acceptés, et un fichier dont la taille
   diffère de celle annoncée par la release est écarté. Utilise la propre
   API publique de GitHub (non authentifiée, donc soumise à la limite de
@@ -1043,11 +1043,11 @@ Les deux empreintes sont vérifiées juste avant le flashage et une
 différence **refuse le flashage** avant tout envoi sur le bus (mauvais
 fichier, téléchargement corrompu ou manifeste périmé). C'est la signature
 publiée qui est envoyée au bootloader, et la version du manifeste qui lui
-est annoncée. Un fichier sans manifeste (votre propre build) n'est flashé
+est annoncée. Un fichier sans manifeste (votre propre compilation) n'est flashé
 que si une clé de signature est définie dans `urtc_config.json` - voir plus
 bas la modification de la clé HMAC.
 
-Ajouter un nouveau build plus tard : déposez-la simplement dans
+Ajouter une nouvelle compilation plus tard : déposez-la simplement dans
 `firmware/` et cliquez sur **Actualiser** - aucun redémarrage
 nécessaire.
 
