@@ -11,7 +11,7 @@ import unittest
 import unittest.mock as mock
 
 import flasher_config as config
-from urtc_can import bus_health, protocol
+from urtc_can import bus_health, health_info, protocol
 
 try:
     import qt_flasher
@@ -106,6 +106,32 @@ class LiveReadingTests(unittest.TestCase):
         with mock.patch.object(bus_health, "warnings", return_value=[bus_health.MIXED_BUS_SUSPECTED, bus_health.BUS_ERRORS, bus_health.LEGACY_HEAD_KNOWN]):
             self.bridge._on_flash_result("FLASH_FAILED x")
         self.assertEqual([line for line in self.logs if line.startswith("BUS_")], ["BUS_MIXED_SPEEDS", "BUS_ERRORS_SEEN", "BUS_LEGACY_HEAD"])
+
+    def test_the_speed_the_heads_declare_is_said_when_the_operation_ends(self):
+        transport = self.connect([(protocol.CAN_ID_HEALTH_INFO, health_info.encode(2, 8, 4, 4, 0, 60, 1_000_000)), (0x7F3, b"\x00")])
+        self.work(transport, 2)
+        self.bridge._on_flash_result("FLASH_COMPLETE")
+        self.assertEqual([line for line in self.logs if line.startswith("BUS_")], ["BUS_RATE_DECLARED 1 Mbit/s"])
+
+    def test_two_different_declared_speeds_are_a_mixed_bus_before_anything_else(self):
+        transport = self.connect([(protocol.CAN_ID_HEALTH_INFO, health_info.encode(2, 8, 4, 4, 0, 60, 1_000_000)),
+                                  (protocol.CAN_ID_HEALTH_INFO, health_info.encode(2, 8, 4, 4, 0, 61, 500_000)), (0x7F3, b"\x00")])
+        self.work(transport, 3)
+        self.bridge._on_flash_result("FLASH_COMPLETE")
+        self.assertEqual([line for line in self.logs if line.startswith("BUS_")], ["BUS_RATES_DECLARED_DIFFER", "BUS_RATE_DECLARED 1 Mbit/s / 500 kbit/s"])
+
+    def test_a_head_of_older_firmware_says_that_it_declares_nothing(self):
+        transport = self.connect([(protocol.CAN_ID_HEALTH_INFO, health_info.encode(1, 8, 4, 4, 0, 60, None)), (0x7F3, b"\x00")])
+        self.work(transport, 2)
+        self.bridge._on_flash_result("FLASH_COMPLETE")
+        self.assertEqual([line for line in self.logs if line.startswith("BUS_")], ["BUS_RATE_NOT_DECLARED"])
+
+    def test_the_log_lines_of_the_declared_speed_are_translated_with_the_speed_in_place(self):
+        with mock.patch.object(config, "_translations", config.load_language("german")):
+            self.assertEqual(config.translate_log_line("BUS_RATE_DECLARED 500 kbit/s"), "Vom Kopf gemeldete Busgeschwindigkeit: 500 kbit/s")
+            self.assertIn("unterschiedliche", config.translate_log_line("BUS_RATES_DECLARED_DIFFER"))
+        with mock.patch.object(config, "_translations", config.load_language("english")):
+            self.assertEqual(config.translate_log_line("BUS_RATE_DECLARED 1 Mbit/s"), "Bus speed the head declares: 1 Mbit/s")
 
     def test_without_a_connection_the_end_of_an_operation_says_nothing_about_the_bus(self):
         self.bridge._on_flash_result("FLASH_FAILED x")

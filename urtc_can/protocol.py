@@ -10,7 +10,7 @@ Standard library only, so this file can also be copied on its own into a tool.
 # =============================================================================
 from __future__ import annotations
 
-PROTOCOL_VERSION = 1
+PROTOCOL_VERSION = 2
 BYTE_ORDER = "big"
 
 # --- constants ---
@@ -106,7 +106,7 @@ CAN_ID_ELECTROMAGNET_CMD = 0x1B0  # Electromagnet coil
 CAN_ID_HEALTH_PROFILE = 0x1B8  # Periodic health frame of the board (only while the health feature runs)
 CAN_ID_PID_CONFIG = 0x1B9  # Gains of the heater PID and start of its relay autotune
 CAN_ID_PID_STATE_RESP = 0x1BA  # The heater PID: gains in force, state and output
-CAN_ID_HEALTH_INFO = 0x1BB  # Identity and life of the board: protocol byte, last reset cause, firmware version and uptime (sent with the health frame)
+CAN_ID_HEALTH_INFO = 0x1BB  # Identity and life of the board: protocol byte, last reset cause, firmware version, bus bit rate and uptime (sent with the health frame)
 CAN_ID_CRASH_DUMP_QUERY = 0x1BC  # Request the fault capture of the last crash (stacked registers kept across the reset)
 CAN_ID_CRASH_DUMP_RESP = 0x1BD  # The fault capture of the last crash
 CAN_ID_SPOT_WELD_CMD = 0x1C0  # Spot welder timed pulse
@@ -235,6 +235,13 @@ RESET_CAUSE_PIN = 0x10
 RESET_CAUSE_LOW_POWER = 0x20
 RESET_CAUSE_OPTION_BYTES = 0x40
 
+# Bit rate of the CAN bus a head declares in its identity frame (0x1BB, protocol version 2 and later)
+BUS_RATE_UNKNOWN = 0x00
+BUS_RATE_MBIT_1 = 0x01
+BUS_RATE_KBIT_500 = 0x02
+BUS_RATE_KBIT_250 = 0x03
+BUS_RATE_KBIT_125 = 0x04
+
 # Expansion board type
 EXPANSION_BOARD_NONE = 0x00
 EXPANSION_BOARD_BASIC_TMC2209 = 0x01
@@ -348,6 +355,7 @@ ENUM_NAMES = {'tool': {0: 'SOLDERING_IRON',
  'responder': {0: 'APPLICATION', 1: 'BOOTLOADER'},
  'thermal_fault': {0: 'NONE', 1: 'MAXTEMP', 2: 'HEATING_NO_RISE', 3: 'DROPPED_AT_TARGET'},
  'reset_cause': {1: 'IWDG', 2: 'WWDG', 4: 'SOFTWARE', 8: 'POWER_ON', 16: 'PIN', 32: 'LOW_POWER', 64: 'OPTION_BYTES'},
+ 'bus_rate_code': {0: 'UNKNOWN', 1: 'MBIT_1', 2: 'KBIT_500', 3: 'KBIT_250', 4: 'KBIT_125'},
  'expansion_board_type': {0: 'NONE',
                           1: 'BASIC_TMC2209',
                           2: 'BASIC_TMC5160A',
@@ -422,6 +430,7 @@ ENUM_TITLES = {'tool': {0: 'Soldering Iron',
                  16: 'NRST pin',
                  32: 'Low-power reset',
                  64: 'Option-byte load'},
+ 'bus_rate_code': {0: 'Not declared', 1: '1 Mbit/s', 2: '500 kbit/s', 3: '250 kbit/s', 4: '125 kbit/s'},
  'expansion_board_type': {0: 'None installed',
                           1: 'Basic, TMC2209',
                           2: 'Basic, TMC5160A',
@@ -684,7 +693,7 @@ LAYOUTS = {
     'pid_config': {'id': 441, 'role': 'request', 'dlc': {'exact': 7}, 'fields': [{'name': 'kp_x100', 'type': 'u16', 'offset': 0, 'width': 2}, {'name': 'ki_x100', 'type': 'u16', 'offset': 2, 'width': 2}, {'name': 'kd_x100', 'type': 'u16', 'offset': 4, 'width': 2}, {'name': 'action', 'type': 'u8', 'offset': 6, 'width': 1, 'allowed': [0, 1, 2, 3]}]},
     'pid_state_resp_request': {'id': 442, 'role': 'request', 'dlc': {'any': True}, 'fields': []},
     'pid_state_resp_response': {'id': 442, 'role': 'response', 'dlc': {'exact': 8}, 'fields': [{'name': 'kp_x100', 'type': 'u16', 'offset': 0, 'width': 2}, {'name': 'ki_x100', 'type': 'u16', 'offset': 2, 'width': 2}, {'name': 'kd_x100', 'type': 'u16', 'offset': 4, 'width': 2}, {'name': 'state', 'type': 'u8', 'offset': 6, 'width': 1}, {'name': 'duty_percent', 'type': 'u8', 'offset': 7, 'width': 1, 'range': [0, 100]}]},
-    'health_info': {'id': 443, 'role': 'response', 'dlc': {'exact': 8}, 'fields': [{'name': 'protocol_version', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'reset_cause', 'type': 'u8', 'offset': 1, 'width': 1}, {'name': 'fw_minor', 'type': 'u8', 'offset': 2, 'width': 1}, {'name': 'fw_patch', 'type': 'u8', 'offset': 3, 'width': 1}, {'name': 'fw_build', 'type': 'u8', 'offset': 4, 'width': 1}, {'name': 'uptime_s', 'type': 'u24', 'offset': 5, 'width': 3}]},
+    'health_info': {'id': 443, 'role': 'response', 'dlc': {'exact': 8}, 'fields': [{'name': 'protocol_version', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'reset_cause', 'type': 'u8', 'offset': 1, 'width': 1}, {'name': 'fw_minor', 'type': 'u8', 'offset': 2, 'width': 1}, {'name': 'fw_patch', 'type': 'u8', 'offset': 3, 'width': 1}, {'name': 'fw_build', 'type': 'u8', 'offset': 4, 'width': 1}, {'name': 'bus_rate_code', 'type': 'u8', 'offset': 5, 'width': 1}, {'name': 'uptime_s', 'type': 'u16', 'offset': 6, 'width': 2}]},
     'crash_dump_query': {'id': 444, 'role': 'request', 'dlc': {'min': 1, 'max': 8}, 'fields': [{'name': 'operation', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 0]}]},
     'crash_dump_resp': {'id': 445, 'role': 'response', 'dlc': {'exact': 8}, 'fields': [{'name': 'data', 'type': 'bytes', 'offset': 0, 'length': 8}]},
     'spot_weld_cmd': {'id': 448, 'role': 'request', 'dlc': {'exact': 3}, 'fields': [{'name': 'fire', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [1, 1]}, {'name': 'duration_ms', 'type': 'u16', 'offset': 1, 'width': 2, 'range': [1, 2000]}]},
@@ -1531,9 +1540,9 @@ def decode_pid_state_resp_response(data: bytes, strict: bool = False) -> dict | 
     return decode("pid_state_resp_response", data, strict)
 
 
-def encode_health_info(protocol_version: int, reset_cause: int, fw_minor: int, fw_patch: int, fw_build: int, uptime_s: int) -> tuple[int, bytes]:
-    """Identity and life of the board: protocol byte, last reset cause, firmware version and uptime (sent with the health frame) (0x1BB, response)."""
-    return encode("health_info", protocol_version=protocol_version, reset_cause=reset_cause, fw_minor=fw_minor, fw_patch=fw_patch, fw_build=fw_build, uptime_s=uptime_s)
+def encode_health_info(protocol_version: int, reset_cause: int, fw_minor: int, fw_patch: int, fw_build: int, bus_rate_code: int, uptime_s: int) -> tuple[int, bytes]:
+    """Identity and life of the board: protocol byte, last reset cause, firmware version, bus bit rate and uptime (sent with the health frame) (0x1BB, response)."""
+    return encode("health_info", protocol_version=protocol_version, reset_cause=reset_cause, fw_minor=fw_minor, fw_patch=fw_patch, fw_build=fw_build, bus_rate_code=bus_rate_code, uptime_s=uptime_s)
 
 
 def decode_health_info(data: bytes, strict: bool = False) -> dict | None:

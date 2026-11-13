@@ -1,10 +1,10 @@
 {
   "format": 1,
-  "urtc_common_version": "0.2.5",
+  "urtc_common_version": "0.2.6",
   "files": {
     "__init__.py": {
       "from": "src/urtc_common/__init__.py",
-      "sha256": "550e37a938eb86b61d6823da2122b976a194f5ae1ce48969d86a0d83f63cbb14"
+      "sha256": "0b405bacda97363c7860f434d32ff53e4b9f309c976dc8200fb208807fac501d"
     },
     "bl_select.py": {
       "from": "src/urtc_common/bl_select.py",
@@ -16,7 +16,7 @@
     },
     "bus_health.py": {
       "from": "src/urtc_common/bus_health.py",
-      "sha256": "80fede3e0c8e7a0d64a6704f00a2f1aed2d134464749def7f69f4cf0f18cd637"
+      "sha256": "618b6a3deaeab2eec8090e6332edefb691c9195c896c6882b6c1b9a7e2658826"
     },
     "bus_scenario.py": {
       "from": "src/urtc_common/bus_scenario.py",
@@ -77,6 +77,10 @@
     "framing.py": {
       "from": "src/urtc_common/framing.py",
       "sha256": "b26b47e7fec0ed1eb04f560221f42dae1b0706952084fd0787440a35b153ce2f"
+    },
+    "health_info.py": {
+      "from": "src/urtc_common/health_info.py",
+      "sha256": "16d65c2c97d5e7a487d06c63d17050fa5fe28fb18641698d5209a43f8ced185b"
     },
     "heater_model.json": {
       "from": "src/urtc_common/heater_model.json",
@@ -148,7 +152,7 @@
     },
     "protocol.py": {
       "from": "src/urtc_common/protocol.py",
-      "sha256": "8ca082503681084b8479b9ddba2071b361df2eba67775537b84c9872de5ac0bb"
+      "sha256": "71f922068bb3dea9a0bd860368fb5707b94aa97d4e5458a7bf6eed95d4c6768a"
     },
     "quick_state.py": {
       "from": "src/urtc_common/quick_state.py",
