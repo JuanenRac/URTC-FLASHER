@@ -39,7 +39,7 @@
 |---|---|
 | Version | `0.5.6` |
 | Maturity | Functional |
-| Tests | 901 (`python -m pytest tests -q`) |
+| Tests | 905 (`python -m pytest tests -q`) |
 | Stack | Python / PySide6 / Qt Quick / CAN-OTA / SWD/JTAG |
 | Target | The PC of the person using it |
 | On real hardware | Simulated only: tested against emulators, fakes or simulators; no run on real hardware is recorded for this version |

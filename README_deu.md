@@ -39,7 +39,7 @@
 |---|---|
 | Version | `0.5.6` |
 | Reifegrad | Funktionsfähig |
-| Tests | 901 (`python -m pytest tests -q`) |
+| Tests | 905 (`python -m pytest tests -q`) |
 | Technik | Python / PySide6 / Qt Quick / CAN-OTA / SWD/JTAG |
 | Ziel | Der PC der Person, die es benutzt |
 | Auf echter Hardware | Nur simuliert: gegen Emulatoren, Attrappen oder Simulatoren getestet; für diese Version ist kein Lauf auf echter Hardware vermerkt |
