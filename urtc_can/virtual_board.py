@@ -273,7 +273,7 @@ class SlcanAdapter:
             try:
                 line = raw.decode("ascii").strip("\n ")
             except UnicodeDecodeError:
-                out += b"\a"
+                out += b"\a\r"  # a line that is not text is a bell like any other refusal, with its terminator
                 continue
             reply = self.command(line)
             if reply and not reply.endswith(b"\r"):
