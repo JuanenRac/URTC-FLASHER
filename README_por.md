@@ -68,8 +68,8 @@
 Uma pequena ferramenta GUI multiplataforma para atualizar o firmware das
 placas URTC através do barramento CAN. Implementa o protocolo exato do
 bootloader descrito em `docs/CANBUS.TXT` (no repositório irmão
-[URTC](https://github.com/JuanenRac/URTC) contra o qual esta ferramenta é
-implementada - consulte «Projetos relacionados» perto do fim deste documento;
+[URTC](https://github.com/JuanenRac/URTC) contra o qual este flasher é
+implementado - consulte «Projetos relacionados» perto do fim deste documento;
 todas as outras referências a `docs/*.TXT` neste README apontam também para
 lá): a verificação do HardwareID, o registo Ed25519 da imagem, o fluxo de
 atualização com imagem dourada e ranhura de reserva, o progresso em direto através das
@@ -189,11 +189,11 @@ O que verá:
 - **`Bootloader running, no valid firmware currently installed, bootloader
   v0.1.2`** - a placa está presa no bootloader sem nada para onde saltar
   (chip em branco, ou todas as verificações da ranhura principal falharam). Esta
-  é exatamente a situação que esta ferramenta existe para resolver - grave.
+  é exatamente a situação que este flasher existe para resolver - grave.
   A versão do bootloader mostrada aqui é a do próprio bootloader, sem relação
   com a versão da aplicação cujas verificações falharam.
 - **`⚠ HardwareID mismatch!`** mostrado a vermelho - algo respondeu, mas o seu
-  HardwareID não coincide com o que esta ferramenta espera. Não grave sem
+  HardwareID não coincide com o que este flasher espera. Não grave sem
   perceber primeiro porquê; o bootloader rejeitaria a atualização de qualquer
   forma, mas uma discrepância aqui pode também significar que está a apontar
   para a placa completamente errada.
@@ -274,7 +274,7 @@ já não tiver o ficheiro que os produziu. Apenas placa principal, e apenas
 enquanto a placa está efetivamente parada no bootloader - requer um bootloader
 que implemente `0x7FE`/`0x7FF` (consulte `docs/CANBUS.TXT`); um mais antigo
 simplesmente nunca responde, o que se manifesta como um tempo limite claro em vez
-de um ficheiro silenciosamente vazio. Na prática, isto significa que a cópia funciona numa placa sem aplicação válida ou que ficou a meio de uma atualização: com uma aplicação válida o bootloader salta para ela cerca de 600 ms depois do reset, a menos que chegue uma trama de início de atualização (`0x7F1`), e esta ferramenta não tem nenhum botão que mantenha o bootloader à espera (isso exigiria uma alteração no bootloader). Para uma placa a funcionar normalmente, faça a cópia da flash por SWD/JTAG (secção 6).
+de um ficheiro silenciosamente vazio. Na prática, isto significa que a cópia funciona numa placa sem aplicação válida ou que ficou a meio de uma atualização: com uma aplicação válida o bootloader salta para ela cerca de 600 ms depois do reset, a menos que chegue uma trama de início de atualização (`0x7F1`), e este flasher não tem nenhum botão que mantenha o bootloader à espera (isso exigiria uma alteração no bootloader). Para uma placa a funcionar normalmente, faça a cópia da flash por SWD/JTAG (secção 6).
 
 **Avisos de versão e de assinatura**: antes da transferência a ferramenta pergunta à placa o que está instalado e regista «instalada vX.Y -> nova vA.B»; se a versão nova for mais antiga, avisa que o bootloader a recusará a menos que o downgrade seja permitido e sugere fazer primeiro uma cópia de segurança. Uma imagem cujo manifesto diz estar assinada com a chave de desenvolvimento PÚBLICA (as imagens oficiais incluídas estão) mostra um aviso a vermelho por baixo do nome do ficheiro; defina `"require_production_signature": true` em `urtc_config.json` para recusar totalmente essas imagens. Um bootloader que publica a impressão digital da chave de assinatura que aceita é comparado com o `signing_key_id` do manifesto da imagem antes da transferência: uma diferença é registada (`"key_id_precheck": "warn"`, o valor por omissão), recusada (`"refuse"`) ou não verificada (`"off"`) em `urtc_config.json`; um bootloader ou um manifesto sem impressão digital nunca conta como diferença. Experimentado apenas com um bootloader simulado. Quando a placa responde a partir do bootloader sem firmware válido, é selecionada a imagem oficial mais recente da placa principal encontrada em `firmware/`, para a verificar e gravar. Depois de cada atualização bem-sucedida é escrito um pequeno relatório (`logs/urtc_update_report_*.json`: versão da ferramenta, operador, nome, tamanho e SHA-256 da imagem, versões antes e depois); leva o seu próprio SHA-256 para que uma edição se note, mas não é uma assinatura.
 
@@ -293,7 +293,7 @@ através da transferência normal, apenas levanta a verificação da ordem de
 versões para essa única tentativa (`0x7FD` - consulte `docs/CANBUS.TXT`); o
 número de versão reportado à placa vem do próprio `.manifest.json` do
 ficheiro quando existe um ao lado dele (consulte a secção 3 acima), recorrendo
-em caso contrário à versão atualmente configurada desta própria ferramenta,
+em caso contrário à versão atualmente configurada deste flasher,
 registado claramente em qualquer dos casos para que nunca seja um palpite
 silencioso.
 
@@ -346,7 +346,7 @@ só ativa os que encontra):
 Ambos são acionados como subprocessos de linha de comandos, não importados como
 bibliotecas Python - verá o comando exato registado antes de ser executado.
 
-**Formatos de ficheiro:** `.bin` (precisa do endereço fixo que esta ferramenta
+**Formatos de ficheiro:** `.bin` (precisa do endereço fixo que este flasher
 já conhece - não o introduz) ou `.hex` (traz o seu próprio endereço, usado tal
 como está). Pode misturá-los: bootloader como `.hex` e aplicação como
 `.bin`, ou o contrário. Ambos os seletores de ficheiro validam
@@ -416,7 +416,7 @@ de protocolo reais efetivamente vistas durante uma janela fixa de 2 segundos
 no transporte que estiver ligado. Isto deliberadamente **não** é a mesma coisa
 que uma verdadeira percentagem de carga do barramento CAN - isso precisaria de
 uma consulta netlink (SocketCAN) ou de extensões específicas do adaptador
-(SLCAN) para as quais esta ferramenta não tem uma forma padrão e sem
+(SLCAN) para as quais este flasher não tem uma forma padrão e sem
 dependências de obter para o controlador *do próprio adaptador*. O que dá: um
 sinal autêntico e medido diretamente de «há algo a falar neste barramento, e
 aproximadamente com que frequência», em qualquer dos transportes. Para o
@@ -521,7 +521,7 @@ numa bancada com vários dispositivos.
 **As escritas do pyOCD são verificadas com uma leitura de volta explícita**, sem
 confiar apenas no código de saída. O próprio comando `flash` do pyOCD
 salta a reescrita de páginas que já coincidem (uma otimização de velocidade,
-não um relatório de verificação), pelo que esta ferramenta acrescenta um passo
+não um relatório de verificação), pelo que este flasher acrescenta um passo
 `commander compare` contra ambas as imagens depois de escrever - uma
 verificação autêntica byte a byte, igual ao que a opção `-v` do
 STM32CubeProgrammer já faz. Apenas para `.bin`: o `compare` verifica o
@@ -545,7 +545,7 @@ uma atualização CAN, o `bootloader_protocol.c` envia um byte de motivo junto
 com o estado `0x05` (verificação falhada) - transferência incompleta, discrepância de
 CRC32, discrepância de assinatura, ou discrepância de HardwareID, em vez de todas as
 falhas parecerem idênticas. Consulte `docs/CANBUS.TXT` para o formato exato da
-trama (`0x7F5`, DLC 2 para este estado específico). Esta ferramenta e o
+trama (`0x7F5`, DLC 2 para este estado específico). Este flasher e o
 bootloader concordam neste formato de trama, pelo que grave ambos em conjunto
 se estiver a construir um bootloader personalizado com uma versão diferente do
 protocolo.
@@ -556,8 +556,8 @@ protocolo.
 bootloader do escravo - os mesmos 5 motivos que acima, apenas alcançados através
 da ponte I2C em vez de lidos diretamente de uma trama CAN. Requer um
 bootloader de escravo que implemente `0x219` (acrescentado juntamente com o
-suporte desta própria ferramenta para ele); um bootloader de escravo mais antigo
-simplesmente não responde a essa consulta, e esta ferramenta recorre à
+suporte deste flasher para ele); um bootloader de escravo mais antigo
+simplesmente não responde a essa consulta, e este flasher recorre à
 mensagem genérica «verificação falhada».
 
 ### Apagamento opcional da F-RAM antes de gravar
@@ -586,7 +586,7 @@ bootloader.
 confirmação do próprio comando de apagamento não voltar dentro de 2 segundos,
 isto é registado como aviso e a atualização de firmware propriamente dita
 prossegue na mesma - apagar é um passo secundário e opcional ao lado do
-verdadeiro objetivo desta ferramenta, não algo que deva abortar uma
+verdadeiro objetivo deste flasher, não algo que deva abortar uma
 atualização que de outra forma teve sucesso por a sua própria trama de
 confirmação se ter perdido. Verifique o estado da F-RAM em separado (o botão
 Consultar estado do `URTC Tester`) se isso lhe importar.
@@ -682,7 +682,7 @@ sucesso, para testar o caminho de falha da mesma forma.
 
 ## ⚙️ Configuração
 
-Esta ferramenta **não guarda qualquer chave de assinatura**. A compilação do URTC
+Este flasher **não guarda qualquer chave de assinatura**. A compilação do URTC
 assina cada imagem de aplicação e publica a assinatura ao lado dela, em
 `<image>.manifest.json` (`hmac_sha256`, mais `<image>.sha256`); o flasher envia
 essa assinatura publicada e recusa uma imagem cujo sha256 não coincida com o
@@ -698,7 +698,7 @@ bootloader não pode ter. Consulte `docs/FIRMWARE_SIGNING.TXT` do URTC. O regist
 `urtc_config.json` opcional ao lado de `firmware/` pode definir a chave de
 assinatura, o HardwareID, e os valores do mapa de memória - útil para uma
 revisão de placa diferente, uma chave rodada, ou (para os campos do mapa de
-memória) adaptar esta ferramenta a uma variante de chip ou esquema de partições
+memória) adaptar este flasher a uma variante de chip ou esquema de partições
 diferente, sem precisar de uma nova versão do script por implementação:
 ```json
 {
@@ -729,7 +729,7 @@ uma dada sessão realmente usou. `hardware_id` aceita uma cadeia de texto JSON
 natural para a forma como o ficheiro é gerado. `app_max_size`,
 `bootloader_max_size`, `flash_page_size`, `bootloader_flash_addr`, e
 `app_flash_addr` também podem ser substituídos aqui, juntamente com a chave de
-assinatura e o HardwareID acima - útil se esta ferramenta for alguma vez
+assinatura e o HardwareID acima - útil se este flasher for alguma vez
 adaptada a uma variante de chip ou esquema de partições diferente.
 
 - **Um `hardware_id` fora do intervalo.** Um `hardware_id` com mais de 32 bits é assinalado como ignorado e mantém-se o HardwareID incorporado, como com qualquer outro valor inválido.
@@ -860,7 +860,7 @@ sempre está no PATH mesmo logo após uma instalação bem-sucedida, enquanto
 
 **A pasta começa vazia.** As imagens de firmware não ficam neste repositório: são os ficheiros das releases do [URTC](https://github.com/JuanenRac/URTC). A janela descarrega-as da release escolhida, e `python tools/sync_firmware.py` preenche a pasta a partir da última release oficial (ou `--release ETIQUETA`). Cada ficheiro é verificado com a assinatura da release (`.sig`, Ed25519) e os seus resumos antes de ser usado.
 
-Esta ferramenta espera uma pasta `firmware/` mesmo ao lado de `urtc_flasher.py`,
+Este flasher espera uma pasta `firmware/` mesmo ao lado de `urtc_flasher.py`,
 na raiz deste mesmo repositório:
 
 ```

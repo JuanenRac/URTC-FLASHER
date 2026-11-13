@@ -67,7 +67,7 @@
 
 Una pequeña herramienta GUI multiplataforma para actualizar el firmware
 de la placa URTC por bus CAN. Implementa exactamente el protocolo del
-bootloader de `docs/CANBUS.TXT` (en el repositorio hermano [URTC](https://github.com/JuanenRac/URTC) contra el que implementa esta herramienta - ver «Proyectos Relacionados» cerca del final de este documento; cualquier otra referencia a `docs/*.TXT` en este README apunta allí también): la verificación de HardwareID, el registro Ed25519 de la imagen, el flujo de actualización con ranura de respaldo de imagen
+bootloader de `docs/CANBUS.TXT` (en el repositorio hermano [URTC](https://github.com/JuanenRac/URTC) contra el que implementa el flasher - ver «Proyectos Relacionados» cerca del final de este documento; cualquier otra referencia a `docs/*.TXT` en este README apunta allí también): la verificación de HardwareID, el registro Ed25519 de la imagen, el flujo de actualización con ranura de respaldo de imagen
 dorada, el progreso en vivo mediante los mensajes de latido del
 bootloader, y una consulta de versión (identifica si la aplicación *o*
 el bootloader de esta placa se anuncia por CAN) para que puedas ver qué
@@ -192,11 +192,11 @@ Lo que verás:
   bootloader v0.1.2`** - la placa está atascada en el bootloader sin
   nada a lo que saltar (chip en blanco, o cada comprobación en la ranura
   principal falló). Esta es exactamente la situación para la que existe
-  esta herramienta - grábalo. La versión de bootloader mostrada aquí
+  el flasher - grábalo. La versión de bootloader mostrada aquí
   es la del propio bootloader, sin relación con la versión de aplicación
   que haya fallado sus comprobaciones.
 - **`⚠ HardwareID mismatch!`** mostrado en rojo - algo respondió, pero
-  su HardwareID no coincide con lo que espera esta herramienta. No
+  su HardwareID no coincide con lo que espera el flasher. No
   grabes sin entender por qué primero; el bootloader rechazaría la
   actualización de todas formas, pero un desajuste aquí también puede
   significar que apuntas a la placa equivocada por completo.
@@ -235,7 +235,7 @@ de expansión ya lo requiere.
    puerto/interfaz, luego haz clic en Conectar. Para Serie/SLCAN esto
    abre el canal CAN a 1 Mbit/s (la velocidad de bus fija de URTC);
    para SocketCAN se espera que la interfaz ya esté a esa velocidad
-   (paso 1 de arriba) - esta herramienta no la establece. De cualquier
+   (paso 1 de arriba) - el flasher no la establece. De cualquier
    forma, la versión actual se consulta automáticamente - ver sección 4
    de arriba.
 2. **Elige un objetivo de grabación**: «Esta placa (principal)» o
@@ -285,7 +285,7 @@ exactos de hoy más adelante si ya no tienes el archivo que los generó.
 Solo placa principal, y solo mientras la placa está realmente en el
 bootloader - requiere un bootloader que implemente `0x7FE`/`0x7FF` (ver
 `docs/CANBUS.TXT`); uno antiguo simplemente nunca responde, mostrado como
-un tiempo de espera claro en vez de un archivo silenciosamente vacío. En la práctica, esto significa que la copia funciona en una placa sin aplicación válida o que quedó a medias de una actualización: con una aplicación válida el bootloader salta a ella unos 600 ms después del reinicio salvo que llegue una trama de inicio de actualización (`0x7F1`), y esta herramienta no tiene ningún botón que mantenga al bootloader esperando (eso requeriría un cambio en el bootloader). Para una placa que funciona con normalidad, haz la copia de la flash por SWD/JTAG (sección 6).
+un tiempo de espera claro en vez de un archivo silenciosamente vacío. En la práctica, esto significa que la copia funciona en una placa sin aplicación válida o que quedó a medias de una actualización: con una aplicación válida el bootloader salta a ella unos 600 ms después del reinicio salvo que llegue una trama de inicio de actualización (`0x7F1`), y el flasher no tiene ningún botón que mantenga al bootloader esperando (eso requeriría un cambio en el bootloader). Para una placa que funciona con normalidad, haz la copia de la flash por SWD/JTAG (sección 6).
 
 **Avisos de versión y de firma**: antes de la transferencia la herramienta pregunta a la placa qué hay instalado y registra "instalada vX.Y -> nueva vA.B"; si la versión nueva es más antigua, avisa de que el bootloader la rechazará salvo que se permita el downgrade y sugiere hacer antes una copia de seguridad. Una imagen cuyo manifiesto dice que está firmada con la clave de desarrollo PÚBLICA (las imágenes oficiales incluidas lo están) muestra un aviso en rojo bajo el nombre del archivo; pon `"require_production_signature": true` en `urtc_config.json` para rechazar por completo esas imágenes. Un bootloader que publica la huella de la clave de firma que acepta se compara con el `signing_key_id` del manifiesto de la imagen antes de la transferencia: una diferencia se anota (`"key_id_precheck": "warn"`, el valor por defecto), se rechaza (`"refuse"`) o no se comprueba (`"off"`) en `urtc_config.json`; un bootloader o un manifiesto sin huella nunca cuenta como diferencia. Probado solo con un bootloader simulado. Cuando la placa responde desde su bootloader sin firmware válido, se selecciona la imagen oficial más reciente de la placa principal que haya en `firmware/` para que la compruebes y la grabes. Tras cada actualización correcta se escribe un pequeño informe (`logs/urtc_update_report_*.json`: versión de la herramienta, operador, nombre, tamaño y SHA-256 de la imagen, versiones anterior y posterior); lleva su propio SHA-256 para que una edición se note, pero no es una firma.
 
@@ -305,7 +305,7 @@ la transferencia normal, solo levanta la comprobación de orden de
 versión para ese intento (`0x7FD` - ver `docs/CANBUS.TXT`); el número de
 versión comunicado a la placa viene del propio `.manifest.json` del
 archivo cuando existe uno junto a él (ver sección 3 arriba), volviendo
-en la versión actualmente configurada de esta herramienta en caso
+en la versión actualmente configurada del flasher en caso
 contrario, registrado claramente en cualquier caso para que nunca sea
 una suposición silenciosa.
 
@@ -436,7 +436,7 @@ tramas de protocolo reales realmente vistas durante una ventana fija de
 2 segundos en el transporte que esté conectado. Esto deliberadamente
 **no** es lo mismo que un porcentaje real de carga de bus CAN - eso
 necesitaría una consulta netlink (SocketCAN) o extensiones específicas
-del adaptador (SLCAN) que esta herramienta no tiene una forma estándar y
+del adaptador (SLCAN) que el flasher no tiene una forma estándar y
 sin dependencias de obtener para el controlador del *propio adaptador*.
 Lo que sí da: una señal genuina, directamente
 medida, de "hay algo hablando en este bus, y aproximadamente con qué
@@ -529,11 +529,11 @@ su propia dirección de carga embebida en su lugar.
 **Comprobar Option Bytes** (misma pestaña de programación SWD/JTAG, solo STM32CubeProgrammer -
 pyOCD no expone esto de la misma forma por CLI): un volcado de solo
 lectura `-ob displ`, sin borrado/escritura. Marca el nivel RDP con el
-mismo cuidado que toma toda esta herramienta en torno al riesgo de SWD:
+mismo cuidado que toma todo el flasher en torno al riesgo de SWD:
 - **RDP0** - sin protección, normal para una placa de desarrollo.
 - **RDP1** - reversible mediante el Read Unprotect de CubeProgrammer,
   pero eso borra el chip por completo como parte de quitarlo - no algo
-  que esta herramienta haga por ti automáticamente.
+  que el flasher haga por ti automáticamente.
 - **RDP2** - el único bloqueo genuinamente **permanente** de todo este
   proyecto. A diferencia de cualquier otro riesgo documentado arriba
   (todos recuperables por SWD), RDP2 deshabilita el puerto de depuración
@@ -552,7 +552,7 @@ placa equivocada sea un riesgo real en un banco con varios dispositivos.
 **Las escrituras de pyOCD se verifican con una relectura explícita**,
 no solo se confía en el código de salida. El propio comando `flash` de
 pyOCD se salta reescribir páginas que ya coinciden (una optimización de
-velocidad, no un informe de verificación), así que esta herramienta
+velocidad, no un informe de verificación), así que el flasher
 añade un paso `commander compare` contra ambas imágenes tras escribir -
 una comprobación genuina byte a byte, igual que ya hace la opción `-v` de
 STM32CubeProgrammer. Solo para `.bin`: `compare` comprueba el contenido
@@ -577,7 +577,7 @@ motivo junto al estado `0x05` (verificación fallida) - transferencia
 incompleta, desajuste de CRC32, desajuste de firma, o desajuste de
 HardwareID, en vez de que todo fallo parezca idéntico. Ver
 `docs/CANBUS.TXT` para el formato exacto de trama (`0x7F5`, DLC 2 para
-este estado específico). Esta herramienta y el bootloader coinciden en
+este estado específico). El flasher y el bootloader coinciden en
 este formato de trama, así que graba ambos juntos si estás
 construyendo un bootloader personalizado con una versión distinta del
 protocolo.
@@ -588,9 +588,9 @@ justo después de que `0x215` indique `STATUS_VERIFY_FAIL`, retransmitiendo el
 propio `REG_VERIFY_FAIL_REASON` del bootloader esclavo - los mismos 5
 motivos de arriba, solo que alcanzados a través del puente I2C en vez de
 leídos directamente de una trama CAN. Requiere un bootloader esclavo que
-implemente `0x219` (añadido junto con el soporte de esta herramienta para
+implemente `0x219` (añadido junto con el soporte del flasher para
 ello); un bootloader esclavo más antiguo simplemente no responde a esa
-consulta, y esta herramienta cae de vuelta al mensaje genérico de
+consulta, y el flasher cae de vuelta al mensaje genérico de
 «verificación fallida».
 
 ### Borrado opcional de la F-RAM antes de grabar
@@ -620,7 +620,7 @@ la placa ya está en el bootloader.
 de confirmación del comando de borrado no vuelve dentro de 2 segundos,
 esto se registra como una advertencia y la actualización de firmware
 real procede de todas formas - borrar es un paso secundario y opcional
-junto al propósito real de esta herramienta, no algo que deba abortar
+junto al propósito real del flasher, no algo que deba abortar
 una actualización por lo demás exitosa por la ausencia de su propia
 trama de confirmación. Comprueba el estado de la F-RAM por separado (el
 propio botón Consultar Estado de `URTC Tester`) si eso te importa.
@@ -708,7 +708,7 @@ adaptador, sin puerto, nada físico involucrado:
 python3 urtc_flasher.py --cli --transport mock --file firmware.bin --no-trigger
 ```
 
-Útil para probar la lógica propia de esta herramienta (comportamiento de
+Útil para probar la lógica propia del flasher (comportamiento de
 reintentos, gestión de los tiempos de espera, códigos de salida) en un flujo de CI
 o antes de tocar hardware real - no algo que hable con una placa real.
 `--mock-fail 0x03` (o cualquier otro valor `VERIFY_FAIL_REASON_*` de
@@ -720,7 +720,7 @@ misma manera.
 
 ## ⚙️ Configuración
 
-Esta herramienta **no lleva ninguna clave de firma**. La compilación de URTC firma
+El flasher **no lleva ninguna clave de firma**. La compilación de URTC firma
 cada imagen de aplicación y publica la firma a su lado, en
 `<imagen>.manifest.json` (`hmac_sha256`, más `<imagen>.sha256`); el flasher
 envía esa firma publicada y rechaza una imagen cuyo sha256 no coincide con
@@ -737,7 +737,7 @@ firmarse con una clave que el bootloader no puede tener. Ver
 `urtc_config.json` opcional junto a `firmware/` puede establecer la
 clave de firma, el HardwareID, y los valores del mapa de memoria - útil
 para una revisión de placa distinta, una clave rotada, o (para los
-campos del mapa de memoria) adaptar esta herramienta a una variante de
+campos del mapa de memoria) adaptar el flasher a una variante de
 chip o esquema de particiones distinto, sin necesitar una versión de
 script nueva por despliegue:
 ```json
@@ -770,7 +770,7 @@ como un número JSON plano (`50580689`) - lo que sea más natural según
 cómo se genere el archivo. `app_max_size`, `bootloader_max_size`,
 `flash_page_size`, `bootloader_flash_addr`, y `app_flash_addr` también
 se pueden sustituir aquí, junto a la clave de firma y el HardwareID de
-arriba - útil si esta herramienta alguna vez se adapta a una variante de
+arriba - útil si el flasher alguna vez se adapta a una variante de
 chip o esquema de particiones distinto.
 
 - **Un `hardware_id` fuera de rango.** Un `hardware_id` de más de 32 bits se avisa como omitido y sigue vigente el HardwareID incorporado, como con cualquier otro valor no válido.
@@ -906,7 +906,7 @@ directamente.
 ### Dónde van los archivos de firmware
 
 **La carpeta empieza vacía.** Las imágenes de firmware no se guardan en este repositorio: son los archivos de las releases de [URTC](https://github.com/JuanenRac/URTC). La ventana las descarga de la release que elijas, y `python tools/sync_firmware.py` rellena la carpeta desde la última release oficial (o `--release ETIQUETA`). Cada archivo se comprueba con la firma de la release (`.sig`, Ed25519) y sus resúmenes antes de usarse.
-Esta herramienta espera una carpeta `firmware/` justo al lado de
+El flasher espera una carpeta `firmware/` justo al lado de
 `urtc_flasher.py`, en la raíz de este mismo repositorio:
 
 ```
@@ -933,7 +933,7 @@ Esta herramienta espera una carpeta `firmware/` justo al lado de
 └── README.md
 ```
 
-Esta herramienta está organizada en los módulos de arriba por
+El flasher está organizado en los módulos de arriba por
 responsabilidad, puramente por legibilidad - no hay ninguna diferencia
 funcional entre tenerlos como archivos separados o como uno grande.
 

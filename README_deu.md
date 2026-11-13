@@ -585,7 +585,7 @@ Gründe wie oben, nur über die I2C-Bridge erreicht statt direkt aus
 einem CAN-Frame gelesen. Erfordert einen Slave-Bootloader, der `0x219`
 implementiert (zusammen mit der Unterstützung im Flasher dafür
 hinzugefügt); ein älterer Slave-Bootloader antwortet auf diese Anfrage
-einfach nicht, und dieses Tool fällt dann auf die generische Meldung
+einfach nicht, und der Flasher fällt dann auf die generische Meldung
 „Verifizierung fehlgeschlagen“ zurück.
 
 ### Optionales F-RAM-Löschen vor dem Flashen
