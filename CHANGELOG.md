@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- **The pause between the data frames is measured in a whole update on a virtual clock:** the real transfer runs against the simulated bootloader with a pause of 0, 1, 5 and 50 ms (the ends and the middle of the accepted range) and the time of every data frame is recorded; two data frames of a page are exactly one configured pause apart, the update lasts one pause longer per data frame and the frames sent do not change. Simulation only: the spacing on the wire with a real adapter is still to be measured on a board.
+
 ## [0.5.6] - The flasher opens the bus at 1 Mbit/s, recognises mixed speeds by their symptoms and reads the header inside the image
 
 - **The plausibility check of an image and the plan of an update are tested at the edges of their ranges:** the stack pointer and the reset handler at both ends of their slots, the exact size limit, files too short or empty or missing, another slot when it is named, the version read from the name of the file only, the data frames rounded up, the numbering of the steps, what force lets through, and generated images judged the same way every time.
