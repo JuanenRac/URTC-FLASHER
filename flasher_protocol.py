@@ -53,6 +53,18 @@ ROTATION_STATUS_OP = 0x05           # operation of 0x7EA that asks which signing
 ROTATION_ANSWER_WAIT = 0.3          # seconds to listen for the answer (0x7ED frames and one 0x7EB)
 
 
+# Reason 7 of the relayed slave query is answered by the main board itself: a digest chunk (0x212) was lost on the bus, so the count it keeps from the start
+# frame was not complete when the end frame came. The other reasons are the ones of the bootloaders (flasher_config.VERIFY_FAIL_REASONS).
+SLAVE_REASON_DIGEST_CHUNK_MISSING = 0x07
+
+
+def slave_reason_text(code):
+    """The words for the reason byte that 0x219 returned."""
+    if code == SLAVE_REASON_DIGEST_CHUNK_MISSING:
+        return _("ERR_DIGEST_CHUNK_MISSING")
+    return VERIFY_FAIL_REASONS.get(code, f"unknown reason 0x{code:02X}")
+
+
 class FlashError(Exception):
     pass
 
@@ -1262,7 +1274,7 @@ class URTCFlasher:
             if status == 0x05:  # STATUS_VERIFY_FAIL
                 reason_byte = self._query_slave_verify_fail_reason(timeout=1.0)
                 if reason_byte is not None:
-                    reason = VERIFY_FAIL_REASONS.get(reason_byte, f"unknown reason 0x{reason_byte:02X}")
+                    reason = slave_reason_text(reason_byte)
                     raise FlashError(_("LOG_SLAVE_VERIFY_FAILED_REASON", reason=reason))
                 raise FlashError(_("LOG_SLAVE_VERIFY_FAILED"))
             if status == 0xFF:
@@ -1333,7 +1345,7 @@ class URTCFlasher:
             if status == 0x05:
                 reason_byte = self._query_slave_verify_fail_reason(timeout=1.0)
                 if reason_byte is not None:
-                    reason = VERIFY_FAIL_REASONS.get(reason_byte, f"unknown reason 0x{reason_byte:02X}")
+                    reason = slave_reason_text(reason_byte)
                     raise FlashError(_("LOG_SLAVE_VERIFY_FAILED_REASON", reason=reason))
                 raise FlashError(_("LOG_SLAVE_VERIFY_FAILED"))
             time.sleep(0.2)

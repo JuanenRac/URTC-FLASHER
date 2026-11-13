@@ -176,6 +176,26 @@ def test_a_verification_failure_reports_the_reason(tmp_path):
     assert cfg.VERIFY_FAIL_REASONS[0x03] in str(error.value)
 
 
+def test_a_lost_digest_chunk_is_named_by_the_reason_of_the_main_board(tmp_path):
+    path, _ = _image(tmp_path, 64)
+    peer = SlavePeer(outcome="fail", reason=0x07)
+    with pytest.raises(FlashError) as error:
+        _flasher(peer)[0].flash_slave(path)
+    assert cfg._("ERR_DIGEST_CHUNK_MISSING") in str(error.value)
+    assert "0x07" not in str(error.value)
+
+
+def test_the_four_digest_chunks_go_out_in_order_after_the_start(tmp_path):
+    path, image = _image(tmp_path, 64)
+    peer = SlavePeer()
+    _flasher(peer)[0].flash_slave(path)
+    ids = [frame[0] for frame in peer.sent]
+    first = ids.index(cfg.CAN_ID_SLAVE_DIGEST_CHUNK)
+    assert ids.index(cfg.CAN_ID_SLAVE_START_UPDATE) < first
+    assert ids[first:first + 4] == [cfg.CAN_ID_SLAVE_DIGEST_CHUNK] * 4
+    assert b"".join(peer.frames(cfg.CAN_ID_SLAVE_DIGEST_CHUNK)) == hashlib.sha256(image).digest()
+
+
 def test_an_unknown_failure_reason_is_still_reported(tmp_path):
     path, _ = _image(tmp_path, 64)
     peer = SlavePeer(outcome="fail", reason=0x77)

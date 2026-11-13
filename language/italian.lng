@@ -273,6 +273,7 @@ QT_SWD_BACKUP_DIALOG_TITLE=Salva backup flash come...
 ERR_CANCELLED_BY_USER=Annullato dall'utente
 ERR_UNKNOWN_REASON=motivo sconosciuto
 ERR_UNKNOWN_REASON_CODE=motivo sconosciuto 0x{code}
+ERR_DIGEST_CHUNK_MISSING=un blocco del digest è andato perso sul bus (ne sono arrivati meno di 4); l'immagine non è stata installata, ripeti l'aggiornamento
 ERR_BOOTLOADER_VERIFY_FAILURE=Il bootloader ha segnalato un errore di verifica: {reason}
 ERR_BOOTLOADER_GENERIC_ERROR=Il bootloader ha segnalato uno stato di errore generico
 ERR_TIMEOUT_WAITING_CAN_ID=Timeout in attesa dell'ID CAN 0x{can_id}
