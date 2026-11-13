@@ -152,15 +152,19 @@
     },
     "protocol.py": {
       "from": "src/urtc_common/protocol.py",
-      "sha256": "c59c3560d1b2240be8ffd5a57c101f97b5d532e96396a498daaef2934cc541c7"
+      "sha256": "4bf72dea52d3e1c6b19425b05d8ba7201d308c3e48a80d517d2ddb7cfe8e180a"
     },
     "quick_state.py": {
       "from": "src/urtc_common/quick_state.py",
-      "sha256": "0cc476a92ae2285c728a3499976b9c65610f754961d722e7a5fff9fa3faaab18"
+      "sha256": "169f7687957430cc9bee365279362c85faac6083b189bcc7449006da6eab3382"
     },
     "record_signing.py": {
       "from": "src/urtc_common/record_signing.py",
       "sha256": "3319983cc18428409251afe87ce4d3dd6967b1d92623f41fb2ac98c611c59164"
+    },
+    "safety_policy.py": {
+      "from": "src/urtc_common/safety_policy.py",
+      "sha256": "1536ccafb5aeb0e0da40bd6b98f7138f0e6769e17fa78c81603a89f47851dd13"
     },
     "self_update.py": {
       "from": "src/urtc_common/self_update.py",
@@ -200,7 +204,7 @@
     },
     "virtual_board.py": {
       "from": "src/urtc_common/virtual_board.py",
-      "sha256": "c0e4114ef361f752dbe021d30c4d68c81b84663d4107da1120b595cd39bf5be6"
+      "sha256": "d574949d15d785a842b0e7f209d622ce0b3df33268013b1de165e4974a48c3af"
     }
   }
 }
