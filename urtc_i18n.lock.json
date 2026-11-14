@@ -2,9 +2,9 @@
   "format": 1,
   "urtc_common_version": "0.2.7",
   "catalog": "spec/i18n/catalog/flasher.json",
-  "catalog_sha256": "80e03beac6006da1a561f39b0fa7b29f715b7246ddc9aaad03efc986c24baab9",
+  "catalog_sha256": "602936ad783e391de252ee2cc1b9eecd8a96c4d88e7d6b483474586498fded4e",
   "files": {
-    "language/chinese.lng": "75a8cd9cafe5cd279643f8dbd1757b68f45fa28622de541fdea0088746aa97da",
+    "language/chinese.lng": "9f92b8a9c4eb4a97ab91b85e34f606f320e434f55ca5053cce76fd3db1d364ed",
     "language/english.lng": "1551ad5e01e5a629efac283c224d67b577dcb2e16aea3e698292094de98afc56",
     "language/french.lng": "a784690e56890de1320a669dd8724556cfc3b77681a46e50a94cec2a8b81ac40",
     "language/german.lng": "45d6adc46c30caba7b21f9ba9f03d99be764149bfed42084c2a1c07e2b7740eb",
