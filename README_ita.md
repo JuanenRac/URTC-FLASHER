@@ -37,7 +37,7 @@
 
 | | |
 |---|---|
-| Versione | `0.5.6` |
+| Versione | `0.5.7` |
 | Maturità | Funzionale |
 | Test | 913 (`python -m pytest tests -q`) |
 | Tecnologia | Python / PySide6 / Qt Quick / CAN-OTA / SWD/JTAG |
