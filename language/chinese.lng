@@ -182,7 +182,7 @@ LOG_MLX_VARIANT_SAVED_CONFIRMED=MLX9064x 传感器变体已保存并确认：{ty
 LOG_MLX_VARIANT_MISMATCH=MLX9064x 传感器变体已设置为 {value}，但板卡报告为 {confirmed}——写入可能未生效。请再次查询以检查。
 LOG_MLX_VARIANT_NO_CONFIRMATION=MLX9064x 传感器变体：已发送，但未收到确认（旧版固件，或板卡未连接）。
 
-# 扩展从属 CAN-OTA 刷写（0x210-0x218 中继）
+# 扩展从机 CAN-OTA 刷写（0x210-0x218 中继）
 LBL_FLASH_TARGET=刷写目标：
 OPT_TARGET_MASTER=本板卡（主）
 OPT_TARGET_SLAVE=扩展从机
@@ -200,7 +200,7 @@ LOG_SLAVE_VERIFY_FAILED=扩展从机报告验证失败（其自身备份槽的�
 LOG_SLAVE_VERIFY_FAILED_REASON=扩展从机报告验证失败：{reason}
 LOG_SLAVE_GENERIC_ERROR=扩展从机报告了一个通用错误状态。
 
-# SWD/JTAG 目标芯片选择器（主板 / 扩展从属）
+# SWD/JTAG 目标芯片选择器（主板 / 扩展从机）
 LBL_SWD_TARGET=目标芯片：
 HELP_SWD_TARGET_SLAVE=探针必须物理接线到此处所设定的那颗芯片——与 CAN-OTA 不同，没有桥接可以让一条连接同时到达两者。STM32F303CC（主板）和 STM32F303CBT6（扩展从机）具有不同的闪存地址/大小和不同的 pyOCD 目标名称，切换此项后会自动应用——扩展从机自身的 SWD 引脚位置见 PINOUT_SLAVE.txt。
 

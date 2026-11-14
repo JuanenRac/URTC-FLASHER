@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The Chinese language file names the expansion slave "从机" in its section comments too:** two comments still said "扩展从属"; no visible text changes.
+
 - **The Chinese texts name the image and the expansion slave the same way everywhere:** the language file and the Chinese README said "镜像" for the firmware image in most places and "映像" in two texts and the README, and "从机" for the slave in the program and "从属" in the README; they now use "镜像" and "从机" throughout, as the shared catalog does.
 
 ## [0.5.7] - Lost digest chunk named, bus speed shown and refreshed shared copies
