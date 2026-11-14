@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here.
 
-## [Unreleased]
+## [0.5.7] - Lost digest chunk named, bus speed shown and refreshed shared copies
 
 - **The copies taken from URTC-COMMON are refreshed:** the protocol layer and the virtual board follow the catalog again (the identifier of the clear-error command, the heater-only layout of 0x170 and the implicit index of the digest chunks), so the comparison of the shared nightly passes.
 
@@ -13,6 +13,8 @@ All notable changes to this project are documented here.
 - **A lost digest chunk of a slave update is named:** when the main board reports that a digest chunk was lost on the bus (reason 7 of the verify-fail query 0x219), the flasher says so in the language of the program, in the eight languages, instead of an unknown reason or a signature mismatch. The chunks are still sent in order, right after the start frame; the position of each is implicit and the main board checks the count at the end frame. Tested against a scripted slave and main board; not tried on a bus with real boards.
 
 - **The pause between the data frames is measured in a whole update on a virtual clock:** the real transfer runs against the simulated bootloader with a pause of 0, 1, 5 and 50 ms (the ends and the middle of the accepted range) and the time of every data frame is recorded; two data frames of a page are exactly one configured pause apart, the update lasts one pause longer per data frame and the frames sent do not change. Simulation only: the spacing on the wire with a real adapter is still to be measured on a board.
+
+## [Unreleased]
 
 ## [0.5.6] - The flasher opens the bus at 1 Mbit/s, recognises mixed speeds by their symptoms and reads the header inside the image
 
