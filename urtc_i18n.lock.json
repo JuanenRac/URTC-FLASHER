@@ -1,10 +1,10 @@
 {
   "format": 1,
-  "urtc_common_version": "0.2.6",
+  "urtc_common_version": "0.2.7",
   "catalog": "spec/i18n/catalog/flasher.json",
-  "catalog_sha256": "6b40bccf904df7d2fb23d784f09b140fc87d47b7a8f363ab6ad66d35cadf93ac",
+  "catalog_sha256": "80e03beac6006da1a561f39b0fa7b29f715b7246ddc9aaad03efc986c24baab9",
   "files": {
-    "language/chinese.lng": "2f7c409175f8f7cf10e8ec893cc89fe9c46fe6a82871c26683548394ee446a57",
+    "language/chinese.lng": "75a8cd9cafe5cd279643f8dbd1757b68f45fa28622de541fdea0088746aa97da",
     "language/english.lng": "1551ad5e01e5a629efac283c224d67b577dcb2e16aea3e698292094de98afc56",
     "language/french.lng": "a784690e56890de1320a669dd8724556cfc3b77681a46e50a94cec2a8b81ac40",
     "language/german.lng": "45d6adc46c30caba7b21f9ba9f03d99be764149bfed42084c2a1c07e2b7740eb",
