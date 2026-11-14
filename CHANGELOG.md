@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- **The Chinese texts name the image and the expansion slave the same way everywhere:** the language file and the Chinese README said "镜像" for the firmware image in most places and "映像" in two texts and the README, and "从机" for the slave in the program and "从属" in the README; they now use "镜像" and "从机" throughout, as the shared catalog does.
+
 ## [0.5.7] - Lost digest chunk named, bus speed shown and refreshed shared copies
 
 - **The copies taken from URTC-COMMON are refreshed:** the protocol layer and the virtual board follow the catalog again (the identifier of the clear-error command, the heater-only layout of 0x170 and the implicit index of the digest chunks), so the comparison of the shared nightly passes.
