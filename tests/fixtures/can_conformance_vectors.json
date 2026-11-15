@@ -7807,45 +7807,6 @@
       }
     },
     {
-      "name": "SET_FEATURES: features above its maximum",
-      "message": "SET_FEATURES",
-      "layout": "set_features",
-      "fields": {
-        "magic": "46454154",
-        "features": 128
-      }
-    },
-    {
-      "name": "FEATURES_RESP: stored above its maximum",
-      "message": "FEATURES_RESP",
-      "layout": "features_resp_response",
-      "fields": {
-        "stored": 128,
-        "running": 0,
-        "supported": 15
-      }
-    },
-    {
-      "name": "FEATURES_RESP: running above its maximum",
-      "message": "FEATURES_RESP",
-      "layout": "features_resp_response",
-      "fields": {
-        "stored": 2,
-        "running": 128,
-        "supported": 15
-      }
-    },
-    {
-      "name": "FEATURES_RESP: supported above its maximum",
-      "message": "FEATURES_RESP",
-      "layout": "features_resp_response",
-      "fields": {
-        "stored": 2,
-        "running": 0,
-        "supported": 128
-      }
-    },
-    {
       "name": "ELECTROMAGNET_CMD: coil above its maximum",
       "message": "ELECTROMAGNET_CMD",
       "layout": "electromagnet_cmd",

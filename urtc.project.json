@@ -3,7 +3,7 @@
   "ecosystem": "URTC",
   "name": "URTC-FLASHER",
   "version": "0.5.7",
-  "min_common": "0.2.4",
+  "min_common": "0.2.7",
   "role": "tool",
   "stack": "python-qtquick",
   "technologies": [

@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The copy of URTC-COMMON brings the stop-following logic of the head (the switch stays off):** the virtual head of the flasher now knows the `ESTOP_FOLLOW` feature (bit 128, off unless the mask has it), the error reasons `ESTOP` and `ESTOP_SILENCE` and the stop frame `0x001`. The flasher itself never writes the optional functions, so nothing changes on the bus; a test keeps it that way. Tested with the virtual head; not tried on a board.
 - **The Chinese language file names the expansion slave "从机" in its section comments too:** two comments still said "扩展从属"; no visible text changes.
 
 - **The Chinese texts name the image and the expansion slave the same way everywhere:** the language file and the Chinese README said "镜像" for the firmware image in most places and "映像" in two texts and the README, and "从机" for the slave in the program and "从属" in the README; they now use "镜像" and "从机" throughout, as the shared catalog does.
