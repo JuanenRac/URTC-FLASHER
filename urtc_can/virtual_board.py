@@ -122,10 +122,30 @@ class VirtualBoard:
         self.uptime_s = 0.0
         self.last_rotation_result: str | None = None
         self._assembler = krc.Assembler()
+        # With the ESTOP_FOLLOW feature the head follows the emergency stop frame 0x001: like every node of the stack it powers up latched.
+        self.estop = None
+        if self.mode == APPLICATION and self.features & protocol.FEATURE_ESTOP_FOLLOW:
+            from . import estop_follow   # here and not at the top, like the safety decisions
+            self.estop = estop_follow.Node()
+            self.system_error = True
+            self.error_reason = protocol.ERROR_REASON_ESTOP
+
+    def _estop_effect(self, effect) -> None:
+        """Applies what the stop-following logic decided: a stop latches the critical error (first reason wins); a release lifts only an error that came from a stop."""
+        if effect.stop_reason:
+            if not self.system_error:
+                self.error_reason = effect.stop_reason
+            self.system_error = True
+            self.heater = None   # the heater is off in the safe state
+        elif effect.released and self.error_reason in (protocol.ERROR_REASON_ESTOP, protocol.ERROR_REASON_ESTOP_SILENCE):
+            self.system_error = False
+            self.error_reason = protocol.ERROR_REASON_NONE
 
     def advance(self, seconds: float) -> list[Frame]:
         """Let simulated time pass: the telemetry the heater loop sends meanwhile (none when it never got a setpoint)."""
         self.uptime_s += seconds
+        if self.estop is not None and self.mode == APPLICATION:
+            self._estop_effect(self.estop.tick(int(self.uptime_s * 1000)))
         if self.mode == BOOTLOADER or self.heater is None:
             return []   # a head in its bootloader drives no heater
         return self.heater.advance(seconds)
@@ -160,6 +180,10 @@ class VirtualBoard:
         return [self._quick_state()]
 
     def _application(self, can_id: int, data: bytes) -> list[Frame]:
+        if can_id == protocol.ESTOP_CAN_ID:
+            if self.estop is not None:
+                self._estop_effect(self.estop.on_frame(int(self.uptime_s * 1000), data))
+            return []   # a head without the feature does not look at the frame
         if can_id == protocol.CAN_ID_QUERY_VERSION:
             return self._version_answer()
         if can_id == protocol.CAN_ID_QUERY_ACTIVE_TOOL:

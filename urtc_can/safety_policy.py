@@ -22,14 +22,14 @@ UINT32_MAX = 0xFFFFFFFF
 def clear_error_decision(feature_on: bool, error_latched: bool, reason: int, temperature_c: int, actuators_off: bool) -> int:
     """Outcome code (``CLEAR_ERROR_*``) of a clear-error command with the magic payload.
 
-    The order of the checks is part of the contract: the switch, then whether there is an error, then whether this kind can be lifted at all, then the
+    The order of the checks is part of the contract: the switch, then whether there is an error, then whether this kind can be lifted at all (a missing tool and a stop of the stack end only another way), then the
     temperature (0xFFFF = unknown, which is refused) and last the actuators.
     """
     if not feature_on:
         return protocol.CLEAR_ERROR_REFUSED_SWITCH_OFF
     if not error_latched:
         return protocol.CLEAR_ERROR_REFUSED_NO_ERROR
-    if reason == protocol.ERROR_REASON_TOOL_ID:
+    if reason in (protocol.ERROR_REASON_TOOL_ID, protocol.ERROR_REASON_ESTOP, protocol.ERROR_REASON_ESTOP_SILENCE):
         return protocol.CLEAR_ERROR_REFUSED_NOT_CLEARABLE
     if temperature_c == TEMPERATURE_UNKNOWN or temperature_c >= protocol.CLEAR_ERROR_MAX_TEMP_C:
         return protocol.CLEAR_ERROR_REFUSED_HOT

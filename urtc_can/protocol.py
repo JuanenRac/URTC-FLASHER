@@ -59,6 +59,8 @@ CLEAR_ERROR_MAX_TEMP_C = 0x32  # A latched error is lifted only below this tempe
 STEPPER_SILENCE_MIN_MS = 0x3E8  # Least silence of the host that cuts a stepper move (communication watchdog on) (ms)
 STEPPER_SILENCE_PERCENT = 0x32  # Silence that cuts a stepper move, as a percentage of the time the move should take (never below the least) (%)
 MAGNET_SILENCE_MS = 0x1388  # Silence of the host after which the electromagnet lets go (communication watchdog and release policy on) (ms)
+ESTOP_CAN_ID = 1  # Identifier of the emergency stop frame of the stack, which a head with the ESTOP_FOLLOW feature obeys (standard frame, eight bytes)
+ESTOP_ALIVE_TIMEOUT_MS = 0x64  # Silence of the master of the emergency stop after which a head that is ready goes back to its safe state (ESTOP_FOLLOW feature on) (ms)
 
 # --- identifiers ---
 CAN_ID_IMPACT_EVENT = 0x095  # Impact register (touch probe, maximum priority)
@@ -305,6 +307,7 @@ FEATURE_THERMAL_PID = 0x08
 FEATURE_CLEAR_ERROR = 0x10
 FEATURE_COMMS_WATCHDOG = 0x20
 FEATURE_MAGNET_RELEASE = 0x40
+FEATURE_ESTOP_FOLLOW = 0x80
 
 # Speed profile of a stepper move
 MOTION_PROFILE_CONSTANT = 0x00
@@ -334,6 +337,8 @@ ERROR_REASON_COMMS_WATCHDOG = 0x05
 ERROR_REASON_FAN_STALL = 0x06
 ERROR_REASON_STEPPER_SILENCE = 0x07
 ERROR_REASON_MAGNET_RELEASE = 0x08
+ERROR_REASON_ESTOP = 0x09
+ERROR_REASON_ESTOP_SILENCE = 0x0A
 
 # Outcome of the last clear-error command
 CLEAR_ERROR_NONE = 0x00
@@ -407,7 +412,8 @@ ENUM_NAMES = {'tool': {0: 'SOLDERING_IRON',
                       8: 'THERMAL_PID',
                       16: 'CLEAR_ERROR',
                       32: 'COMMS_WATCHDOG',
-                      64: 'MAGNET_RELEASE'},
+                      64: 'MAGNET_RELEASE',
+                      128: 'ESTOP_FOLLOW'},
  'motion_profile': {0: 'CONSTANT', 1: 'TRAPEZOID', 2: 'S_CURVE'},
  'pid_action': {0: 'SET_GAINS', 1: 'AUTOTUNE_START', 2: 'AUTOTUNE_ABORT', 3: 'QUERY'},
  'pid_state': {0: 'OFF', 1: 'RUNNING', 2: 'AUTOTUNING', 3: 'AUTOTUNE_DONE', 4: 'AUTOTUNE_FAILED'},
@@ -419,7 +425,9 @@ ENUM_NAMES = {'tool': {0: 'SOLDERING_IRON',
                   5: 'COMMS_WATCHDOG',
                   6: 'FAN_STALL',
                   7: 'STEPPER_SILENCE',
-                  8: 'MAGNET_RELEASE'},
+                  8: 'MAGNET_RELEASE',
+                  9: 'ESTOP',
+                  10: 'ESTOP_SILENCE'},
  'clear_error_result': {0: 'NONE',
                         1: 'CLEARED',
                         2: 'REFUSED_SWITCH_OFF',
@@ -512,7 +520,9 @@ ENUM_TITLES = {'tool': {0: 'Soldering Iron',
                       32: 'Communication watchdog of the stepper moves and of the electromagnet (silence of the '
                           'host)',
                       64: 'With the communication watchdog: the electromagnet lets go when the host falls silent '
-                          '(without it, it holds)'},
+                          '(without it, it holds)',
+                      128: 'The head follows the emergency stop frame 0x001 of the stack: it goes to its safe state '
+                           'on a stop, on a malformed frame and when the master falls silent'},
  'motion_profile': {0: 'Constant speed (the behaviour without the ramps feature)',
                     1: 'Trapezoidal: constant acceleration, cruise, constant deceleration',
                     2: 'S-curve: the acceleration itself ramps up and down'},
@@ -533,7 +543,9 @@ ENUM_TITLES = {'tool': {0: 'Soldering Iron',
                   5: 'An actuator was cut because its refresh stopped',
                   6: 'The hotend fan stalled',
                   7: 'A stepper move was cut because the host fell silent',
-                  8: 'The electromagnet was released because the host fell silent'},
+                  8: 'The electromagnet was released because the host fell silent',
+                  9: 'The emergency stop frame 0x001 (or a malformed frame on it) put the head in its safe state',
+                  10: 'The master of the emergency stop fell silent while the head was ready'},
  'clear_error_result': {0: 'No clear-error command since power-up',
                         1: 'The error was lifted',
                         2: 'The CLEAR_ERROR feature is off',
@@ -764,9 +776,9 @@ LAYOUTS = {
     'set_multinode': {'id': 428, 'role': 'request', 'dlc': {'exact': 6}, 'fields': [{'name': 'magic', 'type': 'bytes', 'offset': 0, 'fixed': '4D4E4F44', 'length': 4}, {'name': 'enable', 'type': 'u8', 'offset': 4, 'width': 1, 'range': [0, 1]}, {'name': 'instance', 'type': 'u8', 'offset': 5, 'width': 1}]},
     'multinode_config_resp_request': {'id': 429, 'role': 'request', 'dlc': {'any': True}, 'fields': []},
     'multinode_config_resp_response': {'id': 429, 'role': 'response', 'dlc': {'exact': 4}, 'fields': [{'name': 'stored', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 1]}, {'name': 'running', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 1]}, {'name': 'instance', 'type': 'u8', 'offset': 2, 'width': 1}, {'name': 'address', 'type': 'u8', 'offset': 3, 'width': 1, 'range': [0, 31]}]},
-    'set_features': {'id': 430, 'role': 'request', 'dlc': {'exact': 5}, 'fields': [{'name': 'magic', 'type': 'bytes', 'offset': 0, 'fixed': '46454154', 'length': 4}, {'name': 'features', 'type': 'u8', 'offset': 4, 'width': 1, 'range': [0, 127]}]},
+    'set_features': {'id': 430, 'role': 'request', 'dlc': {'exact': 5}, 'fields': [{'name': 'magic', 'type': 'bytes', 'offset': 0, 'fixed': '46454154', 'length': 4}, {'name': 'features', 'type': 'u8', 'offset': 4, 'width': 1, 'range': [0, 255]}]},
     'features_resp_request': {'id': 431, 'role': 'request', 'dlc': {'any': True}, 'fields': []},
-    'features_resp_response': {'id': 431, 'role': 'response', 'dlc': {'exact': 3}, 'fields': [{'name': 'stored', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 127]}, {'name': 'running', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 127]}, {'name': 'supported', 'type': 'u8', 'offset': 2, 'width': 1, 'range': [0, 127]}]},
+    'features_resp_response': {'id': 431, 'role': 'response', 'dlc': {'exact': 3}, 'fields': [{'name': 'stored', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 255]}, {'name': 'running', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 255]}, {'name': 'supported', 'type': 'u8', 'offset': 2, 'width': 1, 'range': [0, 255]}]},
     'electromagnet_cmd': {'id': 432, 'role': 'request', 'dlc': {'exact': 1}, 'fields': [{'name': 'coil', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 1]}]},
     'clear_error': {'id': 434, 'role': 'request', 'dlc': {'exact': 4}, 'fields': [{'name': 'magic', 'type': 'bytes', 'offset': 0, 'fixed': '434C4552', 'length': 4}]},
     'health_profile': {'id': 440, 'role': 'response', 'dlc': {'exact': 8}, 'fields': [{'name': 'tec', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'rec', 'type': 'u8', 'offset': 1, 'width': 1}, {'name': 'bus_off_count', 'type': 'u8', 'offset': 2, 'width': 1}, {'name': 'hsi_trim', 'type': 'u8', 'offset': 3, 'width': 1}, {'name': 'loop_max_ms', 'type': 'u8', 'offset': 4, 'width': 1}, {'name': 'mcu_temp_plus_40', 'type': 'u8', 'offset': 5, 'width': 1}, {'name': 'vdda_mv', 'type': 'u16', 'offset': 6, 'width': 2}]},
