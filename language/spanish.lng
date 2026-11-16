@@ -274,6 +274,7 @@ ERR_CANCELLED_BY_USER=Cancelado por el usuario
 ERR_UNKNOWN_REASON=motivo desconocido
 ERR_UNKNOWN_REASON_CODE=motivo desconocido 0x{code}
 ERR_DIGEST_CHUNK_MISSING=se perdió un bloque del resumen en el bus (llegaron menos de los 4 esperados); la imagen no se instaló, repite la actualización
+ERR_ACTUATOR_ACTIVE=la placa rechazó la actualización porque una herramienta seguía activa (calentador, láser, taladro, ventilador, soplador, movimiento del motor o electroimán); la imagen no se instaló, detén la herramienta y repite
 ERR_BOOTLOADER_VERIFY_FAILURE=El bootloader informó de un fallo de verificación: {reason}
 ERR_BOOTLOADER_GENERIC_ERROR=El bootloader informó de un estado de error genérico
 ERR_TIMEOUT_WAITING_CAN_ID=Tiempo de espera agotado esperando el ID CAN 0x{can_id}

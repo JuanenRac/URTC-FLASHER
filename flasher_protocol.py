@@ -56,12 +56,16 @@ ROTATION_ANSWER_WAIT = 0.3          # seconds to listen for the answer (0x7ED fr
 # Reason 7 of the relayed slave query is answered by the main board itself: a digest chunk (0x212) was lost on the bus, so the count it keeps from the start
 # frame was not complete when the end frame came. The other reasons are the ones of the bootloaders (flasher_config.VERIFY_FAIL_REASONS).
 SLAVE_REASON_DIGEST_CHUNK_MISSING = 0x07
+# Reason 8 is also answered by the main board: it refused the end of the update because a tool of the board was active (a heater, the laser, the drill, a fan, a move).
+SLAVE_REASON_ACTUATOR_ACTIVE = 0x08
 
 
 def slave_reason_text(code):
     """The words for the reason byte that 0x219 returned."""
     if code == SLAVE_REASON_DIGEST_CHUNK_MISSING:
         return _("ERR_DIGEST_CHUNK_MISSING")
+    if code == SLAVE_REASON_ACTUATOR_ACTIVE:
+        return _("ERR_ACTUATOR_ACTIVE")
     return VERIFY_FAIL_REASONS.get(code, f"unknown reason 0x{code:02X}")
 
 

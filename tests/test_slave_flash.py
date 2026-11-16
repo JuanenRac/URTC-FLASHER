@@ -185,6 +185,23 @@ def test_a_lost_digest_chunk_is_named_by_the_reason_of_the_main_board(tmp_path):
     assert "0x07" not in str(error.value)
 
 
+def test_a_refusal_because_a_tool_is_active_is_named_by_the_reason_of_the_main_board(tmp_path):
+    path, _ = _image(tmp_path, 64)
+    peer = SlavePeer(outcome="fail", reason=0x08)
+    with pytest.raises(FlashError) as error:
+        _flasher(peer)[0].flash_slave(path)
+    assert cfg._("ERR_ACTUATOR_ACTIVE") in str(error.value)
+    assert "0x08" not in str(error.value)
+
+
+def test_the_text_of_the_refusal_exists_in_every_language_file():
+    import pathlib
+    names = ("english", "spanish", "german", "french", "italian", "japanese", "chinese", "portuguese")
+    root = pathlib.Path(__file__).resolve().parents[1] / "language"
+    for name in names:
+        assert "ERR_ACTUATOR_ACTIVE=" in (root / f"{name}.lng").read_text(encoding="utf-8"), name
+
+
 def test_the_four_digest_chunks_go_out_in_order_after_the_start(tmp_path):
     path, image = _image(tmp_path, 64)
     peer = SlavePeer()
