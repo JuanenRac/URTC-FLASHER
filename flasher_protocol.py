@@ -934,10 +934,30 @@ class URTCFlasher:
         except Exception:
             info = None
         if info is not None and info.get("responder") == "application":
-            self.progress_cb(100)
-            self.log(_("LOG_BOARD_RESPONDING_AS_APP"))
-            return True
+            # Only an application that is the image just sent proves the update: the previous application back after a failed transfer, or another board of the bus,
+            # answers as an application too.
+            if self._answer_is_this_image(info, report_major, report_minor, patch):
+                self.progress_cb(100)
+                self.log(_("LOG_BOARD_RESPONDING_AS_APP"))
+                return True
+            self.log(_("LOG_VERSION_CHANGE", installed=self._answer_image_version_text(info), new=self._image_version_text(report_major, report_minor, patch)))
         raise FlashError(_("ERR_TIMEOUT_FINAL_VERIFICATION"))
+
+    @staticmethod
+    def _answer_is_this_image(info, major, minor, patch):
+        """True when the application that answered reports the version of the image sent (the patch too, when both sides state one)."""
+        if (info.get("version_major"), info.get("version_minor")) != (major, minor):
+            return False
+        answered_patch = info.get("version_patch")
+        return patch is None or answered_patch is None or answered_patch == patch
+
+    @staticmethod
+    def _image_version_text(major, minor, patch):
+        return f"{major}.{minor}" if patch is None else f"{major}.{minor}.{patch}"
+
+    @classmethod
+    def _answer_image_version_text(cls, info):
+        return cls._image_version_text(info.get("version_major"), info.get("version_minor"), info.get("version_patch"))
 
     def read_back_flash(self, output_path, timeout=180.0):
         """Reads the main board's own currently-installed firmware back
