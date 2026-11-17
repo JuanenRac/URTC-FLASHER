@@ -51,6 +51,7 @@ Every file of the repository with a line on what it does: the annotated tree tha
 ├── flasher_scenario.py            <- an update behind a simulated bus scenario, on a virtual clock, with its evidence record
 ├── flasher_integrity.py           Checks before a flash is reported as done: SHA-256 and CRC-32 of the image on disk
 ├── flasher_release_signature.py   Release signatures (Ed25519) of the files this tool downloads or flashes
+├── flasher_image_trust.py         The signature record of an image (.imgsig) checked against a pinned table of public keys before the transfer
 ├── urtc_can/                      Shared code copied from URTC-COMMON: protocol, transports, virtual board, updates, help and the tool heads window
 ├── urtc_ui/                       Shared interface helpers (copy from URTC-COMMON)
 ├── verify_qt_device_config.py     <- real, outside-pytest end-to-end check of the Qt Quick config writes (needs a real Qt event loop)

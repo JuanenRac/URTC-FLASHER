@@ -42,10 +42,11 @@ from flasher_config import (
     CAN_ID_READBACK, CAN_ID_READBACK_PAGE_ACK,
     SLAVE_HARDWARE_ID, SLAVE_APP_MAX_SIZE,
     CAN_ID_VERSION_PATCH_RESPONSE, PATCH_UNKNOWN, PATCH_FLAG,
-    BOOTLOADER_KEY_ID_BYTES, CAN_ID_BOOTLOADER_KEY_ID, KEY_ID_PRECHECK,
+    BOOTLOADER_KEY_ID_BYTES, CAN_ID_BOOTLOADER_KEY_ID, IMGSIG_PRECHECK, KEY_ID_PRECHECK,
     FRAME_GAP_S, FRAME_GAP_PROBLEM, IMAGE_HEADER_POLICY,
 )
 
+import flasher_image_trust as _image_trust
 from urtc_can import image_header as _image_header
 from urtc_can import protocol as _wire
 
@@ -675,6 +676,28 @@ class URTCFlasher:
             return bytes.fromhex(text)
         return None
 
+    def _check_record_signature(self, firmware_path, firmware, record, hardware_id):
+        """Verifies the record next to the image against the pinned table of public keys before anything is sent. Returns "off" (the check is off or there is no record),
+        "unknown" (the file name has no version to rebuild the header with), "ok", "unknown_key" or "bad_signature". The bootloader still decides: a record that does not
+        verify is logged and, with imgsig_precheck "refuse", stops flash()."""
+        if IMGSIG_PRECHECK == "off" or record is None:
+            return "off"
+        name = os.path.basename(firmware_path)
+        version = _image_trust.version_from_name(name)
+        if version is None:
+            return "unknown"
+        verdict = _image_trust.verify_record(record, firmware, hardware_id, version)
+        record_name = name + ".imgsig"
+        if verdict == _image_trust.OK:
+            # the placeholder is called `key`, like the first argument of _(): the text is formatted here
+            self.log(_("LOG_IMGSIG_PRECHECK_OK").format(key=f"{_image_trust.key_name(record)} ({record[:8].hex()})"))
+            return verdict
+        reason = _("IMGSIG_REASON_UNKNOWN_KEY" if verdict == _image_trust.UNKNOWN_KEY else "IMGSIG_REASON_BAD_SIGNATURE")
+        if IMGSIG_PRECHECK == "refuse":
+            raise FlashError(_("ERR_IMGSIG_PRECHECK_REFUSED", name=record_name, reason=reason))
+        self.log(_("LOG_IMGSIG_PRECHECK_FAILED", name=record_name, reason=reason))
+        return verdict
+
     def _send_record(self, can_id, record):
         """The record in 11 frames: the index and 7 bytes of it (the last frame is padded with a zero)."""
         padded = record + bytes(self.RECORD_CHUNK_COUNT * self.RECORD_CHUNK_BYTES - len(record))
@@ -704,6 +727,7 @@ class URTCFlasher:
         if mismatch is not None and KEY_ID_PRECHECK == "refuse":
             raise FlashError(_("ERR_KEY_PRECHECK_REFUSED", board=mismatch[0], image=mismatch[1]))
         record = self._record_for(firmware_path)
+        self._check_record_signature(firmware_path, firmware, record, THIS_HARDWARE_ID)
         try:
             signature = self._signature_for(firmware, manifest_info, HMAC_KEY, "master")
         except FlashError:
@@ -1154,6 +1178,7 @@ class URTCFlasher:
         record = self._record_for(firmware_path)
         if record is None:
             raise FlashError(_("ERR_NO_RECORD", board="slave", name=os.path.basename(firmware_path) + ".imgsig"))
+        self._check_record_signature(firmware_path, firmware, record, SLAVE_HARDWARE_ID)
         digest = bytes.fromhex(actual_sha256)
 
         self.log(_("LOG_FIRMWARE_PATH", path=firmware_path))

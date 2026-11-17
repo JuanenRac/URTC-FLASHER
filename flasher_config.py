@@ -575,6 +575,13 @@ if KEY_ID_PRECHECK not in ("off", "warn", "refuse"):
     KEY_ID_PRECHECK = "warn"
 BOOTLOADER_KEY_ID_BYTES = 8  # the whole payload of 0x7ED
 
+# Signature check on this computer before the transfer: the record next to the image (`<image>.imgsig`) is verified against a pinned copy of the public trust table
+# of the bootloaders (flasher_image_trust.py). "warn" (the default) logs a record that does not verify and goes on, "refuse" stops before a single data frame is sent,
+# "off" skips the check. The bootloader always decides; a pinned table that is behind would say "unknown key" for a good image, which is why it is "warn".
+IMGSIG_PRECHECK = str(_config.get("imgsig_precheck", "warn")).strip().lower()
+if IMGSIG_PRECHECK not in ("off", "warn", "refuse"):
+    IMGSIG_PRECHECK = "warn"
+
 # The header inside the image: an image built with the header slot sealed (docs/IMAGE_HEADER.md of URTC-COMMON) states the hardware it is for, its version, its length and
 # its CRC-32 inside the file. "image_header_policy" decides what happens to an image WITHOUT that header: "accept" (flash it), "warn" (the default: flash it and say that its
 # identity could not be checked) or "require" (refuse it before a single frame is sent). A header that is there is always checked and a bad one is always refused; a value
