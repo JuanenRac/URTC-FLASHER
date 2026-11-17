@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The launcher can require a minimum duration of a first start:** the copy of the shared launcher is brought up to date; with `URTC_UPDATE_FIRST_START_MIN_S` set to a number of seconds above zero, a newly installed release that ends with code 0 before that time is not taken as a good first start. Zero (the default) keeps the behaviour as it was.
 - **The signature record of an image is checked on this computer before the transfer:** the `.imgsig` next to the image is verified against a pinned copy of the public trust table of the bootloaders (`flasher_image_trust.py`), with the header rebuilt from the hardware, the version in the file name and the image. The setting `imgsig_precheck` in `urtc_config.json` is `warn` by default (a record that does not verify, or that names a key the table does not hold, is logged with the reason and the transfer goes on), `refuse` stops before a single data frame is sent and `off` skips the check; the bootloader still decides. The texts are in the eight languages. Tested with records made with the public development seed, an altered image, another hardware and version, an unknown key and the three settings.
 
 - **The requirement of a release signature is a setting:** `require_release_signature` in `urtc_config.json` (off by default, only the value true counts) refuses a file that has no `.sig` next to it, so the check can be tightened without a new version; a wrong signature is refused as before. Tested with the setting read from the file.
