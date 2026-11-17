@@ -775,6 +775,7 @@ de script par déploiement :
 }
 ```
 `frame_gap_ms` est la pause en millisecondes entre les trames de données de 8 octets d'un transfert (1,0 par défaut, de 0 à 50 ; 0 les envoie à la suite) ; une valeur hors de ces limites revient à la valeur par défaut.
+`require_release_signature` (par défaut `false` ; seul `true` compte) refuse un fichier de firmware qui n'a pas son `.sig` à côté, et une signature fausse est toujours refusée. `imgsig_precheck` vérifie sur cet ordinateur l'enregistrement `<image>.imgsig` avant le transfert, contre une copie figée de la table de confiance des bootloaders : `warn` (par défaut) consigne un enregistrement qui ne se vérifie pas et continue, `refuse` s'arrête avant d'envoyer la moindre trame de données et `off` saute la vérification ; le bootloader a toujours le dernier mot.
 Chaque champ est optionnel - ne remplacez que ce qui change réellement.
 Un fichier manquant retombe silencieusement sur les valeurs par défaut
 compilées ; un fichier présent mais cassé enregistre un avertissement

@@ -685,6 +685,7 @@ new script version per deployment:
 }
 ```
 `frame_gap_ms` is the pause in milliseconds between the 8-byte data frames of a transfer (default 1.0, from 0 to 50; 0 sends them back to back); a value outside those limits falls back to the default.
+`require_release_signature` (default `false`; only `true` counts) refuses a firmware file that has no `.sig` next to it, and a wrong signature is always refused. `imgsig_precheck` checks the record `<image>.imgsig` on this computer before the transfer, against a pinned copy of the trust table of the bootloaders: `warn` (the default) logs a record that does not verify and goes on, `refuse` stops before a single data frame is sent and `off` skips the check; the bootloader always has the last word.
 Every field is optional - only override what's actually changing. Missing
 fields fall back to this tool's own built-in defaults. **The memory-map and HardwareID overrides only apply to the main board's own constants** (the one exception is `slave_hmac_key_hex`, the expansion slave's signing key, which can be set here too) - the
 expansion slave chip's own equivalents (`SLAVE_BOOTLOADER_FLASH_ADDR`,

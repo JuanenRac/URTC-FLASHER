@@ -713,6 +713,7 @@ diferente, sem precisar de uma nova versão do script por implementação:
 }
 ```
 `frame_gap_ms` é a pausa em milissegundos entre as tramas de dados de 8 bytes de uma transferência (predefinição 1,0, de 0 a 50; 0 envia-as seguidas); um valor fora desses limites volta à predefinição.
+`require_release_signature` (predefinição `false`; só `true` conta) recusa um ficheiro de firmware que não tenha o seu `.sig` ao lado, e uma assinatura errada é sempre recusada. `imgsig_precheck` verifica neste computador o registo `<imagem>.imgsig` antes da transferência, contra uma cópia fixada da tabela de confiança dos bootloaders: `warn` (predefinição) regista um registo que não verifica e continua, `refuse` pára antes de enviar uma única trama de dados e `off` salta a verificação; a última palavra é sempre do bootloader.
 Todos os campos são opcionais - substitua apenas o que realmente está a mudar.
 Os campos em falta recorrem aos valores por defeito incorporados desta
 ferramenta. **As substituições do mapa de memória e do HardwareID aplicam-se apenas às constantes da própria placa principal** (a única exceção é `slave_hmac_key_hex`, a chave de assinatura do escravo de expansão, que também pode ser definida aqui) - os equivalentes do próprio chip escravo de expansão
