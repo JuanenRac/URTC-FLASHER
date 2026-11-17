@@ -78,3 +78,12 @@ def test_an_unsigned_image_passes_during_the_transition_and_is_blocked_after(sig
 def test_garbage_in_the_signature_file_is_invalid_not_a_crash(signed_image):
     Path(str(signed_image) + ".sig").write_text("zz", encoding="ascii")
     assert flasher_integrity.preflight_image(str(signed_image)).release_signature == "invalid"
+
+
+def test_the_requirement_of_a_release_signature_is_read_from_the_settings_and_only_true_counts():
+    import flasher_config
+
+    assert flasher_config.release_signature_required({}) is False
+    assert flasher_config.release_signature_required({"require_release_signature": True}) is True
+    for value in (False, None, 1, "true", "yes", [True], 0):
+        assert flasher_config.release_signature_required({"require_release_signature": value}) is False
