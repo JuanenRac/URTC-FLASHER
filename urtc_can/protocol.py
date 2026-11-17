@@ -312,6 +312,7 @@ FEATURE_ESTOP_FOLLOW = 0x80
 
 # Optional firmware features of the second byte of the switch map (each one is off until switched on)
 FEATURE_EXT_WATCHDOG_HOST_ONLY = 0x01
+FEATURE_EXT_ALLOW_UPDATE_ACTIVE_ACTUATOR = 0x02
 
 # Speed profile of a stepper move
 MOTION_PROFILE_CONSTANT = 0x00
@@ -418,7 +419,7 @@ ENUM_NAMES = {'tool': {0: 'SOLDERING_IRON',
                       32: 'COMMS_WATCHDOG',
                       64: 'MAGNET_RELEASE',
                       128: 'ESTOP_FOLLOW'},
- 'firmware_feature_ext': {1: 'WATCHDOG_HOST_ONLY'},
+ 'firmware_feature_ext': {1: 'WATCHDOG_HOST_ONLY', 2: 'ALLOW_UPDATE_ACTIVE_ACTUATOR'},
  'motion_profile': {0: 'CONSTANT', 1: 'TRAPEZOID', 2: 'S_CURVE'},
  'pid_action': {0: 'SET_GAINS', 1: 'AUTOTUNE_START', 2: 'AUTOTUNE_ABORT', 3: 'QUERY'},
  'pid_state': {0: 'OFF', 1: 'RUNNING', 2: 'AUTOTUNING', 3: 'AUTOTUNE_DONE', 4: 'AUTOTUNE_FAILED'},
@@ -532,7 +533,10 @@ ENUM_TITLES = {'tool': {0: 'Soldering Iron',
                            'on a stop, on a malformed frame and when the master falls silent'},
  'firmware_feature_ext': {1: 'With the communication watchdog: only a frame with an identifier of the host (a '
                              'command or a query from the host side) counts as a sign of life; the answers of other '
-                             'heads on the bus do not'},
+                             'heads on the bus do not',
+                          2: 'The end of an update of a slave board is accepted while a tool of the head is active '
+                             '(without it, as before, the end is refused with the reason ACTUATOR_ACTIVE); the check '
+                             'of the signature record then holds the safety ticks of the board for most of a second'},
  'motion_profile': {0: 'Constant speed (the behaviour without the ramps feature)',
                     1: 'Trapezoidal: constant acceleration, cruise, constant deceleration',
                     2: 'S-curve: the acceleration itself ramps up and down'},

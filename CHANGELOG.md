@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The copy of URTC-COMMON brings the switch that lets an update of a slave board end while a tool is active (the switch stays off):** the generated protocol now names the extended feature bit `ALLOW_UPDATE_ACTIVE_ACTUATOR` (0x02) and its description. Nothing changes on the bus: the flasher never sets the bit.
 - **The copies of the shared protocol and of the safety policy are brought up to date:** the generated protocol module now knows the second byte of the switch map and the extended layouts of `0x1AE` and `0x1AF`, and the reason of a refused end of update when an actuator of the board is active; the copy of the shared conformance vectors follows. Tested by the existing checks that compare the copies with the lock and with the shared repository.
 
 - **The launcher can require a minimum duration of a first start:** the copy of the shared launcher is brought up to date; with `URTC_UPDATE_FIRST_START_MIN_S` set to a number of seconds above zero, a newly installed release that ends with code 0 before that time is not taken as a good first start. Zero (the default) keeps the behaviour as it was.
