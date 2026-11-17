@@ -19,12 +19,26 @@ import json
 import os
 import subprocess
 import sys
+import time
 from collections.abc import Callable, Sequence
 from pathlib import Path
 
 from . import self_update as su
 
 PENDING_FILE = "first_start_pending.txt"
+FIRST_START_MIN_ENV = "URTC_UPDATE_FIRST_START_MIN_S"
+
+
+def first_start_min_seconds(environ: dict[str, str] | None = None) -> float:
+    """The least time a first start must last to count as good when the program ends with code 0 without having reported ``mark_started`` (the ``URTC_UPDATE_FIRST_START_MIN_S``
+    variable). 0, a missing, negative or unreadable value mean no minimum, as before: a command-line program that ends quickly on purpose is not a failed start."""
+    text = (os.environ if environ is None else environ).get(FIRST_START_MIN_ENV, "")
+    try:
+        value = float(text)
+    except ValueError:
+        return 0.0
+    return value if value > 0 else 0.0
+
 
 
 def resolve_entry(root: str | Path) -> Path:
@@ -49,13 +63,15 @@ def resolve_entry(root: str | Path) -> Path:
     return target
 
 
-def launch(root: str | Path, arguments: Sequence[str] = (), run: Callable[..., int] | None = None) -> int:
-    """Runs the current release and returns its exit code. Rolls back by itself when a first start fails."""
+def launch(root: str | Path, arguments: Sequence[str] = (), run: Callable[..., int] | None = None, clock: Callable[[], float] = time.monotonic) -> int:
+    """Runs the current release and returns its exit code. Rolls back by itself when a first start fails: it ends with an error, or (only when ``URTC_UPDATE_FIRST_START_MIN_S``
+    is set) ends with code 0 before that time without having reported ``mark_started``."""
     base = Path(root)
     entry = resolve_entry(base)
     command = [str(entry), *arguments]
     if entry.suffix.lower() == ".py":
         command = [sys.executable, *command]
+    began = clock()
     code = run(command, cwd=str(entry.parent)) if run else subprocess.call(command, cwd=str(entry.parent), env={**os.environ, "URTC_UPDATE_ROOT_IN_USE": str(base)})
     pending = base / PENDING_FILE
     if pending.is_file():
@@ -63,7 +79,8 @@ def launch(root: str | Path, arguments: Sequence[str] = (), run: Callable[..., i
             pending.unlink()
         except OSError:
             pass
-        su.finish_first_start(base, code == 0)
+        minimum = first_start_min_seconds()
+        su.finish_first_start(base, code == 0 and not (minimum > 0 and clock() - began < minimum))
     return code
 
 

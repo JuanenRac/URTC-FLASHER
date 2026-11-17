@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The launcher can require a minimum duration of a first start:** the copy of the shared launcher is brought up to date; with `URTC_UPDATE_FIRST_START_MIN_S` set to a number of seconds above zero, a newly installed release that ends with code 0 before that time is not taken as a good first start. Zero (the default) keeps the behaviour as it was.
+
 - **The requirement of a release signature is a setting:** `require_release_signature` in `urtc_config.json` (off by default, only the value true counts) refuses a file that has no `.sig` next to it, so the check can be tightened without a new version; a wrong signature is refused as before. Tested with the setting read from the file.
 
 - **A slave update the board refuses because a tool is active says so:** the main board now answers the reason ACTUATOR_ACTIVE (8) when the end of the update arrives while a heater, the laser, the drill, a fan or a move is on; the message names it in the eight languages (stop the tool and try again) instead of showing a bare number.
