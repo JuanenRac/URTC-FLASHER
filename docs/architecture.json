@@ -63,6 +63,7 @@
       "code": [
         "flasher_integrity.py",
         "flasher_release_signature.py",
+        "flasher_image_trust.py",
         "flasher_validation.py"
       ]
     },
