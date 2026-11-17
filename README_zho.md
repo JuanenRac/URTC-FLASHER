@@ -579,6 +579,7 @@ python3 urtc_flasher.py --cli --transport mock --file firmware.bin --no-trigger
 }
 ```
 `frame_gap_ms` 是一次传输中 8 字节数据帧之间的停顿（毫秒，默认 1.0，范围 0 到 50；0 表示连续发送）；超出范围的值会回退到默认值。
+`require_release_signature`（默认 `false`，只有 `true` 才生效）会拒绝旁边没有 `.sig` 的固件文件，签名错误的文件始终被拒绝。`imgsig_precheck` 在传输之前于本机检查 `<镜像>.imgsig` 记录，依据内置的引导程序信任表副本：`warn`（默认）记录无法验证的记录并继续，`refuse` 在发送任何数据帧之前停止，`off` 跳过检查；最终裁决始终由引导程序做出。
 每个字段都是可选的——只覆盖实际需要更改的内容。缺失的字段会回退到本工具
 自身内置的默认值。**内存映射和 HardwareID 的覆盖仅适用于主板自身的常量**（唯一的例外是扩展从机芯片的签名密钥 `slave_hmac_key_hex`，它也可以在这里设置）——扩展从机芯片
 自身的等效常量（`SLAVE_BOOTLOADER_FLASH_ADDR`、`SLAVE_APP_FLASH_ADDR`、

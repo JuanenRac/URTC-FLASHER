@@ -753,6 +753,7 @@ Skriptversion pro Bereitstellung zu benötigen:
 }
 ```
 `frame_gap_ms` ist die Pause in Millisekunden zwischen den 8-Byte-Datenframes einer Übertragung (Standard 1,0, von 0 bis 50; 0 sendet sie unmittelbar hintereinander); ein Wert außerhalb dieser Grenzen fällt auf den Standard zurück.
+`require_release_signature` (Standard `false`; nur `true` zählt) lehnt eine Firmware-Datei ab, neben der keine `.sig` liegt; eine falsche Signatur wird immer abgelehnt. `imgsig_precheck` prüft den Eintrag `<Image>.imgsig` vor der Übertragung auf diesem Rechner gegen eine fest eingebaute Kopie der Vertrauenstabelle der Bootloader: `warn` (Standard) protokolliert einen Eintrag, der nicht verifiziert, und macht weiter, `refuse` hält an, bevor ein einziger Datenframe gesendet wird, und `off` überspringt die Prüfung; das letzte Wort hat immer der Bootloader.
 Jedes Feld ist optional - ersetzen Sie nur, was sich tatsächlich
 ändert. Eine fehlende Datei fällt stillschweigend auf die kompilierten
 Standardwerte zurück; eine vorhandene, aber defekte Datei protokolliert
