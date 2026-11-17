@@ -554,6 +554,18 @@ THIS_HARDWARE_ID, HMAC_KEY, SLAVE_HMAC_KEY, APP_MAX_SIZE, BOOTLOADER_MAX_SIZE, F
 # official images in firmware/ are signed that way, so the default is off.
 REQUIRE_PRODUCTION_SIGNATURE = _config.get("require_production_signature") is True
 
+# Release signatures: "require_release_signature": true in urtc_config.json refuses a file with no `.sig` next to it (a wrong one is always refused). Only the exact value
+# true counts; the default is off, as in the module, so the images of the bench pre-releases keep working.
+import flasher_release_signature as _release_signature  # noqa: E402
+
+
+def release_signature_required(config: dict) -> bool:
+    return config.get("require_release_signature") is True
+
+
+if release_signature_required(_config):
+    _release_signature.REQUIRE_RELEASE_SIGNATURE = True
+
 # Key check before the transfer: a bootloader that publishes the fingerprint of the signing key it accepts (the eight bytes of 0x7ED, sent right after its
 # 0x7F9 answer; 0x7FA stays at the three bytes of the version) is compared with the fingerprint the image's manifest declares ("signing_key_id"). "warn" (the
 # default) logs a mismatch and goes on, "refuse" stops before a single data frame is sent, "off" skips the comparison. A bootloader that does not send 0x7ED (an
