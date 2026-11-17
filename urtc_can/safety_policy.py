@@ -54,3 +54,24 @@ def stepper_must_stop(feature_on: bool, moving: bool, silence_ms: int, limit_ms:
 def magnet_must_release(watchdog_on: bool, release_on: bool, energised: bool, silence_ms: int) -> bool:
     """Whether the electromagnet lets go: both switches on, the coil energised and a silence longer than ``MAGNET_SILENCE_MS``."""
     return bool(watchdog_on and release_on and energised and silence_ms > protocol.MAGNET_SILENCE_MS)
+
+
+ESTOP_FRAME_ID = 0x001  # the emergency stop frame of the stack: not a message of the table, but a frame of the host side all the same
+
+
+def is_host_frame_id(identifier: int) -> bool:
+    """Whether a frame with this identifier is one of the host side: a command or a query from the host (``host_to_board``), a frame both sides use
+    (``both``, a query and its answer share the identifier) or the emergency stop frame of the stack. The answers and reports of a head
+    (``board_to_host``) and every identifier that is not in the table are not.
+
+    A frame of ``both`` that another head of the same bus answers cannot be told from one of the host by its identifier alone; that limit is written down.
+    """
+    if identifier == ESTOP_FRAME_ID:
+        return True
+    message: dict[str, object] | None = protocol.MESSAGES.get(identifier)  # type: ignore[assignment]
+    return bool(message and message["direction"] in ("host_to_board", "both"))
+
+
+def watchdog_feeds(host_only_on: bool, identifier: int) -> bool:
+    """Whether a frame counts as a sign of life for the communication watchdog: any frame while ``WATCHDOG_HOST_ONLY`` is off (as before), only a frame of the host side while it is on."""
+    return True if not host_only_on else is_host_frame_id(identifier)

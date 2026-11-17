@@ -156,7 +156,7 @@
     },
     "protocol.py": {
       "from": "src/urtc_common/protocol.py",
-      "sha256": "c00473ebf0c33b4b5c88523e142447c899e68723cff69e6ada9ac5e2b637d43a"
+      "sha256": "a2c2f0fdd6ffc7cbb741444bf1e67400de64cc88d3541487e4a0c32afb9d8263"
     },
     "quick_state.py": {
       "from": "src/urtc_common/quick_state.py",
@@ -168,7 +168,7 @@
     },
     "safety_policy.py": {
       "from": "src/urtc_common/safety_policy.py",
-      "sha256": "82888a2bd605a905a1c32b60f6a7f7662cbed8f9f10d01085b830bb2f1ad7dce"
+      "sha256": "e37f38f37533d74fef425d89646b9969b68797642c7b27db4d19bbf51d246de2"
     },
     "self_update.py": {
       "from": "src/urtc_common/self_update.py",

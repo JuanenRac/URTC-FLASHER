@@ -1,10 +1,10 @@
 {
   "format": 1,
-  "urtc_common_version": "0.2.7",
+  "urtc_common_version": "0.2.8",
   "files": {
     "can_conformance_vectors.json": {
       "from": "conformance/can_vectors.json",
-      "sha256": "78d2fc094c6124f8e097c06619de423a96d79a71d6c0440f250c36a4a87d06af"
+      "sha256": "ca0a6ce4ade5ac640c84b7ad31f7c7e9bdbb371af59044f9619662eab340e851"
     },
     "node_picker_vectors.json": {
       "from": "conformance/node_picker_vectors.json",
