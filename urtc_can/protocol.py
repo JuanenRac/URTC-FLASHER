@@ -223,6 +223,7 @@ SLAVE_STATUS_AWAIT_CONFIRM = 0x08
 # Verify-fail reasons only the expansion slave bootloader reports (the others are verify_fail_reason)
 SLAVE_VERIFY_FAIL_REASON_NOT_CONFIRMED = 0x06
 SLAVE_VERIFY_FAIL_REASON_DIGEST_CHUNK_MISSING = 0x07
+SLAVE_VERIFY_FAIL_REASON_ACTUATOR_ACTIVE = 0x08
 
 # Answering side
 RESPONDER_APPLICATION = 0x00
@@ -309,6 +310,9 @@ FEATURE_COMMS_WATCHDOG = 0x20
 FEATURE_MAGNET_RELEASE = 0x40
 FEATURE_ESTOP_FOLLOW = 0x80
 
+# Optional firmware features of the second byte of the switch map (each one is off until switched on)
+FEATURE_EXT_WATCHDOG_HOST_ONLY = 0x01
+
 # Speed profile of a stepper move
 MOTION_PROFILE_CONSTANT = 0x00
 MOTION_PROFILE_TRAPEZOID = 0x01
@@ -385,7 +389,7 @@ ENUM_NAMES = {'tool': {0: 'SOLDERING_IRON',
                        255: 'ERROR'},
  'verify_fail_reason': {1: 'INCOMPLETE', 2: 'CRC32', 3: 'HMAC', 4: 'HARDWARE_ID', 5: 'ROLLBACK'},
  'slave_bootloader_status': {8: 'AWAIT_CONFIRM'},
- 'slave_verify_fail_reason': {6: 'NOT_CONFIRMED', 7: 'DIGEST_CHUNK_MISSING'},
+ 'slave_verify_fail_reason': {6: 'NOT_CONFIRMED', 7: 'DIGEST_CHUNK_MISSING', 8: 'ACTUATOR_ACTIVE'},
  'responder': {0: 'APPLICATION', 1: 'BOOTLOADER'},
  'thermal_fault': {0: 'NONE', 1: 'MAXTEMP', 2: 'HEATING_NO_RISE', 3: 'DROPPED_AT_TARGET'},
  'reset_cause': {1: 'IWDG', 2: 'WWDG', 4: 'SOFTWARE', 8: 'POWER_ON', 16: 'PIN', 32: 'LOW_POWER', 64: 'OPTION_BYTES'},
@@ -414,6 +418,7 @@ ENUM_NAMES = {'tool': {0: 'SOLDERING_IRON',
                       32: 'COMMS_WATCHDOG',
                       64: 'MAGNET_RELEASE',
                       128: 'ESTOP_FOLLOW'},
+ 'firmware_feature_ext': {1: 'WATCHDOG_HOST_ONLY'},
  'motion_profile': {0: 'CONSTANT', 1: 'TRAPEZOID', 2: 'S_CURVE'},
  'pid_action': {0: 'SET_GAINS', 1: 'AUTOTUNE_START', 2: 'AUTOTUNE_ABORT', 3: 'QUERY'},
  'pid_state': {0: 'OFF', 1: 'RUNNING', 2: 'AUTOTUNING', 3: 'AUTOTUNE_DONE', 4: 'AUTOTUNE_FAILED'},
@@ -478,7 +483,9 @@ ENUM_TITLES = {'tool': {0: 'Soldering Iron',
  'slave_verify_fail_reason': {6: 'The master did not confirm the image in time, or its confirmation does not match '
                                  'this session and image',
                               7: 'The master bridge found a group of digest chunks (0x212) left half way when the '
-                                 'end (0x214) arrived; a frame was lost'},
+                                 'end (0x214) arrived; a frame was lost',
+                              8: 'The master bridge refused the end of the update (0x214) because an actuator of the '
+                                 'board was active; the image was not installed'},
  'responder': {0: 'The running application', 1: 'The bootloader'},
  'thermal_fault': {0: 'None',
                    1: 'Temperature above the hard ceiling',
@@ -523,6 +530,9 @@ ENUM_TITLES = {'tool': {0: 'Soldering Iron',
                           '(without it, it holds)',
                       128: 'The head follows the emergency stop frame 0x001 of the stack: it goes to its safe state '
                            'on a stop, on a malformed frame and when the master falls silent'},
+ 'firmware_feature_ext': {1: 'With the communication watchdog: only a frame with an identifier of the host (a '
+                             'command or a query from the host side) counts as a sign of life; the answers of other '
+                             'heads on the bus do not'},
  'motion_profile': {0: 'Constant speed (the behaviour without the ramps feature)',
                     1: 'Trapezoidal: constant acceleration, cruise, constant deceleration',
                     2: 'S-curve: the acceleration itself ramps up and down'},
@@ -776,9 +786,12 @@ LAYOUTS = {
     'set_multinode': {'id': 428, 'role': 'request', 'dlc': {'exact': 6}, 'fields': [{'name': 'magic', 'type': 'bytes', 'offset': 0, 'fixed': '4D4E4F44', 'length': 4}, {'name': 'enable', 'type': 'u8', 'offset': 4, 'width': 1, 'range': [0, 1]}, {'name': 'instance', 'type': 'u8', 'offset': 5, 'width': 1}]},
     'multinode_config_resp_request': {'id': 429, 'role': 'request', 'dlc': {'any': True}, 'fields': []},
     'multinode_config_resp_response': {'id': 429, 'role': 'response', 'dlc': {'exact': 4}, 'fields': [{'name': 'stored', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 1]}, {'name': 'running', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 1]}, {'name': 'instance', 'type': 'u8', 'offset': 2, 'width': 1}, {'name': 'address', 'type': 'u8', 'offset': 3, 'width': 1, 'range': [0, 31]}]},
-    'set_features': {'id': 430, 'role': 'request', 'dlc': {'exact': 5}, 'fields': [{'name': 'magic', 'type': 'bytes', 'offset': 0, 'fixed': '46454154', 'length': 4}, {'name': 'features', 'type': 'u8', 'offset': 4, 'width': 1, 'range': [0, 255]}]},
+    'set_features_request': {'id': 430, 'role': 'request', 'dlc': {'exact': 5}, 'fields': [{'name': 'magic', 'type': 'bytes', 'offset': 0, 'fixed': '46454154', 'length': 4}, {'name': 'features', 'type': 'u8', 'offset': 4, 'width': 1, 'range': [0, 255]}]},
+    'set_features_request_extended': {'id': 430, 'role': 'request', 'dlc': {'exact': 6}, 'fields': [{'name': 'magic', 'type': 'bytes', 'offset': 0, 'fixed': '46454154', 'length': 4}, {'name': 'features', 'type': 'u8', 'offset': 4, 'width': 1, 'range': [0, 255]}, {'name': 'features_ext', 'type': 'u8', 'offset': 5, 'width': 1, 'range': [0, 255]}]},
     'features_resp_request': {'id': 431, 'role': 'request', 'dlc': {'any': True}, 'fields': []},
+    'features_resp_request_extended': {'id': 431, 'role': 'request', 'dlc': {'exact': 1}, 'fields': [{'name': 'format', 'type': 'bytes', 'offset': 0, 'fixed': '02', 'length': 1}]},
     'features_resp_response': {'id': 431, 'role': 'response', 'dlc': {'exact': 3}, 'fields': [{'name': 'stored', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 255]}, {'name': 'running', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 255]}, {'name': 'supported', 'type': 'u8', 'offset': 2, 'width': 1, 'range': [0, 255]}]},
+    'features_resp_response_extended': {'id': 431, 'role': 'response', 'dlc': {'exact': 6}, 'fields': [{'name': 'stored', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 255]}, {'name': 'running', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 255]}, {'name': 'supported', 'type': 'u8', 'offset': 2, 'width': 1, 'range': [0, 255]}, {'name': 'stored_ext', 'type': 'u8', 'offset': 3, 'width': 1, 'range': [0, 255]}, {'name': 'running_ext', 'type': 'u8', 'offset': 4, 'width': 1, 'range': [0, 255]}, {'name': 'supported_ext', 'type': 'u8', 'offset': 5, 'width': 1, 'range': [0, 255]}]},
     'electromagnet_cmd': {'id': 432, 'role': 'request', 'dlc': {'exact': 1}, 'fields': [{'name': 'coil', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 1]}]},
     'clear_error': {'id': 434, 'role': 'request', 'dlc': {'exact': 4}, 'fields': [{'name': 'magic', 'type': 'bytes', 'offset': 0, 'fixed': '434C4552', 'length': 4}]},
     'health_profile': {'id': 440, 'role': 'response', 'dlc': {'exact': 8}, 'fields': [{'name': 'tec', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'rec', 'type': 'u8', 'offset': 1, 'width': 1}, {'name': 'bus_off_count', 'type': 'u8', 'offset': 2, 'width': 1}, {'name': 'hsi_trim', 'type': 'u8', 'offset': 3, 'width': 1}, {'name': 'loop_max_ms', 'type': 'u8', 'offset': 4, 'width': 1}, {'name': 'mcu_temp_plus_40', 'type': 'u8', 'offset': 5, 'width': 1}, {'name': 'vdda_mv', 'type': 'u16', 'offset': 6, 'width': 2}]},
@@ -1561,15 +1574,26 @@ def decode_multinode_config_resp_response(data: bytes, strict: bool = False) -> 
     return decode("multinode_config_resp_response", data, strict)
 
 
-def encode_set_features(features: int, magic: bytes | None = None) -> tuple[int, bytes]:
+def encode_set_features_request(features: int, magic: bytes | None = None) -> tuple[int, bytes]:
     """Switch the optional firmware features on or off (persistent, acts after the next power-up) (0x1AE, request)."""
     values = {k: v for k, v in dict(features=features, magic=magic).items() if v is not None}
-    return encode("set_features", **values)
+    return encode("set_features_request", **values)
 
 
-def decode_set_features(data: bytes, strict: bool = False) -> dict | None:
+def decode_set_features_request(data: bytes, strict: bool = False) -> dict | None:
     """Fields of 0x1AE (request), or None when the payload is too short."""
-    return decode("set_features", data, strict)
+    return decode("set_features_request", data, strict)
+
+
+def encode_set_features_request_extended(features: int, features_ext: int, magic: bytes | None = None) -> tuple[int, bytes]:
+    """Switch the optional firmware features on or off (persistent, acts after the next power-up) (0x1AE, request, extended)."""
+    values = {k: v for k, v in dict(features=features, features_ext=features_ext, magic=magic).items() if v is not None}
+    return encode("set_features_request_extended", **values)
+
+
+def decode_set_features_request_extended(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x1AE (request, extended), or None when the payload is too short."""
+    return decode("set_features_request_extended", data, strict)
 
 
 def encode_features_resp_request() -> tuple[int, bytes]:
@@ -1582,6 +1606,17 @@ def decode_features_resp_request(data: bytes, strict: bool = False) -> dict | No
     return decode("features_resp_request", data, strict)
 
 
+def encode_features_resp_request_extended(format: bytes | None = None) -> tuple[int, bytes]:
+    """The optional firmware features: stored mask, mask in force and supported mask (0x1AF, request, extended)."""
+    values = {k: v for k, v in dict(format=format).items() if v is not None}
+    return encode("features_resp_request_extended", **values)
+
+
+def decode_features_resp_request_extended(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x1AF (request, extended), or None when the payload is too short."""
+    return decode("features_resp_request_extended", data, strict)
+
+
 def encode_features_resp_response(stored: int, running: int, supported: int) -> tuple[int, bytes]:
     """The optional firmware features: stored mask, mask in force and supported mask (0x1AF, response)."""
     return encode("features_resp_response", stored=stored, running=running, supported=supported)
@@ -1590,6 +1625,16 @@ def encode_features_resp_response(stored: int, running: int, supported: int) -> 
 def decode_features_resp_response(data: bytes, strict: bool = False) -> dict | None:
     """Fields of 0x1AF (response), or None when the payload is too short."""
     return decode("features_resp_response", data, strict)
+
+
+def encode_features_resp_response_extended(stored: int, running: int, supported: int, stored_ext: int, running_ext: int, supported_ext: int) -> tuple[int, bytes]:
+    """The optional firmware features: stored mask, mask in force and supported mask (0x1AF, response, extended)."""
+    return encode("features_resp_response_extended", stored=stored, running=running, supported=supported, stored_ext=stored_ext, running_ext=running_ext, supported_ext=supported_ext)
+
+
+def decode_features_resp_response_extended(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x1AF (response, extended), or None when the payload is too short."""
+    return decode("features_resp_response_extended", data, strict)
 
 
 def encode_electromagnet_cmd(coil: int) -> tuple[int, bytes]:
