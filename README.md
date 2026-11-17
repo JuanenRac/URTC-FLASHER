@@ -952,6 +952,10 @@ Which versions of the URTC programs work together, and which protocol version ea
 
 The suite has 916 tests in 67 files (`python -m pytest tests -q`; with Qt on a machine with no screen, `QT_QPA_PLATFORM=offscreen`; the 101 that need PySide6 skip without it): the CAN-OTA protocol against a real `MockCAN` transport that plays back a full simulated bootloader (start, erase, receive, page data and ACK, signature record frames, end-update with a real success or a specific `VERIFY_FAIL_REASON`), the signature rules, the image integrity checks, the firmware bundled in `firmware/` against its manifests, the SWD/JTAG commands built with `dry_run`, the language files and the Qt Quick panels. Three scripts at the root (`verify_qt_*.py`) drive the Qt panels end to end. CI also runs `ruff check`, `python -m mypy` and `tools/ci_validate.py`. `MockCAN` is only a model written from the protocol: it is more forgiving than the real bootloader, so a green run does not replace a trial on a real board.
 
+### Operation and tools
+
+* **First start of an updated program:** The launcher (`urtc_can/launcher.py`) runs the release `current.txt` points to and goes back to the previous release by itself when a first start fails (it ends with an error before the program reported `mark_started`). Setting `URTC_UPDATE_FIRST_START_MIN_S` to a number of seconds above zero also counts as failed a first start that ends with code 0 sooner than that; unset, 0 or a negative value changes nothing, so a command-line program that ends quickly on purpose is not affected.
+
 ## 🏗️ Build & Release
 
 `build_exe.bat` / `build_exe.sh` build a standalone program with PyInstaller (both pass `--noconfirm`, so rebuilding over an existing `dist/URTC_Flasher` replaces it directly); `build-test.sh` / `build-test.bat` check everything without building anything or changing a version. The version of the program (`FLASHER_VERSION` in `flasher_config.py`, shown in the window banner and the title bar) changes only with the explicit `python bump.py` step; running from source and building never touch it. See `CHANGELOG.md` for the version history.

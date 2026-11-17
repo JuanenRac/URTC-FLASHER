@@ -813,6 +813,10 @@ SocketCAN 没有这个特定的坑——访问一个类似 `can0` 的接口不�
 
 测试套件在 67 个文件中共有 916 个测试（`python -m pytest tests -q`；在没有屏幕的机器上使用 Qt 时设置 `QT_QPA_PLATFORM=offscreen`；其中 101 个需要 PySide6，没有它时会被跳过）：针对真实 `MockCAN` 传输层的 CAN-OTA 协议（它回放完整的模拟引导程序：开始、擦除、接收、页数据和 ACK、签名记录帧、带真实成功或特定 `VERIFY_FAIL_REASON` 的更新结束）、签名规则、镜像完整性检查、`firmware/` 中内置的固件与其清单的核对、用 `dry_run` 构造的 SWD/JTAG 命令、语言文件和 Qt Quick 面板。根目录下的三个脚本（`verify_qt_*.py`）对 Qt 面板做端到端驱动。CI 还会运行 `ruff check`、`python -m mypy` 和 `tools/ci_validate.py`。`MockCAN` 只是根据协议写成的模型：它比真实的引导程序宽容，所以测试全绿并不能代替在真实板卡上的试验。
 
+### 运维与工具
+
+* **更新后程序的首次启动：** 启动器（`urtc_can/launcher.py`） 运行 `current.txt` 指向的版本；首次启动失败（在程序报告 `mark_started` 之前以错误结束）时会自动回到上一版本。把 `URTC_UPDATE_FIRST_START_MIN_S` 设为大于零的秒数后，比该时间更早以代码 0 结束的首次启动同样视为失败；未设置、为 0 或为负数时不会有任何变化，因此有意快速结束的命令行程序不受影响。
+
 ## 🏗️ 构建与发布
 
 `build_exe.bat` / `build_exe.sh` 用 PyInstaller 构建独立程序（两者都传入 `--noconfirm`，因此在已有的 `dist/URTC_Flasher` 上重新构建会直接替换它）；`build-test.sh` / `build-test.bat` 检查所有内容，但不构建任何东西，也不改变版本。程序的版本（`flasher_config.py` 中的 `FLASHER_VERSION`，显示在窗口横幅和标题栏）只会通过明确的 `python bump.py` 步骤改变；从源码运行和构建都不会触碰它。版本历史见 `CHANGELOG.md`。
