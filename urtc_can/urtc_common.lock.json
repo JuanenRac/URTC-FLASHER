@@ -172,7 +172,7 @@
     },
     "self_update.py": {
       "from": "src/urtc_common/self_update.py",
-      "sha256": "2bd5c4cba06fe9dfede27892dab2b7ee34366133dcbfe3fab3a8152171c8ec01"
+      "sha256": "6051b347bde2fd6000f3955ae2df82a48886b879fa3b675e03d69e03388213a9"
     },
     "slcan.py": {
       "from": "src/urtc_common/slcan.py",
@@ -200,7 +200,7 @@
     },
     "update_strings.py": {
       "from": "src/urtc_common/update_strings.py",
-      "sha256": "031a074bfb004675c5dad5f0fd69e255d6fc51394160da7bb62457b5264ad2e7"
+      "sha256": "a25f0a0f177487a4d670896e27e7182841f8ff9dccfda85b66998b2ca458c58a"
     },
     "versioning.py": {
       "from": "src/urtc_common/versioning.py",
