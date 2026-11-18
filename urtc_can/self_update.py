@@ -497,14 +497,43 @@ def _prune(base: Path, keep: int) -> None:
             shutil.rmtree(base / "releases" / version, ignore_errors=True)
 
 
+def _check_release_usable(base: Path, version: str) -> None:
+    """Refuses (``rollback_target_damaged``) a release whose ``app_info.json`` is missing or unreadable, names no ``entry``, or whose ``entry`` leaves the release
+    folder or is not a file. Nothing is written, so a refused rollback leaves the installation as it was."""
+    folder = (base / "releases" / version).resolve()
+    try:
+        info = json.loads((folder / "app_info.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise UpdateError("rollback_target_damaged", f"releases/{version} has no readable app_info.json") from error
+    entry = info.get("entry") if isinstance(info, dict) else None
+    if not isinstance(entry, str) or not entry:
+        raise UpdateError("rollback_target_damaged", f"releases/{version}: app_info.json names no entry")
+    try:
+        target = (folder / entry).resolve()
+    except (OSError, ValueError) as error:
+        raise UpdateError("rollback_target_damaged", f"releases/{version}: the entry cannot be resolved") from error
+    if folder != target and folder not in target.parents:
+        raise UpdateError("rollback_target_damaged", f"releases/{version}: the entry leaves the release folder")
+    if not target.is_file():
+        raise UpdateError("rollback_target_damaged", f"releases/{version}: the entry {entry} is not a file")
+
+
 def rollback(root: str | Path, reason: str = "requested") -> str:
-    """Points ``current.txt`` to the release before the current one. Returns that version."""
+    """Points ``current.txt`` to the release before the current one. Returns that version.
+
+    The release it goes back to is checked first (``app_info.json`` and its ``entry``): a damaged one is refused with ``rollback_target_damaged``
+    and ``current.txt`` is not touched."""
     base = Path(root)
     current = current_version(base)
     older = [v for v in installed_versions(base) if current is None or parse_version(v) < parse_version(current)]
     if not older:
         raise UpdateError("nothing_to_roll_back", "there is no earlier release kept")
     target = older[-1]
+    try:
+        _check_release_usable(base, target)
+    except UpdateError:
+        _history(base, event="rollback", result="refused", reason=reason, **{"from": current, "to": target})
+        raise
     _write_current(base, target)
     _history(base, event="rollback", result="ok", reason=reason, **{"from": current, "to": target})
     return target
