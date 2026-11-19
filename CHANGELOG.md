@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The copy of the stop following knows the configurable silence of the master:** `estop_follow.Node(alive_timeout_ms)`, `resolve_timeout` and `effective_timeout` and the limits 20 and 500 ms come with the refreshed copy of the shared library; the default stays 100 ms, a value outside the limits is rejected and the master can only lower the timeout. The virtual board takes `estop_alive_timeout_ms`.
+
 - **An optional panel writes the emergency stop following of a tool head, off by default:** with `optional_functions_panel` set to `true` in the config file, the CAN-OTA window shows a check box (never ticked at start) and a button that writes the switch; the head is asked for its stored functions first and only that bit changes, a head that does not answer is left as it is, and a flash never writes the switch. Without the setting nothing changes. The test that the flasher never writes `0x1AE` now allows only the panel module and still checks that no flash path calls it. New `flasher_functions.py` and `tests/test_optional_functions_panel.py`; the texts are in the eight languages.
 
 ## [0.5.8] - Release-signature checks, refused update reasons, optional-function copies and consistent Chinese texts

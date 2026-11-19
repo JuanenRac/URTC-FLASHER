@@ -28,6 +28,12 @@ def test_the_copy_has_the_feature_and_the_two_reasons():
     assert protocol.FEATURE_ESTOP_FOLLOW == ESTOP_BIT
     assert protocol.ERROR_REASON_ESTOP == 9
     assert protocol.ERROR_REASON_ESTOP_SILENCE == 10
+    # the silence of the master is configurable inside hard limits, and a head nobody configured keeps 100 ms
+    from urtc_can import estop_follow
+    assert protocol.ESTOP_ALIVE_TIMEOUT_MS == 100 and (protocol.ESTOP_ALIVE_TIMEOUT_MIN_MS, protocol.ESTOP_ALIVE_TIMEOUT_MAX_MS) == (20, 500)
+    assert estop_follow.Node().alive_timeout_ms == 100 and estop_follow.Node(250).alive_timeout_ms == 250
+    assert estop_follow.resolve_timeout(19) == (100, estop_follow.TIMEOUT_REJECTED) and estop_follow.resolve_timeout(501) == (100, estop_follow.TIMEOUT_REJECTED)
+    assert estop_follow.effective_timeout(100, 300) == (100, estop_follow.TIMEOUT_MASTER_DIFFERS)
     assert protocol.ESTOP_CAN_ID == 1
 
 
