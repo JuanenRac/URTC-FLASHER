@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "urtc_common_version": "0.2.8",
+  "urtc_common_version": "0.3.0",
   "catalog": "spec/i18n/catalog/flasher.json",
   "catalog_sha256": "18dbd4851cbaab0a18e3f5b451cec72279dfffeaee66a974052dfea3ef0e43ac",
   "files": {
