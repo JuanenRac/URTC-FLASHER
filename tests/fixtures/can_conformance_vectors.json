@@ -2469,7 +2469,7 @@
       "message": "FEATURES_RESP",
       "layout": "features_resp_request_estop_timeout",
       "fields": {
-        "format": 3
+        "format": "03"
       },
       "frame": {
         "id": "0x1AF",
@@ -2477,11 +2477,11 @@
       }
     },
     {
-      "name": "FEATURES_RESP request estop_timeout: ask the stored value",
+      "name": "FEATURES_RESP request estop_timeout_stored: ask the stored value",
       "message": "FEATURES_RESP",
-      "layout": "features_resp_request_estop_timeout",
+      "layout": "features_resp_request_estop_timeout_stored",
       "fields": {
-        "format": 4
+        "format": "04"
       },
       "frame": {
         "id": "0x1AF",
@@ -5329,19 +5329,7 @@
         "data": "03"
       },
       "fields": {
-        "format": 3
-      }
-    },
-    {
-      "name": "FEATURES_RESP request estop_timeout: ask the stored value",
-      "message": "FEATURES_RESP",
-      "layout": "features_resp_request_estop_timeout",
-      "frame": {
-        "id": "0x1AF",
-        "data": "04"
-      },
-      "fields": {
-        "format": 4
+        "format": "03"
       }
     },
     {
@@ -5361,6 +5349,39 @@
       "frame": {
         "id": "0x1AF",
         "data": "0300"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "FEATURES_RESP request estop_timeout_stored: ask the stored value",
+      "message": "FEATURES_RESP",
+      "layout": "features_resp_request_estop_timeout_stored",
+      "frame": {
+        "id": "0x1AF",
+        "data": "04"
+      },
+      "fields": {
+        "format": "04"
+      }
+    },
+    {
+      "name": "FEATURES_RESP request: 0 bytes is too short",
+      "message": "FEATURES_RESP",
+      "layout": "features_resp_request_estop_timeout_stored",
+      "frame": {
+        "id": "0x1AF",
+        "data": ""
+      },
+      "fields": null
+    },
+    {
+      "name": "FEATURES_RESP request: one byte too many is refused when strict",
+      "message": "FEATURES_RESP",
+      "layout": "features_resp_request_estop_timeout_stored",
+      "frame": {
+        "id": "0x1AF",
+        "data": "0400"
       },
       "fields": null,
       "strict": true
@@ -8181,19 +8202,19 @@
       }
     },
     {
-      "name": "FEATURES_RESP: format above its maximum",
+      "name": "FEATURES_RESP: a payload that is not the magic one",
       "message": "FEATURES_RESP",
       "layout": "features_resp_request_estop_timeout",
       "fields": {
-        "format": 5
+        "format": "00"
       }
     },
     {
-      "name": "FEATURES_RESP: format below its minimum",
+      "name": "FEATURES_RESP: a payload that is not the magic one",
       "message": "FEATURES_RESP",
-      "layout": "features_resp_request_estop_timeout",
+      "layout": "features_resp_request_estop_timeout_stored",
       "fields": {
-        "format": 2
+        "format": "00"
       }
     },
     {
