@@ -600,6 +600,18 @@ ApplicationWindow {
                     CheckBox { objectName: "signEvidenceCheck"; text: flasherBackend.uiText("CHK_SIGN_EVIDENCE"); checked: flasherBackend.signEvidence; onToggled: flasherBackend.setSignEvidence(checked); palette.windowText: textPrimary }
                     GameButton { text: flasherBackend.uiText("BTN_BACKUP_FIRMWARE_CAN"); accent: "#24465e"; Layout.fillWidth: true; enabled: flasherBackend.canReadback; onClicked: readbackDialog.open() }
                 }
+                ColumnLayout {
+                    objectName: "optionalFunctionsPanel"
+                    visible: flasherBackend.optionalFunctionsPanel
+                    Layout.fillWidth: true
+                    Text { text: flasherBackend.uiText("LBL_OPT_FUNCTIONS_TITLE"); color: textPrimary; font.pixelSize: 11; font.bold: true; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        CheckBox { objectName: "optEstopFollowCheck"; text: flasherBackend.uiText("CHK_OPT_ESTOP_FOLLOW"); checked: flasherBackend.optEstopFollow; enabled: !flasherBackend.busy; onToggled: flasherBackend.setOptEstopFollow(checked); palette.windowText: textPrimary; Layout.fillWidth: true }
+                        GameButton { objectName: "writeOptionalFunctionsButton"; accent: "#24465e"; text: flasherBackend.uiText("BTN_WRITE_OPT_FUNCTIONS"); enabled: flasherBackend.canWriteOptionalFunctions; onClicked: flasherBackend.writeOptionalFunctions() }
+                    }
+                    Text { text: flasherBackend.uiText("HELP_OPT_FUNCTIONS"); color: muted; font.pixelSize: 9; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                }
                 Text { text: flasherBackend.uiText("HELP_ALLOW_DOWNGRADE"); color: "#e0a030"; font.pixelSize: 9; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                 Text { text: flasherBackend.uiText("HELP_BACKUP_FIRMWARE_CAN"); color: muted; font.pixelSize: 9; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                 Text { visible: flasherBackend.readbackResult.length > 0; text: flasherBackend.readbackResult; color: "#43db9b"; font.pixelSize: 10; wrapMode: Text.WordWrap; Layout.fillWidth: true }

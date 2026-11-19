@@ -61,3 +61,5 @@ The program has eight interface languages. These are the same five pictures of t
 ## What the pictures do not show
 
 They do not show a board answering. Nothing in this guide has been run against a real board; the README lists what has and has not been checked.
+
+* **Optional functions** (hidden unless `optional_functions_panel` is `true` in the config file): a check box for the emergency stop following of a tool head, off at start, and a button that writes it to the connected board. See the CLI reference.

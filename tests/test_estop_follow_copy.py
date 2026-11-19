@@ -5,8 +5,8 @@
 # =============================================================================
 """The emergency stop following of a tool head, as the flasher sees it.
 
-The flasher does not switch the optional functions (that is the tester and the web studio, where the check box starts off): it only carries the copy of
-URTC-COMMON that its virtual board needs. These tests keep that copy complete and keep the flasher from writing the switch on its own. Nothing here has
+The flasher switches the optional functions only from its optional panel (hidden unless the config file turns it on, check box off, a button that writes): it
+otherwise carries the copy of URTC-COMMON that its virtual board needs. These tests keep that copy complete and keep a flash from writing the switch. Nothing here has
 run against a real board.
 """
 from __future__ import annotations
@@ -40,5 +40,18 @@ def test_the_virtual_head_ignores_the_stop_frame_until_the_switch_is_on():
 
 
 def test_the_flasher_never_writes_the_optional_functions_on_its_own():
+    """Only flasher_functions.py, behind the optional panel, may name the switch; a flash and every other module never write it."""
     for path in ROOT.glob("*.py"):
-        assert not re.search(r"SET_FEATURES|CAN_ID_SET_FEATURES|0x1AE\b", path.read_text(encoding="utf-8")), path.name
+        found = re.search(r"SET_FEATURES|CAN_ID_SET_FEATURES|0x1AE", path.read_text(encoding="utf-8"))
+        if path.name == "flasher_functions.py":
+            assert found, "the panel module is where the switch is written"
+        else:
+            assert not found, path.name
+
+
+def test_the_flash_paths_never_call_the_panel_module():
+    flash = (ROOT / "flasher_protocol.py").read_text(encoding="utf-8")
+    assert "flasher_functions" not in flash
+    qt = (ROOT / "qt_flasher.py").read_text(encoding="utf-8")
+    worker = qt[qt.index("def _flash_worker"):qt.index("def _write_update_report")]
+    assert "write_optional_functions" not in worker and "flasher_functions" not in worker
