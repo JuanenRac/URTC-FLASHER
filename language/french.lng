@@ -443,3 +443,12 @@ QTLOG_FUNCTIONS_BLOCKED=Fonctions facultatives bloquées : activez le panneau da
 QTLOG_FUNCTIONS_DONE=Fonctions facultatives terminées
 QTLOG_FUNCTIONS_FAILED=Échec des fonctions facultatives
 QTSTATUS_OPTIONAL_FUNCTIONS_IN_PROGRESS=FONCTIONS FACULTATIVES EN COURS
+LBL_OPT_ESTOP_TIMEOUT=Silence du maître avant l'arrêt de la tête, en ms (0 = 100 ms par défaut, sinon de 40 à 500) :
+CHK_OPT_ESTOP_TIMEOUT=Écrire aussi le silence du maître (effectif après la prochaine mise sous tension)
+CHK_OPT_ESTOP_TIMEOUT_CONFIRM=Je confirme que cette valeur est écrite maintenant dans la tête
+BTN_READ_OPT_FUNCTIONS=Lire la tête
+LOG_OPT_TIMEOUT_READ=Silence du maître : en vigueur {running} ms (0 = inactif), enregistré {stored} ms (0 = par défaut)
+LOG_OPT_TIMEOUT_INVALID=Le silence doit valoir 0 ou se situer entre {min} et {max} ms : rien n'a été écrit
+LOG_OPT_TIMEOUT_NOT_CONFIRMED=Le silence n'a pas été écrit : cochez d'abord la confirmation
+LOG_OPT_TIMEOUT_MISMATCH=La tête n'a pas conservé le silence demandé (enregistré {stored} ms) : son firmware est peut-être plus ancien ou a refusé la valeur
+LOG_OPT_TIMEOUT_UNSUPPORTED=La tête ne répond pas à la demande du silence : son firmware est peut-être plus ancien

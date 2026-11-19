@@ -442,3 +442,12 @@ QTLOG_FUNCTIONS_BLOCKED=オプション機能はブロックされました。�
 QTLOG_FUNCTIONS_DONE=オプション機能の処理が終了しました
 QTLOG_FUNCTIONS_FAILED=オプション機能の処理に失敗しました
 QTSTATUS_OPTIONAL_FUNCTIONS_IN_PROGRESS=オプション機能を処理中
+LBL_OPT_ESTOP_TIMEOUT=ヘッドが停止するまでのマスターの無通信時間（ms）（0 = 既定の100 ms、それ以外は40～500）：
+CHK_OPT_ESTOP_TIMEOUT=マスターの無通信時間も書き込む（次回の電源投入後に有効）
+CHK_OPT_ESTOP_TIMEOUT_CONFIRM=この値を今すぐヘッドに書き込むことを確認します
+BTN_READ_OPT_FUNCTIONS=ヘッドを読み取る
+LOG_OPT_TIMEOUT_READ=マスターの無通信時間：有効 {running} ms（0 = 動作していない）、保存値 {stored} ms（0 = 既定）
+LOG_OPT_TIMEOUT_INVALID=無通信時間は0、または{min}～{max} msでなければなりません：何も書き込まれませんでした
+LOG_OPT_TIMEOUT_NOT_CONFIRMED=無通信時間は書き込まれませんでした：先に確認にチェックを入れてください
+LOG_OPT_TIMEOUT_MISMATCH=ヘッドは要求された無通信時間を保持しませんでした（保存値 {stored} ms）：ファームウェアが古いか、値が拒否された可能性があります
+LOG_OPT_TIMEOUT_UNSUPPORTED=ヘッドは無通信時間の問い合わせに応答しません：ファームウェアが古い可能性があります

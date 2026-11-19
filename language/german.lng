@@ -443,3 +443,12 @@ QTLOG_FUNCTIONS_BLOCKED=Optionale Funktionen blockiert: Schalten Sie das Panel i
 QTLOG_FUNCTIONS_DONE=Optionale Funktionen abgeschlossen
 QTLOG_FUNCTIONS_FAILED=Optionale Funktionen fehlgeschlagen
 QTSTATUS_OPTIONAL_FUNCTIONS_IN_PROGRESS=OPTIONALE FUNKTIONEN LAUFEN
+LBL_OPT_ESTOP_TIMEOUT=Schweigen des Masters, bevor der Kopf stoppt, in ms (0 = Standard 100 ms, sonst 40 bis 500):
+CHK_OPT_ESTOP_TIMEOUT=Auch das Schweigen des Masters schreiben (wirkt nach dem nächsten Einschalten)
+CHK_OPT_ESTOP_TIMEOUT_CONFIRM=Ich bestätige, dass dieser Wert jetzt in den Kopf geschrieben wird
+BTN_READ_OPT_FUNCTIONS=Kopf lesen
+LOG_OPT_TIMEOUT_READ=Schweigen des Masters: wirksam {running} ms (0 = läuft nicht), gespeichert {stored} ms (0 = Standard)
+LOG_OPT_TIMEOUT_INVALID=Das Schweigen muss 0 sein oder zwischen {min} und {max} ms liegen: es wurde nichts geschrieben
+LOG_OPT_TIMEOUT_NOT_CONFIRMED=Das Schweigen wurde nicht geschrieben: Setzen Sie zuerst das Häkchen bei der Bestätigung
+LOG_OPT_TIMEOUT_MISMATCH=Der Kopf hat das gewünschte Schweigen nicht übernommen (gespeichert {stored} ms): Seine Firmware ist möglicherweise älter oder hat den Wert abgelehnt
+LOG_OPT_TIMEOUT_UNSUPPORTED=Der Kopf beantwortet die Abfrage des Schweigens nicht: Seine Firmware ist möglicherweise älter

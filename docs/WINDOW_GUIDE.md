@@ -62,4 +62,4 @@ The program has eight interface languages. These are the same five pictures of t
 
 They do not show a board answering. Nothing in this guide has been run against a real board; the README lists what has and has not been checked.
 
-* **Optional functions** (hidden unless `optional_functions_panel` is `true` in the config file): a check box for the emergency stop following of a tool head, off at start, and a button that writes it to the connected board. See the CLI reference.
+* **Optional functions** (hidden unless `optional_functions_panel` is `true` in the config file): a check box for the emergency stop following of a tool head, off at start, and a button that writes it to the connected board, a second check box with a field and a confirmation to also write the silence of the master that makes a ready head stop, and a button that only reads it. See the CLI reference.

@@ -442,3 +442,12 @@ QTLOG_FUNCTIONS_BLOCKED=Optional functions blocked: turn the panel on in the con
 QTLOG_FUNCTIONS_DONE=Optional functions finished
 QTLOG_FUNCTIONS_FAILED=Optional functions failed
 QTSTATUS_OPTIONAL_FUNCTIONS_IN_PROGRESS=OPTIONAL FUNCTIONS IN PROGRESS
+LBL_OPT_ESTOP_TIMEOUT=Silence of the master before the head stops, in ms (0 = default 100 ms, otherwise 40 to 500):
+CHK_OPT_ESTOP_TIMEOUT=Also write the silence of the master (acts after the next power-up)
+CHK_OPT_ESTOP_TIMEOUT_CONFIRM=I confirm that this value is written to the head now
+BTN_READ_OPT_FUNCTIONS=Read the head
+LOG_OPT_TIMEOUT_READ=Silence of the master: in force {running} ms (0 = not running), stored {stored} ms (0 = default)
+LOG_OPT_TIMEOUT_INVALID=The silence must be 0 or between {min} and {max} ms: nothing was written
+LOG_OPT_TIMEOUT_NOT_CONFIRMED=The silence was not written: tick the confirmation first
+LOG_OPT_TIMEOUT_MISMATCH=The head did not keep the silence that was asked for (stored {stored} ms): its firmware may be older or have refused the value
+LOG_OPT_TIMEOUT_UNSUPPORTED=The head does not answer the silence query: its firmware may be older

@@ -143,6 +143,9 @@ class FlasherQtBridge(QObject):
         self._downgrade_confirmed = False
         # The optional functions panel (off unless urtc_config.json says so): its box is never ticked at start and a flash never reads it.
         self._opt_estop_follow = False
+        self._opt_timeout_set = False       # also write the silence of the master (off at start; a flash never reads it)
+        self._opt_timeout_ms = 0            # 0 = the default of the head, otherwise 40 to 500
+        self._opt_timeout_confirm = False   # the person confirms this one write; it goes back to False after every attempt
         self._readback_result = ""
         self._bus_activity_text = ""
         self._export_result = ""
@@ -708,6 +711,47 @@ class FlasherQtBridge(QObject):
             self.changed.emit()
 
     @Property(bool, notify=changed)
+    def optTimeoutSet(self) -> bool:
+        return self._opt_timeout_set
+
+    @Slot(bool)
+    def setOptTimeoutSet(self, enabled: bool) -> None:
+        if not self._busy:
+            self._opt_timeout_set = bool(enabled)
+            if not enabled:
+                self._opt_timeout_confirm = False
+            self.changed.emit()
+
+    @Property(int, notify=changed)
+    def optTimeoutMs(self) -> int:
+        return self._opt_timeout_ms
+
+    @Slot(int)
+    def setOptTimeoutMs(self, value: int) -> None:
+        if not self._busy:
+            self._opt_timeout_ms = int(value)
+            self._opt_timeout_confirm = False   # a changed value needs a new confirmation
+            self.changed.emit()
+
+    @Property(bool, notify=changed)
+    def optTimeoutConfirm(self) -> bool:
+        return self._opt_timeout_confirm
+
+    @Slot(bool)
+    def setOptTimeoutConfirm(self, enabled: bool) -> None:
+        if not self._busy:
+            self._opt_timeout_confirm = bool(enabled)
+            self.changed.emit()
+
+    @Property(int, constant=True)
+    def optTimeoutMin(self) -> int:
+        return flasher_functions.TIMEOUT_MIN_MS
+
+    @Property(int, constant=True)
+    def optTimeoutMax(self) -> int:
+        return flasher_functions.TIMEOUT_MAX_MS
+
+    @Property(bool, notify=changed)
     def canWriteOptionalFunctions(self) -> bool:
         return self.optionalFunctionsPanel and self.connected and not self._busy and self._flash_target == "master"
 
@@ -717,13 +761,36 @@ class FlasherQtBridge(QObject):
         if not self.canWriteOptionalFunctions:
             self._log("FUNCTIONS_BLOCKED")
             return
+        # The silence is written only when its box is ticked AND this write was confirmed; the confirmation is spent by the attempt, whatever its result.
+        timeout = (self._opt_timeout_ms, self._opt_timeout_confirm) if self._opt_timeout_set else None
+        self._opt_timeout_confirm = False
         self._set_state(status="OPTIONAL FUNCTIONS IN PROGRESS", busy=True)
-        threading.Thread(target=self._functions_worker, args=(self._opt_estop_follow,), daemon=True, name="urtc-qt-functions").start()
+        threading.Thread(target=self._functions_worker, args=(self._opt_estop_follow, timeout), daemon=True, name="urtc-qt-functions").start()
 
-    def _functions_worker(self, estop_follow: bool) -> None:
+    @Slot()
+    def readOptionalFunctions(self) -> None:
+        """Read the silence of the master in force and stored in the head. It only reads: it needs no confirmation and never writes."""
+        if not self.canWriteOptionalFunctions:
+            self._log("FUNCTIONS_BLOCKED")
+            return
+        self._set_state(status="OPTIONAL FUNCTIONS IN PROGRESS", busy=True)
+        threading.Thread(target=self._functions_read_worker, daemon=True, name="urtc-qt-functions-read").start()
+
+    def _functions_read_worker(self) -> None:
         try:
             flasher = URTCFlasher(self._transport, log=self._log, stop_flag=lambda: self._cancel_requested)
-            flasher_functions.write_optional_functions(flasher, estop_follow, _)
+            flasher_functions.read_estop_timeout(flasher, _)
+            self._flashResult.emit("FUNCTIONS_DONE")
+        except Exception as exc:
+            self._flashResult.emit(f"FUNCTIONS_FAILED {exc}")
+
+    def _functions_worker(self, estop_follow: bool, timeout: tuple[int, bool] | None = None) -> None:
+        try:
+            flasher = URTCFlasher(self._transport, log=self._log, stop_flag=lambda: self._cancel_requested)
+            if timeout is None:
+                flasher_functions.write_optional_functions(flasher, estop_follow, _)
+            else:
+                flasher_functions.write_estop_timeout(flasher, estop_follow, timeout[0], timeout[1], _)
             self._flashResult.emit("FUNCTIONS_DONE")
         except Exception as exc:
             self._flashResult.emit(f"FUNCTIONS_FAILED {exc}")
