@@ -442,3 +442,4 @@ LOG_OPT_FUNCTIONS_NO_ANSWER=A cabeça não respondeu: leia de volta as funções
 QTLOG_FUNCTIONS_BLOCKED=Funções opcionais bloqueadas: ative o painel no ficheiro de configuração, ligue-se à placa principal e aguarde que a operação atual termine
 QTLOG_FUNCTIONS_DONE=Funções opcionais concluídas
 QTLOG_FUNCTIONS_FAILED=As funções opcionais falharam
+QTSTATUS_OPTIONAL_FUNCTIONS_IN_PROGRESS=FUNÇÕES OPCIONAIS EM CURSO

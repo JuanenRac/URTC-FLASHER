@@ -442,3 +442,4 @@ LOG_OPT_FUNCTIONS_NO_ANSWER=La testina non ha risposto: rilegga le funzioni opzi
 QTLOG_FUNCTIONS_BLOCKED=Funzioni opzionali bloccate: attivi il pannello nel file di configurazione, si colleghi alla scheda principale e attenda la fine dell'operazione in corso
 QTLOG_FUNCTIONS_DONE=Funzioni opzionali completate
 QTLOG_FUNCTIONS_FAILED=Funzioni opzionali non riuscite
+QTSTATUS_OPTIONAL_FUNCTIONS_IN_PROGRESS=FUNZIONI OPZIONALI IN CORSO

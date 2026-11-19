@@ -441,3 +441,4 @@ LOG_OPT_FUNCTIONS_NO_ANSWER=ヘッドから応答がありませんでした。�
 QTLOG_FUNCTIONS_BLOCKED=オプション機能はブロックされました。設定ファイルでパネルを有効にし、メインボードに接続して、現在の操作が終わるまでお待ちください
 QTLOG_FUNCTIONS_DONE=オプション機能の処理が終了しました
 QTLOG_FUNCTIONS_FAILED=オプション機能の処理に失敗しました
+QTSTATUS_OPTIONAL_FUNCTIONS_IN_PROGRESS=オプション機能を処理中

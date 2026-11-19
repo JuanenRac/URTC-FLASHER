@@ -441,3 +441,4 @@ LOG_OPT_FUNCTIONS_NO_ANSWER=The head did not answer: read the optional functions
 QTLOG_FUNCTIONS_BLOCKED=Optional functions blocked: turn the panel on in the config file, connect to the main board and wait for the current operation to finish
 QTLOG_FUNCTIONS_DONE=Optional functions finished
 QTLOG_FUNCTIONS_FAILED=Optional functions failed
+QTSTATUS_OPTIONAL_FUNCTIONS_IN_PROGRESS=OPTIONAL FUNCTIONS IN PROGRESS

@@ -442,3 +442,4 @@ LOG_OPT_FUNCTIONS_NO_ANSWER=Der Kopf hat nicht geantwortet: Lesen Sie die option
 QTLOG_FUNCTIONS_BLOCKED=Optionale Funktionen blockiert: Schalten Sie das Panel in der Konfigurationsdatei ein, verbinden Sie sich mit der Hauptplatine und warten Sie, bis der laufende Vorgang beendet ist
 QTLOG_FUNCTIONS_DONE=Optionale Funktionen abgeschlossen
 QTLOG_FUNCTIONS_FAILED=Optionale Funktionen fehlgeschlagen
+QTSTATUS_OPTIONAL_FUNCTIONS_IN_PROGRESS=OPTIONALE FUNKTIONEN LAUFEN
