@@ -797,7 +797,8 @@ LAYOUTS = {
     'set_features_request_estop_timeout': {'id': 430, 'role': 'request', 'dlc': {'exact': 8}, 'fields': [{'name': 'magic', 'type': 'bytes', 'offset': 0, 'fixed': '46454154', 'length': 4}, {'name': 'features', 'type': 'u8', 'offset': 4, 'width': 1, 'range': [0, 255]}, {'name': 'features_ext', 'type': 'u8', 'offset': 5, 'width': 1, 'range': [0, 255]}, {'name': 'estop_timeout_ms', 'type': 'u16', 'offset': 6, 'width': 2, 'range': [0, 500]}]},
     'features_resp_request': {'id': 431, 'role': 'request', 'dlc': {'any': True}, 'fields': []},
     'features_resp_request_extended': {'id': 431, 'role': 'request', 'dlc': {'exact': 1}, 'fields': [{'name': 'format', 'type': 'bytes', 'offset': 0, 'fixed': '02', 'length': 1}]},
-    'features_resp_request_estop_timeout': {'id': 431, 'role': 'request', 'dlc': {'exact': 1}, 'fields': [{'name': 'format', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [3, 4]}]},
+    'features_resp_request_estop_timeout': {'id': 431, 'role': 'request', 'dlc': {'exact': 1}, 'fields': [{'name': 'format', 'type': 'bytes', 'offset': 0, 'fixed': '03', 'length': 1}]},
+    'features_resp_request_estop_timeout_stored': {'id': 431, 'role': 'request', 'dlc': {'exact': 1}, 'fields': [{'name': 'format', 'type': 'bytes', 'offset': 0, 'fixed': '04', 'length': 1}]},
     'features_resp_response': {'id': 431, 'role': 'response', 'dlc': {'exact': 3}, 'fields': [{'name': 'stored', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 255]}, {'name': 'running', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 255]}, {'name': 'supported', 'type': 'u8', 'offset': 2, 'width': 1, 'range': [0, 255]}]},
     'features_resp_response_extended': {'id': 431, 'role': 'response', 'dlc': {'exact': 6}, 'fields': [{'name': 'stored', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 255]}, {'name': 'running', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 255]}, {'name': 'supported', 'type': 'u8', 'offset': 2, 'width': 1, 'range': [0, 255]}, {'name': 'stored_ext', 'type': 'u8', 'offset': 3, 'width': 1, 'range': [0, 255]}, {'name': 'running_ext', 'type': 'u8', 'offset': 4, 'width': 1, 'range': [0, 255]}, {'name': 'supported_ext', 'type': 'u8', 'offset': 5, 'width': 1, 'range': [0, 255]}]},
     'features_resp_response_estop_timeout': {'id': 431, 'role': 'response', 'dlc': {'exact': 8}, 'fields': [{'name': 'stored', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 255]}, {'name': 'running', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 255]}, {'name': 'supported', 'type': 'u8', 'offset': 2, 'width': 1, 'range': [0, 255]}, {'name': 'stored_ext', 'type': 'u8', 'offset': 3, 'width': 1, 'range': [0, 255]}, {'name': 'running_ext', 'type': 'u8', 'offset': 4, 'width': 1, 'range': [0, 255]}, {'name': 'supported_ext', 'type': 'u8', 'offset': 5, 'width': 1, 'range': [0, 255]}, {'name': 'estop_timeout_ms', 'type': 'u16', 'offset': 6, 'width': 2, 'range': [0, 65535]}]},
@@ -1637,14 +1638,26 @@ def decode_features_resp_request_extended(data: bytes, strict: bool = False) -> 
     return decode("features_resp_request_extended", data, strict)
 
 
-def encode_features_resp_request_estop_timeout(format: int) -> tuple[int, bytes]:
+def encode_features_resp_request_estop_timeout(format: bytes | None = None) -> tuple[int, bytes]:
     """The optional firmware features: stored mask, mask in force and supported mask (0x1AF, request, estop_timeout)."""
-    return encode("features_resp_request_estop_timeout", format=format)
+    values = {k: v for k, v in dict(format=format).items() if v is not None}
+    return encode("features_resp_request_estop_timeout", **values)
 
 
 def decode_features_resp_request_estop_timeout(data: bytes, strict: bool = False) -> dict | None:
     """Fields of 0x1AF (request, estop_timeout), or None when the payload is too short."""
     return decode("features_resp_request_estop_timeout", data, strict)
+
+
+def encode_features_resp_request_estop_timeout_stored(format: bytes | None = None) -> tuple[int, bytes]:
+    """The optional firmware features: stored mask, mask in force and supported mask (0x1AF, request, estop_timeout_stored)."""
+    values = {k: v for k, v in dict(format=format).items() if v is not None}
+    return encode("features_resp_request_estop_timeout_stored", **values)
+
+
+def decode_features_resp_request_estop_timeout_stored(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x1AF (request, estop_timeout_stored), or None when the payload is too short."""
+    return decode("features_resp_request_estop_timeout_stored", data, strict)
 
 
 def encode_features_resp_response(stored: int, running: int, supported: int) -> tuple[int, bytes]:

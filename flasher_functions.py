@@ -86,7 +86,7 @@ def timeout_valid(timeout_ms: Any) -> bool:
 
 def _ask(flasher: Any, query: int) -> dict[str, int] | None:
     """Ask 0x1AF with the byte ``query`` (3: the silence in force, 4: the silence stored) and decode the eight-byte answer; None when there is none."""
-    can_id, data = protocol.encode_features_resp_request_estop_timeout(query)
+    can_id, data = protocol.encode_features_resp_request_estop_timeout_stored() if query == 4 else protocol.encode_features_resp_request_estop_timeout()
     flasher.can.send_frame(can_id, data)
     try:
         return estop_follow.decode_timeout_answer(flasher._wait_for(protocol.CAN_ID_FEATURES_RESP, timeout=2.0))
