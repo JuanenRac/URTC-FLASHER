@@ -28,6 +28,7 @@ from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuickControls2 import QQuickStyle
 
 import flasher_config
+import flasher_functions
 from flasher_config import (
     APP_FLASH_ADDR, APP_MAX_SIZE, BITRATE_DEFAULT_SLCAN_CODE, DEFAULT_BITRATE_LABEL, SLCAN_BITRATES,
     BOOTLOADER_FLASH_ADDR, BOOTLOADER_MAX_SIZE,
@@ -140,6 +141,8 @@ class FlasherQtBridge(QObject):
         self._erase_fram = False
         self._allow_downgrade = False
         self._downgrade_confirmed = False
+        # The optional functions panel (off unless urtc_config.json says so): its box is never ticked at start and a flash never reads it.
+        self._opt_estop_follow = False
         self._readback_result = ""
         self._bus_activity_text = ""
         self._export_result = ""
@@ -688,6 +691,42 @@ class FlasherQtBridge(QObject):
     @Property(bool, notify=changed)
     def eraseFram(self) -> bool:
         return self._erase_fram
+
+    @Property(bool, notify=changed)
+    def optionalFunctionsPanel(self) -> bool:
+        """Whether the panel of optional firmware functions is shown (the ``optional_functions_panel`` setting of the config file, off by default)."""
+        return flasher_functions.panel_enabled(flasher_config.load_config())
+
+    @Property(bool, notify=changed)
+    def optEstopFollow(self) -> bool:
+        return self._opt_estop_follow
+
+    @Slot(bool)
+    def setOptEstopFollow(self, enabled: bool) -> None:
+        if not self._busy:
+            self._opt_estop_follow = bool(enabled)
+            self.changed.emit()
+
+    @Property(bool, notify=changed)
+    def canWriteOptionalFunctions(self) -> bool:
+        return self.optionalFunctionsPanel and self.connected and not self._busy and self._flash_target == "master"
+
+    @Slot()
+    def writeOptionalFunctions(self) -> None:
+        """Write the switch of the emergency stop following to the board. Only this slot ever writes it."""
+        if not self.canWriteOptionalFunctions:
+            self._log("FUNCTIONS_BLOCKED")
+            return
+        self._set_state(status="OPTIONAL FUNCTIONS IN PROGRESS", busy=True)
+        threading.Thread(target=self._functions_worker, args=(self._opt_estop_follow,), daemon=True, name="urtc-qt-functions").start()
+
+    def _functions_worker(self, estop_follow: bool) -> None:
+        try:
+            flasher = URTCFlasher(self._transport, log=self._log, stop_flag=lambda: self._cancel_requested)
+            flasher_functions.write_optional_functions(flasher, estop_follow, _)
+            self._flashResult.emit("FUNCTIONS_DONE")
+        except Exception as exc:
+            self._flashResult.emit(f"FUNCTIONS_FAILED {exc}")
 
     @Property(bool, notify=changed)
     def signEvidence(self) -> bool:

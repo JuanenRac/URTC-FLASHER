@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **An optional panel writes the emergency stop following of a tool head, off by default:** with `optional_functions_panel` set to `true` in the config file, the CAN-OTA window shows a check box (never ticked at start) and a button that writes the switch; the head is asked for its stored functions first and only that bit changes, a head that does not answer is left as it is, and a flash never writes the switch. Without the setting nothing changes. The test that the flasher never writes `0x1AE` now allows only the panel module and still checks that no flash path calls it. New `flasher_functions.py` and `tests/test_optional_functions_panel.py`; the texts are in the eight languages.
+
 ## [0.5.8] - Release-signature checks, refused update reasons, optional-function copies and consistent Chinese texts
 
 - **The copy of the shared update module refuses a rollback to a damaged release:** going back to the previous version first checks that release (its `app_info.json` and the file it names to run); a missing or unusable one is refused with a clear message, in the eight languages, and nothing is changed.

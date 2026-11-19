@@ -326,3 +326,7 @@ Running `urtc_flasher.py` with no arguments (or double-clicking it) opens
 the Qt Quick deck instead — the main window covering both the CAN-OTA update flow shown above and the
 GUI-only SWD/JTAG full-chip programming section, with a language
 selector (the CLI itself stays English-only).
+
+## Optional functions panel
+
+`"optional_functions_panel": true` in the config file (anything other than the plain value `true` keeps it hidden; it is **off by default**) shows a panel in the CAN-OTA window with a check box, never ticked at start, for the emergency stop following of a tool head, and a button that writes it. The button asks the head for its stored functions first and changes only that one, so the others keep their value; a head that does not answer is left as it is and the log says so. Without the tick the button switches the function off. The stored switch acts after the next power-up. A flash never writes it: the panel is the only place of the flasher that sends the identifier `0x1AE`. This is not a certified safety function and never replaces a hardware emergency stop. Nothing of it has run against a real board.
