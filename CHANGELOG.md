@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.5.8] - Release-signature checks, refused update reasons, optional-function copies and consistent Chinese texts
+
 - **The copy of the shared update module refuses a rollback to a damaged release:** going back to the previous version first checks that release (its `app_info.json` and the file it names to run); a missing or unusable one is refused with a clear message, in the eight languages, and nothing is changed.
 - **The copy of the common library moves to 0.2.9:** the shared CAN modules are pinned to the current version of URTC-COMMON; nothing changes in what they do.
 - **The copy of URTC-COMMON brings the switch that lets an update of a slave board end while a tool is active (the switch stays off):** the generated protocol now names the extended feature bit `ALLOW_UPDATE_ACTIVE_ACTUATOR` (0x02) and its description. Nothing changes on the bus: the flasher never sets the bit.
@@ -17,7 +19,6 @@ All notable changes to this project are documented here.
 - **A slave update the board refuses because a tool is active says so:** the main board now answers the reason ACTUATOR_ACTIVE (8) when the end of the update arrives while a heater, the laser, the drill, a fan or a move is on; the message names it in the eight languages (stop the tool and try again) instead of showing a bare number.
 - **A lost confirmation no longer turns another application into a successful update:** when the final status frame of an update never arrives, the flasher still checks which application answers, but now counts it as the update only if its version (and patch, when both sides state one) is the version of the image that was sent; the previous application back after a failed transfer, or another board of the bus, ends in the final-verification error and the answered version is written to the log. Tested against the simulated bootloader behind a bus that goes mute after the end of the update; not tried on a board.
 - **The copy of URTC-COMMON brings the stop-following logic of the head (the switch stays off):** the virtual head of the flasher now knows the `ESTOP_FOLLOW` feature (bit 128, off unless the mask has it), the error reasons `ESTOP` and `ESTOP_SILENCE` and the stop frame `0x001`. The flasher itself never writes the optional functions, so nothing changes on the bus; a test keeps it that way. Tested with the virtual head; not tried on a board.
-- **The Chinese language file names the expansion slave "从机" in its section comments too:** two comments still said "扩展从属"; no visible text changes.
 
 - **The Chinese texts name the image and the expansion slave the same way everywhere:** the language file and the Chinese README said "镜像" for the firmware image in most places and "映像" in two texts and the README, and "从机" for the slave in the program and "从属" in the README; they now use "镜像" and "从机" throughout, as the shared catalog does.
 
@@ -32,8 +33,6 @@ All notable changes to this project are documented here.
 - **A lost digest chunk of a slave update is named:** when the main board reports that a digest chunk was lost on the bus (reason 7 of the verify-fail query 0x219), the flasher says so in the language of the program, in the eight languages, instead of an unknown reason or a signature mismatch. The chunks are still sent in order, right after the start frame; the position of each is implicit and the main board checks the count at the end frame. Tested against a scripted slave and main board; not tried on a bus with real boards.
 
 - **The pause between the data frames is measured in a whole update on a virtual clock:** the real transfer runs against the simulated bootloader with a pause of 0, 1, 5 and 50 ms (the ends and the middle of the accepted range) and the time of every data frame is recorded; two data frames of a page are exactly one configured pause apart, the update lasts one pause longer per data frame and the frames sent do not change. Simulation only: the spacing on the wire with a real adapter is still to be measured on a board.
-
-## [Unreleased]
 
 ## [0.5.6] - The flasher opens the bus at 1 Mbit/s, recognises mixed speeds by their symptoms and reads the header inside the image
 
@@ -56,8 +55,6 @@ All notable changes to this project are documented here.
 - **The German README addresses the reader formally in the contributing list:** the three lines that still used the informal form now use the same formal form as the rest of the text and as the other repositories.
 
 - **The simulated readback tests no longer depend on the speed of the computer:** the simulated board answers at once in the readback tests, so the whole file runs in about one second instead of ten and cannot time out on a busy machine.
-
-## [Unreleased]
 
 - **The coverage of the continuous check is the coverage of the own code:** the copies of the shared module (`urtc_can` and `urtc_ui`, whose locks list every file) are measured where they come from and no longer here, and the floor goes from 67 to the value that is measured, 81.
 
