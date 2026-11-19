@@ -32,7 +32,7 @@
     },
     "estop_follow.py": {
       "from": "src/urtc_common/estop_follow.py",
-      "sha256": "1f4c340114c8e94d7a46dc3ffa6f5d0d1a1ce39b3b9521f0f54a148a9d2ddf2c"
+      "sha256": "58b86111be734409cfe154e416586fc772ce7f3abe8652716baf4e38f8444cad"
     },
     "evidence.py": {
       "from": "src/urtc_common/evidence.py",
@@ -156,7 +156,7 @@
     },
     "protocol.py": {
       "from": "src/urtc_common/protocol.py",
-      "sha256": "0f7005c38a1f132d09c72cff119360748850c3102a044d8afdfb3720839e3746"
+      "sha256": "ecaa9c4f8057870f3227095b214d8ddb4f637aaec81a057ca3169cff134345cd"
     },
     "quick_state.py": {
       "from": "src/urtc_common/quick_state.py",
@@ -208,7 +208,7 @@
     },
     "virtual_board.py": {
       "from": "src/urtc_common/virtual_board.py",
-      "sha256": "8cf629dace95ce4ad827a726f9d246110be57bd415fac85faa3f81a987c77826"
+      "sha256": "4853c2f5bb706ddc14ac46cc6c28847d7bf2d9fdf1bea94e6ff0f8199100a134"
     }
   }
 }

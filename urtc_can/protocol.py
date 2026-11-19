@@ -61,6 +61,8 @@ STEPPER_SILENCE_PERCENT = 0x32  # Silence that cuts a stepper move, as a percent
 MAGNET_SILENCE_MS = 0x1388  # Silence of the host after which the electromagnet lets go (communication watchdog and release policy on) (ms)
 ESTOP_CAN_ID = 1  # Identifier of the emergency stop frame of the stack, which a head with the ESTOP_FOLLOW feature obeys (standard frame, eight bytes)
 ESTOP_ALIVE_TIMEOUT_MS = 0x64  # Silence of the master of the emergency stop after which a head that is ready goes back to its safe state (ESTOP_FOLLOW feature on) (ms)
+ESTOP_ALIVE_TIMEOUT_MIN_MS = 0x14  # Lowest silence of the master of the emergency stop a head accepts as its configured timeout; below it the value is rejected and the default is used (ESTOP_FOLLOW feature on) (ms)
+ESTOP_ALIVE_TIMEOUT_MAX_MS = 0x1F4  # Highest silence of the master of the emergency stop a head accepts as its configured timeout; above it the value is rejected and the default is used (ESTOP_FOLLOW feature on) (ms)
 
 # --- identifiers ---
 CAN_ID_IMPACT_EVENT = 0x095  # Impact register (touch probe, maximum priority)

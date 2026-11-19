@@ -85,7 +85,7 @@ class VirtualBoard:
     def __init__(self, hardware_id: int = protocol.HARDWARE_ID_MAIN, version: tuple[int, int] = (0, 4), patch: int | None = 0,
                  accepts_patch: bool = False, tool_id: int = 0, system_error: bool = False, can_error: bool = False,
                  booting: bool = False, thermal_fault: int | None = 0, reset_cause: int | None = 0,
-                 bootloader: bool = False, heater_config: dict | None = None, key_rotation: krc.State | None = None,
+                 bootloader: bool = False, heater_config: dict | None = None, key_rotation: krc.State | None = None, estop_alive_timeout_ms: int | None = None,
                  error_reason: int | None = None, clear_result: int | None = None, features: int = 0, temperature_c: int = 20,
                  actuators_off: bool = True, **bootloader_options) -> None:
         # ``error_reason`` and ``clear_result`` are the two last bytes of the quick state (None: a board that does not send them). ``features`` is the mask in
@@ -126,7 +126,7 @@ class VirtualBoard:
         self.estop = None
         if self.mode == APPLICATION and self.features & protocol.FEATURE_ESTOP_FOLLOW:
             from . import estop_follow   # here and not at the top, like the safety decisions
-            self.estop = estop_follow.Node()
+            self.estop = estop_follow.Node(estop_alive_timeout_ms)   # None or 0 = the default; outside the limits = rejected, default
             self.system_error = True
             self.error_reason = protocol.ERROR_REASON_ESTOP
 

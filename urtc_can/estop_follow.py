@@ -5,7 +5,7 @@ ends it, and when the silence of the master puts a ready head back in its safe s
 frame on 0x001 that is not a well-formed release or heartbeat is a stop; only the way out is checked.
 
 The head starts latched. A trip, a malformed frame, a heartbeat that says tripped and a bus-off latch it at once. A release moves it to ready only when
-it is latched, the master was heard within ``ESTOP_ALIVE_TIMEOUT_MS``, the epoch is the one of the stop it knows, the sequence is newer than the last one
+it is latched, the master was heard within the timeout (``ESTOP_ALIVE_TIMEOUT_MS``, 100 ms unless the head is configured otherwise), the epoch is the one of the stop it knows, the sequence is newer than the last one
 seen, and, after a bus-off, a new heartbeat was heard. A ready head that hears no new heartbeat for ``ESTOP_ALIVE_TIMEOUT_MS`` latches again. The
 decisions here are the ones of ``fw_estop_follow.c``, which replays the vectors written by ``tools/make_estop_vectors.py``. Standard library only.
 This is not a certified safety function and never replaces a hardware emergency stop.
@@ -37,6 +37,46 @@ STATE_LATCHED = 0
 STATE_READY = 1
 
 UINT32_MASK = 0xFFFFFFFF
+
+# The silence of the master after which a ready head latches again is configurable per head. The default is the constant of the specification, the
+# limits are hard: a configured value outside them is rejected (the default is used and the status says so), never accepted in silence.
+TIMEOUT_DEFAULT_MS = protocol.ESTOP_ALIVE_TIMEOUT_MS
+TIMEOUT_MIN_MS = protocol.ESTOP_ALIVE_TIMEOUT_MIN_MS
+TIMEOUT_MAX_MS = protocol.ESTOP_ALIVE_TIMEOUT_MAX_MS
+CONFIG_KEY = "estop_alive_timeout_ms"   # the key of the head's configuration file (absent or 0 = the default)
+
+TIMEOUT_OK = 0              # the configured value (or the default, when none was set) is the one in use
+TIMEOUT_REJECTED = 1        # the configured value was outside the limits: the default is in use (warn)
+TIMEOUT_MASTER_DIFFERS = 2  # the master announced another value: the lower of the two is in use (warn)
+TIMEOUT_MASTER_REJECTED = 3 # the master announced a value outside the limits: it is ignored, the head's own value is in use (warn)
+
+
+def resolve_timeout(requested: int | None) -> tuple[int, int]:
+    """``(milliseconds, status)`` for a configured value: ``None`` or 0 means not set (the default); a value outside the hard limits is rejected."""
+    if requested is None or requested == 0:
+        return TIMEOUT_DEFAULT_MS, TIMEOUT_OK
+    if isinstance(requested, bool) or not isinstance(requested, int) or not TIMEOUT_MIN_MS <= requested <= TIMEOUT_MAX_MS:
+        return TIMEOUT_DEFAULT_MS, TIMEOUT_REJECTED
+    return requested, TIMEOUT_OK
+
+
+def timeout_from_config(config: dict) -> tuple[int, int]:
+    """The timeout of a head from its configuration mapping (the key ``estop_alive_timeout_ms``); see ``resolve_timeout``."""
+    return resolve_timeout(config.get(CONFIG_KEY))
+
+
+def effective_timeout(own_ms: int, master_ms: int | None) -> tuple[int, int]:
+    """The value a head uses when the master announces its own: the LOWER of the two, never more tolerant than the head's configuration.
+
+    ``master_ms`` of ``None`` or 0 means the master announced nothing. An announced value outside the limits is ignored with ``TIMEOUT_MASTER_REJECTED``.
+    """
+    if master_ms is None or master_ms == 0:
+        return own_ms, TIMEOUT_OK
+    if not TIMEOUT_MIN_MS <= master_ms <= TIMEOUT_MAX_MS:
+        return own_ms, TIMEOUT_MASTER_REJECTED
+    if master_ms == own_ms:
+        return own_ms, TIMEOUT_OK
+    return min(own_ms, master_ms), TIMEOUT_MASTER_DIFFERS
 
 
 @dataclass(frozen=True)
@@ -94,7 +134,9 @@ def seq_newer(candidate: int, have_last: bool, last: int) -> bool:
 class Node:
     """The state of one head that follows the stop. It starts latched."""
 
-    def __init__(self) -> None:
+    def __init__(self, alive_timeout_ms: int | None = None) -> None:
+        self.own_timeout_ms, self.timeout_status = resolve_timeout(alive_timeout_ms)
+        self.alive_timeout_ms = self.own_timeout_ms   # the value in use: never above the one of this head's configuration
         self.latched = True
         self.have_epoch = False
         self.epoch = 0
@@ -104,12 +146,19 @@ class Node:
         self.last_alive_ms = 0
         self.busoff_wait = False
 
+    def set_master_timeout(self, announced_ms: int | None) -> int:
+        """The master announced its timeout: the head uses the lower of the two and returns the status (``TIMEOUT_*``)."""
+        self.alive_timeout_ms, status = effective_timeout(self.own_timeout_ms, announced_ms)
+        if status != TIMEOUT_OK or self.timeout_status != TIMEOUT_REJECTED:
+            self.timeout_status = status
+        return self.timeout_status
+
     @property
     def state(self) -> int:
         return STATE_LATCHED if self.latched else STATE_READY
 
     def _alive(self, now_ms: int) -> bool:
-        return self.have_alive and ((now_ms - self.last_alive_ms) & UINT32_MASK) <= protocol.ESTOP_ALIVE_TIMEOUT_MS
+        return self.have_alive and ((now_ms - self.last_alive_ms) & UINT32_MASK) <= self.alive_timeout_ms
 
     def on_frame(self, now_ms: int, data: bytes) -> Effect:
         """Feed one frame received on 0x001 (any length): a malformed one is a stop."""
