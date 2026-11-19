@@ -32,7 +32,7 @@
     },
     "estop_follow.py": {
       "from": "src/urtc_common/estop_follow.py",
-      "sha256": "58b86111be734409cfe154e416586fc772ce7f3abe8652716baf4e38f8444cad"
+      "sha256": "3530367311519273926232a28c9b38f0f72367925bce95af540738ed4f72d0e0"
     },
     "evidence.py": {
       "from": "src/urtc_common/evidence.py",
@@ -156,7 +156,7 @@
     },
     "protocol.py": {
       "from": "src/urtc_common/protocol.py",
-      "sha256": "ecaa9c4f8057870f3227095b214d8ddb4f637aaec81a057ca3169cff134345cd"
+      "sha256": "3488e4152046ba85c9e74a78d36b0c6e31136c7343060cb2ff20c4d70f784489"
     },
     "quick_state.py": {
       "from": "src/urtc_common/quick_state.py",

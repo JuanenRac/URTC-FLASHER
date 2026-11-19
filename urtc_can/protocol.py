@@ -61,7 +61,7 @@ STEPPER_SILENCE_PERCENT = 0x32  # Silence that cuts a stepper move, as a percent
 MAGNET_SILENCE_MS = 0x1388  # Silence of the host after which the electromagnet lets go (communication watchdog and release policy on) (ms)
 ESTOP_CAN_ID = 1  # Identifier of the emergency stop frame of the stack, which a head with the ESTOP_FOLLOW feature obeys (standard frame, eight bytes)
 ESTOP_ALIVE_TIMEOUT_MS = 0x64  # Silence of the master of the emergency stop after which a head that is ready goes back to its safe state (ESTOP_FOLLOW feature on) (ms)
-ESTOP_ALIVE_TIMEOUT_MIN_MS = 0x14  # Lowest silence of the master of the emergency stop a head accepts as its configured timeout; below it the value is rejected and the default is used (ESTOP_FOLLOW feature on) (ms)
+ESTOP_ALIVE_TIMEOUT_MIN_MS = 0x28  # Lowest silence of the master of the emergency stop a head accepts as its configured timeout; below it the value is rejected and the default is used (ESTOP_FOLLOW feature on) (ms)
 ESTOP_ALIVE_TIMEOUT_MAX_MS = 0x1F4  # Highest silence of the master of the emergency stop a head accepts as its configured timeout; above it the value is rejected and the default is used (ESTOP_FOLLOW feature on) (ms)
 
 # --- identifiers ---
@@ -794,10 +794,13 @@ LAYOUTS = {
     'multinode_config_resp_response': {'id': 429, 'role': 'response', 'dlc': {'exact': 4}, 'fields': [{'name': 'stored', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 1]}, {'name': 'running', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 1]}, {'name': 'instance', 'type': 'u8', 'offset': 2, 'width': 1}, {'name': 'address', 'type': 'u8', 'offset': 3, 'width': 1, 'range': [0, 31]}]},
     'set_features_request': {'id': 430, 'role': 'request', 'dlc': {'exact': 5}, 'fields': [{'name': 'magic', 'type': 'bytes', 'offset': 0, 'fixed': '46454154', 'length': 4}, {'name': 'features', 'type': 'u8', 'offset': 4, 'width': 1, 'range': [0, 255]}]},
     'set_features_request_extended': {'id': 430, 'role': 'request', 'dlc': {'exact': 6}, 'fields': [{'name': 'magic', 'type': 'bytes', 'offset': 0, 'fixed': '46454154', 'length': 4}, {'name': 'features', 'type': 'u8', 'offset': 4, 'width': 1, 'range': [0, 255]}, {'name': 'features_ext', 'type': 'u8', 'offset': 5, 'width': 1, 'range': [0, 255]}]},
+    'set_features_request_estop_timeout': {'id': 430, 'role': 'request', 'dlc': {'exact': 8}, 'fields': [{'name': 'magic', 'type': 'bytes', 'offset': 0, 'fixed': '46454154', 'length': 4}, {'name': 'features', 'type': 'u8', 'offset': 4, 'width': 1, 'range': [0, 255]}, {'name': 'features_ext', 'type': 'u8', 'offset': 5, 'width': 1, 'range': [0, 255]}, {'name': 'estop_timeout_ms', 'type': 'u16', 'offset': 6, 'width': 2, 'range': [0, 500]}]},
     'features_resp_request': {'id': 431, 'role': 'request', 'dlc': {'any': True}, 'fields': []},
     'features_resp_request_extended': {'id': 431, 'role': 'request', 'dlc': {'exact': 1}, 'fields': [{'name': 'format', 'type': 'bytes', 'offset': 0, 'fixed': '02', 'length': 1}]},
+    'features_resp_request_estop_timeout': {'id': 431, 'role': 'request', 'dlc': {'exact': 1}, 'fields': [{'name': 'format', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [3, 4]}]},
     'features_resp_response': {'id': 431, 'role': 'response', 'dlc': {'exact': 3}, 'fields': [{'name': 'stored', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 255]}, {'name': 'running', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 255]}, {'name': 'supported', 'type': 'u8', 'offset': 2, 'width': 1, 'range': [0, 255]}]},
     'features_resp_response_extended': {'id': 431, 'role': 'response', 'dlc': {'exact': 6}, 'fields': [{'name': 'stored', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 255]}, {'name': 'running', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 255]}, {'name': 'supported', 'type': 'u8', 'offset': 2, 'width': 1, 'range': [0, 255]}, {'name': 'stored_ext', 'type': 'u8', 'offset': 3, 'width': 1, 'range': [0, 255]}, {'name': 'running_ext', 'type': 'u8', 'offset': 4, 'width': 1, 'range': [0, 255]}, {'name': 'supported_ext', 'type': 'u8', 'offset': 5, 'width': 1, 'range': [0, 255]}]},
+    'features_resp_response_estop_timeout': {'id': 431, 'role': 'response', 'dlc': {'exact': 8}, 'fields': [{'name': 'stored', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 255]}, {'name': 'running', 'type': 'u8', 'offset': 1, 'width': 1, 'range': [0, 255]}, {'name': 'supported', 'type': 'u8', 'offset': 2, 'width': 1, 'range': [0, 255]}, {'name': 'stored_ext', 'type': 'u8', 'offset': 3, 'width': 1, 'range': [0, 255]}, {'name': 'running_ext', 'type': 'u8', 'offset': 4, 'width': 1, 'range': [0, 255]}, {'name': 'supported_ext', 'type': 'u8', 'offset': 5, 'width': 1, 'range': [0, 255]}, {'name': 'estop_timeout_ms', 'type': 'u16', 'offset': 6, 'width': 2, 'range': [0, 65535]}]},
     'electromagnet_cmd': {'id': 432, 'role': 'request', 'dlc': {'exact': 1}, 'fields': [{'name': 'coil', 'type': 'u8', 'offset': 0, 'width': 1, 'range': [0, 1]}]},
     'clear_error': {'id': 434, 'role': 'request', 'dlc': {'exact': 4}, 'fields': [{'name': 'magic', 'type': 'bytes', 'offset': 0, 'fixed': '434C4552', 'length': 4}]},
     'health_profile': {'id': 440, 'role': 'response', 'dlc': {'exact': 8}, 'fields': [{'name': 'tec', 'type': 'u8', 'offset': 0, 'width': 1}, {'name': 'rec', 'type': 'u8', 'offset': 1, 'width': 1}, {'name': 'bus_off_count', 'type': 'u8', 'offset': 2, 'width': 1}, {'name': 'hsi_trim', 'type': 'u8', 'offset': 3, 'width': 1}, {'name': 'loop_max_ms', 'type': 'u8', 'offset': 4, 'width': 1}, {'name': 'mcu_temp_plus_40', 'type': 'u8', 'offset': 5, 'width': 1}, {'name': 'vdda_mv', 'type': 'u16', 'offset': 6, 'width': 2}]},
@@ -1602,6 +1605,17 @@ def decode_set_features_request_extended(data: bytes, strict: bool = False) -> d
     return decode("set_features_request_extended", data, strict)
 
 
+def encode_set_features_request_estop_timeout(features: int, features_ext: int, estop_timeout_ms: int, magic: bytes | None = None) -> tuple[int, bytes]:
+    """Switch the optional firmware features on or off (persistent, acts after the next power-up) (0x1AE, request, estop_timeout)."""
+    values = {k: v for k, v in dict(features=features, features_ext=features_ext, estop_timeout_ms=estop_timeout_ms, magic=magic).items() if v is not None}
+    return encode("set_features_request_estop_timeout", **values)
+
+
+def decode_set_features_request_estop_timeout(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x1AE (request, estop_timeout), or None when the payload is too short."""
+    return decode("set_features_request_estop_timeout", data, strict)
+
+
 def encode_features_resp_request() -> tuple[int, bytes]:
     """The optional firmware features: stored mask, mask in force and supported mask: the frame the host sends (0x1AF)."""
     return encode("features_resp_request")
@@ -1623,6 +1637,16 @@ def decode_features_resp_request_extended(data: bytes, strict: bool = False) -> 
     return decode("features_resp_request_extended", data, strict)
 
 
+def encode_features_resp_request_estop_timeout(format: int) -> tuple[int, bytes]:
+    """The optional firmware features: stored mask, mask in force and supported mask (0x1AF, request, estop_timeout)."""
+    return encode("features_resp_request_estop_timeout", format=format)
+
+
+def decode_features_resp_request_estop_timeout(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x1AF (request, estop_timeout), or None when the payload is too short."""
+    return decode("features_resp_request_estop_timeout", data, strict)
+
+
 def encode_features_resp_response(stored: int, running: int, supported: int) -> tuple[int, bytes]:
     """The optional firmware features: stored mask, mask in force and supported mask (0x1AF, response)."""
     return encode("features_resp_response", stored=stored, running=running, supported=supported)
@@ -1641,6 +1665,16 @@ def encode_features_resp_response_extended(stored: int, running: int, supported:
 def decode_features_resp_response_extended(data: bytes, strict: bool = False) -> dict | None:
     """Fields of 0x1AF (response, extended), or None when the payload is too short."""
     return decode("features_resp_response_extended", data, strict)
+
+
+def encode_features_resp_response_estop_timeout(stored: int, running: int, supported: int, stored_ext: int, running_ext: int, supported_ext: int, estop_timeout_ms: int) -> tuple[int, bytes]:
+    """The optional firmware features: stored mask, mask in force and supported mask (0x1AF, response, estop_timeout)."""
+    return encode("features_resp_response_estop_timeout", stored=stored, running=running, supported=supported, stored_ext=stored_ext, running_ext=running_ext, supported_ext=supported_ext, estop_timeout_ms=estop_timeout_ms)
+
+
+def decode_features_resp_response_estop_timeout(data: bytes, strict: bool = False) -> dict | None:
+    """Fields of 0x1AF (response, estop_timeout), or None when the payload is too short."""
+    return decode("features_resp_response_estop_timeout", data, strict)
 
 
 def encode_electromagnet_cmd(coil: int) -> tuple[int, bytes]:

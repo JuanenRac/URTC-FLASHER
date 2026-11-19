@@ -204,3 +204,70 @@ class Node:
             self.latched = True
             return Effect(stop_reason=protocol.ERROR_REASON_ESTOP_SILENCE)
         return Effect()
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# The silence of the master on the bus: writing it with 0x1AE (DLC 8) and asking for it with 0x1AF (query byte 3 or 4). The decisions are the ones of
+# ``Feat_ParseWrite`` and ``Feat_QueryForm`` of the firmware, which replay the vectors written by ``tools/make_estop_vectors.py``. A frame of the old
+# forms (DLC 5 and 6, an empty query or the byte 2) behaves exactly as before.
+# ---------------------------------------------------------------------------------------------------------------------
+FEATURES_MAGIC = b"FEAT"
+FEATURE_MASK_SUPPORTED = 0xFF
+FEATURE_EXT_MASK_SUPPORTED = 0x03
+
+QUERY_BASIC = 0            # three-byte answer (an empty query or any byte not listed below)
+QUERY_EXTENDED = 1         # six-byte answer (the byte 2)
+QUERY_TIMEOUT_IN_FORCE = 2 # eight-byte answer with the silence in force now (the byte 3)
+QUERY_TIMEOUT_STORED = 3   # eight-byte answer with the silence stored in the record (the byte 4)
+
+KEEP_STORED_TIMEOUT = None  # the timeout of a write that is not in the eight-byte form: the stored value stays
+
+
+@dataclass(frozen=True)
+class FeaturesWrite:
+    """A valid write of 0x1AE: the masks, the silence to store (``None``: keep the stored one) and the length of the frame (5, 6 or 8)."""
+
+    mask: int
+    mask_ext: int
+    timeout_ms: int | None
+    dlc: int
+
+
+def write_timeout_valid(timeout_ms: int) -> bool:
+    """A silence a write may store: 0 (clear it, the default applies) or inside the hard limits. Anything else makes the whole write invalid."""
+    return timeout_ms == 0 or TIMEOUT_MIN_MS <= timeout_ms <= TIMEOUT_MAX_MS
+
+
+def parse_features_write(data: bytes) -> FeaturesWrite | None:
+    """The write when the 0x1AE payload is valid, ``None`` when the firmware ignores it (nothing is changed and nothing is answered)."""
+    if len(data) not in (5, 6, 8) or data[:4] != FEATURES_MAGIC:
+        return None
+    ext = data[5] if len(data) >= 6 else 0
+    if data[4] & ~FEATURE_MASK_SUPPORTED or ext & ~FEATURE_EXT_MASK_SUPPORTED:
+        return None
+    timeout: int | None = KEEP_STORED_TIMEOUT
+    if len(data) == 8:
+        timeout = (data[6] << 8) | data[7]   # big endian, like every 16-bit field of the protocol
+        if not write_timeout_valid(timeout):
+            return None
+    return FeaturesWrite(data[4], ext, timeout, len(data))
+
+
+def query_form(data: bytes) -> int:
+    """Which answer a 0x1AF query gets (``QUERY_*``): only the one-byte queries 2, 3 and 4 ask for more than the three-byte form."""
+    if len(data) == 1:
+        return {2: QUERY_EXTENDED, 3: QUERY_TIMEOUT_IN_FORCE, 4: QUERY_TIMEOUT_STORED}.get(data[0], QUERY_BASIC)
+    return QUERY_BASIC
+
+
+def encode_timeout_answer(stored: int, running: int, stored_ext: int, running_ext: int, timeout_ms: int) -> bytes:
+    """The eight data bytes of the 0x1AF answer with the silence of the master (big endian); the supported masks are those of this reference."""
+    return bytes([stored, running, FEATURE_MASK_SUPPORTED, stored_ext, running_ext, FEATURE_EXT_MASK_SUPPORTED, (timeout_ms >> 8) & 0xFF, timeout_ms & 0xFF])
+
+
+def decode_timeout_answer(data: bytes) -> dict | None:
+    """The fields of the eight-byte answer, ``None`` for any other length. ``timeout_ms`` is 0 while ESTOP_FOLLOW does not run (in force) or for the default (stored)."""
+    if len(data) != 8:
+        return None
+    return {"stored": data[0], "running": data[1], "supported": data[2], "stored_ext": data[3], "running_ext": data[4], "supported_ext": data[5],
+            "timeout_ms": (data[6] << 8) | data[7]}

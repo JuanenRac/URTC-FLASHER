@@ -2413,6 +2413,36 @@
       }
     },
     {
+      "name": "SET_FEATURES request estop_timeout: ESTOP_FOLLOW on with a silence of 50 ms",
+      "message": "SET_FEATURES",
+      "layout": "set_features_request_estop_timeout",
+      "fields": {
+        "magic": "46454154",
+        "features": 128,
+        "features_ext": 0,
+        "estop_timeout_ms": 50
+      },
+      "frame": {
+        "id": "0x1AE",
+        "data": "4645415480000032"
+      }
+    },
+    {
+      "name": "SET_FEATURES request estop_timeout: ESTOP_FOLLOW on, stored silence cleared (default)",
+      "message": "SET_FEATURES",
+      "layout": "set_features_request_estop_timeout",
+      "fields": {
+        "magic": "46454154",
+        "features": 128,
+        "features_ext": 0,
+        "estop_timeout_ms": 0
+      },
+      "frame": {
+        "id": "0x1AE",
+        "data": "4645415480000000"
+      }
+    },
+    {
       "name": "FEATURES_RESP request: empty query",
       "message": "FEATURES_RESP",
       "layout": "features_resp_request",
@@ -2432,6 +2462,30 @@
       "frame": {
         "id": "0x1AF",
         "data": "02"
+      }
+    },
+    {
+      "name": "FEATURES_RESP request estop_timeout: ask the value in force",
+      "message": "FEATURES_RESP",
+      "layout": "features_resp_request_estop_timeout",
+      "fields": {
+        "format": 3
+      },
+      "frame": {
+        "id": "0x1AF",
+        "data": "03"
+      }
+    },
+    {
+      "name": "FEATURES_RESP request estop_timeout: ask the stored value",
+      "message": "FEATURES_RESP",
+      "layout": "features_resp_request_estop_timeout",
+      "fields": {
+        "format": 4
+      },
+      "frame": {
+        "id": "0x1AF",
+        "data": "04"
       }
     },
     {
@@ -2463,6 +2517,24 @@
       "frame": {
         "id": "0x1AF",
         "data": "2000FF010001"
+      }
+    },
+    {
+      "name": "FEATURES_RESP response estop_timeout: ESTOP_FOLLOW running with a silence of 50 ms",
+      "message": "FEATURES_RESP",
+      "layout": "features_resp_response_estop_timeout",
+      "fields": {
+        "stored": 128,
+        "running": 128,
+        "supported": 255,
+        "stored_ext": 0,
+        "running_ext": 0,
+        "supported_ext": 3,
+        "estop_timeout_ms": 50
+      },
+      "frame": {
+        "id": "0x1AF",
+        "data": "8080FF0000030032"
       }
     },
     {
@@ -5166,6 +5238,46 @@
       "strict": true
     },
     {
+      "name": "SET_FEATURES request estop_timeout: ESTOP_FOLLOW on with a silence of 50 ms",
+      "message": "SET_FEATURES",
+      "layout": "set_features_request_estop_timeout",
+      "frame": {
+        "id": "0x1AE",
+        "data": "4645415480000032"
+      },
+      "fields": {
+        "magic": "46454154",
+        "features": 128,
+        "features_ext": 0,
+        "estop_timeout_ms": 50
+      }
+    },
+    {
+      "name": "SET_FEATURES request estop_timeout: ESTOP_FOLLOW on, stored silence cleared (default)",
+      "message": "SET_FEATURES",
+      "layout": "set_features_request_estop_timeout",
+      "frame": {
+        "id": "0x1AE",
+        "data": "4645415480000000"
+      },
+      "fields": {
+        "magic": "46454154",
+        "features": 128,
+        "features_ext": 0,
+        "estop_timeout_ms": 0
+      }
+    },
+    {
+      "name": "SET_FEATURES request: 7 bytes is too short",
+      "message": "SET_FEATURES",
+      "layout": "set_features_request_estop_timeout",
+      "frame": {
+        "id": "0x1AE",
+        "data": "46454154800000"
+      },
+      "fields": null
+    },
+    {
       "name": "FEATURES_RESP request: empty query",
       "message": "FEATURES_RESP",
       "layout": "features_resp_request",
@@ -5204,6 +5316,51 @@
       "frame": {
         "id": "0x1AF",
         "data": "0200"
+      },
+      "fields": null,
+      "strict": true
+    },
+    {
+      "name": "FEATURES_RESP request estop_timeout: ask the value in force",
+      "message": "FEATURES_RESP",
+      "layout": "features_resp_request_estop_timeout",
+      "frame": {
+        "id": "0x1AF",
+        "data": "03"
+      },
+      "fields": {
+        "format": 3
+      }
+    },
+    {
+      "name": "FEATURES_RESP request estop_timeout: ask the stored value",
+      "message": "FEATURES_RESP",
+      "layout": "features_resp_request_estop_timeout",
+      "frame": {
+        "id": "0x1AF",
+        "data": "04"
+      },
+      "fields": {
+        "format": 4
+      }
+    },
+    {
+      "name": "FEATURES_RESP request: 0 bytes is too short",
+      "message": "FEATURES_RESP",
+      "layout": "features_resp_request_estop_timeout",
+      "frame": {
+        "id": "0x1AF",
+        "data": ""
+      },
+      "fields": null
+    },
+    {
+      "name": "FEATURES_RESP request: one byte too many is refused when strict",
+      "message": "FEATURES_RESP",
+      "layout": "features_resp_request_estop_timeout",
+      "frame": {
+        "id": "0x1AF",
+        "data": "0300"
       },
       "fields": null,
       "strict": true
@@ -5280,6 +5437,34 @@
       },
       "fields": null,
       "strict": true
+    },
+    {
+      "name": "FEATURES_RESP response estop_timeout: ESTOP_FOLLOW running with a silence of 50 ms",
+      "message": "FEATURES_RESP",
+      "layout": "features_resp_response_estop_timeout",
+      "frame": {
+        "id": "0x1AF",
+        "data": "8080FF0000030032"
+      },
+      "fields": {
+        "stored": 128,
+        "running": 128,
+        "supported": 255,
+        "stored_ext": 0,
+        "running_ext": 0,
+        "supported_ext": 3,
+        "estop_timeout_ms": 50
+      }
+    },
+    {
+      "name": "FEATURES_RESP response: 7 bytes is too short",
+      "message": "FEATURES_RESP",
+      "layout": "features_resp_response_estop_timeout",
+      "frame": {
+        "id": "0x1AF",
+        "data": "8080FF00000300"
+      },
+      "fields": null
     },
     {
       "name": "ELECTROMAGNET_CMD request: energise",
@@ -7966,11 +8151,49 @@
       }
     },
     {
+      "name": "SET_FEATURES: a payload that is not the magic one",
+      "message": "SET_FEATURES",
+      "layout": "set_features_request_estop_timeout",
+      "fields": {
+        "magic": "00000000",
+        "features": 128,
+        "features_ext": 0,
+        "estop_timeout_ms": 50
+      }
+    },
+    {
+      "name": "SET_FEATURES: estop_timeout_ms above its maximum",
+      "message": "SET_FEATURES",
+      "layout": "set_features_request_estop_timeout",
+      "fields": {
+        "magic": "46454154",
+        "features": 128,
+        "features_ext": 0,
+        "estop_timeout_ms": 501
+      }
+    },
+    {
       "name": "FEATURES_RESP: a payload that is not the magic one",
       "message": "FEATURES_RESP",
       "layout": "features_resp_request_extended",
       "fields": {
         "format": "00"
+      }
+    },
+    {
+      "name": "FEATURES_RESP: format above its maximum",
+      "message": "FEATURES_RESP",
+      "layout": "features_resp_request_estop_timeout",
+      "fields": {
+        "format": 5
+      }
+    },
+    {
+      "name": "FEATURES_RESP: format below its minimum",
+      "message": "FEATURES_RESP",
+      "layout": "features_resp_request_estop_timeout",
+      "fields": {
+        "format": 2
       }
     },
     {

@@ -610,6 +610,18 @@ ApplicationWindow {
                         CheckBox { objectName: "optEstopFollowCheck"; text: flasherBackend.uiText("CHK_OPT_ESTOP_FOLLOW"); checked: flasherBackend.optEstopFollow; enabled: !flasherBackend.busy; onToggled: flasherBackend.setOptEstopFollow(checked); palette.windowText: textPrimary; Layout.fillWidth: true }
                         GameButton { objectName: "writeOptionalFunctionsButton"; accent: "#24465e"; text: flasherBackend.uiText("BTN_WRITE_OPT_FUNCTIONS"); enabled: flasherBackend.canWriteOptionalFunctions; onClicked: flasherBackend.writeOptionalFunctions() }
                     }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        CheckBox { objectName: "optTimeoutSetCheck"; text: flasherBackend.uiText("CHK_OPT_ESTOP_TIMEOUT"); checked: flasherBackend.optTimeoutSet; enabled: !flasherBackend.busy; onToggled: flasherBackend.setOptTimeoutSet(checked); palette.windowText: textPrimary; Layout.fillWidth: true }
+                        GameButton { objectName: "readOptionalFunctionsButton"; accent: "#24465e"; text: flasherBackend.uiText("BTN_READ_OPT_FUNCTIONS"); enabled: flasherBackend.canWriteOptionalFunctions; onClicked: flasherBackend.readOptionalFunctions() }
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        visible: flasherBackend.optTimeoutSet
+                        Text { text: flasherBackend.uiText("LBL_OPT_ESTOP_TIMEOUT"); color: muted; font.pixelSize: 9; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                        SpinBox { objectName: "optTimeoutSpin"; from: 0; to: flasherBackend.optTimeoutMax; editable: true; value: flasherBackend.optTimeoutMs; enabled: !flasherBackend.busy; onValueModified: flasherBackend.setOptTimeoutMs(value) }
+                    }
+                    CheckBox { objectName: "optTimeoutConfirmCheck"; visible: flasherBackend.optTimeoutSet; text: flasherBackend.uiText("CHK_OPT_ESTOP_TIMEOUT_CONFIRM"); checked: flasherBackend.optTimeoutConfirm; enabled: !flasherBackend.busy; onToggled: flasherBackend.setOptTimeoutConfirm(checked); palette.windowText: textPrimary; Layout.fillWidth: true }
                     Text { text: flasherBackend.uiText("HELP_OPT_FUNCTIONS"); color: muted; font.pixelSize: 9; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                 }
                 Text { text: flasherBackend.uiText("HELP_ALLOW_DOWNGRADE"); color: "#e0a030"; font.pixelSize: 9; wrapMode: Text.WordWrap; Layout.fillWidth: true }

@@ -443,3 +443,12 @@ QTLOG_FUNCTIONS_BLOCKED=Funções opcionais bloqueadas: ative o painel no fichei
 QTLOG_FUNCTIONS_DONE=Funções opcionais concluídas
 QTLOG_FUNCTIONS_FAILED=As funções opcionais falharam
 QTSTATUS_OPTIONAL_FUNCTIONS_IN_PROGRESS=FUNÇÕES OPCIONAIS EM CURSO
+LBL_OPT_ESTOP_TIMEOUT=Silêncio do mestre antes de a cabeça parar, em ms (0 = predefinição de 100 ms, caso contrário de 40 a 500):
+CHK_OPT_ESTOP_TIMEOUT=Escrever também o silêncio do mestre (atua após o próximo arranque)
+CHK_OPT_ESTOP_TIMEOUT_CONFIRM=Confirmo que este valor é escrito agora na cabeça
+BTN_READ_OPT_FUNCTIONS=Ler a cabeça
+LOG_OPT_TIMEOUT_READ=Silêncio do mestre: em vigor {running} ms (0 = inativo), guardado {stored} ms (0 = predefinição)
+LOG_OPT_TIMEOUT_INVALID=O silêncio tem de ser 0 ou estar entre {min} e {max} ms: não foi escrito nada
+LOG_OPT_TIMEOUT_NOT_CONFIRMED=O silêncio não foi escrito: assinale primeiro a confirmação
+LOG_OPT_TIMEOUT_MISMATCH=A cabeça não guardou o silêncio pedido (guardado {stored} ms): o seu firmware pode ser mais antigo ou ter recusado o valor
+LOG_OPT_TIMEOUT_UNSUPPORTED=A cabeça não responde à consulta do silêncio: o seu firmware pode ser mais antigo

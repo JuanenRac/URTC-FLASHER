@@ -442,3 +442,12 @@ QTLOG_FUNCTIONS_BLOCKED=可选功能已被阻止:请在配置文件中启用该�
 QTLOG_FUNCTIONS_DONE=可选功能已完成
 QTLOG_FUNCTIONS_FAILED=可选功能失败
 QTSTATUS_OPTIONAL_FUNCTIONS_IN_PROGRESS=可选功能处理中
+LBL_OPT_ESTOP_TIMEOUT=主控静默多久后工具头停止，单位毫秒（0 = 默认 100 毫秒，否则 40 至 500）：
+CHK_OPT_ESTOP_TIMEOUT=同时写入主控静默时间（下次上电后生效）
+CHK_OPT_ESTOP_TIMEOUT_CONFIRM=我确认现在将此值写入工具头
+BTN_READ_OPT_FUNCTIONS=读取工具头
+LOG_OPT_TIMEOUT_READ=主控静默时间：当前生效 {running} 毫秒（0 = 未运行），已保存 {stored} 毫秒（0 = 默认）
+LOG_OPT_TIMEOUT_INVALID=静默时间必须为 0 或介于 {min} 与 {max} 毫秒之间：未写入任何内容
+LOG_OPT_TIMEOUT_NOT_CONFIRMED=未写入静默时间：请先勾选确认
+LOG_OPT_TIMEOUT_MISMATCH=工具头未保留所请求的静默时间（已保存 {stored} 毫秒）：其固件可能较旧，或已拒绝该值
+LOG_OPT_TIMEOUT_UNSUPPORTED=工具头未响应静默时间查询：其固件可能较旧
