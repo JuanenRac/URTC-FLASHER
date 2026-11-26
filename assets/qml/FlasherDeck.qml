@@ -89,6 +89,11 @@ ApplicationWindow {
             font: control.font
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
+            // a label wider than its button is drawn smaller, never past its edge (fonts differ from one system to another)
+            fontSizeMode: Text.HorizontalFit
+            minimumPixelSize: 8
+            minimumPointSize: 6
+            elide: Text.ElideRight
         }
         background: Rectangle {
             radius: 10
@@ -588,17 +593,19 @@ ApplicationWindow {
                     RadioButton { text: flasherBackend.uiText("OPT_TARGET_SLAVE"); checked: flasherBackend.flashTarget === "slave"; enabled: !flasherBackend.busy; onClicked: flasherBackend.setFlashTarget("slave"); palette.windowText: textPrimary }
                 }
                 Text { text: flasherBackend.uiText("HELP_FLASH_TARGET_SLAVE"); color: muted; font.pixelSize: 9; wrapMode: Text.WordWrap; Layout.fillWidth: true }
-                RowLayout {
+                Flow {
                     Layout.fillWidth: true
+                    spacing: 5
                     CheckBox { text: flasherBackend.uiText("CHK_BOARD_RUNNING_APP"); checked: flasherBackend.triggerBootloader; enabled: !flasherBackend.busy; onToggled: flasherBackend.setTriggerBootloader(checked); palette.windowText: textPrimary }
                     CheckBox { text: flasherBackend.uiText("CHK_ERASE_FRAM_BEFORE_FLASHING"); checked: flasherBackend.eraseFram; enabled: !flasherBackend.busy && flasherBackend.downgradeOptionsAvailable; onToggled: flasherBackend.setEraseFram(checked); palette.windowText: textPrimary }
                 }
                 Text { text: flasherBackend.uiText("HELP_UNCHECK_IF_IN_BOOTLOADER"); color: muted; font.pixelSize: 9; wrapMode: Text.WordWrap; Layout.fillWidth: true }
-                RowLayout {
+                Flow {
                     Layout.fillWidth: true
+                    spacing: 5
                     CheckBox { text: flasherBackend.uiText("CHK_ALLOW_DOWNGRADE"); checked: flasherBackend.allowDowngrade; enabled: !flasherBackend.busy && flasherBackend.downgradeOptionsAvailable; onToggled: flasherBackend.setAllowDowngrade(checked); palette.windowText: textPrimary }
                     CheckBox { objectName: "signEvidenceCheck"; text: flasherBackend.uiText("CHK_SIGN_EVIDENCE"); checked: flasherBackend.signEvidence; onToggled: flasherBackend.setSignEvidence(checked); palette.windowText: textPrimary }
-                    GameButton { text: flasherBackend.uiText("BTN_BACKUP_FIRMWARE_CAN"); accent: "#24465e"; Layout.fillWidth: true; enabled: flasherBackend.canReadback; onClicked: readbackDialog.open() }
+                    GameButton { text: flasherBackend.uiText("BTN_BACKUP_FIRMWARE_CAN"); accent: "#24465e"; enabled: flasherBackend.canReadback; onClicked: readbackDialog.open() }
                 }
                 ColumnLayout {
                     objectName: "optionalFunctionsPanel"
