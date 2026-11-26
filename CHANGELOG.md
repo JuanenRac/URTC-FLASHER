@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The pictures of the window are taken again** for the README and for the window guide in the eight languages, on the current window.
+
 - **No control of the window ends beyond its right edge:** two rows that could not wrap (the options of an update and the downgrade, evidence and backup controls) made the whole column wider than the window, up to 300 pixels at the smallest size and, in several languages, at the starting size. They wrap now, and a headless test loads the window in the eight languages and fails when a control is cut off.
 
 - **The picture tool writes where it is told:** a relative `--out` of `tools/capture_screens.py` was read inside the temporary folder of the run, so the run passed and the folder of the caller stayed empty.
