@@ -26,6 +26,8 @@ import os
 import sys
 import time
 
+from flasher_integrity import read_text as _read_text
+
 KEEP_SESSION_LOGS = 30
 SESSION_LOG_PATTERN = "urtc_flasher_*.log"
 
@@ -207,8 +209,7 @@ def find_recovery_image(folder: str, hardware_id: int | None = None) -> str | No
         if "BOOTLOADER" in os.path.basename(path).upper():
             continue
         try:
-            with open(path + ".manifest.json", "r", encoding="utf-8") as stream:
-                manifest = json.load(stream)
+            manifest = json.loads(_read_text(path + ".manifest.json"))
         except (OSError, ValueError):
             continue
         if not isinstance(manifest, dict) or manifest.get("component") != "main_application":

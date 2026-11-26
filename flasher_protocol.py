@@ -28,6 +28,7 @@ import struct
 import time
 import zlib
 
+from flasher_integrity import read_text as _read_text
 from flasher_config import (
     _, APP_MAX_SIZE, CAN_ID_BOOTLOADER_VERSION_RESPONSE, CAN_ID_DATA,
     CAN_ID_END_UPDATE, CAN_ID_ENTER_BOOTLOADER, CAN_ID_ERASE_FRAM,
@@ -311,8 +312,7 @@ class URTCFlasher:
         """The (major, minor) the image would install, from its manifest, the
         given version or its file name - or None. Never raises."""
         try:
-            with open(firmware_path + ".manifest.json", "r", encoding="utf-8") as f:
-                manifest = json.load(f)
+            manifest = json.loads(_read_text(firmware_path + ".manifest.json"))
             parts = str(manifest.get("version", "")).split(".") if isinstance(manifest, dict) else []
             if len(parts) >= 2 and parts[0].isdigit() and parts[1].isdigit():
                 return (int(parts[0]), int(parts[1]))
@@ -330,8 +330,7 @@ class URTCFlasher:
         (URTC_MAIN_FIRMWARE_v0.3.5.bin) - or None when it has none. Never raises."""
         candidates = []
         try:
-            with open(firmware_path + ".manifest.json", "r", encoding="utf-8") as f:
-                manifest = json.load(f)
+            manifest = json.loads(_read_text(firmware_path + ".manifest.json"))
             if isinstance(manifest, dict):
                 candidates.append(str(manifest.get("version", "")))
         except (OSError, ValueError):
@@ -487,8 +486,7 @@ class URTCFlasher:
             return "off"
         declared = None
         try:
-            with open(firmware_path + ".manifest.json", "r", encoding="utf-8") as stream:
-                manifest = json.load(stream)
+            manifest = json.loads(_read_text(firmware_path + ".manifest.json"))
             if isinstance(manifest, dict):
                 declared = str(manifest.get("signing_key_id", "") or "").strip().lower().replace("0x", "") or None
         except (OSError, ValueError):
@@ -585,9 +583,8 @@ class URTCFlasher:
         if not os.path.isfile(manifest_path):
             return info
         try:
-            with open(manifest_path, "r", encoding="utf-8") as f:
-                manifest = json.load(f)
-        except (OSError, json.JSONDecodeError) as e:
+            manifest = json.loads(_read_text(manifest_path))
+        except (OSError, ValueError) as e:   # ValueError: not JSON, or text in another encoding
             self.log(_("LOG_MANIFEST_UNREADABLE", e=e))
             return info
         if not isinstance(manifest, dict):
@@ -1283,8 +1280,7 @@ class URTCFlasher:
         slave_major, slave_minor = 0, 0
         if os.path.isfile(manifest_path):
             try:
-                with open(manifest_path, "r", encoding="utf-8") as f:
-                    manifest = json.load(f)
+                manifest = json.loads(_read_text(manifest_path))
                 version_str = str(manifest.get("version", "0.0"))
                 parts = version_str.split(".")
                 slave_major = int(parts[0]) if len(parts) > 0 and parts[0].isdigit() else 0

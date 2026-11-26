@@ -22,6 +22,7 @@
 # digests that matter for flashing travel in the manifests and are checked
 # again before anything is sent to a board.
 # =============================================================================
+import http.client
 import json
 import os
 import re
@@ -126,10 +127,12 @@ def fetch_release(tag=None, log=None, only_firmware=True):
         raise GitHubDownloadError(_("ERR_GITHUB_NETWORK", reason=e.reason)) from e
     except TimeoutError:
         raise GitHubDownloadError(_("ERR_GITHUB_TIMEOUT")) from None
+    except (http.client.HTTPException, OSError) as e:   # the answer was cut in the middle
+        raise GitHubDownloadError(_("ERR_GITHUB_NETWORK", reason=e)) from e
 
     try:
         release = json.loads(raw)
-    except json.JSONDecodeError:
+    except (ValueError, RecursionError):
         raise GitHubDownloadError(_("ERR_GITHUB_BAD_RESPONSE")) from None
 
     if not isinstance(release, dict) or not isinstance(release.get("assets"), list):
@@ -142,7 +145,7 @@ def fetch_release(tag=None, log=None, only_firmware=True):
             continue
         name = asset.get("name")
         download_url = asset.get("browser_download_url")
-        if not name or not download_url:
+        if not isinstance(name, str) or not isinstance(download_url, str) or not name or not download_url:
             continue
         # An asset still being uploaded is not a complete file.
         if asset.get("state", "uploaded") != "uploaded":
@@ -227,6 +230,8 @@ def download_file(download_url, dest_path, log=None, progress_cb=None, expected_
         raise GitHubDownloadError(_("ERR_GITHUB_NETWORK", reason=e.reason)) from e
     except TimeoutError:
         raise GitHubDownloadError(_("ERR_GITHUB_TIMEOUT")) from None
+    except (http.client.HTTPException, ConnectionError) as e:   # the transfer was cut: not a problem of the disk
+        raise GitHubDownloadError(_("ERR_GITHUB_NETWORK", reason=e)) from e
     except OSError as e:
         raise GitHubDownloadError(_("ERR_GITHUB_WRITE_FAILED", reason=e)) from e
     finally:

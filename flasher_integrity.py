@@ -35,6 +35,14 @@ class IntegrityResult:
     crc32: str = ""
 
 
+def read_text(path: str) -> str:
+    """The text of a file that travels with an image. UTF-8, with or without a byte-order mark, or UTF-16 with its mark (what
+    some Windows editors and shells write): a digest saved that way must be compared, not silently taken as missing."""
+    with open(path, "rb") as stream:
+        raw = stream.read()
+    return raw.decode("utf-16" if raw[:2] in (b"\xff\xfe", b"\xfe\xff") else "utf-8-sig")
+
+
 def _digests(path: str) -> tuple[str, int]:
     sha, crc = hashlib.sha256(), 0
     with open(path, "rb") as stream:
@@ -94,8 +102,7 @@ def read_sidecar_sha256(path: str) -> str | None:
     Returns None when there is no such file or it holds no valid digest.
     """
     try:
-        with open(path + ".sha256", "r", encoding="utf-8") as stream:
-            first = stream.read().split()
+        first = read_text(path + ".sha256").split()
     except (OSError, UnicodeDecodeError):
         return None
     if first and _SHA256_RE.match(first[0]):
@@ -124,8 +131,7 @@ def read_manifest_sha256(path: str) -> str | None:
     """The SHA-256 declared in `<image>.manifest.json` (written by the URTC
     build next to every image), or None when absent/unreadable."""
     try:
-        with open(path + ".manifest.json", "r", encoding="utf-8") as stream:
-            manifest = json.load(stream)
+        manifest = json.loads(read_text(path + ".manifest.json"))
     except (OSError, UnicodeDecodeError, ValueError):
         return None
     value = str(manifest.get("sha256", "") or "").strip().lower() if isinstance(manifest, dict) else ""
@@ -136,8 +142,7 @@ def manifest_signing_kind(path: str) -> str | None:
     """`signing_key_kind` declared in `<image>.manifest.json` ("dev", "production", ...),
     lower-cased, or None when there is no readable manifest or no such field."""
     try:
-        with open(path + ".manifest.json", "r", encoding="utf-8") as stream:
-            manifest = json.load(stream)
+        manifest = json.loads(read_text(path + ".manifest.json"))
     except (OSError, UnicodeDecodeError, ValueError):
         return None
     if not isinstance(manifest, dict):
