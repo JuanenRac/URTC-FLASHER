@@ -89,6 +89,11 @@ ApplicationWindow {
             font: control.font
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
+            // a label wider than its button is drawn smaller, never past its edge (fonts differ from one system to another)
+            fontSizeMode: Text.HorizontalFit
+            minimumPixelSize: 8
+            minimumPointSize: 6
+            elide: Text.ElideRight
         }
         background: Rectangle {
             radius: 10
