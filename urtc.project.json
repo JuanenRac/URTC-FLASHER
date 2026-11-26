@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "ecosystem": "URTC",
   "name": "URTC-FLASHER",
-  "version": "0.5.8",
+  "version": "0.5.9",
   "min_common": "0.3.0",
   "role": "tool",
   "stack": "python-qtquick",
