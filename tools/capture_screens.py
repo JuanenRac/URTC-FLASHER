@@ -117,6 +117,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--language", choices=sorted(LANGUAGE_SUFFIX), default="english", help="the interface language of the pictures")
     parser.add_argument("--all-languages", action="store_true", help="one run per language (each in its own process)")
     args = parser.parse_args(argv)
+    args.out = os.path.abspath(args.out)  # before the program moves to its temporary folder: a relative folder is where the caller is
     if args.all_languages:
         import subprocess
 

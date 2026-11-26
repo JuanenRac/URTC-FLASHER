@@ -4,6 +4,10 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **No control of the window ends beyond its right edge:** two rows that could not wrap (the options of an update and the downgrade, evidence and backup controls) made the whole column wider than the window, up to 300 pixels at the smallest size and, in several languages, at the starting size. They wrap now, and a headless test loads the window in the eight languages and fails when a control is cut off.
+
+- **The picture tool writes where it is told:** a relative `--out` of `tools/capture_screens.py` was read inside the temporary folder of the run, so the run passed and the folder of the caller stayed empty.
+
 - **The optional functions panel reads and writes the silence of the master of the emergency stop:** a second check box (never ticked at start) with a field for the milliseconds (0 for the default of 100 ms, otherwise 40 to 500) and a confirmation that is spent by every attempt and dropped when the value changes; the write uses the eight-byte form of `0x1AE`, carries over the stored switches of both bytes, asks the head for its stored state first and is refused, before anything is sent, for a value outside the limits or without the confirmation. A button reads the silence in force and the stored one and writes nothing. A head with an older firmware is told so and left alone, a head that does not keep the value is reported, and a flash never writes it. The texts are in the eight languages and the copy of the shared library follows the current one. Nothing of it has run against a real board.
 
 - **The copy of the stop following knows the configurable silence of the master:** `estop_follow.Node(alive_timeout_ms)`, `resolve_timeout` and `effective_timeout` and the limits 40 and 500 ms come with the refreshed copy of the shared library; the default stays 100 ms, a value outside the limits is rejected and the master can only lower the timeout. The virtual board takes `estop_alive_timeout_ms`.
