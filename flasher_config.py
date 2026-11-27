@@ -259,7 +259,7 @@ def load_config():
     if not os.path.isfile(CONFIG_FILE_PATH):
         return {}
     try:
-        with open(CONFIG_FILE_PATH, encoding="utf-8") as f:
+        with open(CONFIG_FILE_PATH, encoding="utf-8-sig") as f:
             data = json.load(f)
         return data if isinstance(data, dict) else {}
     except (OSError, json.JSONDecodeError, UnicodeDecodeError):
@@ -436,9 +436,11 @@ def _load_config_overrides(log=None):
         return defaults
 
     try:
-        with open(CONFIG_FILE_PATH, "r", encoding="utf-8") as f:
+        with open(CONFIG_FILE_PATH, "r", encoding="utf-8-sig") as f:
             cfg = json.load(f)
-    except (OSError, json.JSONDecodeError) as e:
+        if not isinstance(cfg, dict):
+            raise ValueError("not a JSON object")
+    except (OSError, ValueError) as e:
         # Nothing to salvage here - the file couldn't even be read as JSON
         # at all, so there's no per-field data to fall back on individually.
         log(f"WARNING: couldn't load {CONFIG_FILE_PATH} ({e}) - using compiled-in defaults instead.")
