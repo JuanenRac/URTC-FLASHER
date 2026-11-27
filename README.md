@@ -31,7 +31,7 @@
 
 ---
 
-> **Safety and security status:** this ecosystem is not a certified safety system, and no populated URTC board exists yet. The main-board bootloader verifies an Ed25519 record of the image (`<image>.imgsig`) against a table of public keys and holds no secret, and the expansion-slave bootloader checks a plain SHA-256 and installs only an image that the main board confirms; the table of the official build is empty until the image-signing key is created, and a bench build trusts a public development key, so anyone can produce an image such a bootloader accepts; nothing has been transmitted to a real board. Read the [security baseline](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md) and the [threat model](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md) before relying on any statement here for the safety of a person.
+> **Safety and security status:** this ecosystem is not a certified safety system, and no populated URTC board exists yet. The main-board bootloader verifies an Ed25519 record of the image (`<image>.imgsig`) against a table of public keys and holds no secret, and the expansion-slave bootloader checks a plain SHA-256 and installs only an image that the main board confirms; the table of the official build holds the public release image-signing keys, and a bench build trusts a public development key, so anyone can produce an image such a bootloader accepts; nothing has been transmitted to a real board. Read the [security baseline](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/SECURITY_BASELINE.md) and the [threat model](https://github.com/JuanenRac/URTC-DOCS/blob/main/docs/THREAT_MODEL.md) before relying on any statement here for the safety of a person.
 
 ## 📋 At a glance
 
@@ -587,7 +587,7 @@ A plan or an update can be run against a simulated bus that misbehaves the way a
 | A failed update that leaves the board dead | The golden-image model: the backup slot keeps the previous firmware, a lost confirmation frame is recovered by asking the version again instead of reporting a false failure, and the main slot can be read back first |
 | A tampered update of this program | "Check for updates" accepts only a package with a valid SHA-256 and Ed25519 signature (the key of the releases, pinned in the program), installs only after a confirmation and never during a transfer, and keeps the previous version |
 
-The main-board bootloader verifies an Ed25519 record of the image against a table of public keys and holds no secret; the table of the official build is empty until the image-signing key is created, and a bench build trusts a public development key, so anyone can make an image that such a bootloader accepts. Nothing here has been run on a real board.
+The main-board bootloader verifies an Ed25519 record of the image against a table of public keys and holds no secret; the table of the official build holds the public release image-signing keys, and a bench build trusts a public development key, so anyone can make an image that such a bootloader accepts. Nothing here has been run on a real board.
 
 ### Reliability during a CAN update, and session logs
 
