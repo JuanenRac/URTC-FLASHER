@@ -279,7 +279,7 @@ ERR_BOOTLOADER_GENERIC_ERROR=引导程序报告了通用错误状态
 ERR_TIMEOUT_WAITING_CAN_ID=等待 CAN ID 0x{can_id} 超时
 ERR_MANIFEST_MISMATCH=清单不匹配——{name} 声明 sha256={expected}，而此文件的实际 sha256 为 {actual}。可能是文件错误、下载损坏或清单过期，已拒绝刷写。
 ERR_HMAC_NOT_32_BYTES={name}：hmac_sha256 不是 32 字节的十六进制
-ERR_PUBLISHED_FILE_UNREADABLE={name} 位于镜像旁边但无法读取，因此无法校验镜像：未发送任何数据。请重新下载镜像及其文件，或仅在您清楚镜像来源时删除 {name}。
+ERR_PUBLISHED_FILE_UNREADABLE={name} 位于镜像旁边但无法读取，因此无法校验镜像：未发送任何数据。请重新下载镜像及其文件，或仅在你清楚镜像来源时删除 {name}。
 LOG_USING_PUBLISHED_SIGNATURE=使用清单中发布的签名（密钥：{kind}）。
 LOG_DEV_KEY_NOTE=注意：使用公开的开发密钥签名，只有引导程序使用同一密钥构建的板卡才会接受。
 LOG_SIGNING_LOCALLY=没有已发布的签名，使用 urtc_config.json 中的 {board} 密钥在本地签名。
