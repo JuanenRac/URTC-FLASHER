@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The compatibility table is current:** `docs/COMPATIBILITY.md` is the current copy of URTC-COMMON; the old one named versions of long ago.
+
 - **A download that fails half way leaves no image behind:** when the image arrived and its `.sha256` or `.manifest.json` did not, the image stayed in `firmware/` and was treated as one with no published digest. The image and its files are now downloaded apart and moved into place only when all of them arrived, the image last; an earlier copy of the same name is kept.
 
 ## [0.6.0] - Safer backup before SWD programming, unreadable published files refused and cut downloads reported
