@@ -483,17 +483,19 @@ def install_package(archive: str | Path, root: str | Path, offer: Offer, busy_re
         _history(base, event="install", result="refused", app=offer.app, to=offer.version, previous=previous)
         raise
     _write_current(base, offer.version)
-    _prune(base, keep=KEEP_RELEASES)
+    _prune(base, keep=KEEP_RELEASES, previous=previous)
     _history(base, event="install", result="ok", app=offer.app, to=offer.version, previous=previous, sha256=sha256_hex)
     return final
 
 
-def _prune(base: Path, keep: int) -> None:
-    current = current_version(base)
+def _prune(base: Path, keep: int, previous: str | None = None) -> None:
+    """Removes the releases past ``keep``. The one in use stays, then the one that was in use before this install (a newer one may be
+    a release that was rolled back because it failed), then the newest."""
     versions = installed_versions(base)
-    survivors = set(versions[-keep:])
-    if current:
-        survivors.add(current)
+    survivors: list[str] = []
+    for version in (current_version(base), previous, *reversed(versions)):
+        if version in versions and version not in survivors and len(survivors) < keep:
+            survivors.append(version)
     for version in versions:
         if version not in survivors:
             shutil.rmtree(base / "releases" / version, ignore_errors=True)

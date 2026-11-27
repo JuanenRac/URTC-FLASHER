@@ -172,7 +172,7 @@
     },
     "self_update.py": {
       "from": "src/urtc_common/self_update.py",
-      "sha256": "e931ed603553a0aa7bedc04e7669f89c2dd37fafc89425787d5cf033692e5170"
+      "sha256": "efcc6b9181d77740b6e025e346275dde261b1507e7089a2f708a167216a0ca84"
     },
     "slcan.py": {
       "from": "src/urtc_common/slcan.py",
