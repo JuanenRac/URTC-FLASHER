@@ -417,11 +417,13 @@ def read_history(root: str | Path) -> list[dict]:
     if not path.is_file():
         return []
     out = []
-    for line in path.read_text(encoding="utf-8").splitlines():
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():   # a damaged byte loses its line, not the history
         try:
-            out.append(json.loads(line))
+            entry = json.loads(line)
         except ValueError:
             continue
+        if isinstance(entry, dict):
+            out.append(entry)
     return out
 
 
@@ -429,7 +431,7 @@ def current_version(root: str | Path) -> str | None:
     path = Path(root) / "current.txt"
     try:
         text = path.read_text(encoding="utf-8").strip()
-    except OSError:
+    except (OSError, UnicodeDecodeError):
         return None
     return text if _VERSION.match(text) else None
 

@@ -27,6 +27,7 @@ Standard library only.
 from __future__ import annotations
 
 import hashlib
+import http.client
 import json
 import os
 import platform as _platform
@@ -185,8 +186,11 @@ class UpdateService:
 
     def check(self) -> su.Offer | None:
         """One request. Returns the offer, or None when this version is the latest (or the newest has no package for this system)."""
-        with self.fetch(self.release_url()) as stream:
-            raw = stream.read(2 * 1024 * 1024 + 1)
+        try:
+            with self.fetch(self.release_url()) as stream:
+                raw = stream.read(2 * 1024 * 1024 + 1)
+        except http.client.HTTPException as error:      # cut in the middle, or not an HTTP answer: a network error like the others
+            raise OSError(f"the answer was cut short: {error!r}") from error
         if len(raw) > 2 * 1024 * 1024:
             raise su.UpdateError("too_big", "release listing")
         try:
@@ -200,7 +204,10 @@ class UpdateService:
     def prepare(self, offer: su.Offer, progress: Callable[[int, int], None] | None = None) -> Prepared:
         """Downloads and verifies; installs nothing. The package never reaches ``install`` unless it passed the checksum and the signature."""
         folder = self.root / "downloads"
-        path, sha, signature = su.download_package(offer, self.fetch, folder, progress)
+        try:
+            path, sha, signature = su.download_package(offer, self.fetch, folder, progress)
+        except http.client.HTTPException as error:
+            raise OSError(f"the download was cut short: {error!r}") from error
         try:
             su.verify_package(offer, path, sha, signature, self.public_key_hex, self.key_id)
         except BaseException:
