@@ -112,6 +112,7 @@ LOG_PROBE_DETECTED_USB=Probe detected via USB - proceeding. (This doesn't yet co
 LOG_BACKING_UP_FLASH=Backing up entire flash (256KB) to {path} before erasing...
 LOG_BACKUP_WRITTEN=Backup written: {path} ({size} bytes)
 LOG_BACKUP_NO_FILE=Backup did not produce a file - see the log above for what the read command actually reported.
+LOG_BACKUP_INCOMPLETE=Backup is incomplete ({size} of {expected} bytes): it is not kept and nothing is erased.
 LOG_PYOCD_FULLCHIP_HEADER=== pyOCD full-chip program (target={target}) ===
 LOG_BOOTLOADER_NOT_BIN_SKIP=Bootloader is not a .bin - skipping read-back compare (pyOCD's own flash-time verification still applies).
 LOG_APPLICATION_NOT_BIN_SKIP=Application is not a .bin - skipping read-back compare (pyOCD's own flash-time verification still applies).
@@ -279,6 +280,7 @@ ERR_BOOTLOADER_GENERIC_ERROR=Bootloader reported a generic error status
 ERR_TIMEOUT_WAITING_CAN_ID=Timed out waiting for CAN ID 0x{can_id}
 ERR_MANIFEST_MISMATCH=MANIFEST MISMATCH - {name} declares sha256={expected}, this file's actual sha256={actual}. Wrong file, a corrupted download, or a stale manifest - refusing to flash.
 ERR_HMAC_NOT_32_BYTES={name}: hmac_sha256 is not 32 bytes of hex
+ERR_PUBLISHED_FILE_UNREADABLE={name} is next to the image but cannot be read, so the image cannot be checked: nothing was sent. Download the image and its files again, or remove {name} only if you know where the image comes from.
 LOG_USING_PUBLISHED_SIGNATURE=Using the signature published in the manifest (key: {kind}).
 LOG_DEV_KEY_NOTE=NOTE: signed with the PUBLIC development key - only boards whose bootloader was built with that same key accept it.
 LOG_SIGNING_LOCALLY=No published signature - signing locally with the {board} key from urtc_config.json.

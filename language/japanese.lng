@@ -112,6 +112,7 @@ LOG_PROBE_DETECTED_USB=USB 経由でプローブを検出しました——続�
 LOG_BACKING_UP_FLASH=消去前にフラッシュ全体（256KB）を {path} にバックアップ中…
 LOG_BACKUP_WRITTEN=バックアップを書き込みました：{path}（{size} バイト）
 LOG_BACKUP_NO_FILE=バックアップはファイルを生成しませんでした——読み取りコマンドが実際に何を報告したかは上記のログを参照してください。
+LOG_BACKUP_INCOMPLETE=バックアップが不完全です（{expected} バイト中 {size} バイト）。保存せず、何も消去しません。
 LOG_PYOCD_FULLCHIP_HEADER=== pyOCD チップ全体プログラム（target={target}）===
 LOG_BOOTLOADER_NOT_BIN_SKIP=ブートローダーが .bin ではありません——読み戻し比較をスキップします（pyOCD 自身の書き込み時検証は引き続き適用されます）。
 LOG_APPLICATION_NOT_BIN_SKIP=アプリケーションが .bin ではありません——読み戻し比較をスキップします（pyOCD 自身の書き込み時検証は引き続き適用されます）。
@@ -279,6 +280,7 @@ ERR_BOOTLOADER_GENERIC_ERROR=ブートローダーが一般的なエラー状態
 ERR_TIMEOUT_WAITING_CAN_ID=CAN ID 0x{can_id} の待機中にタイムアウトしました
 ERR_MANIFEST_MISMATCH=マニフェストが一致しません——{name} は sha256={expected} を宣言していますが、このファイルの実際の sha256 は {actual} です。ファイルの間違い、ダウンロードの破損、または古いマニフェストです。書き込みを拒否します。
 ERR_HMAC_NOT_32_BYTES={name}: hmac_sha256 は 16 進数 32 バイトではありません
+ERR_PUBLISHED_FILE_UNREADABLE={name} はイメージの隣にありますが読み取れないため、イメージを検証できません。何も送信していません。イメージとそのファイルをもう一度ダウンロードするか、イメージの入手元が分かっている場合に限り {name} を削除してください。
 LOG_USING_PUBLISHED_SIGNATURE=マニフェストに公開されている署名を使用します（鍵：{kind}）。
 LOG_DEV_KEY_NOTE=注意：公開の開発用鍵で署名されています。同じ鍵でビルドされたブートローダーを持つボードだけが受け入れます。
 LOG_SIGNING_LOCALLY=公開された署名がないため、urtc_config.json の {board} 鍵でローカルに署名します。

@@ -228,7 +228,7 @@ def test_pyocd_backup_is_taken_before_the_erase(pyocd, monkeypatch, tmp_path):
 
     def write_backup(cmd, **kwargs):
         if "savemem" in " ".join(cmd):
-            backup.write_bytes(b"\x01" * 32)
+            (tmp_path / "backup.part.bin").write_bytes(b"\x01" * 0x40000)
         return original(cmd, **kwargs)
     monkeypatch.setattr(swd.subprocess, "Popen", write_backup)
     boot, app = _images(tmp_path)
@@ -243,6 +243,36 @@ def test_pyocd_stops_before_the_erase_when_the_backup_is_empty(pyocd, monkeypatc
     with pytest.raises(SWDFlashError, match="Backup"):
         pyocd.full_chip_flash(boot, app, backup_path=str(tmp_path / "missing.bin"))
     assert "erase" not in runner.verbs()
+
+
+@pytest.mark.parametrize("written", [None, 0, 4096, 0x40000 - 1], ids=["nothing", "empty", "cut", "one byte short"])
+def test_a_backup_that_is_not_whole_stops_before_the_erase_and_keeps_the_earlier_one(pyocd, monkeypatch, tmp_path, written):
+    folder = tmp_path / "mis copias \u56fa\u4ef6"
+    folder.mkdir()
+    backup = folder / "backup.bin"
+    backup.write_bytes(b"earlier backup")
+    runner = _Runner(monkeypatch, {"list --probes": (PROBE_TABLE, 0)})
+    original = runner._popen
+
+    def read_back(cmd, **kwargs):
+        if "savemem" in " ".join(cmd) and written is not None:
+            (folder / "backup.part.bin").write_bytes(b"\x01" * written)
+        return original(cmd, **kwargs)
+    monkeypatch.setattr(swd.subprocess, "Popen", read_back)
+    boot, app = _images(tmp_path)
+    with pytest.raises(SWDFlashError, match="Backup"):
+        pyocd.full_chip_flash(boot, app, backup_path=str(backup))
+    assert "erase" not in runner.verbs()
+    assert backup.read_bytes() == b"earlier backup"
+    assert [item.name for item in folder.iterdir()] == ["backup.bin"]
+
+
+def test_a_backup_over_one_of_the_images_is_refused(pyocd, monkeypatch, tmp_path):
+    runner = _Runner(monkeypatch, {"list --probes": (PROBE_TABLE, 0)})
+    boot, app = _images(tmp_path)
+    with pytest.raises(SWDFlashError, match="one of the images"):
+        pyocd.full_chip_flash(boot, app, backup_path=app)
+    assert runner.commands == []
 
 
 def test_pyocd_dry_run_touches_nothing(pyocd, monkeypatch, tmp_path):

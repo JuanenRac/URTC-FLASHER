@@ -17,11 +17,13 @@ from __future__ import annotations
 
 import json
 import hashlib
+import os
 import re
 import zlib
 from dataclasses import dataclass, field
 
 import flasher_release_signature as release_signature
+from flasher_config import _
 
 _SHA256_RE = re.compile(r"^[0-9a-fA-F]{64}$")
 _CRC32_RE = re.compile(r"^(?:0x)?[0-9a-fA-F]{1,8}$")
@@ -110,12 +112,33 @@ def read_sidecar_sha256(path: str) -> str | None:
     return None
 
 
+def unreadable_published_files(path: str) -> list[str]:
+    """The names of the files published next to an image that are there but cannot be read: `<image>.sha256` without a
+    digest it can give (not a file, no permission, not text, empty, not 64 hexadecimal digits) and `<image>.manifest.json`
+    that is not a JSON object or whose `sha256` is not a digest. A file that is there and cannot be read is not the same as
+    no file: what it said about the image is unknown, so the image is not flashed. A manifest with no `sha256` field is
+    readable and simply publishes no digest."""
+    unreadable: list[str] = []
+    if os.path.lexists(path + ".sha256") and read_sidecar_sha256(path) is None:
+        unreadable.append(os.path.basename(path) + ".sha256")
+    if os.path.lexists(path + ".manifest.json"):
+        try:
+            manifest = json.loads(read_text(path + ".manifest.json"))
+            readable = isinstance(manifest, dict) and ("sha256" not in manifest or read_manifest_sha256(path) is not None)
+        except (OSError, UnicodeDecodeError, ValueError, RecursionError):
+            readable = False
+        if not readable:
+            unreadable.append(os.path.basename(path) + ".manifest.json")
+    return unreadable
+
+
 @dataclass(frozen=True)
 class Preflight:
     """What to do before flashing an image.
 
     `blocked` is true when a published digest (`<image>.sha256` or the
-    manifest's sha256) does not match, or the image cannot be read. An image
+    manifest's sha256) does not match, when one of those two files is there
+    but cannot be read, or the image cannot be read. An image
     with no published digest at all (a self-built file) is allowed here, but
     flasher_protocol.py still refuses it unless a signing key is configured.
     """
@@ -159,6 +182,9 @@ def preflight_image(path: str) -> Preflight:
     (flasher_release_signature.REQUIRE_RELEASE_SIGNATURE)."""
     status = release_signature.check_file(path)
     refused = release_signature.refusal(status)
+    unreadable = unreadable_published_files(path)
+    if unreadable:
+        return Preflight(True, False, "", tuple(_("ERR_PUBLISHED_FILE_UNREADABLE", name=name) for name in unreadable), status.state)
     sidecar = read_sidecar_sha256(path)
     declared = read_manifest_sha256(path)
     if sidecar and declared and sidecar != declared:

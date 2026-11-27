@@ -113,6 +113,7 @@ LOG_PROBE_DETECTED_USB=Sonde détectée via USB - on continue. (Ceci ne confirme
 LOG_BACKING_UP_FLASH=Sauvegarde de toute la flash (256Ko) dans {path} avant l'effacement...
 LOG_BACKUP_WRITTEN=Sauvegarde écrite : {path} ({size} octets)
 LOG_BACKUP_NO_FILE=La sauvegarde n'a pas produit de fichier - voir le journal ci-dessus pour ce que la commande de lecture a réellement rapporté.
+LOG_BACKUP_INCOMPLETE=La sauvegarde est incomplète ({size} octets sur {expected}) : elle n'est pas conservée et rien n'est effacé.
 LOG_PYOCD_FULLCHIP_HEADER=== Programmation de la puce complète avec pyOCD (cible={target}) ===
 LOG_BOOTLOADER_NOT_BIN_SKIP=Le bootloader n'est pas un .bin - comparaison de relecture ignorée (la propre vérification de pyOCD lors de la programmation s'applique quand même).
 LOG_APPLICATION_NOT_BIN_SKIP=L'application n'est pas un .bin - comparaison de relecture ignorée (la propre vérification de pyOCD lors de la programmation s'applique quand même).
@@ -280,6 +281,7 @@ ERR_BOOTLOADER_GENERIC_ERROR=Le bootloader a signalé un état d'erreur généri
 ERR_TIMEOUT_WAITING_CAN_ID=Délai dépassé en attendant l'ID CAN 0x{can_id}
 ERR_MANIFEST_MISMATCH=LE MANIFESTE NE CORRESPOND PAS - {name} déclare sha256={expected}, le sha256 réel de ce fichier est {actual}. Mauvais fichier, téléchargement corrompu ou manifeste périmé - le flashage est refusé.
 ERR_HMAC_NOT_32_BYTES={name} : hmac_sha256 n'est pas de 32 octets en hexadécimal
+ERR_PUBLISHED_FILE_UNREADABLE={name} se trouve à côté de l'image mais ne peut pas être lu, l'image ne peut donc pas être vérifiée : rien n'a été envoyé. Téléchargez à nouveau l'image et ses fichiers, ou retirez {name} uniquement si vous connaissez la provenance de l'image.
 LOG_USING_PUBLISHED_SIGNATURE=Utilisation de la signature publiée dans le manifeste (clé : {kind}).
 LOG_DEV_KEY_NOTE=NOTE : signé avec la clé de développement PUBLIQUE - seules les cartes dont le bootloader a été compilé avec cette même clé l'acceptent.
 LOG_SIGNING_LOCALLY=Aucune signature publiée - signature locale avec la clé {board} de urtc_config.json.

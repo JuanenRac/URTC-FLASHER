@@ -81,6 +81,36 @@ def _address_args_bin_needs_it(path, address, flag_before=None):
     return []
 
 
+def _backup_part_path(output_path):
+    """The file a backup is read into: next to the chosen one, with the same extension (the programmer picks the format from it)."""
+    root, extension = os.path.splitext(output_path)
+    return root + ".part" + extension
+
+
+def _keep_whole_backup(part_path, output_path, expected_size, log):
+    """True when `part_path` holds a usable backup, which then takes the place of `output_path`. A raw image must hold every byte of
+    the memory (`expected_size`; None for a text format). Anything else is removed and the file of an earlier backup stays as it was."""
+    size = os.path.getsize(part_path) if os.path.isfile(part_path) else 0
+    if size == 0:
+        log(_("LOG_BACKUP_NO_FILE"))
+    elif expected_size is not None and size != expected_size:
+        log(_("LOG_BACKUP_INCOMPLETE", size=size, expected=expected_size))
+    else:
+        os.replace(part_path, output_path)
+        log(_("LOG_BACKUP_WRITTEN", path=output_path, size=size))
+        return True
+    if os.path.isfile(part_path):
+        os.remove(part_path)
+    return False
+
+
+def _refuse_backup_over_an_image(backup_path, images):
+    """A backup written over one of the two images would be programmed back in its place."""
+    for image in images:
+        if os.path.exists(backup_path) and os.path.exists(image) and os.path.samefile(backup_path, image):
+            raise SWDFlashError(f"The backup path is one of the images to program ({image}) - choose another file.")
+
+
 class _SubprocessProgrammerBase:
     """Shared run/log/error-handling plumbing for both CLI wrappers below."""
     NAME = "programmer"
@@ -279,6 +309,9 @@ class PyOCDCLI(_SubprocessProgrammerBase):
                       + f' -c "savemem 0x08000000 0x{total_flash_size:x} \\"{output_path}\\""')
             self.log(_("LOG_DRY_RUN_NOTHING_TO_VERIFY"))
             return False
+        part_path = _backup_part_path(output_path)
+        if os.path.isfile(part_path):
+            os.remove(part_path)
         self._run(["commander", "-t", target] + probe_args
                   # Quoted per pyOCD's own commander syntax (confirmed in its
                   # docs: words can be single/double-quoted to include
@@ -291,18 +324,16 @@ class PyOCDCLI(_SubprocessProgrammerBase):
                   # escape sequence on Windows paths - forward slashes are
                   # accepted for file paths on Windows by essentially every
                   # modern tool, sidestepping the question entirely.
-                  + ["-c", f'savemem 0x08000000 0x{total_flash_size:x} "{output_path.replace(os.sep, "/")}"'], dry_run=False)
-        ok = os.path.isfile(output_path) and os.path.getsize(output_path) > 0
-        if ok:
-            self.log(_("LOG_BACKUP_WRITTEN", path=output_path, size=os.path.getsize(output_path)))
-        else:
-            self.log(_("LOG_BACKUP_NO_FILE"))
-        return ok
+                  + ["-c", f'savemem 0x08000000 0x{total_flash_size:x} "{part_path.replace(os.sep, "/")}"'], dry_run=False)
+        # savemem writes the raw bytes whatever the name of the file
+        return _keep_whole_backup(part_path, output_path, total_flash_size, self.log)
 
     def full_chip_flash(self, bootloader_path, app_path, dry_run=False,
                          target=PYOCD_TARGET_NAME, probe_uid=None, backup_path=None,
                          bootloader_addr=BOOTLOADER_FLASH_ADDR, app_addr=APP_FLASH_ADDR,
                          total_flash_size=0x40000):
+        if backup_path is not None:
+            _refuse_backup_over_an_image(backup_path, (bootloader_path, app_path))
         self.check_connection(probe_uid, dry_run)
         probe_args = ["--probe", probe_uid] if probe_uid else []
         if backup_path is not None:
@@ -529,17 +560,18 @@ class CubeProgrammerCLI(_SubprocessProgrammerBase):
             self.log(f"$ {self.exe} " + " ".join(connect) + f" -r 0x08000000 0x{total_flash_size:x} \"{output_path}\"")
             self.log(_("LOG_DRY_RUN_NOTHING_TO_VERIFY"))
             return False
-        self._run(connect + ["-r", "0x08000000", f"0x{total_flash_size:x}", output_path], dry_run=False)
-        ok = os.path.isfile(output_path) and os.path.getsize(output_path) > 0
-        if ok:
-            self.log(_("LOG_BACKUP_WRITTEN", path=output_path, size=os.path.getsize(output_path)))
-        else:
-            self.log(_("LOG_BACKUP_NO_FILE"))
-        return ok
+        part_path = _backup_part_path(output_path)
+        if os.path.isfile(part_path):
+            os.remove(part_path)
+        self._run(connect + ["-r", "0x08000000", f"0x{total_flash_size:x}", part_path], dry_run=False)
+        expected = total_flash_size if output_path.lower().endswith(".bin") else None
+        return _keep_whole_backup(part_path, output_path, expected, self.log)
 
     def full_chip_flash(self, bootloader_path, app_path, dry_run=False, serial=None,
                          backup_path=None, bootloader_addr=BOOTLOADER_FLASH_ADDR, app_addr=APP_FLASH_ADDR,
                          total_flash_size=0x40000):
+        if backup_path is not None:
+            _refuse_backup_over_an_image(backup_path, (bootloader_path, app_path))
         self.check_connection(serial, dry_run)
         connect = ["-c", "port=SWD" + (f" sn={serial}" if serial else "")]
         if backup_path is not None:

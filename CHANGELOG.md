@@ -4,6 +4,11 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **A backup before an SWD/JTAG programming has to be whole before the chip is erased:** a read that stopped half way, or that wrote nothing over the file of an earlier backup, was taken as a good backup. The read now goes to a file of its own, a raw image has to hold every byte of the memory, an earlier backup is replaced only by a whole one, and a backup path that is one of the two images is refused. The backup read over CAN is also written apart and renamed, so a failed write no longer cuts the file of an earlier one.
+
+- **A published file that cannot be read stops the flash:** an `<image>.sha256` that is there but empty, binary or without a digest, or an `<image>.manifest.json` that is not a JSON object or holds a `sha256` that is not a digest, was taken as if there were no file. The update is now refused before anything is sent, with a message that names the file, in the eight languages. An image with no such files is treated as before.
+- **SWD/JTAG programming checks the published files too:** the bootloader and application images go through the same check (digest, manifest and release signature) before the probe is touched.
+
 - **A check or a download of an update cut in the middle is reported:** an incomplete answer ended the worker with an error nobody handled and the window stayed busy. A damaged `current.txt` or history of the updates no longer raises (the copy of the common library follows).
 - **A published digest saved with a byte-order mark or in UTF-16 is compared again:** an `<image>.sha256` or `<image>.manifest.json` written that way by a Windows editor or shell was taken as if there were none, so an image that did not match it was not blocked.
 - **A listing or a download cut in the middle is a message:** an incomplete or reset answer ended in an unhandled error, or was reported as a failure to write the file.

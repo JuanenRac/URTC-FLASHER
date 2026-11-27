@@ -113,6 +113,7 @@ LOG_PROBE_DETECTED_USB=Sonda detectada por USB - continuando. (Esto todavía no 
 LOG_BACKING_UP_FLASH=Haciendo copia de seguridad de toda la flash (256KB) en {path} antes de borrar...
 LOG_BACKUP_WRITTEN=Copia de seguridad escrita: {path} ({size} bytes)
 LOG_BACKUP_NO_FILE=La copia de seguridad no produjo un archivo - mira el registro de arriba para ver qué reportó realmente el comando de lectura.
+LOG_BACKUP_INCOMPLETE=La copia de seguridad está incompleta ({size} de {expected} bytes): no se conserva y no se borra nada.
 LOG_PYOCD_FULLCHIP_HEADER=== Programación de chip completo con pyOCD (objetivo={target}) ===
 LOG_BOOTLOADER_NOT_BIN_SKIP=El bootloader no es un .bin - saltando la comparación de lectura (la propia verificación de pyOCD al grabar sigue aplicando).
 LOG_APPLICATION_NOT_BIN_SKIP=La aplicación no es un .bin - saltando la comparación de lectura (la propia verificación de pyOCD al grabar sigue aplicando).
@@ -280,6 +281,7 @@ ERR_BOOTLOADER_GENERIC_ERROR=El bootloader informó de un estado de error genér
 ERR_TIMEOUT_WAITING_CAN_ID=Tiempo de espera agotado esperando el ID CAN 0x{can_id}
 ERR_MANIFEST_MISMATCH=EL MANIFIESTO NO COINCIDE - {name} declara sha256={expected}, el sha256 real de este archivo es {actual}. Archivo equivocado, descarga corrupta o manifiesto obsoleto: no se graba.
 ERR_HMAC_NOT_32_BYTES={name}: hmac_sha256 no son 32 bytes en hexadecimal
+ERR_PUBLISHED_FILE_UNREADABLE={name} está junto a la imagen pero no se puede leer, así que la imagen no se puede comprobar: no se ha enviado nada. Vuelva a descargar la imagen y sus ficheros, o quite {name} solo si sabe de dónde procede la imagen.
 LOG_USING_PUBLISHED_SIGNATURE=Se usa la firma publicada en el manifiesto (clave: {kind}).
 LOG_DEV_KEY_NOTE=NOTA: firmado con la clave de desarrollo PÚBLICA: solo la aceptan las placas cuyo bootloader se compiló con esa misma clave.
 LOG_SIGNING_LOCALLY=No hay firma publicada: se firma localmente con la clave de {board} de urtc_config.json.
