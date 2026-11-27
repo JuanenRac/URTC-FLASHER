@@ -120,12 +120,12 @@ class PreflightTests(unittest.TestCase):
         self.assertTrue(result.blocked)
         self.assertIn("mismatch", result.reasons[0])
 
-    def test_a_garbage_sidecar_is_treated_as_absent(self):
+    def test_a_garbage_sidecar_blocks(self):
         from flasher_integrity import preflight_image, read_sidecar_sha256
 
         self._sidecar("not a digest")
         self.assertIsNone(read_sidecar_sha256(self.path))
-        self.assertFalse(preflight_image(self.path).blocked)
+        self.assertTrue(preflight_image(self.path).blocked)
 
     def test_an_unreadable_image_blocks(self):
         from flasher_integrity import preflight_image

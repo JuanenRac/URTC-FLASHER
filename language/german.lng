@@ -280,6 +280,7 @@ ERR_BOOTLOADER_GENERIC_ERROR=Der Bootloader meldete einen allgemeinen Fehlerstat
 ERR_TIMEOUT_WAITING_CAN_ID=Zeitüberschreitung beim Warten auf CAN-ID 0x{can_id}
 ERR_MANIFEST_MISMATCH=MANIFEST STIMMT NICHT - {name} gibt sha256={expected} an, das tatsächliche sha256 dieser Datei ist {actual}. Falsche Datei, beschädigter Download oder veraltetes Manifest - es wird nicht geflasht.
 ERR_HMAC_NOT_32_BYTES={name}: hmac_sha256 sind keine 32 Byte in Hex
+ERR_PUBLISHED_FILE_UNREADABLE={name} liegt neben dem Image, kann aber nicht gelesen werden, deshalb lässt sich das Image nicht prüfen: Es wurde nichts gesendet. Laden Sie das Image und seine Dateien erneut herunter oder entfernen Sie {name} nur, wenn Sie die Herkunft des Images kennen.
 LOG_USING_PUBLISHED_SIGNATURE=Die im Manifest veröffentlichte Signatur wird verwendet (Schlüssel: {kind}).
 LOG_DEV_KEY_NOTE=HINWEIS: mit dem ÖFFENTLICHEN Entwicklungsschlüssel signiert - nur Platinen, deren Bootloader mit demselben Schlüssel gebaut wurde, akzeptieren es.
 LOG_SIGNING_LOCALLY=Keine veröffentlichte Signatur - es wird lokal mit dem {board}-Schlüssel aus urtc_config.json signiert.

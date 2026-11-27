@@ -280,6 +280,7 @@ ERR_BOOTLOADER_GENERIC_ERROR=Le bootloader a signalé un état d'erreur généri
 ERR_TIMEOUT_WAITING_CAN_ID=Délai dépassé en attendant l'ID CAN 0x{can_id}
 ERR_MANIFEST_MISMATCH=LE MANIFESTE NE CORRESPOND PAS - {name} déclare sha256={expected}, le sha256 réel de ce fichier est {actual}. Mauvais fichier, téléchargement corrompu ou manifeste périmé - le flashage est refusé.
 ERR_HMAC_NOT_32_BYTES={name} : hmac_sha256 n'est pas de 32 octets en hexadécimal
+ERR_PUBLISHED_FILE_UNREADABLE={name} se trouve à côté de l'image mais ne peut pas être lu, l'image ne peut donc pas être vérifiée : rien n'a été envoyé. Téléchargez à nouveau l'image et ses fichiers, ou retirez {name} uniquement si vous connaissez la provenance de l'image.
 LOG_USING_PUBLISHED_SIGNATURE=Utilisation de la signature publiée dans le manifeste (clé : {kind}).
 LOG_DEV_KEY_NOTE=NOTE : signé avec la clé de développement PUBLIQUE - seules les cartes dont le bootloader a été compilé avec cette même clé l'acceptent.
 LOG_SIGNING_LOCALLY=Aucune signature publiée - signature locale avec la clé {board} de urtc_config.json.

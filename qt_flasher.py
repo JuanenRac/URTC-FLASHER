@@ -1584,6 +1584,13 @@ class FlasherQtBridge(QObject):
         probe_uid: str | None, backup_path: str | None, is_slave: bool,
     ) -> None:
         try:
+            # the files published next to the two images are checked before the probe is touched, as for an update over the bus
+            for image_path in (bootloader_path, app_path):
+                check = preflight_image(image_path)
+                if check.blocked:
+                    reasons = "; ".join(check.reasons)
+                    self._log(f"IMAGE_REFUSED {reasons}")
+                    raise SWDFlashError(reasons)
             if is_slave:
                 target_kwargs = {
                     "bootloader_addr": SLAVE_BOOTLOADER_FLASH_ADDR,

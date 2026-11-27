@@ -4,6 +4,9 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **A published file that cannot be read stops the flash:** an `<image>.sha256` that is there but empty, binary or without a digest, or an `<image>.manifest.json` that is not a JSON object or holds a `sha256` that is not a digest, was taken as if there were no file. The update is now refused before anything is sent, with a message that names the file, in the eight languages. An image with no such files is treated as before.
+- **SWD/JTAG programming checks the published files too:** the bootloader and application images go through the same check (digest, manifest and release signature) before the probe is touched.
+
 - **A check or a download of an update cut in the middle is reported:** an incomplete answer ended the worker with an error nobody handled and the window stayed busy. A damaged `current.txt` or history of the updates no longer raises (the copy of the common library follows).
 - **A published digest saved with a byte-order mark or in UTF-16 is compared again:** an `<image>.sha256` or `<image>.manifest.json` written that way by a Windows editor or shell was taken as if there were none, so an image that did not match it was not blocked.
 - **A listing or a download cut in the middle is a message:** an incomplete or reset answer ended in an unhandled error, or was reported as a failure to write the file.

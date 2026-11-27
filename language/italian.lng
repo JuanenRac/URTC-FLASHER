@@ -280,6 +280,7 @@ ERR_BOOTLOADER_GENERIC_ERROR=Il bootloader ha segnalato uno stato di errore gene
 ERR_TIMEOUT_WAITING_CAN_ID=Timeout in attesa dell'ID CAN 0x{can_id}
 ERR_MANIFEST_MISMATCH=IL MANIFEST NON CORRISPONDE - {name} dichiara sha256={expected}, lo sha256 reale di questo file è {actual}. File sbagliato, download danneggiato o manifest obsoleto: scrittura rifiutata.
 ERR_HMAC_NOT_32_BYTES={name}: hmac_sha256 non è composto da 32 byte esadecimali
+ERR_PUBLISHED_FILE_UNREADABLE={name} è accanto all'immagine ma non può essere letto, quindi l'immagine non può essere verificata: non è stato inviato nulla. Scaricate di nuovo l'immagine e i suoi file, oppure rimuovete {name} solo se sapete da dove proviene l'immagine.
 LOG_USING_PUBLISHED_SIGNATURE=Si usa la firma pubblicata nel manifest (chiave: {kind}).
 LOG_DEV_KEY_NOTE=NOTA: firmato con la chiave di sviluppo PUBBLICA: lo accettano solo le schede il cui bootloader è stato compilato con la stessa chiave.
 LOG_SIGNING_LOCALLY=Nessuna firma pubblicata: firma locale con la chiave {board} di urtc_config.json.

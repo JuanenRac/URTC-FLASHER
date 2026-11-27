@@ -280,6 +280,7 @@ ERR_BOOTLOADER_GENERIC_ERROR=O bootloader comunicou um estado de erro genérico
 ERR_TIMEOUT_WAITING_CAN_ID=Tempo esgotado à espera do ID CAN 0x{can_id}
 ERR_MANIFEST_MISMATCH=O MANIFESTO NÃO CORRESPONDE - {name} declara sha256={expected}, o sha256 real deste ficheiro é {actual}. Ficheiro errado, transferência corrompida ou manifesto desatualizado - a gravação é recusada.
 ERR_HMAC_NOT_32_BYTES={name}: hmac_sha256 não são 32 bytes em hexadecimal
+ERR_PUBLISHED_FILE_UNREADABLE={name} está junto à imagem mas não pode ser lido, por isso a imagem não pode ser verificada: nada foi enviado. Transfira novamente a imagem e os respetivos ficheiros, ou remova {name} apenas se souber de onde vem a imagem.
 LOG_USING_PUBLISHED_SIGNATURE=A usar a assinatura publicada no manifesto (chave: {kind}).
 LOG_DEV_KEY_NOTE=NOTA: assinado com a chave de desenvolvimento PÚBLICA - só o aceitam as placas cujo bootloader foi compilado com essa mesma chave.
 LOG_SIGNING_LOCALLY=Sem assinatura publicada - a assinar localmente com a chave {board} de urtc_config.json.
