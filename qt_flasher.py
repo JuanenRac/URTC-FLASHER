@@ -16,6 +16,8 @@ import logging
 import os
 import platform
 import sys
+import tempfile
+import shutil
 import threading
 import time
 import zipfile
@@ -597,21 +599,38 @@ class FlasherQtBridge(QObject):
 
     def _release_download_worker(self, entry: dict) -> None:
         name = str(entry["name"])
+        staging = ""
         try:
+            # Everything arrives in a folder of its own and is moved into firmware/ only when all of it did: an image whose
+            # digest file failed to download would otherwise be left there looking like one that has no published digest.
+            try:
+                staging = tempfile.mkdtemp(prefix=".download-", dir=FIRMWARE_FOLDER)
+            except OSError as exc:
+                raise GitHubDownloadError(_("ERR_GITHUB_WRITE_FAILED", reason=exc)) from exc
             download_file(
-                entry["download_url"], os.path.join(FIRMWARE_FOLDER, name), log=self._log, expected_size=entry.get("size"),
+                entry["download_url"], os.path.join(staging, name), log=self._log, expected_size=entry.get("size"),
                 progress_cb=self._releaseProgressed.emit,
             )
             # The published digest and manifest (with the signature the bootloader expects) travel with the image.
+            arrived = []
             for sidecar in sidecars_for(self._release_entries, name):
                 side = str(sidecar["name"])
                 if os.path.basename(side) == side:
-                    download_file(sidecar["download_url"], os.path.join(FIRMWARE_FOLDER, side), log=self._log, expected_size=sidecar.get("size"))
+                    download_file(sidecar["download_url"], os.path.join(staging, side), log=self._log, expected_size=sidecar.get("size"))
+                    arrived.append(side)
+            try:
+                for arrived_name in (*arrived, name):   # the image last: it is never in firmware/ before its files
+                    os.replace(os.path.join(staging, arrived_name), os.path.join(FIRMWARE_FOLDER, arrived_name))
+            except OSError as exc:
+                raise GitHubDownloadError(_("ERR_GITHUB_WRITE_FAILED", reason=exc)) from exc
             self._releaseDownloaded.emit(name, "")
         except GitHubDownloadError as exc:
             self._releaseDownloaded.emit(name, str(exc))
         except Exception as exc:
             self._releaseDownloaded.emit(name, _("ERR_GITHUB_UNEXPECTED", e=exc))
+        finally:
+            if staging:
+                shutil.rmtree(staging, ignore_errors=True)
 
     @Slot(int)
     def _on_release_progress(self, percent: int) -> None:
