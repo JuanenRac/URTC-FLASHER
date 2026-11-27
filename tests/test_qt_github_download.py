@@ -147,6 +147,59 @@ class QtGithubDownloadTests(unittest.TestCase):
         self.assertIn("size differs", self.bridge.releaseStatus)
         self.assertFalse(self.bridge.releaseBusy)
 
+    def _download_failing_at(self, failing: str, error=None):
+        working = qt_flasher.download_file
+
+        def flaky(url, dest, **kwargs):
+            if os.path.basename(dest) == failing:
+                raise error or qt_flasher.GitHubDownloadError("cut")
+            working(url, dest, **kwargs)
+
+        with mock.patch.object(qt_flasher, "download_file", flaky):
+            self.bridge.downloadReleaseFile(IMAGE["name"])
+
+    def test_an_image_is_not_left_behind_when_one_of_its_files_fails_to_download(self):
+        for failing in (SHA["name"], MANIFEST["name"]):
+            for error in (None, RuntimeError("odd")):
+                self.bridge.loadRelease("")
+                self._download_failing_at(failing, error)
+                self.assertEqual(os.listdir(self.folder.name), [], failing)
+                self.assertFalse(self.bridge.releaseBusy)
+        self.assertFalse(any(line.startswith("GITHUB_DOWNLOADED") for line in self.logs))
+
+    def test_an_earlier_copy_survives_a_download_that_fails_half_way(self):
+        for name in (IMAGE["name"], SHA["name"]):
+            with open(os.path.join(self.folder.name, name), "wb") as stream:
+                stream.write(b"mine")
+        self.bridge.loadRelease("")
+        self.bridge.downloadReleaseFile(IMAGE["name"])
+        self._download_failing_at(SHA["name"])
+        self.assertEqual(sorted(os.listdir(self.folder.name)), sorted([IMAGE["name"], SHA["name"]]))
+        for name in (IMAGE["name"], SHA["name"]):
+            with open(os.path.join(self.folder.name, name), "rb") as stream:
+                self.assertEqual(stream.read(), b"mine")
+
+    def test_the_image_is_moved_into_the_folder_after_its_files_and_nothing_else_stays(self):
+        moved = []
+        replace = os.replace
+
+        def noting(source, target):
+            moved.append(os.path.basename(target))
+            replace(source, target)
+
+        self.bridge.loadRelease("")
+        with mock.patch.object(qt_flasher.os, "replace", noting):
+            self.bridge.downloadReleaseFile(IMAGE["name"])
+        self.assertEqual(moved, [SHA["name"], MANIFEST["name"], IMAGE["name"]])
+        self.assertEqual(sorted(os.listdir(self.folder.name)), sorted([IMAGE["name"], SHA["name"], MANIFEST["name"]]))
+
+    def test_a_file_that_cannot_be_moved_into_place_is_reported_and_the_image_stays_out(self):
+        self.bridge.loadRelease("")
+        with mock.patch.object(qt_flasher.os, "replace", side_effect=OSError("locked")):
+            self.bridge.downloadReleaseFile(IMAGE["name"])
+        self.assertIn("locked", self.bridge.releaseStatus)
+        self.assertEqual(os.listdir(self.folder.name), [])
+
 
 if __name__ == "__main__":
     unittest.main()
