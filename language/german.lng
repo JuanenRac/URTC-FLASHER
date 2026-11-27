@@ -113,6 +113,7 @@ LOG_PROBE_DETECTED_USB=Sonde über USB erkannt - es wird fortgefahren. (Dies bes
 LOG_BACKING_UP_FLASH=Gesamter Flash (256KB) wird nach {path} gesichert, bevor gelöscht wird...
 LOG_BACKUP_WRITTEN=Sicherung geschrieben: {path} ({size} Bytes)
 LOG_BACKUP_NO_FILE=Die Sicherung hat keine Datei erzeugt - siehe Protokoll oben für das, was der Lesebefehl tatsächlich gemeldet hat.
+LOG_BACKUP_INCOMPLETE=Die Sicherung ist unvollständig ({size} von {expected} Bytes): Sie wird nicht behalten und nichts wird gelöscht.
 LOG_PYOCD_FULLCHIP_HEADER=== Vollchip-Programmierung mit pyOCD (Ziel={target}) ===
 LOG_BOOTLOADER_NOT_BIN_SKIP=Der Bootloader ist keine .bin - Rücklesevergleich übersprungen (die eigene Verifizierung von pyOCD beim Flashen gilt trotzdem).
 LOG_APPLICATION_NOT_BIN_SKIP=Die Anwendung ist keine .bin - Rücklesevergleich übersprungen (die eigene Verifizierung von pyOCD beim Flashen gilt trotzdem).

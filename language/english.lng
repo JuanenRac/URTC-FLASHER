@@ -112,6 +112,7 @@ LOG_PROBE_DETECTED_USB=Probe detected via USB - proceeding. (This doesn't yet co
 LOG_BACKING_UP_FLASH=Backing up entire flash (256KB) to {path} before erasing...
 LOG_BACKUP_WRITTEN=Backup written: {path} ({size} bytes)
 LOG_BACKUP_NO_FILE=Backup did not produce a file - see the log above for what the read command actually reported.
+LOG_BACKUP_INCOMPLETE=Backup is incomplete ({size} of {expected} bytes): it is not kept and nothing is erased.
 LOG_PYOCD_FULLCHIP_HEADER=== pyOCD full-chip program (target={target}) ===
 LOG_BOOTLOADER_NOT_BIN_SKIP=Bootloader is not a .bin - skipping read-back compare (pyOCD's own flash-time verification still applies).
 LOG_APPLICATION_NOT_BIN_SKIP=Application is not a .bin - skipping read-back compare (pyOCD's own flash-time verification still applies).

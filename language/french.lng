@@ -113,6 +113,7 @@ LOG_PROBE_DETECTED_USB=Sonde détectée via USB - on continue. (Ceci ne confirme
 LOG_BACKING_UP_FLASH=Sauvegarde de toute la flash (256Ko) dans {path} avant l'effacement...
 LOG_BACKUP_WRITTEN=Sauvegarde écrite : {path} ({size} octets)
 LOG_BACKUP_NO_FILE=La sauvegarde n'a pas produit de fichier - voir le journal ci-dessus pour ce que la commande de lecture a réellement rapporté.
+LOG_BACKUP_INCOMPLETE=La sauvegarde est incomplète ({size} octets sur {expected}) : elle n'est pas conservée et rien n'est effacé.
 LOG_PYOCD_FULLCHIP_HEADER=== Programmation de la puce complète avec pyOCD (cible={target}) ===
 LOG_BOOTLOADER_NOT_BIN_SKIP=Le bootloader n'est pas un .bin - comparaison de relecture ignorée (la propre vérification de pyOCD lors de la programmation s'applique quand même).
 LOG_APPLICATION_NOT_BIN_SKIP=L'application n'est pas un .bin - comparaison de relecture ignorée (la propre vérification de pyOCD lors de la programmation s'applique quand même).

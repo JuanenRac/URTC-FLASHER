@@ -112,6 +112,7 @@ LOG_PROBE_DETECTED_USB=USB 経由でプローブを検出しました——続�
 LOG_BACKING_UP_FLASH=消去前にフラッシュ全体（256KB）を {path} にバックアップ中…
 LOG_BACKUP_WRITTEN=バックアップを書き込みました：{path}（{size} バイト）
 LOG_BACKUP_NO_FILE=バックアップはファイルを生成しませんでした——読み取りコマンドが実際に何を報告したかは上記のログを参照してください。
+LOG_BACKUP_INCOMPLETE=バックアップが不完全です（{expected} バイト中 {size} バイト）。保存せず、何も消去しません。
 LOG_PYOCD_FULLCHIP_HEADER=== pyOCD チップ全体プログラム（target={target}）===
 LOG_BOOTLOADER_NOT_BIN_SKIP=ブートローダーが .bin ではありません——読み戻し比較をスキップします（pyOCD 自身の書き込み時検証は引き続き適用されます）。
 LOG_APPLICATION_NOT_BIN_SKIP=アプリケーションが .bin ではありません——読み戻し比較をスキップします（pyOCD 自身の書き込み時検証は引き続き適用されます）。

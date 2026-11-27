@@ -112,6 +112,7 @@ LOG_PROBE_DETECTED_USB=已通过 USB 检测到探针——继续进行。（这�
 LOG_BACKING_UP_FLASH=正在擦除前将整个闪存（256KB）备份至 {path}…
 LOG_BACKUP_WRITTEN=备份已写入：{path}（{size} 字节）
 LOG_BACKUP_NO_FILE=备份未生成文件——具体读取指令实际报告了什么，见上方日志。
+LOG_BACKUP_INCOMPLETE=备份不完整（{expected} 字节中仅 {size} 字节）：不予保留，且不会擦除任何内容。
 LOG_PYOCD_FULLCHIP_HEADER=== pyOCD 完整芯片编程（目标={target}）===
 LOG_BOOTLOADER_NOT_BIN_SKIP=引导程序不是 .bin 文件——跳过读回比对（pyOCD 自身刷写时的验证仍然适用）。
 LOG_APPLICATION_NOT_BIN_SKIP=应用程序不是 .bin 文件——跳过读回比对（pyOCD 自身刷写时的验证仍然适用）。

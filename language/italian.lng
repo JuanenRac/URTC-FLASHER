@@ -113,6 +113,7 @@ LOG_PROBE_DETECTED_USB=Sonda rilevata via USB - si procede. (Questo non conferma
 LOG_BACKING_UP_FLASH=Backup di tutta la flash (256KB) in {path} prima della cancellazione...
 LOG_BACKUP_WRITTEN=Backup scritto: {path} ({size} byte)
 LOG_BACKUP_NO_FILE=Il backup non ha prodotto un file - vedi il registro sopra per ciò che il comando di lettura ha effettivamente riportato.
+LOG_BACKUP_INCOMPLETE=Il backup è incompleto ({size} di {expected} byte): non viene conservato e non si cancella nulla.
 LOG_PYOCD_FULLCHIP_HEADER=== Programmazione chip completo con pyOCD (target={target}) ===
 LOG_BOOTLOADER_NOT_BIN_SKIP=Il bootloader non è un .bin - confronto di rilettura saltato (la verifica di pyOCD durante la programmazione si applica comunque).
 LOG_APPLICATION_NOT_BIN_SKIP=L'applicazione non è un .bin - confronto di rilettura saltato (la verifica di pyOCD durante la programmazione si applica comunque).
