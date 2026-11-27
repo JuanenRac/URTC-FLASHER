@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **A check or a download of an update cut in the middle is reported:** an incomplete answer ended the worker with an error nobody handled and the window stayed busy. A damaged `current.txt` or history of the updates no longer raises (the copy of the common library follows).
 - **A published digest saved with a byte-order mark or in UTF-16 is compared again:** an `<image>.sha256` or `<image>.manifest.json` written that way by a Windows editor or shell was taken as if there were none, so an image that did not match it was not blocked.
 - **A listing or a download cut in the middle is a message:** an incomplete or reset answer ended in an unhandled error, or was reported as a failure to write the file.
 - **A damaged options file no longer stops the program from starting:** a `urtc_config.json` in another encoding, or holding something other than an object, falls back to the built-in values with a warning; one with a byte-order mark is read.
