@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The README files say that the official trust table of the bootloaders holds the release keys:** they still said it was empty until the image-signing key was created. That key exists and `keys/image_trust.json` holds it, with a reserved next one. Eight languages.
+
 - **The compatibility table is current:** `docs/COMPATIBILITY.md` is the current copy of URTC-COMMON; the old one named versions of long ago.
 
 - **A download that fails half way leaves no image behind:** when the image arrived and its `.sha256` or `.manifest.json` did not, the image stayed in `firmware/` and was treated as one with no published digest. The image and its files are now downloaded apart and moved into place only when all of them arrived, the image last; an earlier copy of the same name is kept.
