@@ -1081,8 +1081,15 @@ class URTCFlasher:
             running_kbps = (min(len(buf), total_size) / 1024) / running_elapsed if running_elapsed > 0 else 0.0
             self.speed_cb(running_kbps)
 
-        with open(output_path, "wb") as f:
-            f.write(bytes(buf[:total_size]))
+        # written apart and renamed, so a disk that fills up leaves the file of an earlier backup as it was
+        part_path = output_path + ".part"
+        try:
+            with open(part_path, "wb") as f:
+                f.write(bytes(buf[:total_size]))
+            os.replace(part_path, output_path)
+        finally:
+            if os.path.isfile(part_path):
+                os.remove(part_path)
         elapsed = time.monotonic() - transfer_start
         kbps = (total_size / 1024) / elapsed if elapsed > 0 else 0.0
         self.log(_("LOG_READBACK_COMPLETE", size=total_size, path=output_path, elapsed=elapsed, kbps=kbps))

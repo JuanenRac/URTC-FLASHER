@@ -51,3 +51,20 @@ def test_the_backup_is_complete_whatever_the_size_of_the_installed_image(tmp_pat
     output = tmp_path / "backup.bin"
     assert flasher.read_back_flash(str(output)) == size
     assert output.read_bytes() == image
+
+
+def test_a_backup_that_cannot_be_saved_leaves_the_earlier_one(tmp_path, monkeypatch):
+    folder = tmp_path / "mis copias \u56fa\u4ef6"
+    folder.mkdir()
+    output = folder / "backup.bin"
+    output.write_bytes(b"earlier backup")
+
+    def full_disk(source, destination):
+        raise OSError(28, "No space left on device")
+
+    monkeypatch.setattr("flasher_protocol.os.replace", full_disk)
+    flasher = URTCFlasher(_Bootloader(bytes(64)), log=lambda message: None)
+    with pytest.raises(OSError):
+        flasher.read_back_flash(str(output))
+    assert output.read_bytes() == b"earlier backup"
+    assert [item.name for item in folder.iterdir()] == ["backup.bin"]
