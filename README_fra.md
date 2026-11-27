@@ -749,11 +749,13 @@ envoie cette signature publiée et refuse une image dont le sha256 ne
 correspond pas à son manifeste. Télécharger une image depuis GitHub
 télécharge aussi ces deux fichiers, et `python tools/sync_firmware.py` met à
 jour le dossier `firmware/` fourni à partir de la compilation d'URTC (`--check` le
-vérifie). Par défaut, il prend l'ensemble dans les fichiers joints de la dernière release d'URTC (`--release TAG` en choisit une autre) ; on peut aussi passer en argument un dossier local, par exemple une compilation URTC locale. Seule une image compilée soi-même sans manifeste, sur une carte de
-banc, a besoin d'une clé : définir `hmac_key_hex` / `slave_hmac_key_hex`
-dans `urtc_config.json` (ci-dessous) - sans elle, une telle image est
-refusée au lieu d'être signée avec une clé que le bootloader ne peut pas
-avoir. Voir `docs/FIRMWARE_SIGNING.TXT` dans URTC. L'enregistrement Ed25519 de chaque image d'application est le fichier `<image>.imgsig` publié à côté d'elle ; le flasher se contente de le transmettre au bootloader, qui le vérifie par rapport à sa table de clés publiques (le flasher ne détient aucune clé et ne décide de rien). Les images d'une compilation de banc sont signées avec la clé publique de développement (`signing_key_kind: dev`) : n'importe qui peut produire une telle image.
+vérifie). Par défaut, il prend l'ensemble dans les fichiers joints de la dernière release d'URTC (`--release TAG` en choisit une autre) ; on peut aussi passer en argument un dossier local, par exemple une compilation URTC locale. Une image compilée soi-même a besoin de
+son enregistrement `<image>.imgsig` (un bootloader de banc fait confiance à la
+clé publique de développement) : les bootloaders actuels n'installent rien sans
+lui. Une clé (`hmac_key_hex` dans `urtc_config.json`, ci-dessous) ne sert qu'à
+une carte de banc avec un bootloader de la génération précédente, quand il n'y a
+ni enregistrement ni signature publiée ; sans elle, une telle image est refusée
+au lieu d'être signée avec une clé inventée. Voir `docs/FIRMWARE_SIGNING.TXT` dans URTC. L'enregistrement Ed25519 de chaque image d'application est le fichier `<image>.imgsig` publié à côté d'elle ; le flasher se contente de le transmettre au bootloader, qui le vérifie par rapport à sa table de clés publiques (le flasher ne détient aucune clé et ne décide de rien). Les images d'une compilation de banc sont signées avec la clé publique de développement (`signing_key_kind: dev`) : n'importe qui peut produire une telle image.
 
 **Ou remplacez tout ceci sans toucher le script :** un
 `urtc_config.json` optionnel à côté de `firmware/` peut définir la clé
@@ -780,7 +782,7 @@ Chaque champ est optionnel - ne remplacez que ce qui change réellement.
 Un fichier manquant retombe silencieusement sur les valeurs par défaut
 compilées ; un fichier présent mais cassé enregistre un avertissement
 et retombe aussi sur ces valeurs, plutôt que de faire planter le flasher
-pour une faute de frappe. **Les remplacements du plan mémoire et du HardwareID ne s'appliquent qu'aux constantes propres de la carte principale** (la seule exception est `slave_hmac_key_hex`, la clé de signature de l'esclave d'extension, qui peut aussi être définie ici) - les équivalents
+pour une faute de frappe. **Les remplacements du plan mémoire et du HardwareID ne s'appliquent qu'aux constantes propres de la carte principale** (la seule exception est `slave_hmac_key_hex`, la clé de signature d'un esclave d'extension de la génération précédente, qui peut aussi être définie ici bien que rien ne soit signé avec elle, le bootloader actuel de l'esclave ne détenant aucune clé) - les équivalents
 de la puce esclave d'extension (`SLAVE_BOOTLOADER_FLASH_ADDR`,
 `SLAVE_APP_FLASH_ADDR`, `SLAVE_HARDWARE_ID`, etc.) sont fixés dans
 `flasher_config.py`, car les valeurs réelles de ce matériel sont déjà confirmées
@@ -944,7 +946,7 @@ Le flasher s'attend à un dossier `firmware/` juste à côté de
 │   ├── URTC_MAIN_FIRMWARE_v<version>.bin  <- placez les nouveaux fichiers .bin ici
 │   └── URTC_*  <- tools/sync_firmware.py remplace les fichiers URTC_* de ce dossier par ceux d'une release ; les autres fichiers restent
 ├── logs/                          <- créé automatiquement, un fichier par session
-├── urtc_config.json               <- optionnel, non inclus par défaut (voir « Changer la clé HMAC » ci-dessous)
+├── urtc_config.json               <- optionnel, non inclus par défaut (voir « Configuration » ci-dessus)
 ├── urtc_flasher.py                <- point d'entrée : arguments CLI et démarrage de la fenêtre Qt Quick
 ├── flasher_config.py              <- E/S du fichier de configuration, chargement de la langue, constantes du protocole
 ├── flasher_transports.py          <- SLCAN, SocketCAN, MockCAN
@@ -1042,9 +1044,11 @@ Les deux empreintes sont vérifiées juste avant le flashage et une
 différence **refuse le flashage** avant tout envoi sur le bus (mauvais
 fichier, téléchargement corrompu ou manifeste périmé). C'est la signature
 publiée qui est envoyée au bootloader, et la version du manifeste qui lui
-est annoncée. Un fichier sans manifeste (votre propre compilation) n'est flashé
-que si une clé de signature est définie dans `urtc_config.json` - voir plus
-bas la modification de la clé HMAC.
+est annoncée. Un fichier sans manifeste (votre propre
+compilation) est flashé avec son enregistrement `<image>.imgsig` ; sans
+enregistrement, seulement pour un bootloader de la génération précédente et avec
+une clé de signature définie dans `urtc_config.json` - voir « Configuration »
+ci-dessus. Essayé uniquement contre un bootloader simulé.
 
 Un `<image>.sha256` ou un `<image>.manifest.json` présent mais illisible (vide,
 binaire, tronqué ou sans empreinte là où elle est attendue) refuse aussi le

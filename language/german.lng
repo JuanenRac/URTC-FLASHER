@@ -198,7 +198,7 @@ LOG_SLAVE_FIRMWARE_HARDWAREID=Erweiterungs-Slave HardwareID: 0x{hw_id:08X}
 LOG_SLAVE_PROGRESS={offset}/{size} Bytes an Erweiterungs-Slave gesendet (eigener gemeldeter Fortschritt: {slave_pct}%)
 LOG_SLAVE_TRANSFER_COMPLETE=Übertragung an Erweiterungs-Slave abgeschlossen: {size} Bytes in {elapsed:.1f}s ({kbps:.1f} KB/s)
 LOG_SLAVE_UPDATE_CONFIRMED=Erweiterungs-Slave-Update überprüft und bestätigt.
-LOG_SLAVE_VERIFY_FAILED=Erweiterungs-Slave meldete Überprüfungsfehler (Größe, CRC32, HMAC oder HardwareID stimmen im eigenen Backup-Slot nicht überein).
+LOG_SLAVE_VERIFY_FAILED=Erweiterungs-Slave meldete Überprüfungsfehler (Größe, CRC32, SHA-256, Signaturdatensatz, Version oder HardwareID wurden im eigenen Backup-Slot nicht bestanden).
 LOG_SLAVE_VERIFY_FAILED_REASON=Erweiterungs-Slave meldete Überprüfungsfehler: {reason}
 LOG_SLAVE_GENERIC_ERROR=Erweiterungs-Slave meldete einen allgemeinen Fehlerstatus.
 
@@ -285,7 +285,7 @@ ERR_PUBLISHED_FILE_UNREADABLE={name} liegt neben dem Image, kann aber nicht gele
 LOG_USING_PUBLISHED_SIGNATURE=Die im Manifest veröffentlichte Signatur wird verwendet (Schlüssel: {kind}).
 LOG_DEV_KEY_NOTE=HINWEIS: mit dem ÖFFENTLICHEN Entwicklungsschlüssel signiert - nur Platinen, deren Bootloader mit demselben Schlüssel gebaut wurde, akzeptieren es.
 LOG_SIGNING_LOCALLY=Keine veröffentlichte Signatur - es wird lokal mit dem {board}-Schlüssel aus urtc_config.json signiert.
-ERR_NO_SIGNATURE_NO_KEY=Dieses Image hat keine veröffentlichte Signatur (hmac_sha256 in <Datei>.manifest.json) und es ist kein {board}-Signaturschlüssel konfiguriert. Verwenden Sie ein Image aus dem URTC-Build (es enthält sein .manifest.json) oder setzen Sie für ein selbst gebautes Image auf einer Testplatine "{option}" in urtc_config.json.
+ERR_NO_SIGNATURE_NO_KEY=Dieses Image hat keinen Signaturdatensatz (<Datei>.imgsig), keine veröffentlichte Signatur (hmac_sha256 in <Datei>.manifest.json) und es ist kein {board}-Signaturschlüssel konfiguriert. Verwenden Sie ein Image aus dem URTC-Build mit Datensatz und Manifest: Die aktuellen Bootloader installieren nur ein Image mit Datensatz. Ein Schlüssel in "{option}" in urtc_config.json dient nur einer Testplatine mit einem Bootloader der früheren Generation.
 ERR_FIRMWARE_EMPTY=Die Firmware-Datei ist leer
 ERR_FIRMWARE_TOO_BIG_MAIN=Die Firmware hat {size} Byte und überschreitet den Hauptslot von {max} Byte - ein Update, das der Bootloader ohnehin ablehnen würde, wird nicht gesendet
 ERR_PAGE_ACK_SHORT=Die Seiten-ACK für Seite {page} hatte nur {got} Byte (mindestens 4 erwartet) - wahrscheinlich hat Busrauschen den Frame beschädigt

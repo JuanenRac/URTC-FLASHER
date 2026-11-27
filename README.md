@@ -660,10 +660,13 @@ image and publishes the signature next to it, in `<image>.manifest.json`
 signature and refuses an image whose sha256 does not match its manifest.
 Downloading an image from GitHub also downloads both files, and
 `python tools/sync_firmware.py` fills the `firmware/` folder
-from the URTC build (`--check` verifies it). By default it takes the set from the assets of the latest URTC release (`--release TAG` picks another one); a local folder, such as a local URTC build, can be given as an argument instead. Only a self-built image with
-no manifest, on a bench board, needs a key: set `hmac_key_hex` /
-`slave_hmac_key_hex` in `urtc_config.json` below - without one such an image
-is refused instead of being signed with a key the bootloader cannot have.
+from the URTC build (`--check` verifies it). By default it takes the set from the assets of the latest URTC release (`--release TAG` picks another one); a local folder, such as a local URTC build, can be given as an argument instead. A self-built image
+needs its record `<image>.imgsig` (a bench bootloader trusts the public
+development key): the current bootloaders install nothing without one. A key
+(`hmac_key_hex` in `urtc_config.json` below) serves only a bench board with a
+bootloader of the earlier generation, when neither a record nor a published
+signature is there; without it such an image is refused instead of being signed
+with a made-up key.
 See URTC's `docs/FIRMWARE_SIGNING.TXT`. The Ed25519 record of each application image is the file `<image>.imgsig` published next to it; the flasher only carries it to the bootloader, which verifies it against its table of public keys (the flasher holds no key and decides nothing). The images of a bench build are signed with the public development key (`signing_key_kind: dev`): anyone can make such an image.
 
 **Or override any of this without touching the script:** an optional
@@ -687,7 +690,7 @@ new script version per deployment:
 `frame_gap_ms` is the pause in milliseconds between the 8-byte data frames of a transfer (default 1.0, from 0 to 50; 0 sends them back to back); a value outside those limits falls back to the default.
 `require_release_signature` (default `false`; only `true` counts) refuses a firmware file that has no `.sig` next to it, and a wrong signature is always refused. `imgsig_precheck` checks the record `<image>.imgsig` on this computer before the transfer, against a pinned copy of the trust table of the bootloaders: `warn` (the default) logs a record that does not verify and goes on, `refuse` stops before a single data frame is sent and `off` skips the check; the bootloader always has the last word.
 Every field is optional - only override what's actually changing. Missing
-fields fall back to this tool's own built-in defaults. **The memory-map and HardwareID overrides only apply to the main board's own constants** (the one exception is `slave_hmac_key_hex`, the expansion slave's signing key, which can be set here too) - the
+fields fall back to this tool's own built-in defaults. **The memory-map and HardwareID overrides only apply to the main board's own constants** (the one exception is `slave_hmac_key_hex`, the signing key of an earlier-generation expansion slave, which can be set here too although nothing is signed with it, because the current slave bootloader holds no key) - the
 expansion slave chip's own equivalents (`SLAVE_BOOTLOADER_FLASH_ADDR`,
 `SLAVE_APP_FLASH_ADDR`, `SLAVE_HARDWARE_ID`, etc.) are fixed in
 `flasher_config.py` itself, since that hardware's own real values are
@@ -837,7 +840,7 @@ at this repository's own root:
 │   ├── URTC_MAIN_FIRMWARE_v<version>.bin  <- put new .bin files here
 │   └── URTC_*  <- tools/sync_firmware.py replaces the URTC_* files of this folder with one release; other files stay
 ├── logs/                          <- created automatically, one file per session
-├── urtc_config.json               <- optional, not included by default (see "Changing the HMAC key" below)
+├── urtc_config.json               <- optional, not included by default (see "Configuration" above)
 ├── urtc_flasher.py                <- entry point: CLI arguments and start of the Qt Quick window
 ├── flasher_config.py              <- config file I/O, language loading, protocol constants
 ├── flasher_transports.py          <- SLCAN, SocketCAN, MockCAN
@@ -927,8 +930,9 @@ Both digests are checked right before flashing and a mismatch **refuses the
 flash** before anything is sent on the bus (wrong file, corrupted download
 or stale manifest). The published signature is what gets sent to the
 bootloader, and the manifest's version is what gets reported to it. A file
-without a manifest (your own build) is flashed only if a signing key is set
-in `urtc_config.json` - see "Changing the HMAC key" below.
+without a manifest (your own build) is flashed with its record `<image>.imgsig`;
+without a record, only for a bootloader of the earlier generation and with a
+signing key set in `urtc_config.json` - see "Configuration" above. Tried against a simulated bootloader only.
 
 A `<image>.sha256` or `<image>.manifest.json` that is there but cannot be read
 (empty, binary, cut, or without a digest where one is expected) also refuses

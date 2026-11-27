@@ -35,7 +35,7 @@ Every file of the repository with a line on what it does: the annotated tree tha
 │   └── portuguese.lng
 ├── logs/                           <- created automatically, one file per session
 ├── urtc_config.json.example        <- template for the optional urtc_config.json override file
-│                                       (see "Changing the HMAC key / HardwareID" above) - copy it
+│                                       (see "Configuration" above) - copy it
 │                                       to urtc_config.json and edit, rather than starting from
 │                                       scratch
 ├── urtc_flasher.py                <- entry point: CLI arguments and start of the Qt Quick window

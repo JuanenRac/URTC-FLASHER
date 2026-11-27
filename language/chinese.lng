@@ -197,7 +197,7 @@ LOG_SLAVE_FIRMWARE_HARDWAREID=扩展从机 HardwareID：0x{hw_id:08X}
 LOG_SLAVE_PROGRESS=已向扩展从机发送 {offset}/{size} 字节（其自身报告的进度：{slave_pct}%）
 LOG_SLAVE_TRANSFER_COMPLETE=扩展从机传输完成：{size} 字节，耗时 {elapsed:.1f} 秒（{kbps:.1f} KB/s）
 LOG_SLAVE_UPDATE_CONFIRMED=扩展从机更新已验证并确认。
-LOG_SLAVE_VERIFY_FAILED=扩展从机报告验证失败（其自身备份槽的大小、CRC32、HMAC 或 HardwareID 不匹配）。
+LOG_SLAVE_VERIFY_FAILED=扩展从机报告验证失败（其自身备份槽中的大小、CRC32、SHA-256、签名记录、版本或 HardwareID 未通过）。
 LOG_SLAVE_VERIFY_FAILED_REASON=扩展从机报告验证失败：{reason}
 LOG_SLAVE_GENERIC_ERROR=扩展从机报告了一个通用错误状态。
 
@@ -284,7 +284,7 @@ ERR_PUBLISHED_FILE_UNREADABLE={name} 位于镜像旁边但无法读取，因此�
 LOG_USING_PUBLISHED_SIGNATURE=使用清单中发布的签名（密钥：{kind}）。
 LOG_DEV_KEY_NOTE=注意：使用公开的开发密钥签名，只有引导程序使用同一密钥构建的板卡才会接受。
 LOG_SIGNING_LOCALLY=没有已发布的签名，使用 urtc_config.json 中的 {board} 密钥在本地签名。
-ERR_NO_SIGNATURE_NO_KEY=此镜像没有已发布的签名（<文件>.manifest.json 中的 hmac_sha256），也未配置 {board} 签名密钥。请使用 URTC 构建的镜像（附带其 .manifest.json），或者对于台架板上自行构建的镜像，在 urtc_config.json 中设置 "{option}"。
+ERR_NO_SIGNATURE_NO_KEY=此镜像没有签名记录（<文件>.imgsig），没有已发布的签名（<文件>.manifest.json 中的 hmac_sha256），也未配置 {board} 签名密钥。请使用带记录和清单的 URTC 构建镜像：当前的引导加载程序只安装带记录的镜像。urtc_config.json 中 "{option}" 的密钥仅适用于装有上一代引导加载程序的台架板。
 ERR_FIRMWARE_EMPTY=固件文件为空
 ERR_FIRMWARE_TOO_BIG_MAIN=固件大小为 {size} 字节，超过了 {max} 字节的主槽，引导程序本来也会拒绝，因此不发送此次更新
 ERR_PAGE_ACK_SHORT=第 {page} 页的 ACK 只有 {got} 字节（至少应为 4 字节），很可能是总线噪声破坏了该帧

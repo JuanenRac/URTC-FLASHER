@@ -688,11 +688,13 @@ assina cada imagem de aplicação e publica a assinatura ao lado dela, em
 essa assinatura publicada e recusa uma imagem cujo sha256 não coincida com o
 seu manifesto. Descarregar uma imagem do GitHub descarrega também ambos os
 ficheiros, e `python tools/sync_firmware.py` atualiza a pasta `firmware/`
-incluída a partir da compilação do URTC (`--check` verifica-a). Por omissão, obtém o conjunto dos anexos da última release do URTC (`--release TAG` escolhe outra); em alternativa, pode passar-se como argumento uma pasta local, por exemplo uma compilação local do URTC. Apenas uma imagem
-compilada por si, sem manifesto, numa placa de bancada, precisa de uma chave:
-defina `hmac_key_hex` / `slave_hmac_key_hex` em `urtc_config.json` abaixo - sem
-uma, essa imagem é recusada em vez de ser assinada com uma chave que o
-bootloader não pode ter. Consulte `docs/FIRMWARE_SIGNING.TXT` do URTC. O registo Ed25519 de cada imagem de aplicação é o ficheiro `<image>.imgsig` publicado junto dela; o flasher limita-se a levá-lo ao bootloader, que o verifica contra a sua tabela de chaves públicas (o flasher não guarda nenhuma chave e não decide nada). As imagens de uma compilação de bancada são assinadas com a chave pública de desenvolvimento (`signing_key_kind: dev`): qualquer pessoa pode fazer uma imagem assim.
+incluída a partir da compilação do URTC (`--check` verifica-a). Por omissão, obtém o conjunto dos anexos da última release do URTC (`--release TAG` escolhe outra); em alternativa, pode passar-se como argumento uma pasta local, por exemplo uma compilação local do URTC. Uma imagem compilada por si
+precisa do seu registo `<image>.imgsig` (um bootloader de bancada confia na
+chave de desenvolvimento pública): os bootloaders atuais não instalam nada sem
+ele. Uma chave (`hmac_key_hex` em `urtc_config.json`, abaixo) só serve para uma
+placa de bancada com um bootloader da geração anterior, quando não há nem registo
+nem assinatura publicada; sem ela, essa imagem é recusada em vez de ser assinada
+com uma chave inventada. Consulte `docs/FIRMWARE_SIGNING.TXT` do URTC. O registo Ed25519 de cada imagem de aplicação é o ficheiro `<image>.imgsig` publicado junto dela; o flasher limita-se a levá-lo ao bootloader, que o verifica contra a sua tabela de chaves públicas (o flasher não guarda nenhuma chave e não decide nada). As imagens de uma compilação de bancada são assinadas com a chave pública de desenvolvimento (`signing_key_kind: dev`): qualquer pessoa pode fazer uma imagem assim.
 
 **Ou substitua qualquer um destes valores sem tocar no script:** um
 `urtc_config.json` opcional ao lado de `firmware/` pode definir a chave de
@@ -716,7 +718,7 @@ diferente, sem precisar de uma nova versão do script por implementação:
 `require_release_signature` (predefinição `false`; só `true` conta) recusa um ficheiro de firmware que não tenha o seu `.sig` ao lado, e uma assinatura errada é sempre recusada. `imgsig_precheck` verifica neste computador o registo `<imagem>.imgsig` antes da transferência, contra uma cópia fixada da tabela de confiança dos bootloaders: `warn` (predefinição) regista um registo que não verifica e continua, `refuse` pára antes de enviar uma única trama de dados e `off` salta a verificação; a última palavra é sempre do bootloader.
 Todos os campos são opcionais - substitua apenas o que realmente está a mudar.
 Os campos em falta recorrem aos valores por defeito incorporados desta
-ferramenta. **As substituições do mapa de memória e do HardwareID aplicam-se apenas às constantes da própria placa principal** (a única exceção é `slave_hmac_key_hex`, a chave de assinatura do escravo de expansão, que também pode ser definida aqui) - os equivalentes do próprio chip escravo de expansão
+ferramenta. **As substituições do mapa de memória e do HardwareID aplicam-se apenas às constantes da própria placa principal** (a única exceção é `slave_hmac_key_hex`, a chave de assinatura de um escravo de expansão da geração anterior, que também pode ser definida aqui embora nada seja assinado com ela, porque o bootloader atual do escravo não guarda nenhuma chave) - os equivalentes do próprio chip escravo de expansão
 (`SLAVE_BOOTLOADER_FLASH_ADDR`, `SLAVE_APP_FLASH_ADDR`, `SLAVE_HARDWARE_ID`,
 etc.) estão fixos em `flasher_config.py`, uma vez que os valores reais
 desse hardware já estão confirmados contra os respetivos scripts de ligação (linker), em
@@ -871,7 +873,7 @@ na raiz deste mesmo repositório:
 │   ├── URTC_MAIN_FIRMWARE_v<version>.bin  <- coloque aqui os novos ficheiros .bin
 │   └── URTC_*  <- tools/sync_firmware.py substitui os ficheiros URTC_* desta pasta pelos de uma release; os outros ficheiros ficam
 ├── logs/                          <- criada automaticamente, um ficheiro por sessão
-├── urtc_config.json               <- opcional, não incluído por defeito (ver «Alterar a chave HMAC» abaixo)
+├── urtc_config.json               <- opcional, não incluído por defeito (ver «Configuração» acima)
 ├── urtc_flasher.py                <- ponto de entrada: argumentos da CLI e arranque da janela Qt Quick
 ├── flasher_config.py              <- E/S do ficheiro de configuração, carregamento do idioma, constantes do protocolo
 ├── flasher_transports.py          <- SLCAN, SocketCAN, MockCAN
@@ -964,9 +966,11 @@ Ambos os resumos são verificados mesmo antes da gravação e uma discrepância
 **recusa a gravação** antes de qualquer coisa ser enviada para o barramento
 (ficheiro errado, transferência corrompida ou manifesto desatualizado). A
 assinatura publicada é a que é enviada ao bootloader, e a versão do manifesto
-é a que lhe é reportada. Um ficheiro sem manifesto (a sua própria compilação) só é
-gravado se uma chave de assinatura estiver definida em `urtc_config.json` -
-consulte «Alterar a chave HMAC» abaixo.
+é a que lhe é reportada. Um ficheiro sem manifesto (a sua própria compilação) é
+gravado com o seu registo `<image>.imgsig`; sem registo, apenas para um
+bootloader da geração anterior e com uma chave de assinatura definida em
+`urtc_config.json` -
+consulte «Configuração» acima. Experimentado apenas com um bootloader simulado.
 
 Um `<image>.sha256` ou `<image>.manifest.json` que existe mas não pode ser lido
 (vazio, binário, cortado ou sem um resumo onde se espera um) também impede a

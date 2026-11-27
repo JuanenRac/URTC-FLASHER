@@ -197,7 +197,7 @@ LOG_SLAVE_FIRMWARE_HARDWAREID=Expansion slave HardwareID: 0x{hw_id:08X}
 LOG_SLAVE_PROGRESS=Sent {offset}/{size} bytes to expansion slave (its own reported progress: {slave_pct}%)
 LOG_SLAVE_TRANSFER_COMPLETE=Expansion slave transfer complete: {size} bytes in {elapsed:.1f}s ({kbps:.1f} KB/s)
 LOG_SLAVE_UPDATE_CONFIRMED=Expansion slave update verified and confirmed.
-LOG_SLAVE_VERIFY_FAILED=Expansion slave reported verification failure (size, CRC32, HMAC, or HardwareID mismatch on its own backup slot).
+LOG_SLAVE_VERIFY_FAILED=Expansion slave reported verification failure (size, CRC32, SHA-256, signature record, version or HardwareID did not pass on its own backup slot).
 LOG_SLAVE_VERIFY_FAILED_REASON=Expansion slave reported verification failure: {reason}
 LOG_SLAVE_GENERIC_ERROR=Expansion slave reported a generic error status.
 
@@ -284,7 +284,7 @@ ERR_PUBLISHED_FILE_UNREADABLE={name} is next to the image but cannot be read, so
 LOG_USING_PUBLISHED_SIGNATURE=Using the signature published in the manifest (key: {kind}).
 LOG_DEV_KEY_NOTE=NOTE: signed with the PUBLIC development key - only boards whose bootloader was built with that same key accept it.
 LOG_SIGNING_LOCALLY=No published signature - signing locally with the {board} key from urtc_config.json.
-ERR_NO_SIGNATURE_NO_KEY=This image has no published signature (hmac_sha256 in <file>.manifest.json) and no {board} signing key is configured. Use an image from the URTC build (it ships its .manifest.json), or for a self-built image on a bench board set "{option}" in urtc_config.json.
+ERR_NO_SIGNATURE_NO_KEY=This image has no signature record (<file>.imgsig), no published signature (hmac_sha256 in <file>.manifest.json) and no {board} signing key is configured. Use an image from the URTC build with its record and manifest: the current bootloaders install only an image with a record. A key in "{option}" in urtc_config.json serves only a bench board with a bootloader of the earlier generation.
 ERR_FIRMWARE_EMPTY=Firmware file is empty
 ERR_FIRMWARE_TOO_BIG_MAIN=Firmware is {size} bytes, exceeds the {max}-byte main slot - refusing to send an update the bootloader would reject anyway
 ERR_PAGE_ACK_SHORT=Page ACK for page {page} was only {got} bytes (expected at least 4) - likely bus noise corrupting the frame

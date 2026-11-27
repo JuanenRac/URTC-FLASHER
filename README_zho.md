@@ -556,10 +556,10 @@ python3 urtc_flasher.py --cli --transport mock --file firmware.bin --no-trigger
 镜像旁边的 `<image>.manifest.json`（`hmac_sha256`，另有 `<image>.sha256`）中；
 刷写工具发送该已发布的签名，并拒绝 sha256 与清单不符的镜像。从 GitHub 下载
 镜像时会同时下载这两个文件，`python tools/sync_firmware.py` 会根据 URTC 构建
-更新随附的 `firmware/` 文件夹（`--check` 用于校验）。默认从 URTC 最新发布版本的资源（assets）中获取这一组文件（`--release TAG` 可选择其他版本）；也可以改为传入本地文件夹作为参数，例如本地的 URTC 构建。只有在测试板上刷写没有
-清单的自建镜像时才需要密钥：在下方的 `urtc_config.json` 中设置
-`hmac_key_hex` / `slave_hmac_key_hex`——没有密钥时，此类镜像会被拒绝，而不是
-用引导程序不可能拥有的密钥签名。参见 URTC 的 `docs/FIRMWARE_SIGNING.TXT`。每个应用镜像的 Ed25519 记录是发布在其旁边的 `<image>.imgsig` 文件；刷写工具只负责把它转交给引导程序，由引导程序对照自己的公钥表进行验证（刷写工具不持有任何密钥，也不做任何决定）。台架构建的镜像使用公开的开发密钥（`signing_key_kind: dev`）签名：任何人都可以做出这样的镜像。
+更新随附的 `firmware/` 文件夹（`--check` 用于校验）。默认从 URTC 最新发布版本的资源（assets）中获取这一组文件（`--release TAG` 可选择其他版本）；也可以改为传入本地文件夹作为参数，例如本地的 URTC 构建。自建镜像需要它的记录 `<image>.imgsig`（测试用引导程序信任公开的开发密钥）：
+当前的引导程序没有记录就不会安装任何东西。密钥（下方 `urtc_config.json` 中的
+`hmac_key_hex`）仅适用于装有上一代引导程序的测试板，且既没有记录也没有已发布签名时；
+没有密钥时，此类镜像会被拒绝，而不是用编造的密钥签名。参见 URTC 的 `docs/FIRMWARE_SIGNING.TXT`。每个应用镜像的 Ed25519 记录是发布在其旁边的 `<image>.imgsig` 文件；刷写工具只负责把它转交给引导程序，由引导程序对照自己的公钥表进行验证（刷写工具不持有任何密钥，也不做任何决定）。台架构建的镜像使用公开的开发密钥（`signing_key_kind: dev`）签名：任何人都可以做出这样的镜像。
 
 **或者在不改动脚本的情况下覆盖这一切：** 一个位于 `firmware/` 旁边的
 可选 `urtc_config.json` 可以设置签名密钥、HardwareID，以及内存映射值——
@@ -581,7 +581,7 @@ python3 urtc_flasher.py --cli --transport mock --file firmware.bin --no-trigger
 `frame_gap_ms` 是一次传输中 8 字节数据帧之间的停顿（毫秒，默认 1.0，范围 0 到 50；0 表示连续发送）；超出范围的值会回退到默认值。
 `require_release_signature`（默认 `false`，只有 `true` 才生效）会拒绝旁边没有 `.sig` 的固件文件，签名错误的文件始终被拒绝。`imgsig_precheck` 在传输之前于本机检查 `<镜像>.imgsig` 记录，依据内置的引导程序信任表副本：`warn`（默认）记录无法验证的记录并继续，`refuse` 在发送任何数据帧之前停止，`off` 跳过检查；最终裁决始终由引导程序做出。
 每个字段都是可选的——只覆盖实际需要更改的内容。缺失的字段会回退到本工具
-自身内置的默认值。**内存映射和 HardwareID 的覆盖仅适用于主板自身的常量**（唯一的例外是扩展从机芯片的签名密钥 `slave_hmac_key_hex`，它也可以在这里设置）——扩展从机芯片
+自身内置的默认值。**内存映射和 HardwareID 的覆盖仅适用于主板自身的常量**（唯一的例外是上一代扩展从机的签名密钥 `slave_hmac_key_hex`，它也可以在这里设置，但当前的从机引导程序不持有密钥，因此不会用它签名任何内容）——扩展从机芯片
 自身的等效常量（`SLAVE_BOOTLOADER_FLASH_ADDR`、`SLAVE_APP_FLASH_ADDR`、
 `SLAVE_HARDWARE_ID` 等）固定在 `flasher_config.py` 自身中，因为该硬件
 自身的真实值已经根据其自身的链接脚本得到确认，而不像主板自身的默认值
@@ -713,7 +713,7 @@ SocketCAN 没有这个特定的坑——访问一个类似 `can0` 的接口不�
 │   ├── URTC_MAIN_FIRMWARE_v<version>.bin  <- 将新的 .bin 文件放在这里
 │   └── URTC_*  <- tools/sync_firmware.py 会用某个发布版本的文件替换此文件夹中的 URTC_* 文件；其他文件保持不变
 ├── logs/                          <- 自动创建，每个会话一个文件
-├── urtc_config.json               <- 可选，默认不包含（见下方“更改 HMAC 密钥”）
+├── urtc_config.json               <- 可选，默认不包含（见上方“配置”）
 ├── urtc_flasher.py                <- 入口：CLI 参数与 Qt Quick 窗口的启动
 ├── flasher_config.py              <- 配置文件 I/O、语言加载、协议常量
 ├── flasher_transports.py          <- SLCAN、SocketCAN、MockCAN
@@ -789,8 +789,8 @@ SocketCAN 没有这个特定的坑——访问一个类似 `can0` 的接口不�
 
 刷写前会立即校验这两个摘要，不一致时会在向总线发送任何数据之前**拒绝刷写**
 （文件错误、下载损坏或清单过期）。发送给引导程序的是已发布的签名，报告给它
-的是清单中的版本。没有清单的文件（自建镜像）只有在 `urtc_config.json` 中设置
-了签名密钥时才会刷写——参见下文更改 HMAC 密钥。
+的是清单中的版本。没有清单的文件（自建镜像）随其记录 `<image>.imgsig` 一起刷写；没有记录时，
+仅限上一代引导程序，且需在 `urtc_config.json` 中设置了签名密钥——参见上文“配置”。仅在模拟的引导程序上试过。
 
 如果 `<image>.sha256` 或 `<image>.manifest.json` 存在但无法读取（为空、二进制、
 被截断，或应有摘要处没有摘要），同样会拒绝刷写，并在消息中指出该文件。通过

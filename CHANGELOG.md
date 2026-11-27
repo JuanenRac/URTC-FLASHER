@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The texts about a signing key say which bootloader takes one:** the message for an image with no signature, the READMEs, the reasons of a failed verification and the message of a refused slave update still described a shared-key HMAC as the way to flash an image built by hand. The current bootloaders install only an image with its signature record (`<image>.imgsig`); a key serves only a bench board with a bootloader of the earlier generation. No behaviour changes. Eight languages where the text is shown translated.
+
 - **The README files say that the official trust table of the bootloaders holds the release keys:** they still said it was empty until the image-signing key was created. That key exists and `keys/image_trust.json` holds it, with a reserved next one. Eight languages.
 
 - **The compatibility table is current:** `docs/COMPATIBILITY.md` is the current copy of URTC-COMMON; the old one named versions of long ago.

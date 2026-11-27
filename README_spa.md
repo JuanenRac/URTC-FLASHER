@@ -727,10 +727,13 @@ envía esa firma publicada y rechaza una imagen cuyo sha256 no coincide con
 su manifiesto. Al descargar una imagen desde GitHub también se descargan
 ambos archivos, y `python tools/sync_firmware.py` actualiza la carpeta
 `firmware/` incluida a partir de la compilación de URTC (`--check` la verifica). Por defecto toma el conjunto de los archivos adjuntos de la última release de URTC (`--release TAG` elige otra); en su lugar se puede pasar como argumento una carpeta local, por ejemplo una compilación local de URTC.
-Solo una imagen compilada por ti sin manifiesto, en una placa de banco,
-necesita clave: define `hmac_key_hex` / `slave_hmac_key_hex` en
-`urtc_config.json` (abajo); sin ella esa imagen se rechaza en lugar de
-firmarse con una clave que el bootloader no puede tener. Ver
+Una imagen compilada por ti
+necesita su registro `<imagen>.imgsig` (un bootloader de banco confía en la
+clave pública de desarrollo): los bootloaders actuales no instalan nada sin él.
+Una clave (`hmac_key_hex` en `urtc_config.json`, abajo) solo sirve para una
+placa de banco con un bootloader de la generación anterior, cuando no hay ni
+registro ni firma publicada; sin ella esa imagen se rechaza en lugar de
+firmarse con una clave inventada. Ver
 `docs/FIRMWARE_SIGNING.TXT` de URTC. El registro Ed25519 de cada imagen de aplicación es el archivo `<imagen>.imgsig` publicado junto a ella; el flasher solo lo lleva al bootloader, que lo verifica contra su tabla de claves públicas (el flasher no guarda ninguna clave y no decide nada). Las imágenes de una compilación de banco están firmadas con la clave pública de desarrollo (`signing_key_kind: dev`): cualquiera puede hacer una imagen así.
 
 **O sustituye cualquiera de esto sin tocar el script:** un
@@ -758,7 +761,7 @@ Todo campo es opcional - solo sustituye lo que realmente esté
 cambiando. Un archivo ausente vuelve en silencio a los valores por
 defecto compilados; un archivo presente pero roto registra una
 advertencia y también vuelve a esos valores, en vez de hacer fallar la
-herramienta por una errata. **Las sustituciones del mapa de memoria y del HardwareID solo aplican a las constantes de la propia placa principal** (la única excepción es `slave_hmac_key_hex`, la clave de firma del esclavo de expansión, que también puede fijarse aquí) - los equivalentes
+herramienta por una errata. **Las sustituciones del mapa de memoria y del HardwareID solo aplican a las constantes de la propia placa principal** (la única excepción es `slave_hmac_key_hex`, la clave de firma de un esclavo de expansión de la generación anterior, que también puede fijarse aquí aunque no se firma nada con ella, porque el bootloader actual del esclavo no guarda ninguna clave) - los equivalentes
 propios del chip esclavo de expansión (`SLAVE_BOOTLOADER_FLASH_ADDR`,
 `SLAVE_APP_FLASH_ADDR`, `SLAVE_HARDWARE_ID`, etc.) están fijos en el
 propio `flasher_config.py`, ya que los valores reales de ese hardware
@@ -917,7 +920,7 @@ El flasher espera una carpeta `firmware/` justo al lado de
 │   ├── URTC_MAIN_FIRMWARE_v<version>.bin  <- pon los archivos .bin nuevos aquí
 │   └── URTC_*  <- tools/sync_firmware.py sustituye los archivos URTC_* de esta carpeta por los de una release; los demás archivos se quedan
 ├── logs/                          <- se crea automáticamente, un archivo por sesión
-├── urtc_config.json               <- opcional, no incluido por defecto (ver "Cambiar la clave HMAC" más abajo)
+├── urtc_config.json               <- opcional, no incluido por defecto (ver "Configuración" más arriba)
 ├── urtc_flasher.py                <- punto de entrada: argumentos de la CLI e inicio de la ventana Qt Quick
 ├── flasher_config.py              <- E/S del archivo de configuración, carga de idioma, constantes del protocolo
 ├── flasher_transports.py          <- SLCAN, SocketCAN, MockCAN
@@ -1014,9 +1017,10 @@ Ambos resúmenes se comprueban justo antes de grabar y una discrepancia
 **rechaza la grabación** antes de enviar nada por el bus (archivo
 equivocado, descarga corrupta o manifiesto desactualizado). La firma
 publicada es la que se envía al bootloader, y la versión del manifiesto es
-la que se le comunica. Un archivo sin manifiesto (una compilación propia) solo se
-graba si hay una clave de firma en `urtc_config.json` - ver "Cambiar la
-clave HMAC" más abajo.
+la que se le comunica. Un archivo sin manifiesto (una
+compilación propia) se graba con su registro `<imagen>.imgsig`; sin registro,
+solo para un bootloader de la generación anterior y con una clave de firma en
+`urtc_config.json` - ver "Configuración" más arriba. Probado solo contra un bootloader simulado.
 
 Un `<image>.sha256` o `<image>.manifest.json` que está pero no se puede leer
 (vacío, binario, cortado o sin un resumen donde se espera uno) también impide
