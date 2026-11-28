@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **README facts checked against the code:** which images carry the development key, where the published signature is and what the default virtual board checks.
+
 ## [0.6.1] - Whole downloads, signing texts and the version rule command
 
 - **A workshop tool makes the signed command of the version rule:** `tools/version_compat_command.py` prints the frames that set how a head reads an image without a patch number (`strict` or `accept_patchless`), or the one that asks for it. It sends nothing and takes the key from a file it is given. Only a bootloader built with that command, off in the builds, answers. Tried against the host reference only.
