@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.6.1] - Whole downloads, signing texts and the version rule command
+
 - **A workshop tool makes the signed command of the version rule:** `tools/version_compat_command.py` prints the frames that set how a head reads an image without a patch number (`strict` or `accept_patchless`), or the one that asks for it. It sends nothing and takes the key from a file it is given. Only a bootloader built with that command, off in the builds, answers. Tried against the host reference only.
 
 - **The texts about a signing key say which bootloader takes one:** the message for an image with no signature, the READMEs, the reasons of a failed verification and the message of a refused slave update still described a shared-key HMAC as the way to flash an image built by hand. The current bootloaders install only an image with its signature record (`<image>.imgsig`); a key serves only a bench board with a bootloader of the earlier generation. No behaviour changes. Eight languages where the text is shown translated.
