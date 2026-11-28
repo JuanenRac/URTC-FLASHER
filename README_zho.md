@@ -21,13 +21,13 @@
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Language-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-1012-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-1017-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocol-CAN--OTA-orange.svg" alt="CAN-OTA">
 </p>
 
 ---
 
-**诚实核查 - 今天真正能运行的部分：** `tests/` 下有 76 个 pytest 文件（1012 个测试：全部通过，其中 106 个在没有 PySide6 时跳过）——针对真实 `MockCAN` 传输（`flasher_transports.py`）的 CAN-OTA 协议测试，它会回放完整的模拟引导程序序列（开始／擦除／接收、页数据 + PAGE_ACK、签名记录帧、以真实成功或特定 `VERIFY_FAIL_REASON` 结束更新）；签名规则（无需任何密钥即发送已发布的签名、拒绝未签名镜像、清单 sha256 不符时在任何总线通信前拒绝）；镜像完整性检查；以及随附 `firmware/` 与其清单的核对。GitHub Actions（`.github/workflows/ci.yml`）在每次推送时运行这套测试，`tools/build_test.py` 也会在 `build-test.sh`/`.bat` 中运行。它还会运行 `ruff check` 和 `python -m mypy`（对程序及共享代码副本的类型检查）。根目录下的三个 `verify_qt_*.py` 脚本是 pytest 之外的真实端到端检查（需要真实的 Qt 事件循环；用 `QT_QPA_PLATFORM=offscreen python verify_qt_*.py` 运行）；`verify_qt_swd_full_chip_flash.py` 只以 `dry_run=True` 构造 `PyOCDCLI`/`CubeProgrammerCLI` 命令。这些都没有在本环境中针对真实板卡运行过。已发布的内容请参见 `CHANGELOG.md`。模拟的引导程序（`MockCAN`）只是根据协议说明编写的模型：它能重现页确认、不完整的最后一页和回读帧，但它不是真正的引导程序，所以测试全部通过并不能代替在真实板卡上的试验（官方 73476 字节镜像曾无法安装、备份的最后一帧曾被丢弃，而测试却是通过的，正是因为模拟比真正的引导程序更宽松）。
+**诚实核查 - 今天真正能运行的部分：** `tests/` 下有 77 个 pytest 文件（1017 个测试：全部通过，其中 106 个在没有 PySide6 时跳过）——针对真实 `MockCAN` 传输（`flasher_transports.py`）的 CAN-OTA 协议测试，它会回放完整的模拟引导程序序列（开始／擦除／接收、页数据 + PAGE_ACK、签名记录帧、以真实成功或特定 `VERIFY_FAIL_REASON` 结束更新）；签名规则（无需任何密钥即发送已发布的签名、拒绝未签名镜像、清单 sha256 不符时在任何总线通信前拒绝）；镜像完整性检查；以及随附 `firmware/` 与其清单的核对。GitHub Actions（`.github/workflows/ci.yml`）在每次推送时运行这套测试，`tools/build_test.py` 也会在 `build-test.sh`/`.bat` 中运行。它还会运行 `ruff check` 和 `python -m mypy`（对程序及共享代码副本的类型检查）。根目录下的三个 `verify_qt_*.py` 脚本是 pytest 之外的真实端到端检查（需要真实的 Qt 事件循环；用 `QT_QPA_PLATFORM=offscreen python verify_qt_*.py` 运行）；`verify_qt_swd_full_chip_flash.py` 只以 `dry_run=True` 构造 `PyOCDCLI`/`CubeProgrammerCLI` 命令。这些都没有在本环境中针对真实板卡运行过。已发布的内容请参见 `CHANGELOG.md`。模拟的引导程序（`MockCAN`）只是根据协议说明编写的模型：它能重现页确认、不完整的最后一页和回读帧，但它不是真正的引导程序，所以测试全部通过并不能代替在真实板卡上的试验（官方 73476 字节镜像曾无法安装、备份的最后一帧曾被丢弃，而测试却是通过的，正是因为模拟比真正的引导程序更宽松）。
 
 ---
 
@@ -39,7 +39,7 @@
 |---|---|
 | 版本 | `0.6.0` |
 | 成熟度 | 可用 |
-| 测试 | 1012 (`python -m pytest tests -q`) |
+| 测试 | 1017 (`python -m pytest tests -q`) |
 | 技术栈 | Python / PySide6 / Qt Quick / CAN-OTA / SWD/JTAG |
 | 目标 | 使用者的电脑 |
 | 真实硬件 | 仅模拟：使用模拟器、替身或仿真测试；此版本没有在真实硬件上运行的记录 |
@@ -556,10 +556,10 @@ python3 urtc_flasher.py --cli --transport mock --file firmware.bin --no-trigger
 镜像旁边的 `<image>.manifest.json`（`hmac_sha256`，另有 `<image>.sha256`）中；
 刷写工具发送该已发布的签名，并拒绝 sha256 与清单不符的镜像。从 GitHub 下载
 镜像时会同时下载这两个文件，`python tools/sync_firmware.py` 会根据 URTC 构建
-更新随附的 `firmware/` 文件夹（`--check` 用于校验）。默认从 URTC 最新发布版本的资源（assets）中获取这一组文件（`--release TAG` 可选择其他版本）；也可以改为传入本地文件夹作为参数，例如本地的 URTC 构建。只有在测试板上刷写没有
-清单的自建镜像时才需要密钥：在下方的 `urtc_config.json` 中设置
-`hmac_key_hex` / `slave_hmac_key_hex`——没有密钥时，此类镜像会被拒绝，而不是
-用引导程序不可能拥有的密钥签名。参见 URTC 的 `docs/FIRMWARE_SIGNING.TXT`。每个应用镜像的 Ed25519 记录是发布在其旁边的 `<image>.imgsig` 文件；刷写工具只负责把它转交给引导程序，由引导程序对照自己的公钥表进行验证（刷写工具不持有任何密钥，也不做任何决定）。台架构建的镜像使用公开的开发密钥（`signing_key_kind: dev`）签名：任何人都可以做出这样的镜像。
+更新随附的 `firmware/` 文件夹（`--check` 用于校验）。默认从 URTC 最新发布版本的资源（assets）中获取这一组文件（`--release TAG` 可选择其他版本）；也可以改为传入本地文件夹作为参数，例如本地的 URTC 构建。自建镜像需要它的记录 `<image>.imgsig`（测试用引导程序信任公开的开发密钥）：
+当前的引导程序没有记录就不会安装任何东西。密钥（下方 `urtc_config.json` 中的
+`hmac_key_hex`）仅适用于装有上一代引导程序的测试板，且既没有记录也没有已发布签名时；
+没有密钥时，此类镜像会被拒绝，而不是用编造的密钥签名。参见 URTC 的 `docs/FIRMWARE_SIGNING.TXT`。每个应用镜像的 Ed25519 记录是发布在其旁边的 `<image>.imgsig` 文件；刷写工具只负责把它转交给引导程序，由引导程序对照自己的公钥表进行验证（刷写工具不持有任何密钥，也不做任何决定）。台架构建的镜像使用公开的开发密钥（`signing_key_kind: dev`）签名：任何人都可以做出这样的镜像。
 
 **或者在不改动脚本的情况下覆盖这一切：** 一个位于 `firmware/` 旁边的
 可选 `urtc_config.json` 可以设置签名密钥、HardwareID，以及内存映射值——
@@ -581,7 +581,7 @@ python3 urtc_flasher.py --cli --transport mock --file firmware.bin --no-trigger
 `frame_gap_ms` 是一次传输中 8 字节数据帧之间的停顿（毫秒，默认 1.0，范围 0 到 50；0 表示连续发送）；超出范围的值会回退到默认值。
 `require_release_signature`（默认 `false`，只有 `true` 才生效）会拒绝旁边没有 `.sig` 的固件文件，签名错误的文件始终被拒绝。`imgsig_precheck` 在传输之前于本机检查 `<镜像>.imgsig` 记录，依据内置的引导程序信任表副本：`warn`（默认）记录无法验证的记录并继续，`refuse` 在发送任何数据帧之前停止，`off` 跳过检查；最终裁决始终由引导程序做出。
 每个字段都是可选的——只覆盖实际需要更改的内容。缺失的字段会回退到本工具
-自身内置的默认值。**内存映射和 HardwareID 的覆盖仅适用于主板自身的常量**（唯一的例外是扩展从机芯片的签名密钥 `slave_hmac_key_hex`，它也可以在这里设置）——扩展从机芯片
+自身内置的默认值。**内存映射和 HardwareID 的覆盖仅适用于主板自身的常量**（唯一的例外是上一代扩展从机的签名密钥 `slave_hmac_key_hex`，它也可以在这里设置，但当前的从机引导程序不持有密钥，因此不会用它签名任何内容）——扩展从机芯片
 自身的等效常量（`SLAVE_BOOTLOADER_FLASH_ADDR`、`SLAVE_APP_FLASH_ADDR`、
 `SLAVE_HARDWARE_ID` 等）固定在 `flasher_config.py` 自身中，因为该硬件
 自身的真实值已经根据其自身的链接脚本得到确认，而不像主板自身的默认值
@@ -713,7 +713,7 @@ SocketCAN 没有这个特定的坑——访问一个类似 `can0` 的接口不�
 │   ├── URTC_MAIN_FIRMWARE_v<version>.bin  <- 将新的 .bin 文件放在这里
 │   └── URTC_*  <- tools/sync_firmware.py 会用某个发布版本的文件替换此文件夹中的 URTC_* 文件；其他文件保持不变
 ├── logs/                          <- 自动创建，每个会话一个文件
-├── urtc_config.json               <- 可选，默认不包含（见下方“更改 HMAC 密钥”）
+├── urtc_config.json               <- 可选，默认不包含（见上方“配置”）
 ├── urtc_flasher.py                <- 入口：CLI 参数与 Qt Quick 窗口的启动
 ├── flasher_config.py              <- 配置文件 I/O、语言加载、协议常量
 ├── flasher_transports.py          <- SLCAN、SocketCAN、MockCAN
@@ -789,8 +789,8 @@ SocketCAN 没有这个特定的坑——访问一个类似 `can0` 的接口不�
 
 刷写前会立即校验这两个摘要，不一致时会在向总线发送任何数据之前**拒绝刷写**
 （文件错误、下载损坏或清单过期）。发送给引导程序的是已发布的签名，报告给它
-的是清单中的版本。没有清单的文件（自建镜像）只有在 `urtc_config.json` 中设置
-了签名密钥时才会刷写——参见下文更改 HMAC 密钥。
+的是清单中的版本。没有清单的文件（自建镜像）随其记录 `<image>.imgsig` 一起刷写；没有记录时，
+仅限上一代引导程序，且需在 `urtc_config.json` 中设置了签名密钥——参见上文“配置”。仅在模拟的引导程序上试过。
 
 如果 `<image>.sha256` 或 `<image>.manifest.json` 存在但无法读取（为空、二进制、
 被截断，或应有摘要处没有摘要），同样会拒绝刷写，并在消息中指出该文件。通过
@@ -815,7 +815,7 @@ SWD/JTAG 编程之前也会执行相同的检查。
 
 ## 🧪 测试
 
-测试套件在 76 个文件中共有 1012 个测试（`python -m pytest tests -q`；在没有屏幕的机器上使用 Qt 时设置 `QT_QPA_PLATFORM=offscreen`；其中 106 个需要 PySide6，没有它时会被跳过）：针对真实 `MockCAN` 传输层的 CAN-OTA 协议（它回放完整的模拟引导程序：开始、擦除、接收、页数据和 ACK、签名记录帧、带真实成功或特定 `VERIFY_FAIL_REASON` 的更新结束）、签名规则、镜像完整性检查、`firmware/` 中内置的固件与其清单的核对、用 `dry_run` 构造的 SWD/JTAG 命令、语言文件和 Qt Quick 面板。根目录下的三个脚本（`verify_qt_*.py`）对 Qt 面板做端到端驱动。CI 还会运行 `ruff check`、`python -m mypy` 和 `tools/ci_validate.py`。`MockCAN` 只是根据协议写成的模型：它比真实的引导程序宽容，所以测试全绿并不能代替在真实板卡上的试验。
+测试套件在 77 个文件中共有 1017 个测试（`python -m pytest tests -q`；在没有屏幕的机器上使用 Qt 时设置 `QT_QPA_PLATFORM=offscreen`；其中 106 个需要 PySide6，没有它时会被跳过）：针对真实 `MockCAN` 传输层的 CAN-OTA 协议（它回放完整的模拟引导程序：开始、擦除、接收、页数据和 ACK、签名记录帧、带真实成功或特定 `VERIFY_FAIL_REASON` 的更新结束）、签名规则、镜像完整性检查、`firmware/` 中内置的固件与其清单的核对、用 `dry_run` 构造的 SWD/JTAG 命令、语言文件和 Qt Quick 面板。根目录下的三个脚本（`verify_qt_*.py`）对 Qt 面板做端到端驱动。CI 还会运行 `ruff check`、`python -m mypy` 和 `tools/ci_validate.py`。`MockCAN` 只是根据协议写成的模型：它比真实的引导程序宽容，所以测试全绿并不能代替在真实板卡上的试验。
 
 ### 运维与工具
 
@@ -843,7 +843,7 @@ URTC-FLASHER/
 ├── urtc_can/                                          协议、传输和更新（副本）
 ├── urtc_ui/                                           界面辅助（副本）
 ├── firmware/                                          镜像存放处（起初为空）
-├── tests/                                             76 个测试文件，每个领域一个
+├── tests/                                             77 个测试文件，每个领域一个
 ├── language/                                          八个 .lng 语言文件
 ├── assets/                                            QML、横幅和图标
 ├── docs/                                              架构、构建与运行

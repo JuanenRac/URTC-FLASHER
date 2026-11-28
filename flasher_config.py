@@ -103,7 +103,7 @@ STATUS_NAMES = {
     0x01: "Listening",
     0x02: "Erasing backup slot",
     0x03: "Receiving firmware data",
-    0x06: "Verifying (size/CRC32/HMAC/HardwareID)",
+    0x06: "Verifying (size/CRC32/signature/HardwareID)",
     0x07: "Copying backup into main slot",
     0x04: "Verify OK - jumping to new firmware",
     0x05: "Verify FAILED - main slot untouched",
@@ -116,9 +116,9 @@ STATUS_NAMES = {
 # just THAT. Byte[0] is still 0x05 regardless, so any code that
 # only reads that first byte keeps working unchanged.
 VERIFY_FAIL_REASONS = {
-    0x01: "incomplete transfer (didn't receive the declared size or all 4 HMAC chunks)",
+    0x01: "incomplete transfer (the declared size or the signature did not all arrive)",
     0x02: "CRC32 mismatch (transfer corruption)",
-    0x03: "HMAC signature mismatch (not signed with this project's key)",
+    0x03: "signature check failed (not signed with a key this board trusts, or the image arrived altered)",
     0x04: "HardwareID mismatch (image built for different hardware)",
     0x05: "rollback rejected (older version than what's already installed)",
 }

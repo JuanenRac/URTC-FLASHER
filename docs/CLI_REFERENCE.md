@@ -161,7 +161,7 @@ Sending firmware data...
 Transfer complete: 73476 bytes in 16.8s (4.3 KB/s average, 0 page-ACK retries)
 Sending end-update / verify (0x7F4)...
 Verifying and copying to main slot (this can take a while)...
-  status: Verifying (size/CRC32/HMAC/HardwareID)
+  status: Verifying (size/CRC32/signature/HardwareID)
   status: Verify OK - jumping to new firmware
 Update verified OK - board is resetting into new firmware.
 SUCCESS: firmware update complete.
@@ -193,9 +193,9 @@ Sending firmware data...
 Transfer complete: 73476 bytes in 15.8s (4.5 KB/s average, 0 page-ACK retries)
 Sending end-update / verify (0x7F4)...
 Verifying and copying to main slot (this can take a while)...
-  status: Verifying (size/CRC32/HMAC/HardwareID)
-  status: Verify FAILED - main slot untouched - HMAC signature mismatch (not signed with this project's key)
-FAILED: Bootloader reported failure: Verify FAILED - main slot untouched - HMAC signature mismatch (not signed with this project's key)
+  status: Verifying (size/CRC32/signature/HardwareID)
+  status: Verify FAILED - main slot untouched - signature check failed (not signed with a key this board trusts, or the image arrived altered)
+FAILED: Bootloader reported failure: Verify FAILED - main slot untouched - signature check failed (not signed with a key this board trusts, or the image arrived altered)
 $ echo $?
 1
 ```

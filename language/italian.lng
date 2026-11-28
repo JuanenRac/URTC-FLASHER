@@ -198,7 +198,7 @@ LOG_SLAVE_FIRMWARE_HARDWAREID=HardwareID dello slave di espansione: 0x{hw_id:08X
 LOG_SLAVE_PROGRESS=Inviati {offset}/{size} byte allo slave di espansione (progresso proprio riportato: {slave_pct}%)
 LOG_SLAVE_TRANSFER_COMPLETE=Trasferimento allo slave di espansione completato: {size} byte in {elapsed:.1f}s ({kbps:.1f} KB/s)
 LOG_SLAVE_UPDATE_CONFIRMED=Aggiornamento dello slave di espansione verificato e confermato.
-LOG_SLAVE_VERIFY_FAILED=Lo slave di espansione ha segnalato un errore di verifica (dimensione, CRC32, HMAC o HardwareID non corrispondenti nel proprio slot di backup).
+LOG_SLAVE_VERIFY_FAILED=Lo slave di espansione ha segnalato un errore di verifica (dimensione, CRC32, SHA-256, record di firma, versione o HardwareID non hanno superato il controllo nel proprio slot di backup).
 LOG_SLAVE_VERIFY_FAILED_REASON=Lo slave di espansione ha segnalato un errore di verifica: {reason}
 LOG_SLAVE_GENERIC_ERROR=Lo slave di espansione ha segnalato uno stato di errore generico.
 
@@ -285,7 +285,7 @@ ERR_PUBLISHED_FILE_UNREADABLE={name} è accanto all'immagine ma non può essere 
 LOG_USING_PUBLISHED_SIGNATURE=Si usa la firma pubblicata nel manifest (chiave: {kind}).
 LOG_DEV_KEY_NOTE=NOTA: firmato con la chiave di sviluppo PUBBLICA: lo accettano solo le schede il cui bootloader è stato compilato con la stessa chiave.
 LOG_SIGNING_LOCALLY=Nessuna firma pubblicata: firma locale con la chiave {board} di urtc_config.json.
-ERR_NO_SIGNATURE_NO_KEY=Questa immagine non ha una firma pubblicata (hmac_sha256 in <file>.manifest.json) e non è configurata alcuna chiave di firma {board}. Usa un'immagine della build URTC (include il suo .manifest.json) oppure, per un'immagine compilata da te su una scheda da banco, imposta "{option}" in urtc_config.json.
+ERR_NO_SIGNATURE_NO_KEY=Questa immagine non ha né un record di firma (<file>.imgsig) né una firma pubblicata (hmac_sha256 in <file>.manifest.json) e non è configurata alcuna chiave di firma {board}. Usa un'immagine della build URTC con il suo record e il suo manifest: i bootloader attuali installano solo un'immagine con il record. Una chiave in "{option}" in urtc_config.json serve solo a una scheda da banco con un bootloader della generazione precedente.
 ERR_FIRMWARE_EMPTY=Il file del firmware è vuoto
 ERR_FIRMWARE_TOO_BIG_MAIN=Il firmware è di {size} byte e supera lo slot principale di {max} byte: non si invia un aggiornamento che il bootloader rifiuterebbe comunque
 ERR_PAGE_ACK_SHORT=L'ACK della pagina {page} era di soli {got} byte (ne servono almeno 4): probabilmente il rumore sul bus ha corrotto il frame

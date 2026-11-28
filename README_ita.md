@@ -21,13 +21,13 @@
   <img src="https://img.shields.io/badge/Licenza-GPL%203.0-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Linguaggio-Python-3776AB.svg" alt="Python">
   <img src="https://img.shields.io/badge/UI-Qt%20Quick-38d4e6.svg" alt="Qt Quick">
-  <img src="https://img.shields.io/badge/Tests-1012-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-1017-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Protocollo-CAN--OTA-orange.svg" alt="CAN-OTA">
 </p>
 
 ---
 
-**Verifica di onestà - cosa funziona davvero oggi:** `tests/` contiene 76 file pytest (1012 test: tutti superati; 106 di essi saltati senza PySide6) - il protocollo CAN-OTA contro un vero trasporto `MockCAN` (`flasher_transports.py`) che riproduce un'intera sequenza di bootloader simulato (avvio/cancellazione/ricezione, dati di pagina + PAGE_ACK, frame del record di firma, fine aggiornamento con un vero successo o uno specifico `VERIFY_FAIL_REASON`), le regole di firma (firma pubblicata inviata senza alcuna chiave, immagine non firmata rifiutata, sha256 del manifest non corrispondente rifiutato prima di qualsiasi traffico sul bus), i controlli di integrità dell'immagine e la cartella `firmware/` inclusa rispetto ai suoi manifest. GitHub Actions (`.github/workflows/ci.yml`) esegue questa suite a ogni push, e `tools/build_test.py` la esegue in `build-test.sh`/`.bat`. Esegue anche `ruff check` e `python -m mypy` (un controllo dei tipi del programma e delle copie del codice condiviso). I tre script `verify_qt_*.py` nella radice sono veri controlli end-to-end fuori da pytest (richiedono un vero ciclo di eventi Qt; si eseguono con `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`); `verify_qt_swd_full_chip_flash.py` costruisce solo i comandi `PyOCDCLI`/`CubeProgrammerCLI` con `dry_run=True`. Niente di tutto ciò è stato eseguito su una scheda reale in questo ambiente. Vedi `CHANGELOG.md` per cosa è stato effettivamente rilasciato. Il bootloader simulato (`MockCAN`) è solo un modello scritto dalla descrizione del protocollo: riproduce gli ACK di pagina, l'ultima pagina parziale e i frame di lettura, ma non è il vero bootloader, quindi una serie di test verdi non sostituisce una prova su una scheda reale (l'immagine ufficiale da 73476 byte non si poteva installare e l'ultimo frame di un backup andava perso mentre i test passavano, proprio perché la simulazione era più indulgente del vero bootloader).
+**Verifica di onestà - cosa funziona davvero oggi:** `tests/` contiene 77 file pytest (1017 test: tutti superati; 106 di essi saltati senza PySide6) - il protocollo CAN-OTA contro un vero trasporto `MockCAN` (`flasher_transports.py`) che riproduce un'intera sequenza di bootloader simulato (avvio/cancellazione/ricezione, dati di pagina + PAGE_ACK, frame del record di firma, fine aggiornamento con un vero successo o uno specifico `VERIFY_FAIL_REASON`), le regole di firma (firma pubblicata inviata senza alcuna chiave, immagine non firmata rifiutata, sha256 del manifest non corrispondente rifiutato prima di qualsiasi traffico sul bus), i controlli di integrità dell'immagine e la cartella `firmware/` inclusa rispetto ai suoi manifest. GitHub Actions (`.github/workflows/ci.yml`) esegue questa suite a ogni push, e `tools/build_test.py` la esegue in `build-test.sh`/`.bat`. Esegue anche `ruff check` e `python -m mypy` (un controllo dei tipi del programma e delle copie del codice condiviso). I tre script `verify_qt_*.py` nella radice sono veri controlli end-to-end fuori da pytest (richiedono un vero ciclo di eventi Qt; si eseguono con `QT_QPA_PLATFORM=offscreen python verify_qt_*.py`); `verify_qt_swd_full_chip_flash.py` costruisce solo i comandi `PyOCDCLI`/`CubeProgrammerCLI` con `dry_run=True`. Niente di tutto ciò è stato eseguito su una scheda reale in questo ambiente. Vedi `CHANGELOG.md` per cosa è stato effettivamente rilasciato. Il bootloader simulato (`MockCAN`) è solo un modello scritto dalla descrizione del protocollo: riproduce gli ACK di pagina, l'ultima pagina parziale e i frame di lettura, ma non è il vero bootloader, quindi una serie di test verdi non sostituisce una prova su una scheda reale (l'immagine ufficiale da 73476 byte non si poteva installare e l'ultimo frame di un backup andava perso mentre i test passavano, proprio perché la simulazione era più indulgente del vero bootloader).
 
 ---
 
@@ -39,7 +39,7 @@
 |---|---|
 | Versione | `0.6.0` |
 | Maturità | Funzionale |
-| Test | 1012 (`python -m pytest tests -q`) |
+| Test | 1017 (`python -m pytest tests -q`) |
 | Tecnologia | Python / PySide6 / Qt Quick / CAN-OTA / SWD/JTAG |
 | Destinazione | Il PC di chi lo usa |
 | Su hardware reale | Solo simulato: provato con emulatori, test double o simulatori; per questa versione non risulta alcuna esecuzione su hardware reale |
@@ -728,10 +728,13 @@ flasher invia quella firma pubblicata e rifiuta un'immagine il cui sha256
 non corrisponde al suo manifest. Scaricando un'immagine da GitHub vengono
 scaricati anche entrambi i file, e `python tools/sync_firmware.py` aggiorna
 la cartella `firmware/` inclusa dalla build URTC (`--check` la verifica). Per impostazione predefinita prende l'insieme dagli asset dell'ultima release di URTC (`--release TAG` ne sceglie un'altra); in alternativa si può passare come argomento una cartella locale, ad esempio una build URTC locale.
-Solo un'immagine compilata in proprio senza manifest, su una scheda da
-banco, richiede una chiave: impostare `hmac_key_hex` / `slave_hmac_key_hex`
-in `urtc_config.json` (sotto) - senza, tale immagine viene rifiutata invece
-di essere firmata con una chiave che il bootloader non può avere. Vedi
+Un'immagine compilata in proprio ha
+bisogno del suo record `<immagine>.imgsig` (un bootloader da banco si fida della
+chiave pubblica di sviluppo): i bootloader attuali non installano nulla senza.
+Una chiave (`hmac_key_hex` in `urtc_config.json`, sotto) serve solo a una scheda
+da banco con un bootloader della generazione precedente, quando non c'è né un
+record né una firma pubblicata; senza, tale immagine viene rifiutata invece di
+essere firmata con una chiave inventata. Vedi
 `docs/FIRMWARE_SIGNING.TXT` in URTC. Il record Ed25519 di ogni immagine applicativa è il file `<immagine>.imgsig` pubblicato accanto ad essa; il flasher si limita a portarlo al bootloader, che lo verifica rispetto alla propria tabella di chiavi pubbliche (il flasher non custodisce alcuna chiave e non decide nulla). Le immagini di una build di banco sono firmate con la chiave pubblica di sviluppo (`signing_key_kind: dev`): chiunque può produrre un'immagine così.
 
 **Oppure sostituisci qualsiasi cosa di questo senza toccare lo script:**
@@ -759,7 +762,7 @@ Ogni campo è opzionale - sostituisci solo ciò che effettivamente sta
 cambiando. Un file mancante ricade in silenzio sui default compilati; un
 file presente ma rotto registra un avviso e ricade anch'esso su quei
 valori, invece di far crashare lo strumento per un errore di battitura.
-**Le sostituzioni della mappa di memoria e dell'HardwareID si applicano solo alle costanti proprie della scheda principale** (l'unica eccezione è `slave_hmac_key_hex`, la chiave di firma dello slave di espansione, che si può impostare anche qui) - gli equivalenti propri del chip
+**Le sostituzioni della mappa di memoria e dell'HardwareID si applicano solo alle costanti proprie della scheda principale** (l'unica eccezione è `slave_hmac_key_hex`, la chiave di firma di uno slave di espansione della generazione precedente, che si può impostare anche qui sebbene non venga firmato nulla con essa, perché il bootloader attuale dello slave non custodisce alcuna chiave) - gli equivalenti propri del chip
 slave di espansione (`SLAVE_BOOTLOADER_FLASH_ADDR`,
 `SLAVE_APP_FLASH_ADDR`, `SLAVE_HARDWARE_ID`, ecc.) sono fissi nel
 proprio `flasher_config.py`, poiché i valori reali di quell'hardware
@@ -920,7 +923,7 @@ Questo strumento si aspetta una cartella `firmware/` proprio accanto a
 │   ├── URTC_MAIN_FIRMWARE_v<version>.bin  <- metti qui i nuovi file .bin
 │   └── URTC_*  <- tools/sync_firmware.py sostituisce i file URTC_* di questa cartella con quelli di una release; gli altri file restano
 ├── logs/                          <- creato automaticamente, un file per sessione
-├── urtc_config.json               <- opzionale, non incluso di default (vedi «Cambiare la chiave HMAC» sotto)
+├── urtc_config.json               <- opzionale, non incluso di default (vedi «Configurazione» sopra)
 ├── urtc_flasher.py                <- punto di ingresso: argomenti CLI e avvio della finestra Qt Quick
 ├── flasher_config.py              <- I/O file di configurazione, caricamento lingua, costanti del protocollo
 ├── flasher_transports.py          <- SLCAN, SocketCAN, MockCAN
@@ -1015,9 +1018,11 @@ Entrambe le impronte vengono verificate subito prima del flash e una
 differenza **rifiuta il flash** prima di inviare qualsiasi cosa sul bus
 (file sbagliato, download corrotto o manifest non aggiornato). Al
 bootloader viene inviata la firma pubblicata e comunicata la versione del
-manifest. Un file senza manifest (una build propria) viene flashato solo se
-in `urtc_config.json` è impostata una chiave di firma - vedi più sotto la
-modifica della chiave HMAC.
+manifest. Un file senza manifest (una build propria)
+viene flashato con il suo record `<immagine>.imgsig`; senza record, solo per un
+bootloader della generazione precedente e con una chiave di firma impostata in
+`urtc_config.json` - vedi «Configurazione»
+sopra. Provato solo con un bootloader simulato.
 
 Anche un `<image>.sha256` o un `<image>.manifest.json` presente ma illeggibile
 (vuoto, binario, troncato o senza digest dove ne è atteso uno) impedisce il
@@ -1044,7 +1049,7 @@ Quali versioni dei programmi URTC funzionano insieme, e quale versione del proto
 
 ## 🧪 Test
 
-La suite ha 1012 test in 76 file (`python -m pytest tests -q`; con Qt su una macchina senza schermo, `QT_QPA_PLATFORM=offscreen`; i 106 che richiedono PySide6 vengono saltati senza): il protocollo CAN-OTA contro un vero trasporto `MockCAN` che riproduce un bootloader simulato completo (avvio, cancellazione, ricezione, dati di pagina e ACK, frame del record di firma, fine aggiornamento con un vero successo o uno specifico `VERIFY_FAIL_REASON`), le regole di firma, i controlli di integrità dell'immagine, il firmware incluso in `firmware/` rispetto ai suoi manifesti, i comandi SWD/JTAG costruiti con `dry_run`, i file di lingua e i pannelli Qt Quick. Tre script nella radice (`verify_qt_*.py`) pilotano i pannelli Qt end-to-end. La CI esegue anche `ruff check`, `python -m mypy` e `tools/ci_validate.py`. `MockCAN` è solo un modello scritto dal protocollo: è più indulgente del vero bootloader, quindi un'esecuzione verde non sostituisce una prova su una scheda reale.
+La suite ha 1017 test in 77 file (`python -m pytest tests -q`; con Qt su una macchina senza schermo, `QT_QPA_PLATFORM=offscreen`; i 106 che richiedono PySide6 vengono saltati senza): il protocollo CAN-OTA contro un vero trasporto `MockCAN` che riproduce un bootloader simulato completo (avvio, cancellazione, ricezione, dati di pagina e ACK, frame del record di firma, fine aggiornamento con un vero successo o uno specifico `VERIFY_FAIL_REASON`), le regole di firma, i controlli di integrità dell'immagine, il firmware incluso in `firmware/` rispetto ai suoi manifesti, i comandi SWD/JTAG costruiti con `dry_run`, i file di lingua e i pannelli Qt Quick. Tre script nella radice (`verify_qt_*.py`) pilotano i pannelli Qt end-to-end. La CI esegue anche `ruff check`, `python -m mypy` e `tools/ci_validate.py`. `MockCAN` è solo un modello scritto dal protocollo: è più indulgente del vero bootloader, quindi un'esecuzione verde non sostituisce una prova su una scheda reale.
 
 ### Operatività e strumenti
 
@@ -1072,7 +1077,7 @@ URTC-FLASHER/
 ├── urtc_can/                                          protocollo, trasporti e aggiornamenti (copia)
 ├── urtc_ui/                                           aiuti per l'interfaccia (copia)
 ├── firmware/                                          dove vanno le immagini (all'inizio vuota)
-├── tests/                                             76 file di test, uno per area
+├── tests/                                             77 file di test, uno per area
 ├── language/                                          gli otto file di lingua .lng
 ├── assets/                                            QML, banner e icona
 ├── docs/                                              architettura, compilazione ed esecuzione

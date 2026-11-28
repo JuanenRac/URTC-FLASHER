@@ -198,7 +198,7 @@ LOG_SLAVE_FIRMWARE_HARDWAREID=HardwareID de l'esclave d'extension : 0x{hw_id:08X
 LOG_SLAVE_PROGRESS=Envoyé {offset}/{size} octets à l'esclave d'extension (sa propre progression rapportée : {slave_pct}%)
 LOG_SLAVE_TRANSFER_COMPLETE=Transfert vers l'esclave d'extension terminé : {size} octets en {elapsed:.1f}s ({kbps:.1f} Ko/s)
 LOG_SLAVE_UPDATE_CONFIRMED=Mise à jour de l'esclave d'extension vérifiée et confirmée.
-LOG_SLAVE_VERIFY_FAILED=L'esclave d'extension a signalé un échec de vérification (taille, CRC32, HMAC ou HardwareID non concordants sur son propre emplacement de sauvegarde).
+LOG_SLAVE_VERIFY_FAILED=L'esclave d'extension a signalé un échec de vérification (la taille, le CRC32, le SHA-256, l'enregistrement de signature, la version ou le HardwareID n'ont pas passé le contrôle sur son propre emplacement de sauvegarde).
 LOG_SLAVE_VERIFY_FAILED_REASON=L'esclave d'extension a signalé un échec de vérification : {reason}
 LOG_SLAVE_GENERIC_ERROR=L'esclave d'extension a signalé un statut d'erreur générique.
 
@@ -285,7 +285,7 @@ ERR_PUBLISHED_FILE_UNREADABLE={name} se trouve à côté de l'image mais ne peut
 LOG_USING_PUBLISHED_SIGNATURE=Utilisation de la signature publiée dans le manifeste (clé : {kind}).
 LOG_DEV_KEY_NOTE=NOTE : signé avec la clé de développement PUBLIQUE - seules les cartes dont le bootloader a été compilé avec cette même clé l'acceptent.
 LOG_SIGNING_LOCALLY=Aucune signature publiée - signature locale avec la clé {board} de urtc_config.json.
-ERR_NO_SIGNATURE_NO_KEY=Cette image n'a pas de signature publiée (hmac_sha256 dans <fichier>.manifest.json) et aucune clé de signature {board} n'est configurée. Utilisez une image du build URTC (elle fournit son .manifest.json) ou, pour une image compilée soi-même sur une carte de banc, définissez "{option}" dans urtc_config.json.
+ERR_NO_SIGNATURE_NO_KEY=Cette image n'a ni enregistrement de signature (<fichier>.imgsig) ni signature publiée (hmac_sha256 dans <fichier>.manifest.json), et aucune clé de signature {board} n'est configurée. Utilisez une image du build URTC avec son enregistrement et son manifeste : les bootloaders actuels n'installent qu'une image accompagnée d'un enregistrement. Une clé dans "{option}" de urtc_config.json ne sert qu'à une carte de banc avec un bootloader de la génération précédente.
 ERR_FIRMWARE_EMPTY=Le fichier de firmware est vide
 ERR_FIRMWARE_TOO_BIG_MAIN=Le firmware fait {size} octets et dépasse l'emplacement principal de {max} octets - la mise à jour, que le bootloader refuserait de toute façon, n'est pas envoyée
 ERR_PAGE_ACK_SHORT=L'ACK de la page {page} ne faisait que {got} octets (au moins 4 attendus) - probablement du bruit sur le bus a corrompu la trame

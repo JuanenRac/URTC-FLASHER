@@ -197,7 +197,7 @@ LOG_SLAVE_FIRMWARE_HARDWAREID=拡張スレーブ HardwareID：0x{hw_id:08X}
 LOG_SLAVE_PROGRESS=拡張スレーブへ {offset}/{size} バイトを送信しました（自身が報告する進捗：{slave_pct}%）
 LOG_SLAVE_TRANSFER_COMPLETE=拡張スレーブの転送が完了しました：{size} バイト、{elapsed:.1f} 秒（{kbps:.1f} KB/s）
 LOG_SLAVE_UPDATE_CONFIRMED=拡張スレーブの更新が検証され確認されました。
-LOG_SLAVE_VERIFY_FAILED=拡張スレーブが検証失敗を報告しました（自身のバックアップスロットのサイズ、CRC32、HMAC、または HardwareID の不一致）。
+LOG_SLAVE_VERIFY_FAILED=拡張スレーブが検証失敗を報告しました（自身のバックアップスロットで、サイズ、CRC32、SHA-256、署名レコード、バージョン、または HardwareID が通りませんでした）。
 LOG_SLAVE_VERIFY_FAILED_REASON=拡張スレーブが検証失敗を報告しました：{reason}
 LOG_SLAVE_GENERIC_ERROR=拡張スレーブが一般的なエラー状態を報告しました。
 
@@ -284,7 +284,7 @@ ERR_PUBLISHED_FILE_UNREADABLE={name} はイメージの隣にありますが読�
 LOG_USING_PUBLISHED_SIGNATURE=マニフェストに公開されている署名を使用します（鍵：{kind}）。
 LOG_DEV_KEY_NOTE=注意：公開の開発用鍵で署名されています。同じ鍵でビルドされたブートローダーを持つボードだけが受け入れます。
 LOG_SIGNING_LOCALLY=公開された署名がないため、urtc_config.json の {board} 鍵でローカルに署名します。
-ERR_NO_SIGNATURE_NO_KEY=このイメージには公開された署名（<file>.manifest.json の hmac_sha256） がなく、{board} の署名鍵も設定されていません。URTC ビルドのイメージ（.manifest.json 付き） を使うか、ベンチボード上の自作イメージの場合は urtc_config.json に "{option}" を設定してください。
+ERR_NO_SIGNATURE_NO_KEY=このイメージには署名レコード（<file>.imgsig）も公開された署名（<file>.manifest.json の hmac_sha256）もなく、{board} の署名鍵も設定されていません。レコードとマニフェストが付いた URTC ビルドのイメージを使ってください。現行のブートローダーはレコードのあるイメージだけをインストールします。urtc_config.json の "{option}" の鍵は、旧世代のブートローダーを持つベンチボードにのみ使えます。
 ERR_FIRMWARE_EMPTY=ファームウェアファイルが空です
 ERR_FIRMWARE_TOO_BIG_MAIN=ファームウェアは {size} バイトで、メインスロットの {max} バイトを超えています。ブートローダーがどのみち拒否する更新は送信しません
 ERR_PAGE_ACK_SHORT=ページ {page} の ACK は {got} バイトしかありませんでした（4 バイト以上が必要）。バスノイズでフレームが壊れた可能性があります

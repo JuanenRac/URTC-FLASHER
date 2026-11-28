@@ -198,7 +198,7 @@ LOG_SLAVE_FIRMWARE_HARDWAREID=HardwareID do escravo de expansão: 0x{hw_id:08X}
 LOG_SLAVE_PROGRESS=Enviados {offset}/{size} bytes ao escravo de expansão (progresso próprio reportado: {slave_pct}%)
 LOG_SLAVE_TRANSFER_COMPLETE=Transferência para o escravo de expansão concluída: {size} bytes em {elapsed:.1f}s ({kbps:.1f} KB/s)
 LOG_SLAVE_UPDATE_CONFIRMED=Atualização do escravo de expansão verificada e confirmada.
-LOG_SLAVE_VERIFY_FAILED=O escravo de expansão reportou falha de verificação (tamanho, CRC32, HMAC ou HardwareID não correspondem no seu próprio slot de cópia de segurança).
+LOG_SLAVE_VERIFY_FAILED=O escravo de expansão reportou falha de verificação (o tamanho, o CRC32, o SHA-256, o registo de assinatura, a versão ou o HardwareID não passaram no seu próprio slot de cópia de segurança).
 LOG_SLAVE_VERIFY_FAILED_REASON=O escravo de expansão reportou falha de verificação: {reason}
 LOG_SLAVE_GENERIC_ERROR=O escravo de expansão reportou um estado de erro genérico.
 
@@ -285,7 +285,7 @@ ERR_PUBLISHED_FILE_UNREADABLE={name} está junto à imagem mas não pode ser lid
 LOG_USING_PUBLISHED_SIGNATURE=A usar a assinatura publicada no manifesto (chave: {kind}).
 LOG_DEV_KEY_NOTE=NOTA: assinado com a chave de desenvolvimento PÚBLICA - só o aceitam as placas cujo bootloader foi compilado com essa mesma chave.
 LOG_SIGNING_LOCALLY=Sem assinatura publicada - a assinar localmente com a chave {board} de urtc_config.json.
-ERR_NO_SIGNATURE_NO_KEY=Esta imagem não tem assinatura publicada (hmac_sha256 em <ficheiro>.manifest.json) e não há chave de assinatura de {board} configurada. Use uma imagem da compilação URTC (inclui o seu .manifest.json) ou, para uma imagem própria numa placa de bancada, defina "{option}" em urtc_config.json.
+ERR_NO_SIGNATURE_NO_KEY=Esta imagem não tem registo de assinatura (<ficheiro>.imgsig) nem assinatura publicada (hmac_sha256 em <ficheiro>.manifest.json) e não há chave de assinatura de {board} configurada. Use uma imagem da compilação URTC com o respetivo registo e manifesto: os bootloaders atuais só instalam uma imagem com registo. Uma chave em "{option}" em urtc_config.json serve apenas uma placa de bancada com um bootloader da geração anterior.
 ERR_FIRMWARE_EMPTY=O ficheiro de firmware está vazio
 ERR_FIRMWARE_TOO_BIG_MAIN=O firmware tem {size} bytes e excede o slot principal de {max} bytes - não se envia uma atualização que o bootloader rejeitaria na mesma
 ERR_PAGE_ACK_SHORT=O ACK da página {page} tinha apenas {got} bytes (esperados pelo menos 4) - provavelmente ruído no barramento corrompeu a trama

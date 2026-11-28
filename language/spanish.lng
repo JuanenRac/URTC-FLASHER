@@ -198,7 +198,7 @@ LOG_SLAVE_FIRMWARE_HARDWAREID=HardwareID del esclavo de expansión: 0x{hw_id:08X
 LOG_SLAVE_PROGRESS=Enviados {offset}/{size} bytes al esclavo de expansión (progreso propio reportado: {slave_pct}%)
 LOG_SLAVE_TRANSFER_COMPLETE=Transferencia al esclavo de expansión completa: {size} bytes en {elapsed:.1f}s ({kbps:.1f} KB/s)
 LOG_SLAVE_UPDATE_CONFIRMED=Actualización del esclavo de expansión verificada y confirmada.
-LOG_SLAVE_VERIFY_FAILED=El esclavo de expansión reportó fallo de verificación (tamaño, CRC32, HMAC, o HardwareID no coinciden en su propio slot de respaldo).
+LOG_SLAVE_VERIFY_FAILED=El esclavo de expansión reportó fallo de verificación (tamaño, CRC32, SHA-256, registro de firma, versión o HardwareID no pasaron en su propio slot de respaldo).
 LOG_SLAVE_VERIFY_FAILED_REASON=El esclavo de expansión reportó fallo de verificación: {reason}
 LOG_SLAVE_GENERIC_ERROR=El esclavo de expansión reportó un estado de error genérico.
 
@@ -285,7 +285,7 @@ ERR_PUBLISHED_FILE_UNREADABLE={name} está junto a la imagen pero no se puede le
 LOG_USING_PUBLISHED_SIGNATURE=Se usa la firma publicada en el manifiesto (clave: {kind}).
 LOG_DEV_KEY_NOTE=NOTA: firmado con la clave de desarrollo PÚBLICA: solo la aceptan las placas cuyo bootloader se compiló con esa misma clave.
 LOG_SIGNING_LOCALLY=No hay firma publicada: se firma localmente con la clave de {board} de urtc_config.json.
-ERR_NO_SIGNATURE_NO_KEY=Esta imagen no tiene firma publicada (hmac_sha256 en <archivo>.manifest.json) y no hay clave de firma de {board} configurada. Usa una imagen de la compilación de URTC (incluye su .manifest.json) o, para una imagen propia en una placa de banco, define "{option}" en urtc_config.json.
+ERR_NO_SIGNATURE_NO_KEY=Esta imagen no tiene registro de firma (<archivo>.imgsig) ni firma publicada (hmac_sha256 en <archivo>.manifest.json) y no hay clave de firma de {board} configurada. Usa una imagen de la compilación de URTC con su registro y su manifiesto: los bootloaders actuales solo instalan una imagen con registro. Una clave en "{option}" en urtc_config.json solo sirve para una placa de banco con un bootloader de la generación anterior.
 ERR_FIRMWARE_EMPTY=El archivo de firmware está vacío
 ERR_FIRMWARE_TOO_BIG_MAIN=El firmware ocupa {size} bytes y supera el slot principal de {max} bytes: no se envía una actualización que el bootloader rechazaría igualmente
 ERR_PAGE_ACK_SHORT=El ACK de la página {page} tenía solo {got} bytes (se esperaban al menos 4): probablemente ruido en el bus corrompió la trama

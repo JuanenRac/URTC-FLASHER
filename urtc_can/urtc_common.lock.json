@@ -202,6 +202,10 @@
       "from": "src/urtc_common/update_strings.py",
       "sha256": "a25f0a0f177487a4d670896e27e7182841f8ff9dccfda85b66998b2ca458c58a"
     },
+    "version_compat.py": {
+      "from": "src/urtc_common/version_compat.py",
+      "sha256": "a952214245bfc8bcfe9106836bceaae25b151a7f086931c6f378d00315ae1dc3"
+    },
     "versioning.py": {
       "from": "src/urtc_common/versioning.py",
       "sha256": "dde6c0d5e8fffc590c4b9eafa6eb31ccf58678d7b4881e616d4c4e7e26808ca7"
