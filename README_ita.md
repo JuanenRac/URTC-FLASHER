@@ -287,7 +287,7 @@ bootloader che implementi `0x7FE`/`0x7FF` (vedi `docs/CANBUS.TXT`); uno
 datato semplicemente non risponde mai, mostrato come un chiaro timeout
 invece di un file silenziosamente vuoto. In pratica la copia funziona su una scheda senza applicazione valida o rimasta a metà di un aggiornamento: con un'applicazione valida il bootloader vi salta circa 600 ms dopo il reset, a meno che arrivi un frame di avvio aggiornamento (`0x7F1`), e questo strumento non ha alcun pulsante che tenga il bootloader in attesa (servirebbe una modifica del bootloader). Per una scheda che funziona normalmente, fai il backup della flash via SWD/JTAG (sezione 6).
 
-**Indicazioni su versione e firma**: prima del trasferimento lo strumento chiede alla scheda cosa è installato e registra "installata vX.Y -> nuova vA.B"; se la nuova versione è più vecchia, avverte che il bootloader la rifiuterà se il downgrade non è consentito e suggerisce di fare prima un backup. Un'immagine il cui manifest dichiara di essere firmata con la chiave di sviluppo PUBBLICA (lo sono le immagini ufficiali incluse) mostra un avviso rosso sotto il nome del file; imposta `"require_production_signature": true` in `urtc_config.json` per rifiutare del tutto tali immagini. Un bootloader che pubblica l'impronta della chiave di firma che accetta viene confrontato con il `signing_key_id` del manifesto dell'immagine prima del trasferimento: una differenza viene registrata (`"key_id_precheck": "warn"`, il valore predefinito), rifiutata (`"refuse"`) o non controllata (`"off"`) in `urtc_config.json`; un bootloader o un manifesto senza impronta non è mai una differenza. Provato solo con un bootloader simulato. Quando la scheda risponde dal bootloader senza firmware valido, viene selezionata l'immagine ufficiale più recente della scheda principale trovata in `firmware/`, perché tu la controlli e la scriva. Dopo ogni aggiornamento riuscito viene scritto un piccolo rapporto (`logs/urtc_update_report_*.json`: versione dello strumento, operatore, nome, dimensione e SHA-256 dell'immagine, versioni prima e dopo); porta il proprio SHA-256 così una modifica si nota, ma non è una firma.
+**Indicazioni su versione e firma**: prima del trasferimento lo strumento chiede alla scheda cosa è installato e registra "installata vX.Y -> nuova vA.B"; se la nuova versione è più vecchia, avverte che il bootloader la rifiuterà se il downgrade non è consentito e suggerisce di fare prima un backup. Un'immagine il cui manifest dichiara di essere firmata con la chiave di sviluppo PUBBLICA (una build da banco; una release ufficiale non è firmata così) mostra un avviso rosso sotto il nome del file; imposta `"require_production_signature": true` in `urtc_config.json` per rifiutare del tutto tali immagini. Un bootloader che pubblica l'impronta della chiave di firma che accetta viene confrontato con il `signing_key_id` del manifesto dell'immagine prima del trasferimento: una differenza viene registrata (`"key_id_precheck": "warn"`, il valore predefinito), rifiutata (`"refuse"`) o non controllata (`"off"`) in `urtc_config.json`; un bootloader o un manifesto senza impronta non è mai una differenza. Provato solo con un bootloader simulato. Quando la scheda risponde dal bootloader senza firmware valido, viene selezionata l'immagine ufficiale più recente della scheda principale trovata in `firmware/`, perché tu la controlli e la scriva. Dopo ogni aggiornamento riuscito viene scritto un piccolo rapporto (`logs/urtc_update_report_*.json`: versione dello strumento, operatore, nome, dimensione e SHA-256 dell'immagine, versioni prima e dopo); porta il proprio SHA-256 così una modifica si nota, ma non è una firma.
 
 **Intestazione nell'immagine**: un'immagine firmware costruita con l'intestazione sigillata (`stamp_image.py seal` di URTC-COMMON) indica nel file stesso l'hardware a cui è destinata, la sua versione, la sua lunghezza e il suo CRC-32. Prima del primo frame il flasher la legge e rifiuta un'immagine per un'altra scheda, una versione diversa dal nome del file, una lunghezza o un CRC-32 che non corrispondono, un'intestazione che nessuno ha sigillato e un file `.urimg` (l'intestazione davanti al binario, che non viene mai programmato). Un'immagine precedente senza intestazione viene programmata con un avviso; `image_header_policy` in `urtc_config.json` lo cambia: `accept` (senza avviso), `warn` (il valore predefinito) o `require` (rifiutarla).
 
@@ -723,7 +723,7 @@ stesso modo.
 
 Questo strumento **non contiene alcuna chiave di firma**. La build URTC
 firma ogni immagine applicativa e pubblica la firma accanto, in
-`<immagine>.manifest.json` (`hmac_sha256`, più `<immagine>.sha256`); il
+`<immagine>.imgsig` (più `<immagine>.manifest.json` e `<immagine>.sha256`); il
 flasher invia quella firma pubblicata e rifiuta un'immagine il cui sha256
 non corrisponde al suo manifest. Scaricando un'immagine da GitHub vengono
 scaricati anche entrambi i file, e `python tools/sync_firmware.py` aggiorna
@@ -1008,7 +1008,7 @@ Ogni file di una release ufficiale ha una firma di release (`<file>.sig`, Ed2551
 **`<nomefile>.manifest.json` e `<nomefile>.sha256`, accanto a ogni file
 firmware** - pubblicati dalla build URTC per ogni immagine (e scaricati
 insieme a essa da GitHub). Il manifest contiene la versione, lo `sha256` e,
-per le immagini applicative, il valore `hmac_sha256` atteso dal bootloader (un HMAC-SHA256 a chiave condivisa che controllano solo i bootloader della generazione precedente; il record Ed25519 che verificano quelli attuali è il file `<immagine>.imgsig` accanto all'immagine; `signing_key_kind: dev` indica la chiave pubblica di sviluppo):
+solo per un'immagine applicativa compilata con una chiave per i bootloader precedenti, il valore `hmac_sha256` atteso dal bootloader (un HMAC-SHA256 a chiave condivisa che controllano solo i bootloader della generazione precedente; il record Ed25519 che verificano quelli attuali è il file `<immagine>.imgsig` accanto all'immagine; `signing_key_kind: dev` indica la chiave pubblica di sviluppo):
 
 ```json
 {"component": "main_application", "version": "<version>", "sha256": "b48d4cd5...", "hmac_sha256": "b63a701e...", "signing_key_kind": "dev"}
@@ -1038,7 +1038,7 @@ cliccare **Aggiorna** - nessun riavvio necessario.
 1. Avvia la scheda virtuale: `python -m urtc_can.virtual_board`.
 2. In un altro terminale imposta `URTC_VIRTUAL_PORT=socket://127.0.0.1:7777` e avvia il flasher: la scheda virtuale è nell'elenco delle porte.
 3. Selezionala, premi Connetti, scegli un'immagine da `firmware/` (o cercala) e premi Avvia CAN-OTA.
-4. La scheda virtuale accetta l'intero aggiornamento, con gli stessi controlli di dimensione, firma e versione di una vera. È un modello: nulla di tutto ciò è girato su una scheda.
+4. La scheda virtuale predefinita accetta l'intero aggiornamento ma non controlla dimensione, firma né versione; per questi controlli avvia `python -m urtc_can.virtual_board --firmware-repo ../URTC --firmware-bootloader`, il bootloader del firmware compilato per il PC. Entrambe sono modelli: nulla di tutto ciò è girato su una scheda.
 <!-- /urtc-section:first_flash -->
 
 <!-- urtc-section:compatibility -->

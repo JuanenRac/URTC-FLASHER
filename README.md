@@ -268,7 +268,7 @@ sitting in the bootloader - requires a bootloader that implements
 `0x7FE`/`0x7FF` (see `docs/CANBUS.TXT`); an older one just never answers,
 surfaced as a clear timeout rather than a silently empty file. In practice this means the backup works on a board that has no valid application or that was left halfway through an update: with a valid application the bootloader jumps to it about 600 ms after reset unless a start-update frame (`0x7F1`) arrives, and this tool has no button that keeps the bootloader waiting (that would need a change in the bootloader). For a board that is running normally, back up the flash over SWD/JTAG (section 6) instead.
 
-**Version and signature hints**: before the transfer the tool asks the board what is installed and logs "installed vX.Y -> new vA.B"; if the new version is older it warns that the bootloader will refuse it unless the downgrade is allowed, and suggests taking a backup first. An image whose manifest says it is signed with the PUBLIC development key (the bundled official images are) shows a red warning under the file name; set `"require_production_signature": true` in `urtc_config.json` to refuse such images altogether. A bootloader that publishes the fingerprint of the signing key it accepts is compared with the `signing_key_id` of the image manifest before the transfer: a mismatch is logged (`"key_id_precheck": "warn"`, the default), refused (`"refuse"`) or not checked (`"off"`) in `urtc_config.json`; a bootloader or a manifest without the fingerprint is never a mismatch. Tried against a simulated bootloader only. When the board answers from its bootloader with no valid firmware, the newest official main-board image found in `firmware/` is selected for you to check and flash. After every successful update a small report (`logs/urtc_update_report_*.json`: tool version, operator, image name, size and SHA-256, versions before and after) is written; it carries its own SHA-256 so that an edit is noticeable, but it is not a signature.
+**Version and signature hints**: before the transfer the tool asks the board what is installed and logs "installed vX.Y -> new vA.B"; if the new version is older it warns that the bootloader will refuse it unless the downgrade is allowed, and suggests taking a backup first. An image whose manifest says it is signed with the PUBLIC development key (a bench build; an official release is not signed that way) shows a red warning under the file name; set `"require_production_signature": true` in `urtc_config.json` to refuse such images altogether. A bootloader that publishes the fingerprint of the signing key it accepts is compared with the `signing_key_id` of the image manifest before the transfer: a mismatch is logged (`"key_id_precheck": "warn"`, the default), refused (`"refuse"`) or not checked (`"off"`) in `urtc_config.json`; a bootloader or a manifest without the fingerprint is never a mismatch. Tried against a simulated bootloader only. When the board answers from its bootloader with no valid firmware, the newest official main-board image found in `firmware/` is selected for you to check and flash. After every successful update a small report (`logs/urtc_update_report_*.json`: tool version, operator, image name, size and SHA-256, versions before and after) is written; it carries its own SHA-256 so that an edit is noticeable, but it is not a signature.
 
 **Header inside the image**: a firmware image built with the header slot sealed (`stamp_image.py seal` of URTC-COMMON) states inside the file itself the hardware it is for, its version, its length and its CRC-32. Before the first frame the flasher reads it and refuses an image for another board, a version that differs from the file name, a length or CRC-32 that does not match, a header nobody sealed, and a `.urimg` file (the header in front of the binary, which is never flashed). An older image without the header is flashed with a warning; `image_header_policy` in `urtc_config.json` changes that: `accept` (no warning), `warn` (the default) or `require` (refuse it).
 
@@ -654,9 +654,8 @@ the failure path the same way.
 
 ## ⚙️ Configuration
 
-This tool holds **no signing key**. The URTC build signs every application
-image and publishes the signature next to it, in `<image>.manifest.json`
-(`hmac_sha256`, plus `<image>.sha256`); the flasher sends that published
+This tool holds **no signing key**. The URTC build signs every application image (this tool never makes an Ed25519 signature) and publishes the signature next to it, in `<image>.imgsig`
+(plus `<image>.manifest.json` and `<image>.sha256`); the flasher sends that published
 signature and refuses an image whose sha256 does not match its manifest.
 Downloading an image from GitHub also downloads both files, and
 `python tools/sync_firmware.py` fills the `firmware/` folder
@@ -920,7 +919,7 @@ Each file of an official release has a release signature (`<file>.sig`, Ed25519)
 **`<filename>.manifest.json` and `<filename>.sha256`, next to each firmware
 file** - published by the URTC build for every image (and downloaded
 together with it from GitHub). The manifest carries the version, the
-`sha256` and, for application images, the `hmac_sha256` value the bootloader expects (a shared-key HMAC-SHA256 that only the bootloaders of the earlier generation check; the Ed25519 record that the current ones verify is the file `<image>.imgsig` next to the image; `signing_key_kind: dev` marks the public development key):
+`sha256` and, only in an application image built with a key for the earlier bootloaders, the optional `hmac_sha256` value the bootloader expects (a shared-key HMAC-SHA256 that only the bootloaders of the earlier generation check; the Ed25519 record that the current ones verify is the file `<image>.imgsig` next to the image; `signing_key_kind: dev` marks the public development key):
 
 ```json
 {"component": "main_application", "version": "<version>", "sha256": "b48d4cd5...", "hmac_sha256": "b63a701e...", "signing_key_kind": "dev"}
@@ -948,7 +947,7 @@ Adding a new build later: just drop it into `firmware/` and click
 1. Start the virtual board: `python -m urtc_can.virtual_board`.
 2. In another terminal set `URTC_VIRTUAL_PORT=socket://127.0.0.1:7777` and start the flasher: the virtual board is in the list of ports.
 3. Select it, press Connect, pick an image from `firmware/` (or Browse) and press Start CAN-OTA.
-4. The virtual board takes the whole update, with the same checks of the size, the signature and the version as a real one. It is a model: nothing of this has run on a board.
+4. The default virtual board takes the whole update but never checks a signature, nor the size or the version; for those checks start `python -m urtc_can.virtual_board --firmware-repo ../URTC --firmware-bootloader`, the bootloader of the firmware compiled for the PC. Both are models: nothing of this has run on a board.
 <!-- /urtc-section:first_flash -->
 
 <!-- urtc-section:compatibility -->
